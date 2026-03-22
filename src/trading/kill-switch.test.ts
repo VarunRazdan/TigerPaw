@@ -59,7 +59,7 @@ function makeState(overrides: Partial<TradingPolicyState> = {}): TradingPolicySt
 describe("kill-switch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    capturedMutator = undefined;
+    _capturedMutator = undefined;
     policyState = makeState();
   });
 

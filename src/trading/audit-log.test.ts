@@ -42,10 +42,10 @@ async function makeTmpDir(): Promise<string> {
   return base;
 }
 
-/** Minimal valid entry (without timestamp / prevHash, as required by writeAuditEntry). */
+/** Minimal valid entry (without timestamp / prevHash / hmac, as required by writeAuditEntry). */
 function sampleEntry(
-  overrides?: Partial<Omit<AuditLogEntry, "timestamp" | "prevHash">>,
-): Omit<AuditLogEntry, "timestamp" | "prevHash"> {
+  overrides?: Partial<Omit<AuditLogEntry, "timestamp" | "prevHash" | "hmac">>,
+): Omit<AuditLogEntry, "timestamp" | "prevHash" | "hmac"> {
   return {
     extensionId: "ext-test",
     action: "order_requested" as AuditAction,
