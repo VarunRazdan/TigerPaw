@@ -254,6 +254,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Tigerpaw began as a fork of [OpenClaw](https://github.com/nicepkg/openclaw) by Peter Steinberger, originally a multi-channel AI messaging gateway. It has since been extensively rebuilt with a policy-gated trading engine, 9 exchange integrations, HMAC-signed request authentication, tamper-evident audit logging, and a React trading dashboard — transforming it into a full trading gateway with hardened security.
 
+## Support
+
+If you find Tigerpaw useful, consider supporting development:
+
+<a href="https://buymeacoffee.com/CrimesAnatomy"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
+
 ## License
 
 [MIT](LICENSE)
