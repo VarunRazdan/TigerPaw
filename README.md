@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@greatlyrecommended/tigerpaw"><img src="https://img.shields.io/npm/v/@greatlyrecommended/tigerpaw?color=orange" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/tigerpaw"><img src="https://img.shields.io/npm/v/tigerpaw?color=orange" alt="npm" /></a>
   <a href="https://github.com/varunrazdan/tigerpaw/actions/workflows/ci.yml"><img src="https://github.com/varunrazdan/tigerpaw/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
   <a href="https://github.com/varunrazdan/tigerpaw/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" />
@@ -77,7 +77,7 @@
 ## Install
 
 ```bash
-npm install -g @greatlyrecommended/tigerpaw
+npm install -g tigerpaw
 ```
 
 Requires Node.js 22+.
