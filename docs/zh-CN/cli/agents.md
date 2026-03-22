@@ -1,7 +1,7 @@
 ---
 read_when:
   - 你需要多个隔离的智能体（工作区 + 路由 + 认证）
-summary: "`openclaw agents` 的 CLI 参考（列出/添加/删除/设置身份）"
+summary: "`tigerpaw agents` 的 CLI 参考（列出/添加/删除/设置身份）"
 title: agents
 x-i18n:
   generated_at: "2026-02-01T19:58:38Z"
@@ -12,7 +12,7 @@ x-i18n:
   workflow: 14
 ---
 
-# `openclaw agents`
+# `tigerpaw agents`
 
 管理隔离的智能体（工作区 + 认证 + 路由）。
 
@@ -24,18 +24,18 @@ x-i18n:
 ## 示例
 
 ```bash
-openclaw agents list
-openclaw agents add work --workspace ~/.openclaw/workspace-work
-openclaw agents set-identity --workspace ~/.openclaw/workspace --from-identity
-openclaw agents set-identity --agent main --avatar avatars/openclaw.png
-openclaw agents delete work
+tigerpaw agents list
+tigerpaw agents add work --workspace ~/.tigerpaw/workspace-work
+tigerpaw agents set-identity --workspace ~/.tigerpaw/workspace --from-identity
+tigerpaw agents set-identity --agent main --avatar avatars/tigerpaw.png
+tigerpaw agents delete work
 ```
 
 ## 身份文件
 
 每个智能体工作区可以在工作区根目录包含一个 `IDENTITY.md`：
 
-- 示例路径：`~/.openclaw/workspace/IDENTITY.md`
+- 示例路径：`~/.tigerpaw/workspace/IDENTITY.md`
 - `set-identity --from-identity` 从工作区根目录读取（或从显式指定的 `--identity-file` 读取）
 
 头像路径相对于工作区根目录解析。
@@ -52,13 +52,13 @@ openclaw agents delete work
 从 `IDENTITY.md` 加载：
 
 ```bash
-openclaw agents set-identity --workspace ~/.openclaw/workspace --from-identity
+tigerpaw agents set-identity --workspace ~/.tigerpaw/workspace --from-identity
 ```
 
 显式覆盖字段：
 
 ```bash
-openclaw agents set-identity --agent main --name "OpenClaw" --emoji "🦞" --avatar avatars/openclaw.png
+tigerpaw agents set-identity --agent main --name "Tigerpaw" --emoji "🦞" --avatar avatars/tigerpaw.png
 ```
 
 配置示例：
@@ -70,10 +70,10 @@ openclaw agents set-identity --agent main --name "OpenClaw" --emoji "🦞" --ava
       {
         id: "main",
         identity: {
-          name: "OpenClaw",
+          name: "Tigerpaw",
           theme: "space lobster",
           emoji: "🦞",
-          avatar: "avatars/openclaw.png",
+          avatar: "avatars/tigerpaw.png",
         },
       },
     ],

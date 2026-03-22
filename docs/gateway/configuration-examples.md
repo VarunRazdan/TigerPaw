@@ -1,9 +1,9 @@
 ---
-summary: "Schema-accurate configuration examples for common OpenClaw setups"
+summary: "Schema-accurate configuration examples for common Tigerpaw setups"
 read_when:
-  - Learning how to configure OpenClaw
+  - Learning how to configure Tigerpaw
   - Looking for configuration examples
-  - Setting up OpenClaw for the first time
+  - Setting up Tigerpaw for the first time
 title: "Configuration Examples"
 ---
 
@@ -17,12 +17,12 @@ Examples below are aligned with the current config schema. For the exhaustive re
 
 ```json5
 {
-  agent: { workspace: "~/.openclaw/workspace" },
+  agent: { workspace: "~/.tigerpaw/workspace" },
   channels: { whatsapp: { allowFrom: ["+15555550123"] } },
 }
 ```
 
-Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
+Save to `~/.tigerpaw/tigerpaw.json` and you can DM the bot from that number.
 
 ### Recommended starter
 
@@ -34,7 +34,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
     emoji: "🦞",
   },
   agent: {
-    workspace: "~/.openclaw/workspace",
+    workspace: "~/.tigerpaw/workspace",
     model: { primary: "anthropic/claude-sonnet-4-5" },
   },
   channels: {
@@ -93,7 +93,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
   // Logging
   logging: {
     level: "info",
-    file: "/tmp/openclaw/openclaw.log",
+    file: "/tmp/tigerpaw/tigerpaw.log",
     consoleLevel: "info",
     consoleStyle: "pretty",
     redactSensitive: "tools",
@@ -101,7 +101,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
 
   // Message formatting
   messages: {
-    messagePrefix: "[openclaw]",
+    messagePrefix: "[tigerpaw]",
     responsePrefix: ">",
     ackReaction: "👀",
     ackReactionScope: "group-mentions",
@@ -110,7 +110,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
   // Routing + queue
   routing: {
     groupChat: {
-      mentionPatterns: ["@openclaw", "openclaw"],
+      mentionPatterns: ["@tigerpaw", "tigerpaw"],
       historyLimit: 50,
     },
     queue: {
@@ -163,7 +163,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
       discord: { mode: "idle", idleMinutes: 10080 },
     },
     resetTriggers: ["/new", "/reset"],
-    store: "~/.openclaw/agents/default/sessions/sessions.json",
+    store: "~/.tigerpaw/agents/default/sessions/sessions.json",
     maintenance: {
       mode: "warn",
       pruneAfter: "30d",
@@ -205,7 +205,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
       dm: { enabled: true, allowFrom: ["123456789012345678"] },
       guilds: {
         "123456789012345678": {
-          slug: "friends-of-openclaw",
+          slug: "friends-of-tigerpaw",
           requireMention: false,
           channels: {
             general: { allow: true },
@@ -225,7 +225,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
       dm: { enabled: true, allowFrom: ["U123"] },
       slashCommand: {
         enabled: true,
-        name: "openclaw",
+        name: "tigerpaw",
         sessionPrefix: "slack:slash",
         ephemeral: true,
       },
@@ -235,7 +235,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
   // Agent runtime
   agents: {
     defaults: {
-      workspace: "~/.openclaw/workspace",
+      workspace: "~/.tigerpaw/workspace",
       userTimezone: "America/Chicago",
       model: {
         primary: "anthropic/claude-sonnet-4-5",
@@ -289,9 +289,9 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
       sandbox: {
         mode: "non-main",
         perSession: true,
-        workspaceRoot: "~/.openclaw/sandboxes",
+        workspaceRoot: "~/.tigerpaw/sandboxes",
         docker: {
-          image: "openclaw-sandbox:bookworm-slim",
+          image: "tigerpaw-sandbox:bookworm-slim",
           workdir: "/workspace",
           readOnlyRoot: true,
           tmpfs: ["/tmp", "/var/tmp", "/run"],
@@ -356,7 +356,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
   // Cron jobs
   cron: {
     enabled: true,
-    store: "~/.openclaw/cron/cron.json",
+    store: "~/.tigerpaw/cron/cron.json",
     maxConcurrentRuns: 2,
     sessionRetention: "24h",
     runLog: {
@@ -371,7 +371,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
     path: "/hooks",
     token: "shared-secret",
     presets: ["gmail"],
-    transformsDir: "~/.openclaw/hooks/transforms",
+    transformsDir: "~/.tigerpaw/hooks/transforms",
     mappings: [
       {
         id: "gmail-hook",
@@ -394,7 +394,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
       },
     ],
     gmail: {
-      account: "openclaw@gmail.com",
+      account: "tigerpaw@gmail.com",
       label: "INBOX",
       topic: "projects/<project-id>/topics/gog-gmail-watch",
       subscription: "gog-gmail-watch-push",
@@ -413,7 +413,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
     mode: "local",
     port: 18789,
     bind: "loopback",
-    controlUi: { enabled: true, basePath: "/openclaw" },
+    controlUi: { enabled: true, basePath: "/tigerpaw" },
     auth: {
       mode: "token",
       token: "gateway-token",
@@ -451,7 +451,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
 
 ```json5
 {
-  agent: { workspace: "~/.openclaw/workspace" },
+  agent: { workspace: "~/.tigerpaw/workspace" },
   channels: {
     whatsapp: { allowFrom: ["+15555550123"] },
     telegram: {
@@ -518,7 +518,7 @@ Only enable direct mutable name/email/nick matching with each channel's `dangero
     },
   },
   agent: {
-    workspace: "~/.openclaw/workspace",
+    workspace: "~/.tigerpaw/workspace",
     model: {
       primary: "anthropic/claude-sonnet-4-5",
       fallbacks: ["anthropic/claude-opus-4-6"],
@@ -563,7 +563,7 @@ terms before depending on subscription auth.
     },
   },
   agent: {
-    workspace: "~/.openclaw/workspace",
+    workspace: "~/.tigerpaw/workspace",
     model: {
       primary: "anthropic/claude-opus-4-6",
       fallbacks: ["minimax/MiniMax-M2.5"],
@@ -581,7 +581,7 @@ terms before depending on subscription auth.
     theme: "professional assistant",
   },
   agent: {
-    workspace: "~/work-openclaw",
+    workspace: "~/work-tigerpaw",
     elevated: { enabled: false },
   },
   channels: {
@@ -602,7 +602,7 @@ terms before depending on subscription auth.
 ```json5
 {
   agent: {
-    workspace: "~/.openclaw/workspace",
+    workspace: "~/.tigerpaw/workspace",
     model: { primary: "lmstudio/minimax-m2.5-gs32" },
   },
   models: {

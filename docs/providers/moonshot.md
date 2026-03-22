@@ -31,13 +31,13 @@ Current Kimi K2 model IDs:
   <!-- markdownlint-enable MD037 -->
 
 ```bash
-openclaw onboard --auth-choice moonshot-api-key
+tigerpaw onboard --auth-choice moonshot-api-key
 ```
 
 Kimi Coding:
 
 ```bash
-openclaw onboard --auth-choice kimi-code-api-key
+tigerpaw onboard --auth-choice kimi-code-api-key
 ```
 
 Note: Moonshot and Kimi Coding are separate providers. Keys are not interchangeable, endpoints differ, and model refs differ (Moonshot uses `moonshot/...`, Kimi Coding uses `kimi-coding/...`).
@@ -172,9 +172,9 @@ Configure it per model via `agents.defaults.models.<provider/model>.params`:
 }
 ```
 
-OpenClaw also maps runtime `/think` levels for Moonshot:
+Tigerpaw also maps runtime `/think` levels for Moonshot:
 
 - `/think off` -> `thinking.type=disabled`
 - any non-off thinking level -> `thinking.type=enabled`
 
-When Moonshot thinking is enabled, `tool_choice` must be `auto` or `none`. OpenClaw normalizes incompatible `tool_choice` values to `auto` for compatibility.
+When Moonshot thinking is enabled, `tool_choice` must be `auto` or `none`. Tigerpaw normalizes incompatible `tool_choice` values to `auto` for compatibility.

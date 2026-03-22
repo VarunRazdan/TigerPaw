@@ -2,31 +2,31 @@
 summary: "Integrated browser control service + action commands"
 read_when:
   - Adding agent-controlled browser automation
-  - Debugging why openclaw is interfering with your own Chrome
+  - Debugging why tigerpaw is interfering with your own Chrome
   - Implementing browser settings + lifecycle in the macOS app
-title: "Browser (OpenClaw-managed)"
+title: "Browser (Tigerpaw-managed)"
 ---
 
-# Browser (openclaw-managed)
+# Browser (tigerpaw-managed)
 
-OpenClaw can run a **dedicated Chrome/Brave/Edge/Chromium profile** that the agent controls.
+Tigerpaw can run a **dedicated Chrome/Brave/Edge/Chromium profile** that the agent controls.
 It is isolated from your personal browser and is managed through a small local
 control service inside the Gateway (loopback only).
 
 Beginner view:
 
 - Think of it as a **separate, agent-only browser**.
-- The `openclaw` profile does **not** touch your personal browser profile.
+- The `tigerpaw` profile does **not** touch your personal browser profile.
 - The agent can **open tabs, read pages, click, and type** in a safe lane.
 - The default `chrome` profile uses the **system default Chromium browser** via the
-  extension relay; switch to `openclaw` for the isolated managed browser.
+  extension relay; switch to `tigerpaw` for the isolated managed browser.
 
 ## What you get
 
-- A separate browser profile named **openclaw** (orange accent by default).
+- A separate browser profile named **tigerpaw** (orange accent by default).
 - Deterministic tab control (list/open/focus/close).
 - Agent actions (click/type/drag/select), snapshots, screenshots, PDFs.
-- Optional multi-profile support (`openclaw`, `work`, `remote`, ...).
+- Optional multi-profile support (`tigerpaw`, `work`, `remote`, ...).
 
 This browser is **not** your daily driver. It is a safe, isolated surface for
 agent automation and verification.
@@ -34,26 +34,26 @@ agent automation and verification.
 ## Quick start
 
 ```bash
-openclaw browser --browser-profile openclaw status
-openclaw browser --browser-profile openclaw start
-openclaw browser --browser-profile openclaw open https://example.com
-openclaw browser --browser-profile openclaw snapshot
+tigerpaw browser --browser-profile tigerpaw status
+tigerpaw browser --browser-profile tigerpaw start
+tigerpaw browser --browser-profile tigerpaw open https://example.com
+tigerpaw browser --browser-profile tigerpaw snapshot
 ```
 
 If you get “Browser disabled”, enable it in config (see below) and restart the
 Gateway.
 
-## Profiles: `openclaw` vs `chrome`
+## Profiles: `tigerpaw` vs `chrome`
 
-- `openclaw`: managed, isolated browser (no extension required).
-- `chrome`: extension relay to your **system browser** (requires the OpenClaw
+- `tigerpaw`: managed, isolated browser (no extension required).
+- `chrome`: extension relay to your **system browser** (requires the Tigerpaw
   extension to be attached to a tab).
 
-Set `browser.defaultProfile: "openclaw"` if you want managed mode by default.
+Set `browser.defaultProfile: "tigerpaw"` if you want managed mode by default.
 
 ## Configuration
 
-Browser settings live in `~/.openclaw/openclaw.json`.
+Browser settings live in `~/.tigerpaw/tigerpaw.json`.
 
 ```json5
 {
@@ -75,7 +75,7 @@ Browser settings live in `~/.openclaw/openclaw.json`.
     attachOnly: false,
     executablePath: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
     profiles: {
-      openclaw: { cdpPort: 18800, color: "#FF4500" },
+      tigerpaw: { cdpPort: 18800, color: "#FF4500" },
       work: { cdpPort: 18801, color: "#0066CC" },
       remote: { cdpUrl: "http://10.0.0.42:9222", color: "#00AA00" },
     },
@@ -97,20 +97,20 @@ Notes:
 - `browser.ssrfPolicy.allowPrivateNetwork` remains supported as a legacy alias for compatibility.
 - `attachOnly: true` means “never launch a local browser; only attach if it is already running.”
 - `color` + per-profile `color` tint the browser UI so you can see which profile is active.
-- Default profile is `openclaw` (OpenClaw-managed standalone browser). Use `defaultProfile: "chrome"` to opt into the Chrome extension relay.
+- Default profile is `tigerpaw` (Tigerpaw-managed standalone browser). Use `defaultProfile: "chrome"` to opt into the Chrome extension relay.
 - Auto-detect order: system default browser if Chromium-based; otherwise Chrome → Brave → Edge → Chromium → Chrome Canary.
-- Local `openclaw` profiles auto-assign `cdpPort`/`cdpUrl` — set those only for remote CDP.
+- Local `tigerpaw` profiles auto-assign `cdpPort`/`cdpUrl` — set those only for remote CDP.
 
 ## Use Brave (or another Chromium-based browser)
 
 If your **system default** browser is Chromium-based (Chrome/Brave/Edge/etc),
-OpenClaw uses it automatically. Set `browser.executablePath` to override
+Tigerpaw uses it automatically. Set `browser.executablePath` to override
 auto-detection:
 
 CLI example:
 
 ```bash
-openclaw config set browser.executablePath "/usr/bin/google-chrome"
+tigerpaw config set browser.executablePath "/usr/bin/google-chrome"
 ```
 
 ```json5
@@ -141,20 +141,20 @@ openclaw config set browser.executablePath "/usr/bin/google-chrome"
 - **Local control (default):** the Gateway starts the loopback control service and can launch a local browser.
 - **Remote control (node host):** run a node host on the machine that has the browser; the Gateway proxies browser actions to it.
 - **Remote CDP:** set `browser.profiles.<name>.cdpUrl` (or `browser.cdpUrl`) to
-  attach to a remote Chromium-based browser. In this case, OpenClaw will not launch a local browser.
+  attach to a remote Chromium-based browser. In this case, Tigerpaw will not launch a local browser.
 
 Remote CDP URLs can include auth:
 
 - Query tokens (e.g., `https://provider.example?token=<token>`)
 - HTTP Basic auth (e.g., `https://user:pass@provider.example`)
 
-OpenClaw preserves the auth when calling `/json/*` endpoints and when connecting
+Tigerpaw preserves the auth when calling `/json/*` endpoints and when connecting
 to the CDP WebSocket. Prefer environment variables or secrets managers for
 tokens instead of committing them to config files.
 
 ## Node browser proxy (zero-config default)
 
-If you run a **node host** on the machine that has your browser, OpenClaw can
+If you run a **node host** on the machine that has your browser, Tigerpaw can
 auto-route browser tool calls to that node without any extra browser config.
 This is the default path for remote gateways.
 
@@ -169,7 +169,7 @@ Notes:
 ## Browserless (hosted remote CDP)
 
 [Browserless](https://browserless.io) is a hosted Chromium service that exposes
-CDP endpoints over HTTPS. You can point a OpenClaw browser profile at a
+CDP endpoints over HTTPS. You can point a Tigerpaw browser profile at a
 Browserless region endpoint and authenticate with your API key.
 
 Example:
@@ -199,11 +199,11 @@ Notes:
 ## Direct WebSocket CDP providers
 
 Some hosted browser services expose a **direct WebSocket** endpoint rather than
-the standard HTTP-based CDP discovery (`/json/version`). OpenClaw supports both:
+the standard HTTP-based CDP discovery (`/json/version`). Tigerpaw supports both:
 
-- **HTTP(S) endpoints** (e.g. Browserless) — OpenClaw calls `/json/version` to
+- **HTTP(S) endpoints** (e.g. Browserless) — Tigerpaw calls `/json/version` to
   discover the WebSocket debugger URL, then connects.
-- **WebSocket endpoints** (`ws://` / `wss://`) — OpenClaw connects directly,
+- **WebSocket endpoints** (`ws://` / `wss://`) — Tigerpaw connects directly,
   skipping `/json/version`. Use this for services like
   [Browserbase](https://www.browserbase.com) or any provider that hands you a
   WebSocket URL.
@@ -248,7 +248,7 @@ Notes:
 Key ideas:
 
 - Browser control is loopback-only; access flows through the Gateway’s auth or node pairing.
-- If browser control is enabled and no auth is configured, OpenClaw auto-generates `gateway.auth.token` on startup and persists it to config.
+- If browser control is enabled and no auth is configured, Tigerpaw auto-generates `gateway.auth.token` on startup and persists it to config.
 - Keep the Gateway and any node hosts on a private network (Tailscale); avoid public exposure.
 - Treat remote CDP URLs/tokens as secrets; prefer env vars or a secrets manager.
 
@@ -259,15 +259,15 @@ Remote CDP tips:
 
 ## Profiles (multi-browser)
 
-OpenClaw supports multiple named profiles (routing configs). Profiles can be:
+Tigerpaw supports multiple named profiles (routing configs). Profiles can be:
 
-- **openclaw-managed**: a dedicated Chromium-based browser instance with its own user data directory + CDP port
+- **tigerpaw-managed**: a dedicated Chromium-based browser instance with its own user data directory + CDP port
 - **remote**: an explicit CDP URL (Chromium-based browser running elsewhere)
 - **extension relay**: your existing Chrome tab(s) via the local relay + Chrome extension
 
 Defaults:
 
-- The `openclaw` profile is auto-created if missing.
+- The `tigerpaw` profile is auto-created if missing.
 - The `chrome` profile is built-in for the Chrome extension relay (points at `http://127.0.0.1:18792` by default).
 - Local CDP ports allocate from **18800–18899** by default.
 - Deleting a profile moves its local data directory to Trash.
@@ -276,7 +276,7 @@ All control endpoints accept `?profile=<name>`; the CLI uses `--browser-profile`
 
 ## Chrome extension relay (use your existing Chrome)
 
-OpenClaw can also drive **your existing Chrome tabs** (no separate “openclaw” Chrome instance) via a local CDP relay + a Chrome extension.
+Tigerpaw can also drive **your existing Chrome tabs** (no separate “tigerpaw” Chrome instance) via a local CDP relay + a Chrome extension.
 
 Full guide: [Chrome extension](/tools/chrome-extension)
 
@@ -284,7 +284,7 @@ Flow:
 
 - The Gateway runs locally (same machine) or a node host runs on the browser machine.
 - A local **relay server** listens at a loopback `cdpUrl` (default: `http://127.0.0.1:18792`).
-- You click the **OpenClaw Browser Relay** extension icon on a tab to attach (it does not auto-attach).
+- You click the **Tigerpaw Browser Relay** extension icon on a tab to attach (it does not auto-attach).
 - The agent controls that tab via the normal `browser` tool, by selecting the right profile.
 
 If the Gateway runs elsewhere, run a node host on the browser machine so the Gateway can proxy browser actions.
@@ -302,22 +302,22 @@ Chrome extension relay takeover requires host browser control, so either:
 1. Load the extension (dev/unpacked):
 
 ```bash
-openclaw browser extension install
+tigerpaw browser extension install
 ```
 
 - Chrome → `chrome://extensions` → enable “Developer mode”
-- “Load unpacked” → select the directory printed by `openclaw browser extension path`
+- “Load unpacked” → select the directory printed by `tigerpaw browser extension path`
 - Pin the extension, then click it on the tab you want to control (badge shows `ON`).
 
 2. Use it:
 
-- CLI: `openclaw browser --browser-profile chrome tabs`
+- CLI: `tigerpaw browser --browser-profile chrome tabs`
 - Agent tool: `browser` with `profile="chrome"`
 
 Optional: if you want a different name or relay port, create your own profile:
 
 ```bash
-openclaw browser create-profile \
+tigerpaw browser create-profile \
   --name my-chrome \
   --driver extension \
   --cdp-url http://127.0.0.1:18792 \
@@ -350,7 +350,7 @@ WSL2 / cross-namespace example:
 
 ## Browser selection
 
-When launching locally, OpenClaw picks the first available:
+When launching locally, Tigerpaw picks the first available:
 
 1. Chrome
 2. Brave
@@ -388,18 +388,18 @@ All endpoints accept `?profile=<name>`.
 If gateway auth is configured, browser HTTP routes require auth too:
 
 - `Authorization: Bearer <gateway token>`
-- `x-openclaw-password: <gateway password>` or HTTP Basic auth with that password
+- `x-tigerpaw-password: <gateway password>` or HTTP Basic auth with that password
 
 ### Playwright requirement
 
 Some features (navigate/act/AI snapshot/role snapshot, element screenshots, PDF) require
 Playwright. If Playwright isn’t installed, those endpoints return a clear 501
-error. ARIA snapshots and basic screenshots still work for openclaw-managed Chrome.
+error. ARIA snapshots and basic screenshots still work for tigerpaw-managed Chrome.
 For the Chrome extension relay driver, ARIA snapshots and screenshots require Playwright.
 
 If you see `Playwright is not available in this gateway build`, install the full
 Playwright package (not `playwright-core`) and restart the gateway, or reinstall
-OpenClaw with browser support.
+Tigerpaw with browser support.
 
 #### Docker Playwright install
 
@@ -407,7 +407,7 @@ If your Gateway runs in Docker, avoid `npx playwright` (npm override conflicts).
 Use the bundled CLI instead:
 
 ```bash
-docker compose run --rm openclaw-cli \
+docker compose run --rm tigerpaw-cli \
   node /app/node_modules/playwright-core/cli.js install chromium
 ```
 
@@ -435,95 +435,95 @@ All commands also accept `--json` for machine-readable output (stable payloads).
 
 Basics:
 
-- `openclaw browser status`
-- `openclaw browser start`
-- `openclaw browser stop`
-- `openclaw browser tabs`
-- `openclaw browser tab`
-- `openclaw browser tab new`
-- `openclaw browser tab select 2`
-- `openclaw browser tab close 2`
-- `openclaw browser open https://example.com`
-- `openclaw browser focus abcd1234`
-- `openclaw browser close abcd1234`
+- `tigerpaw browser status`
+- `tigerpaw browser start`
+- `tigerpaw browser stop`
+- `tigerpaw browser tabs`
+- `tigerpaw browser tab`
+- `tigerpaw browser tab new`
+- `tigerpaw browser tab select 2`
+- `tigerpaw browser tab close 2`
+- `tigerpaw browser open https://example.com`
+- `tigerpaw browser focus abcd1234`
+- `tigerpaw browser close abcd1234`
 
 Inspection:
 
-- `openclaw browser screenshot`
-- `openclaw browser screenshot --full-page`
-- `openclaw browser screenshot --ref 12`
-- `openclaw browser screenshot --ref e12`
-- `openclaw browser snapshot`
-- `openclaw browser snapshot --format aria --limit 200`
-- `openclaw browser snapshot --interactive --compact --depth 6`
-- `openclaw browser snapshot --efficient`
-- `openclaw browser snapshot --labels`
-- `openclaw browser snapshot --selector "#main" --interactive`
-- `openclaw browser snapshot --frame "iframe#main" --interactive`
-- `openclaw browser console --level error`
-- `openclaw browser errors --clear`
-- `openclaw browser requests --filter api --clear`
-- `openclaw browser pdf`
-- `openclaw browser responsebody "**/api" --max-chars 5000`
+- `tigerpaw browser screenshot`
+- `tigerpaw browser screenshot --full-page`
+- `tigerpaw browser screenshot --ref 12`
+- `tigerpaw browser screenshot --ref e12`
+- `tigerpaw browser snapshot`
+- `tigerpaw browser snapshot --format aria --limit 200`
+- `tigerpaw browser snapshot --interactive --compact --depth 6`
+- `tigerpaw browser snapshot --efficient`
+- `tigerpaw browser snapshot --labels`
+- `tigerpaw browser snapshot --selector "#main" --interactive`
+- `tigerpaw browser snapshot --frame "iframe#main" --interactive`
+- `tigerpaw browser console --level error`
+- `tigerpaw browser errors --clear`
+- `tigerpaw browser requests --filter api --clear`
+- `tigerpaw browser pdf`
+- `tigerpaw browser responsebody "**/api" --max-chars 5000`
 
 Actions:
 
-- `openclaw browser navigate https://example.com`
-- `openclaw browser resize 1280 720`
-- `openclaw browser click 12 --double`
-- `openclaw browser click e12 --double`
-- `openclaw browser type 23 "hello" --submit`
-- `openclaw browser press Enter`
-- `openclaw browser hover 44`
-- `openclaw browser scrollintoview e12`
-- `openclaw browser drag 10 11`
-- `openclaw browser select 9 OptionA OptionB`
-- `openclaw browser download e12 report.pdf`
-- `openclaw browser waitfordownload report.pdf`
-- `openclaw browser upload /tmp/openclaw/uploads/file.pdf`
-- `openclaw browser fill --fields '[{"ref":"1","type":"text","value":"Ada"}]'`
-- `openclaw browser dialog --accept`
-- `openclaw browser wait --text "Done"`
-- `openclaw browser wait "#main" --url "**/dash" --load networkidle --fn "window.ready===true"`
-- `openclaw browser evaluate --fn '(el) => el.textContent' --ref 7`
-- `openclaw browser highlight e12`
-- `openclaw browser trace start`
-- `openclaw browser trace stop`
+- `tigerpaw browser navigate https://example.com`
+- `tigerpaw browser resize 1280 720`
+- `tigerpaw browser click 12 --double`
+- `tigerpaw browser click e12 --double`
+- `tigerpaw browser type 23 "hello" --submit`
+- `tigerpaw browser press Enter`
+- `tigerpaw browser hover 44`
+- `tigerpaw browser scrollintoview e12`
+- `tigerpaw browser drag 10 11`
+- `tigerpaw browser select 9 OptionA OptionB`
+- `tigerpaw browser download e12 report.pdf`
+- `tigerpaw browser waitfordownload report.pdf`
+- `tigerpaw browser upload /tmp/tigerpaw/uploads/file.pdf`
+- `tigerpaw browser fill --fields '[{"ref":"1","type":"text","value":"Ada"}]'`
+- `tigerpaw browser dialog --accept`
+- `tigerpaw browser wait --text "Done"`
+- `tigerpaw browser wait "#main" --url "**/dash" --load networkidle --fn "window.ready===true"`
+- `tigerpaw browser evaluate --fn '(el) => el.textContent' --ref 7`
+- `tigerpaw browser highlight e12`
+- `tigerpaw browser trace start`
+- `tigerpaw browser trace stop`
 
 State:
 
-- `openclaw browser cookies`
-- `openclaw browser cookies set session abc123 --url "https://example.com"`
-- `openclaw browser cookies clear`
-- `openclaw browser storage local get`
-- `openclaw browser storage local set theme dark`
-- `openclaw browser storage session clear`
-- `openclaw browser set offline on`
-- `openclaw browser set headers --headers-json '{"X-Debug":"1"}'`
-- `openclaw browser set credentials user pass`
-- `openclaw browser set credentials --clear`
-- `openclaw browser set geo 37.7749 -122.4194 --origin "https://example.com"`
-- `openclaw browser set geo --clear`
-- `openclaw browser set media dark`
-- `openclaw browser set timezone America/New_York`
-- `openclaw browser set locale en-US`
-- `openclaw browser set device "iPhone 14"`
+- `tigerpaw browser cookies`
+- `tigerpaw browser cookies set session abc123 --url "https://example.com"`
+- `tigerpaw browser cookies clear`
+- `tigerpaw browser storage local get`
+- `tigerpaw browser storage local set theme dark`
+- `tigerpaw browser storage session clear`
+- `tigerpaw browser set offline on`
+- `tigerpaw browser set headers --headers-json '{"X-Debug":"1"}'`
+- `tigerpaw browser set credentials user pass`
+- `tigerpaw browser set credentials --clear`
+- `tigerpaw browser set geo 37.7749 -122.4194 --origin "https://example.com"`
+- `tigerpaw browser set geo --clear`
+- `tigerpaw browser set media dark`
+- `tigerpaw browser set timezone America/New_York`
+- `tigerpaw browser set locale en-US`
+- `tigerpaw browser set device "iPhone 14"`
 
 Notes:
 
 - `upload` and `dialog` are **arming** calls; run them before the click/press
   that triggers the chooser/dialog.
-- Download and trace output paths are constrained to OpenClaw temp roots:
-  - traces: `/tmp/openclaw` (fallback: `${os.tmpdir()}/openclaw`)
-  - downloads: `/tmp/openclaw/downloads` (fallback: `${os.tmpdir()}/openclaw/downloads`)
-- Upload paths are constrained to an OpenClaw temp uploads root:
-  - uploads: `/tmp/openclaw/uploads` (fallback: `${os.tmpdir()}/openclaw/uploads`)
+- Download and trace output paths are constrained to Tigerpaw temp roots:
+  - traces: `/tmp/tigerpaw` (fallback: `${os.tmpdir()}/tigerpaw`)
+  - downloads: `/tmp/tigerpaw/downloads` (fallback: `${os.tmpdir()}/tigerpaw/downloads`)
+- Upload paths are constrained to an Tigerpaw temp uploads root:
+  - uploads: `/tmp/tigerpaw/uploads` (fallback: `${os.tmpdir()}/tigerpaw/uploads`)
 - `upload` can also set file inputs directly via `--input-ref` or `--element`.
 - `snapshot`:
   - `--format ai` (default when Playwright is installed): returns an AI snapshot with numeric refs (`aria-ref="<n>"`).
   - `--format aria`: returns the accessibility tree (no refs; inspection only).
   - `--efficient` (or `--mode efficient`): compact role snapshot preset (interactive + compact + depth + lower maxChars).
-  - Config default (tool/CLI only): set `browser.snapshotDefaults.mode: "efficient"` to use efficient snapshots when the caller does not pass a mode (see [Gateway configuration](/gateway/configuration#browser-openclaw-managed-browser)).
+  - Config default (tool/CLI only): set `browser.snapshotDefaults.mode: "efficient"` to use efficient snapshots when the caller does not pass a mode (see [Gateway configuration](/gateway/configuration#browser-tigerpaw-managed-browser)).
   - Role snapshot options (`--interactive`, `--compact`, `--depth`, `--selector`) force a role-based snapshot with refs like `ref=e12`.
   - `--frame "<iframe selector>"` scopes role snapshots to an iframe (pairs with role refs like `e12`).
   - `--interactive` outputs a flat, easy-to-pick list of interactive elements (best for driving actions).
@@ -533,16 +533,16 @@ Notes:
 
 ## Snapshots and refs
 
-OpenClaw supports two “snapshot” styles:
+Tigerpaw supports two “snapshot” styles:
 
-- **AI snapshot (numeric refs)**: `openclaw browser snapshot` (default; `--format ai`)
+- **AI snapshot (numeric refs)**: `tigerpaw browser snapshot` (default; `--format ai`)
   - Output: a text snapshot that includes numeric refs.
-  - Actions: `openclaw browser click 12`, `openclaw browser type 23 "hello"`.
+  - Actions: `tigerpaw browser click 12`, `tigerpaw browser type 23 "hello"`.
   - Internally, the ref is resolved via Playwright’s `aria-ref`.
 
-- **Role snapshot (role refs like `e12`)**: `openclaw browser snapshot --interactive` (or `--compact`, `--depth`, `--selector`, `--frame`)
+- **Role snapshot (role refs like `e12`)**: `tigerpaw browser snapshot --interactive` (or `--compact`, `--depth`, `--selector`, `--frame`)
   - Output: a role-based list/tree with `[ref=e12]` (and optional `[nth=1]`).
-  - Actions: `openclaw browser click e12`, `openclaw browser highlight e12`.
+  - Actions: `tigerpaw browser click e12`, `tigerpaw browser highlight e12`.
   - Internally, the ref is resolved via `getByRole(...)` (plus `nth()` for duplicates).
   - Add `--labels` to include a viewport screenshot with overlayed `e12` labels.
 
@@ -556,18 +556,18 @@ Ref behavior:
 You can wait on more than just time/text:
 
 - Wait for URL (globs supported by Playwright):
-  - `openclaw browser wait --url "**/dash"`
+  - `tigerpaw browser wait --url "**/dash"`
 - Wait for load state:
-  - `openclaw browser wait --load networkidle`
+  - `tigerpaw browser wait --load networkidle`
 - Wait for a JS predicate:
-  - `openclaw browser wait --fn "window.ready===true"`
+  - `tigerpaw browser wait --fn "window.ready===true"`
 - Wait for a selector to become visible:
-  - `openclaw browser wait "#main"`
+  - `tigerpaw browser wait "#main"`
 
 These can be combined:
 
 ```bash
-openclaw browser wait "#main" \
+tigerpaw browser wait "#main" \
   --url "**/dash" \
   --load networkidle \
   --fn "window.ready===true" \
@@ -578,16 +578,16 @@ openclaw browser wait "#main" \
 
 When an action fails (e.g. “not visible”, “strict mode violation”, “covered”):
 
-1. `openclaw browser snapshot --interactive`
+1. `tigerpaw browser snapshot --interactive`
 2. Use `click <ref>` / `type <ref>` (prefer role refs in interactive mode)
-3. If it still fails: `openclaw browser highlight <ref>` to see what Playwright is targeting
+3. If it still fails: `tigerpaw browser highlight <ref>` to see what Playwright is targeting
 4. If the page behaves oddly:
-   - `openclaw browser errors --clear`
-   - `openclaw browser requests --filter api --clear`
+   - `tigerpaw browser errors --clear`
+   - `tigerpaw browser requests --filter api --clear`
 5. For deep debugging: record a trace:
-   - `openclaw browser trace start`
+   - `tigerpaw browser trace start`
    - reproduce the issue
-   - `openclaw browser trace stop` (prints `TRACE:<path>`)
+   - `tigerpaw browser trace stop` (prints `TRACE:<path>`)
 
 ## JSON output
 
@@ -596,10 +596,10 @@ When an action fails (e.g. “not visible”, “strict mode violation”, “co
 Examples:
 
 ```bash
-openclaw browser status --json
-openclaw browser snapshot --interactive --json
-openclaw browser requests --filter api --json
-openclaw browser cookies --json
+tigerpaw browser status --json
+tigerpaw browser snapshot --interactive --json
+tigerpaw browser requests --filter api --json
+tigerpaw browser cookies --json
 ```
 
 Role snapshots in JSON include `refs` plus a small `stats` block (lines/chars/refs/interactive) so tools can reason about payload size and density.
@@ -622,8 +622,8 @@ These are useful for “make the site behave like X” workflows:
 
 ## Security & privacy
 
-- The openclaw browser profile may contain logged-in sessions; treat it as sensitive.
-- `browser act kind=evaluate` / `openclaw browser evaluate` and `wait --fn`
+- The tigerpaw browser profile may contain logged-in sessions; treat it as sensitive.
+- `browser act kind=evaluate` / `tigerpaw browser evaluate` and `wait --fn`
   execute arbitrary JavaScript in the page context. Prompt injection can steer
   this. Disable it with `browser.evaluateEnabled=false` if you do not need it.
 - For logins and anti-bot notes (X/Twitter, etc.), see [Browser login + X/Twitter posting](/tools/browser-login).
@@ -664,7 +664,7 @@ How it maps:
 - `browser act` uses the snapshot `ref` IDs to click/type/drag/select.
 - `browser screenshot` captures pixels (full page or element).
 - `browser` accepts:
-  - `profile` to choose a named browser profile (openclaw, chrome, or remote CDP).
+  - `profile` to choose a named browser profile (tigerpaw, chrome, or remote CDP).
   - `target` (`sandbox` | `host` | `node`) to select where the browser lives.
   - In sandboxed sessions, `target: "host"` requires `agents.defaults.sandbox.browser.allowHostControl=true`.
   - If `target` is omitted: sandboxed sessions default to `sandbox`, non-sandbox sessions default to `host`.

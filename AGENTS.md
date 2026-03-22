@@ -92,7 +92,7 @@ All trading tools are **policy-gated**: every order goes through `TradingPolicyE
 ### Fail-Safe Trading Pattern
 
 - Extensions MUST check `api.tradingPolicyConfig` and block orders with a hard error if missing
-- Extensions MUST NOT use `as unknown as` casts to access trading config — use the typed field on `OpenClawPluginApi`
+- Extensions MUST NOT use `as unknown as` casts to access trading config — use the typed field on `OpenClawPluginApi` (legacy name for the Tigerpaw plugin API type)
 - Order placement tools must have `if (!policyEngine) { return error; }` before any order execution
 - API secrets must never be sent as plaintext headers — use HMAC or RSA request signing
 

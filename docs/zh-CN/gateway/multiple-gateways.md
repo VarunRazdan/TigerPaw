@@ -2,7 +2,7 @@
 read_when:
   - 在同一台机器上运行多个 Gateway 网关
   - 你需要每个 Gateway 网关有隔离的配置/状态/端口
-summary: 在同一主机上运行多个 OpenClaw Gateway 网关（隔离、端口和配置文件）
+summary: 在同一主机上运行多个 Tigerpaw Gateway 网关（隔离、端口和配置文件）
 title: 多 Gateway 网关
 x-i18n:
   generated_at: "2026-02-03T07:48:13Z"
@@ -33,19 +33,19 @@ x-i18n:
 
 ```bash
 # main
-openclaw --profile main setup
-openclaw --profile main gateway --port 18789
+tigerpaw --profile main setup
+tigerpaw --profile main gateway --port 18789
 
 # rescue
-openclaw --profile rescue setup
-openclaw --profile rescue gateway --port 19001
+tigerpaw --profile rescue setup
+tigerpaw --profile rescue gateway --port 19001
 ```
 
 按配置文件的服务：
 
 ```bash
-openclaw --profile main gateway install
-openclaw --profile rescue gateway install
+tigerpaw --profile main gateway install
+tigerpaw --profile rescue gateway install
 ```
 
 ## 救援机器人指南
@@ -66,11 +66,11 @@ openclaw --profile rescue gateway install
 ```bash
 # 主机器人（现有或新建，不带 --profile 参数）
 # 运行在端口 18789 + Chrome CDC/Canvas/... 端口
-openclaw onboard
-openclaw gateway install
+tigerpaw onboard
+tigerpaw gateway install
 
 # 救援机器人（隔离的配置文件 + 端口）
-openclaw --profile rescue onboard
+tigerpaw --profile rescue onboard
 # 注意：
 # - 工作区名称默认会添加 -rescue 后缀
 # - 端口应至少为 18789 + 20 个端口，
@@ -78,7 +78,7 @@ openclaw --profile rescue onboard
 # - 其余的新手引导与正常相同
 
 # 安装服务（如果在新手引导期间没有自动完成）
-openclaw --profile rescue gateway install
+tigerpaw --profile rescue gateway install
 ```
 
 ## 端口映射（派生）
@@ -101,19 +101,19 @@ openclaw --profile rescue gateway install
 ## 手动环境变量示例
 
 ```bash
-OPENCLAW_CONFIG_PATH=~/.openclaw/main.json \
-OPENCLAW_STATE_DIR=~/.openclaw-main \
-openclaw gateway --port 18789
+OPENCLAW_CONFIG_PATH=~/.tigerpaw/main.json \
+OPENCLAW_STATE_DIR=~/.tigerpaw-main \
+tigerpaw gateway --port 18789
 
-OPENCLAW_CONFIG_PATH=~/.openclaw/rescue.json \
-OPENCLAW_STATE_DIR=~/.openclaw-rescue \
-openclaw gateway --port 19001
+OPENCLAW_CONFIG_PATH=~/.tigerpaw/rescue.json \
+OPENCLAW_STATE_DIR=~/.tigerpaw-rescue \
+tigerpaw gateway --port 19001
 ```
 
 ## 快速检查
 
 ```bash
-openclaw --profile main status
-openclaw --profile rescue status
-openclaw --profile rescue browser status
+tigerpaw --profile main status
+tigerpaw --profile rescue status
+tigerpaw --profile rescue browser status
 ```

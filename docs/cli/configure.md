@@ -1,19 +1,19 @@
 ---
-summary: "CLI reference for `openclaw configure` (interactive configuration prompts)"
+summary: "CLI reference for `tigerpaw configure` (interactive configuration prompts)"
 read_when:
   - You want to tweak credentials, devices, or agent defaults interactively
 title: "configure"
 ---
 
-# `openclaw configure`
+# `tigerpaw configure`
 
 Interactive prompt to set up credentials, devices, and agent defaults.
 
 Note: The **Model** section now includes a multi-select for the
 `agents.defaults.models` allowlist (what shows up in `/model` and the model picker).
 
-Tip: `openclaw config` without a subcommand opens the same wizard. Use
-`openclaw config get|set|unset` for non-interactive edits.
+Tip: `tigerpaw config` without a subcommand opens the same wizard. Use
+`tigerpaw config get|set|unset` for non-interactive edits.
 
 Related:
 
@@ -31,6 +31,6 @@ Notes:
 ## Examples
 
 ```bash
-openclaw configure
-openclaw configure --section model --section channels
+tigerpaw configure
+tigerpaw configure --section model --section channels
 ```

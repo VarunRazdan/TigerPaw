@@ -20,6 +20,7 @@
 ## Table of Contents
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -40,6 +41,38 @@
 - **3 Approval Modes** -- Auto, confirm (15s timeout), or manual (5min timeout)
 - **3 Risk Tiers** -- Conservative, moderate, aggressive presets
 - **React Control UI** -- Dashboard with real-time positions, P&L charts, risk gauges, trade history
+
+## Screenshots
+
+<p align="center">
+  <img src=".github/screenshots/trading-hub.png" alt="Trading Hub" width="720" />
+  <br />
+  <em>Trading Hub — Live positions, risk gauges, approval queue, and trade history</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/dashboard.png" alt="Dashboard" width="720" />
+  <br />
+  <em>Dashboard — Portfolio overview, daily P&L chart, and extension status</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/trading-settings.png" alt="Trading Settings" width="720" />
+  <br />
+  <em>Risk Settings — Risk tier selection, approval mode, and configurable limits</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/channels.png" alt="Channels" width="720" />
+  <br />
+  <em>Channels — Manage messaging integrations (Discord, Telegram, Slack, Signal, etc.)</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/config.png" alt="Configuration" width="720" />
+  <br />
+  <em>Configuration — JSON config editor with live validation</em>
+</p>
 
 ## Install
 

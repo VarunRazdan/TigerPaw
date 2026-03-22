@@ -19,22 +19,22 @@ x-i18n:
 ## 是什么
 
 - 拥有单一 Baileys/Telegram 连接和控制/事件平面的常驻进程。
-- 替代旧版 `gateway` 命令。CLI 入口点：`openclaw gateway`。
+- 替代旧版 `gateway` 命令。CLI 入口点：`tigerpaw gateway`。
 - 运行直到停止；出现致命错误时以非零退出码退出，以便 supervisor 重启它。
 
 ## 如何运行（本地）
 
 ```bash
-openclaw gateway --port 18789
+tigerpaw gateway --port 18789
 # 在 stdio 中获取完整的调试/追踪日志：
-openclaw gateway --port 18789 --verbose
+tigerpaw gateway --port 18789 --verbose
 # 如果端口被占用，终止监听器然后启动：
-openclaw gateway --force
+tigerpaw gateway --force
 # 开发循环（TS 更改时自动重载）：
 pnpm gateway:watch
 ```
 
-- 配置热重载监视 `~/.openclaw/openclaw.json`（或 `OPENCLAW_CONFIG_PATH`）。
+- 配置热重载监视 `~/.tigerpaw/tigerpaw.json`（或 `OPENCLAW_CONFIG_PATH`）。
   - 默认模式：`gateway.reload.mode="hybrid"`（热应用安全更改，关键更改时重启）。
   - 热重载在需要时通过 **SIGUSR1** 使用进程内重启。
   - 使用 `gateway.reload.mode="off"` 禁用。
@@ -43,7 +43,7 @@ pnpm gateway:watch
   - OpenAI Chat Completions（HTTP）：[`/v1/chat/completions`](/gateway/openai-http-api)。
   - OpenResponses（HTTP）：[`/v1/responses`](/gateway/openresponses-http-api)。
   - Tools Invoke（HTTP）：[`/tools/invoke`](/gateway/tools-invoke-http-api)。
-- 默认在 `canvasHost.port`（默认 `18793`）上启动 Canvas 文件服务器，从 `~/.openclaw/workspace/canvas` 提供 `http://<gateway-host>:18793/__openclaw__/canvas/`。使用 `canvasHost.enabled=false` 或 `OPENCLAW_SKIP_CANVAS_HOST=1` 禁用。
+- 默认在 `canvasHost.port`（默认 `18793`）上启动 Canvas 文件服务器，从 `~/.tigerpaw/workspace/canvas` 提供 `http://<gateway-host>:18793/__tigerpaw__/canvas/`。使用 `canvasHost.enabled=false` 或 `OPENCLAW_SKIP_CANVAS_HOST=1` 禁用。
 - 输出日志到 stdout；使用 launchd/systemd 保持运行并轮转日志。
 - 故障排除时传递 `--verbose` 以将调试日志（握手、请求/响应、事件）从日志文件镜像到 stdio。
 - `--force` 使用 `lsof` 查找所选端口上的监听器，发送 SIGTERM，记录它终止了什么，然后启动 Gateway 网关（如果缺少 `lsof` 则快速失败）。
@@ -70,13 +70,13 @@ pnpm gateway:watch
 
 服务名称是配置文件感知的：
 
-- macOS：`bot.molt.<profile>`（旧版 `com.openclaw.*` 可能仍然存在）
-- Linux：`openclaw-gateway-<profile>.service`
-- Windows：`OpenClaw Gateway (<profile>)`
+- macOS：`bot.molt.<profile>`（旧版 `com.tigerpaw.*` 可能仍然存在）
+- Linux：`tigerpaw-gateway-<profile>.service`
+- Windows：`Tigerpaw Gateway (<profile>)`
 
 安装元数据嵌入在服务配置中：
 
-- `OPENCLAW_SERVICE_MARKER=openclaw`
+- `OPENCLAW_SERVICE_MARKER=tigerpaw`
 - `OPENCLAW_SERVICE_KIND=gateway`
 - `OPENCLAW_SERVICE_VERSION=<version>`
 
@@ -87,21 +87,21 @@ pnpm gateway:watch
 快速路径：运行完全隔离的 dev 实例（配置/状态/工作区）而不触及你的主设置。
 
 ```bash
-openclaw --dev setup
-openclaw --dev gateway --allow-unconfigured
+tigerpaw --dev setup
+tigerpaw --dev gateway --allow-unconfigured
 # 然后定位到 dev 实例：
-openclaw --dev status
-openclaw --dev health
+tigerpaw --dev status
+tigerpaw --dev health
 ```
 
 默认值（可通过 env/flags/config 覆盖）：
 
-- `OPENCLAW_STATE_DIR=~/.openclaw-dev`
-- `OPENCLAW_CONFIG_PATH=~/.openclaw-dev/openclaw.json`
+- `OPENCLAW_STATE_DIR=~/.tigerpaw-dev`
+- `OPENCLAW_CONFIG_PATH=~/.tigerpaw-dev/tigerpaw.json`
 - `OPENCLAW_GATEWAY_PORT=19001`（Gateway 网关 WS + HTTP）
 - 浏览器控制服务端口 = `19003`（派生：`gateway.port+2`，仅 loopback）
 - `canvasHost.port=19005`（派生：`gateway.port+4`）
-- 当你在 `--dev` 下运行 `setup`/`onboard` 时，`agents.defaults.workspace` 默认变为 `~/.openclaw/workspace-dev`。
+- 当你在 `--dev` 下运行 `setup`/`onboard` 时，`agents.defaults.workspace` 默认变为 `~/.tigerpaw/workspace-dev`。
 
 派生端口（经验法则）：
 
@@ -121,15 +121,15 @@ openclaw --dev health
 按配置文件安装服务：
 
 ```bash
-openclaw --profile main gateway install
-openclaw --profile rescue gateway install
+tigerpaw --profile main gateway install
+tigerpaw --profile rescue gateway install
 ```
 
 示例：
 
 ```bash
-OPENCLAW_CONFIG_PATH=~/.openclaw/a.json OPENCLAW_STATE_DIR=~/.openclaw-a openclaw gateway --port 19001
-OPENCLAW_CONFIG_PATH=~/.openclaw/b.json OPENCLAW_STATE_DIR=~/.openclaw-b openclaw gateway --port 19002
+OPENCLAW_CONFIG_PATH=~/.tigerpaw/a.json OPENCLAW_STATE_DIR=~/.tigerpaw-a tigerpaw gateway --port 19001
+OPENCLAW_CONFIG_PATH=~/.tigerpaw/b.json OPENCLAW_STATE_DIR=~/.tigerpaw-b tigerpaw gateway --port 19002
 ```
 
 ## 协议（运维视角）
@@ -145,7 +145,7 @@ OPENCLAW_CONFIG_PATH=~/.openclaw/b.json OPENCLAW_STATE_DIR=~/.openclaw-b opencla
 
 ## 方法（初始集）
 
-- `health` — 完整健康快照（与 `openclaw health --json` 形状相同）。
+- `health` — 完整健康快照（与 `tigerpaw health --json` 形状相同）。
 - `status` — 简短摘要。
 - `system-presence` — 当前 presence 列表。
 - `system-event` — 发布 presence/系统注释（结构化）。
@@ -205,26 +205,26 @@ OPENCLAW_CONFIG_PATH=~/.openclaw/b.json OPENCLAW_STATE_DIR=~/.openclaw-b opencla
 ## 监管（macOS 示例）
 
 - 使用 launchd 保持服务存活：
-  - Program：`openclaw` 的路径
+  - Program：`tigerpaw` 的路径
   - Arguments：`gateway`
   - KeepAlive：true
   - StandardOut/Err：文件路径或 `syslog`
 - 失败时，launchd 重启；致命的配置错误应保持退出，以便运维人员注意到。
 - LaunchAgents 是按用户的，需要已登录的会话；对于无头设置，使用自定义 LaunchDaemon（未随附）。
-  - `openclaw gateway install` 写入 `~/Library/LaunchAgents/bot.molt.gateway.plist`
-    （或 `bot.molt.<profile>.plist`；旧版 `com.openclaw.*` 会被清理）。
-  - `openclaw doctor` 审计 LaunchAgent 配置，可以将其更新为当前默认值。
+  - `tigerpaw gateway install` 写入 `~/Library/LaunchAgents/bot.molt.gateway.plist`
+    （或 `bot.molt.<profile>.plist`；旧版 `com.tigerpaw.*` 会被清理）。
+  - `tigerpaw doctor` 审计 LaunchAgent 配置，可以将其更新为当前默认值。
 
 ## Gateway 网关服务管理（CLI）
 
 使用 Gateway 网关 CLI 进行 install/start/stop/restart/status：
 
 ```bash
-openclaw gateway status
-openclaw gateway install
-openclaw gateway stop
-openclaw gateway restart
-openclaw logs --follow
+tigerpaw gateway status
+tigerpaw gateway install
+tigerpaw gateway stop
+tigerpaw gateway restart
+tigerpaw logs --follow
 ```
 
 注意事项：
@@ -237,40 +237,40 @@ openclaw logs --follow
 - `gateway status` 打印配置路径 + 探测目标以避免"localhost vs LAN 绑定"混淆和配置文件不匹配。
 - `gateway status` 在服务看起来正在运行但端口已关闭时包含最后一行 Gateway 网关错误。
 - `logs` 通过 RPC 尾随 Gateway 网关文件日志（无需手动 `tail`/`grep`）。
-- 如果检测到其他类似 Gateway 网关的服务，CLI 会发出警告，除非它们是 OpenClaw 配置文件服务。
+- 如果检测到其他类似 Gateway 网关的服务，CLI 会发出警告，除非它们是 Tigerpaw 配置文件服务。
   我们仍然建议大多数设置**每台机器一个 Gateway 网关**；使用隔离的配置文件/端口进行冗余或救援机器人。参见[多个 Gateway 网关](/gateway/multiple-gateways)。
-  - 清理：`openclaw gateway uninstall`（当前服务）和 `openclaw doctor`（旧版迁移）。
-- `gateway install` 在已安装时是无操作的；使用 `openclaw gateway install --force` 重新安装（配置文件/env/路径更改）。
+  - 清理：`tigerpaw gateway uninstall`（当前服务）和 `tigerpaw doctor`（旧版迁移）。
+- `gateway install` 在已安装时是无操作的；使用 `tigerpaw gateway install --force` 重新安装（配置文件/env/路径更改）。
 
 捆绑的 mac 应用：
 
-- OpenClaw.app 可以捆绑基于 Node 的 Gateway 网关中继并安装标记为
-  `bot.molt.gateway`（或 `bot.molt.<profile>`；旧版 `com.openclaw.*` 标签仍能干净卸载）的按用户 LaunchAgent。
-- 要干净地停止它，使用 `openclaw gateway stop`（或 `launchctl bootout gui/$UID/bot.molt.gateway`）。
-- 要重启，使用 `openclaw gateway restart`（或 `launchctl kickstart -k gui/$UID/bot.molt.gateway`）。
-  - `launchctl` 仅在 LaunchAgent 已安装时有效；否则先使用 `openclaw gateway install`。
+- Tigerpaw.app 可以捆绑基于 Node 的 Gateway 网关中继并安装标记为
+  `bot.molt.gateway`（或 `bot.molt.<profile>`；旧版 `com.tigerpaw.*` 标签仍能干净卸载）的按用户 LaunchAgent。
+- 要干净地停止它，使用 `tigerpaw gateway stop`（或 `launchctl bootout gui/$UID/bot.molt.gateway`）。
+- 要重启，使用 `tigerpaw gateway restart`（或 `launchctl kickstart -k gui/$UID/bot.molt.gateway`）。
+  - `launchctl` 仅在 LaunchAgent 已安装时有效；否则先使用 `tigerpaw gateway install`。
   - 运行命名配置文件时，将标签替换为 `bot.molt.<profile>`。
 
 ## 监管（systemd 用户单元）
 
-OpenClaw 在 Linux/WSL2 上默认安装 **systemd 用户服务**。我们
+Tigerpaw 在 Linux/WSL2 上默认安装 **systemd 用户服务**。我们
 建议单用户机器使用用户服务（更简单的 env，按用户配置）。
 对于多用户或常驻服务器使用**系统服务**（无需 lingering，
 共享监管）。
 
-`openclaw gateway install` 写入用户单元。`openclaw doctor` 审计
+`tigerpaw gateway install` 写入用户单元。`tigerpaw doctor` 审计
 单元并可以将其更新以匹配当前推荐的默认值。
 
-创建 `~/.config/systemd/user/openclaw-gateway[-<profile>].service`：
+创建 `~/.config/systemd/user/tigerpaw-gateway[-<profile>].service`：
 
 ```
 [Unit]
-Description=OpenClaw Gateway (profile: <profile>, v<version>)
+Description=Tigerpaw Gateway (profile: <profile>, v<version>)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/openclaw gateway --port 18789
+ExecStart=/usr/local/bin/tigerpaw gateway --port 18789
 Restart=always
 RestartSec=5
 Environment=OPENCLAW_GATEWAY_TOKEN=
@@ -290,17 +290,17 @@ sudo loginctl enable-linger youruser
 然后启用服务：
 
 ```
-systemctl --user enable --now openclaw-gateway[-<profile>].service
+systemctl --user enable --now tigerpaw-gateway[-<profile>].service
 ```
 
 **替代方案（系统服务）** - 对于常驻或多用户服务器，你可以
 安装 systemd **系统**单元而不是用户单元（无需 lingering）。
-创建 `/etc/systemd/system/openclaw-gateway[-<profile>].service`（复制上面的单元，
+创建 `/etc/systemd/system/tigerpaw-gateway[-<profile>].service`（复制上面的单元，
 切换 `WantedBy=multi-user.target`，设置 `User=` + `WorkingDirectory=`），然后：
 
 ```
 sudo systemctl daemon-reload
-sudo systemctl enable --now openclaw-gateway[-<profile>].service
+sudo systemctl enable --now tigerpaw-gateway[-<profile>].service
 ```
 
 ## Windows（WSL2）
@@ -322,14 +322,14 @@ Windows 安装应使用 **WSL2** 并遵循上面的 Linux systemd 部分。
 
 ## CLI 辅助工具
 
-- `openclaw gateway health|status` — 通过 Gateway 网关 WS 请求 health/status。
-- `openclaw message send --target <num> --message "hi" [--media ...]` — 通过 Gateway 网关发送（对 WhatsApp 是幂等的）。
-- `openclaw agent --message "hi" --to <num>` — 运行智能体轮次（默认等待最终结果）。
-- `openclaw gateway call <method> --params '{"k":"v"}'` — 用于调试的原始方法调用器。
-- `openclaw gateway stop|restart` — 停止/重启受监管的 Gateway 网关服务（launchd/systemd）。
+- `tigerpaw gateway health|status` — 通过 Gateway 网关 WS 请求 health/status。
+- `tigerpaw message send --target <num> --message "hi" [--media ...]` — 通过 Gateway 网关发送（对 WhatsApp 是幂等的）。
+- `tigerpaw agent --message "hi" --to <num>` — 运行智能体轮次（默认等待最终结果）。
+- `tigerpaw gateway call <method> --params '{"k":"v"}'` — 用于调试的原始方法调用器。
+- `tigerpaw gateway stop|restart` — 停止/重启受监管的 Gateway 网关服务（launchd/systemd）。
 - Gateway 网关辅助子命令假设 `--url` 上有运行中的 Gateway 网关；它们不再自动生成一个。
 
 ## 迁移指南
 
-- 淘汰 `openclaw gateway` 和旧版 TCP 控制端口的使用。
+- 淘汰 `tigerpaw gateway` 和旧版 TCP 控制端口的使用。
 - 更新客户端以使用带有强制 connect 和结构化 presence 的 WS 协议。

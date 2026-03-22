@@ -15,7 +15,7 @@ x-i18n:
 
 # 后台 Exec + Process 工具
 
-OpenClaw 通过 `exec` 工具运行 shell 命令，并将长时间运行的任务保存在内存中。`process` 工具管理这些后台会话。
+Tigerpaw 通过 `exec` 工具运行 shell 命令，并将长时间运行的任务保存在内存中。`process` 工具管理这些后台会话。
 
 ## exec 工具
 

@@ -1,15 +1,15 @@
-# OpenClaw Security & Trust
+# Tigerpaw Security & Trust
 
-**Live:** [trust.openclaw.ai](https://trust.openclaw.ai)
+**Live:** [trust.tigerpaw.dev](https://trust.tigerpaw.dev)
 
 ## Documents
 
-- [Threat Model](/security/THREAT-MODEL-ATLAS) - MITRE ATLAS-based threat model for the OpenClaw ecosystem
+- [Threat Model](/security/THREAT-MODEL-ATLAS) - MITRE ATLAS-based threat model for the Tigerpaw ecosystem
 - [Contributing to the Threat Model](/security/CONTRIBUTING-THREAT-MODEL) - How to add threats, mitigations, and attack chains
 
 ## Reporting Vulnerabilities
 
-See the [Trust page](https://trust.openclaw.ai) for full reporting instructions covering all repos.
+See the [Trust page](https://trust.tigerpaw.dev) for full reporting instructions covering all repos.
 
 ## Contact
 

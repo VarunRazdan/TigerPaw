@@ -1,5 +1,5 @@
 ---
-summary: "Optional Docker-based setup and onboarding for OpenClaw"
+summary: "Optional Docker-based setup and onboarding for Tigerpaw"
 read_when:
   - You want a containerized gateway instead of local installs
   - You are validating the Docker flow
@@ -12,13 +12,13 @@ Docker is **optional**. Use it only if you want a containerized gateway or to va
 
 ## Is Docker right for me?
 
-- **Yes**: you want an isolated, throwaway gateway environment or to run OpenClaw on a host without local installs.
+- **Yes**: you want an isolated, throwaway gateway environment or to run Tigerpaw on a host without local installs.
 - **No**: you’re running on your own machine and just want the fastest dev loop. Use the normal install flow instead.
 - **Sandboxing note**: agent sandboxing uses Docker too, but it does **not** require the full gateway to run in Docker. See [Sandboxing](/gateway/sandboxing).
 
 This guide covers:
 
-- Containerized Gateway (full OpenClaw in Docker)
+- Containerized Gateway (full Tigerpaw in Docker)
 - Per-session Agent Sandbox (host gateway + Docker-isolated agent tools)
 
 Sandboxing details: [Sandboxing](/gateway/sandboxing)
@@ -58,7 +58,7 @@ This script:
 
 Optional env vars:
 
-- `OPENCLAW_IMAGE` — use a remote image instead of building locally (e.g. `ghcr.io/openclaw/openclaw:latest`)
+- `OPENCLAW_IMAGE` — use a remote image instead of building locally (e.g. `ghcr.io/varunrazdan/tigerpaw:latest`)
 - `OPENCLAW_DOCKER_APT_PACKAGES` — install extra apt packages during build
 - `OPENCLAW_EXTENSIONS` — pre-install extension dependencies at build time (space-separated extension names, e.g. `diagnostics-otel matrix`)
 - `OPENCLAW_EXTRA_MOUNTS` — add extra host bind mounts
@@ -80,7 +80,7 @@ After it finishes:
 
 - Open `http://127.0.0.1:18789/` in your browser.
 - Paste the token into the Control UI (Settings → token).
-- Need the URL again? Run `docker compose run --rm openclaw-cli dashboard --no-open`.
+- Need the URL again? Run `docker compose run --rm tigerpaw-cli dashboard --no-open`.
 
 ### Enable agent sandbox for Docker gateway (opt-in)
 
@@ -109,7 +109,7 @@ Notes:
   `agents.defaults.sandbox.mode` to `off` to avoid stale/broken sandbox config
   on reruns.
 - If `Dockerfile.sandbox` is missing, the script prints a warning and continues;
-  build `openclaw-sandbox:bookworm-slim` with `scripts/sandbox-setup.sh` if
+  build `tigerpaw-sandbox:bookworm-slim` with `scripts/sandbox-setup.sh` if
   needed.
 - For non-local `OPENCLAW_IMAGE` values, the image must already contain Docker
   CLI support for sandbox execution.
@@ -119,8 +119,8 @@ Notes:
 For scripts and CI, disable Compose pseudo-TTY allocation with `-T`:
 
 ```bash
-docker compose run -T --rm openclaw-cli gateway probe
-docker compose run -T --rm openclaw-cli devices list --json
+docker compose run -T --rm tigerpaw-cli gateway probe
+docker compose run -T --rm tigerpaw-cli devices list --json
 ```
 
 If your automation exports no Claude session vars, leaving them unset now resolves to
@@ -129,20 +129,20 @@ warnings.
 
 ### Shared-network security note (CLI + gateway)
 
-`openclaw-cli` uses `network_mode: "service:openclaw-gateway"` so CLI commands can
+`tigerpaw-cli` uses `network_mode: "service:tigerpaw-gateway"` so CLI commands can
 reliably reach the gateway over `127.0.0.1` in Docker.
 
 Treat this as a shared trust boundary: loopback binding is not isolation between these two
 containers. If you need stronger separation, run commands from a separate container/host
-network path instead of the bundled `openclaw-cli` service.
+network path instead of the bundled `tigerpaw-cli` service.
 
 To reduce impact if the CLI process is compromised, the compose config drops
-`NET_RAW`/`NET_ADMIN` and enables `no-new-privileges` on `openclaw-cli`.
+`NET_RAW`/`NET_ADMIN` and enables `no-new-privileges` on `tigerpaw-cli`.
 
 It writes config/workspace on the host:
 
-- `~/.openclaw/`
-- `~/.openclaw/workspace`
+- `~/.tigerpaw/`
+- `~/.tigerpaw/workspace`
 
 Running on a VPS? See [Hetzner (Docker VPS)](/install/hetzner).
 
@@ -150,9 +150,9 @@ Running on a VPS? See [Hetzner (Docker VPS)](/install/hetzner).
 
 Official pre-built images are published at:
 
-- [GitHub Container Registry package](https://github.com/openclaw/openclaw/pkgs/container/openclaw)
+- [GitHub Container Registry package](https://github.com/varunrazdan/tigerpaw/pkgs/container/tigerpaw)
 
-Use image name `ghcr.io/openclaw/openclaw` (not similarly named Docker Hub
+Use image name `ghcr.io/varunrazdan/tigerpaw` (not similarly named Docker Hub
 images).
 
 Common tags:
@@ -172,12 +172,12 @@ and points at the pinned multi-arch manifest list for that tag):
 
 - `org.opencontainers.image.base.name=docker.io/library/node:22-bookworm`
 - `org.opencontainers.image.base.digest=sha256:b501c082306a4f528bc4038cbf2fbb58095d583d0419a259b2114b5ac53d12e9`
-- `org.opencontainers.image.source=https://github.com/openclaw/openclaw`
-- `org.opencontainers.image.url=https://openclaw.ai`
-- `org.opencontainers.image.documentation=https://docs.openclaw.ai/install/docker`
+- `org.opencontainers.image.source=https://github.com/varunrazdan/tigerpaw`
+- `org.opencontainers.image.url=https://tigerpaw.dev`
+- `org.opencontainers.image.documentation=https://github.com/varunrazdan/tigerpaw/install/docker`
 - `org.opencontainers.image.licenses=MIT`
-- `org.opencontainers.image.title=OpenClaw`
-- `org.opencontainers.image.description=OpenClaw gateway and CLI runtime container image`
+- `org.opencontainers.image.title=Tigerpaw`
+- `org.opencontainers.image.description=Tigerpaw gateway and CLI runtime container image`
 - `org.opencontainers.image.revision=<git-sha>`
 - `org.opencontainers.image.version=<tag-or-main>`
 - `org.opencontainers.image.created=<rfc3339 timestamp>`
@@ -191,11 +191,11 @@ By default the setup script builds the image from source. To pull a pre-built
 image instead, set `OPENCLAW_IMAGE` before running the script:
 
 ```bash
-export OPENCLAW_IMAGE="ghcr.io/openclaw/openclaw:latest"
+export OPENCLAW_IMAGE="ghcr.io/varunrazdan/tigerpaw:latest"
 ./docker-setup.sh
 ```
 
-The script detects that `OPENCLAW_IMAGE` is not the default `openclaw:local` and
+The script detects that `OPENCLAW_IMAGE` is not the default `tigerpaw:local` and
 runs `docker pull` instead of `docker build`. Everything else (onboarding,
 gateway start, token generation) works the same way.
 
@@ -208,7 +208,7 @@ time; it does not replace the compose/setup workflow.
 For easier day-to-day Docker management, install `ClawDock`:
 
 ```bash
-mkdir -p ~/.clawdock && curl -sL https://raw.githubusercontent.com/openclaw/openclaw/main/scripts/shell-helpers/clawdock-helpers.sh -o ~/.clawdock/clawdock-helpers.sh
+mkdir -p ~/.clawdock && curl -sL https://raw.githubusercontent.com/varunrazdan/tigerpaw/main/scripts/shell-helpers/clawdock-helpers.sh -o ~/.clawdock/clawdock-helpers.sh
 ```
 
 **Add to your shell config (zsh):**
@@ -219,14 +219,14 @@ echo 'source ~/.clawdock/clawdock-helpers.sh' >> ~/.zshrc && source ~/.zshrc
 
 Then use `clawdock-start`, `clawdock-stop`, `clawdock-dashboard`, etc. Run `clawdock-help` for all commands.
 
-See [`ClawDock` Helper README](https://github.com/openclaw/openclaw/blob/main/scripts/shell-helpers/README.md) for details.
+See [`ClawDock` Helper README](https://github.com/varunrazdan/tigerpaw/blob/main/scripts/shell-helpers/README.md) for details.
 
 ### Manual flow (compose)
 
 ```bash
-docker build -t openclaw:local -f Dockerfile .
-docker compose run --rm openclaw-cli onboard
-docker compose up -d openclaw-gateway
+docker build -t tigerpaw:local -f Dockerfile .
+docker compose run --rm tigerpaw-cli onboard
+docker compose up -d tigerpaw-gateway
 ```
 
 Note: run `docker compose ...` from the repo root. If you enabled
@@ -243,9 +243,9 @@ If you see “unauthorized” or “disconnected (1008): pairing required”, fe
 fresh dashboard link and approve the browser device:
 
 ```bash
-docker compose run --rm openclaw-cli dashboard --no-open
-docker compose run --rm openclaw-cli devices list
-docker compose run --rm openclaw-cli devices approve <requestId>
+docker compose run --rm tigerpaw-cli dashboard --no-open
+docker compose run --rm tigerpaw-cli devices list
+docker compose run --rm tigerpaw-cli devices approve <requestId>
 ```
 
 More detail: [Dashboard](/web/dashboard), [Devices](/cli/devices).
@@ -255,7 +255,7 @@ More detail: [Dashboard](/web/dashboard), [Devices](/cli/devices).
 If you want to mount additional host directories into the containers, set
 `OPENCLAW_EXTRA_MOUNTS` before running `docker-setup.sh`. This accepts a
 comma-separated list of Docker bind mounts and applies them to both
-`openclaw-gateway` and `openclaw-cli` by generating `docker-compose.extra.yml`.
+`tigerpaw-gateway` and `tigerpaw-cli` by generating `docker-compose.extra.yml`.
 
 Example:
 
@@ -283,14 +283,14 @@ named volume here (not a bind path); for bind mounts, use
 Example:
 
 ```bash
-export OPENCLAW_HOME_VOLUME="openclaw_home"
+export OPENCLAW_HOME_VOLUME="tigerpaw_home"
 ./docker-setup.sh
 ```
 
 You can combine this with extra mounts:
 
 ```bash
-export OPENCLAW_HOME_VOLUME="openclaw_home"
+export OPENCLAW_HOME_VOLUME="tigerpaw_home"
 export OPENCLAW_EXTRA_MOUNTS="$HOME/.codex:/home/node/.codex:ro,$HOME/github:/home/node/github:rw"
 ./docker-setup.sh
 ```
@@ -361,7 +361,7 @@ If you want a more full-featured container, use these opt-in knobs:
 1. **Persist `/home/node`** so browser downloads and tool caches survive:
 
 ```bash
-export OPENCLAW_HOME_VOLUME="openclaw_home"
+export OPENCLAW_HOME_VOLUME="tigerpaw_home"
 ./docker-setup.sh
 ```
 
@@ -375,7 +375,7 @@ export OPENCLAW_DOCKER_APT_PACKAGES="git curl jq"
 3. **Install Playwright browsers without `npx`** (avoids npm override conflicts):
 
 ```bash
-docker compose run --rm openclaw-cli \
+docker compose run --rm tigerpaw-cli \
   node /app/node_modules/playwright-core/cli.js install chromium
 ```
 
@@ -392,12 +392,12 @@ If you need Playwright to install system deps, rebuild the image with
 ### Permissions + EACCES
 
 The image runs as `node` (uid 1000). If you see permission errors on
-`/home/node/.openclaw`, make sure your host bind mounts are owned by uid 1000.
+`/home/node/.tigerpaw`, make sure your host bind mounts are owned by uid 1000.
 
 Example (Linux host):
 
 ```bash
-sudo chown -R 1000:1000 /path/to/openclaw-config /path/to/openclaw-workspace
+sudo chown -R 1000:1000 /path/to/tigerpaw-config /path/to/tigerpaw-workspace
 ```
 
 If you choose to run as root for convenience, you accept the security tradeoff.
@@ -442,19 +442,19 @@ Use the CLI container to configure channels, then restart the gateway if needed.
 WhatsApp (QR):
 
 ```bash
-docker compose run --rm openclaw-cli channels login
+docker compose run --rm tigerpaw-cli channels login
 ```
 
 Telegram (bot token):
 
 ```bash
-docker compose run --rm openclaw-cli channels add --channel telegram --token "<token>"
+docker compose run --rm tigerpaw-cli channels add --channel telegram --token "<token>"
 ```
 
 Discord (bot token):
 
 ```bash
-docker compose run --rm openclaw-cli channels add --channel discord --token "<token>"
+docker compose run --rm tigerpaw-cli channels add --channel discord --token "<token>"
 ```
 
 Docs: [WhatsApp](/channels/whatsapp), [Telegram](/channels/telegram), [Discord](/channels/discord)
@@ -482,7 +482,7 @@ Aliases: `/health` and `/ready`.
 managed channels are still disconnected after grace or disconnect later.
 
 The Docker image includes a built-in `HEALTHCHECK` that pings `/healthz` in the
-background. In plain terms: Docker keeps checking if OpenClaw is still
+background. In plain terms: Docker keeps checking if Tigerpaw is still
 responsive. If checks keep failing, Docker marks the container as `unhealthy`,
 and orchestration systems (Docker Compose restart policy, Swarm, Kubernetes,
 etc.) can automatically restart or replace it.
@@ -490,7 +490,7 @@ etc.) can automatically restart or replace it.
 Authenticated deep health snapshot (gateway + channels):
 
 ```bash
-docker compose exec openclaw-gateway node dist/index.js health --token "$OPENCLAW_GATEWAY_TOKEN"
+docker compose exec tigerpaw-gateway node dist/index.js health --token "$OPENCLAW_GATEWAY_TOKEN"
 ```
 
 ### E2E smoke test (Docker)
@@ -525,22 +525,22 @@ If you see `Gateway target: ws://172.x.x.x:18789` or repeated `pairing required`
 errors from Docker CLI commands, run:
 
 ```bash
-docker compose run --rm openclaw-cli config set gateway.mode local
-docker compose run --rm openclaw-cli config set gateway.bind lan
-docker compose run --rm openclaw-cli devices list --url ws://127.0.0.1:18789
+docker compose run --rm tigerpaw-cli config set gateway.mode local
+docker compose run --rm tigerpaw-cli config set gateway.bind lan
+docker compose run --rm tigerpaw-cli devices list --url ws://127.0.0.1:18789
 ```
 
 ### Notes
 
 - Gateway bind defaults to `lan` for container use (`OPENCLAW_GATEWAY_BIND`).
 - Dockerfile CMD uses `--allow-unconfigured`; mounted config with `gateway.mode` not `local` will still start. Override CMD to enforce the guard.
-- The gateway container is the source of truth for sessions (`~/.openclaw/agents/<agentId>/sessions/`).
+- The gateway container is the source of truth for sessions (`~/.tigerpaw/agents/<agentId>/sessions/`).
 
 ### Storage model
 
-- **Persistent host data:** Docker Compose bind-mounts `OPENCLAW_CONFIG_DIR` to `/home/node/.openclaw` and `OPENCLAW_WORKSPACE_DIR` to `/home/node/.openclaw/workspace`, so those paths survive container replacement.
+- **Persistent host data:** Docker Compose bind-mounts `OPENCLAW_CONFIG_DIR` to `/home/node/.tigerpaw` and `OPENCLAW_WORKSPACE_DIR` to `/home/node/.tigerpaw/workspace`, so those paths survive container replacement.
 - **Ephemeral sandbox tmpfs:** when `agents.defaults.sandbox` is enabled, the sandbox containers use `tmpfs` for `/tmp`, `/var/tmp`, and `/run`. Those mounts are separate from the top-level Compose stack and disappear with the sandbox container.
-- **Disk growth hotspots:** watch `media/`, `agents/<agentId>/sessions/sessions.json`, transcript JSONL files, `cron/runs/*.jsonl`, and rolling file logs under `/tmp/openclaw/` (or your configured `logging.file`). If you also run the macOS app outside Docker, its service logs are separate again: `~/.openclaw/logs/gateway.log`, `~/.openclaw/logs/gateway.err.log`, and `/tmp/openclaw/openclaw-gateway.log`.
+- **Disk growth hotspots:** watch `media/`, `agents/<agentId>/sessions/sessions.json`, transcript JSONL files, `cron/runs/*.jsonl`, and rolling file logs under `/tmp/tigerpaw/` (or your configured `logging.file`). If you also run the macOS app outside Docker, its service logs are separate again: `~/.tigerpaw/logs/gateway.log`, `~/.tigerpaw/logs/gateway.err.log`, and `/tmp/tigerpaw/tigerpaw-gateway.log`.
 
 ## Agent Sandbox (host gateway + Docker tools)
 
@@ -576,9 +576,9 @@ precedence, and troubleshooting.
 
 ### Default behavior
 
-- Image: `openclaw-sandbox:bookworm-slim`
+- Image: `tigerpaw-sandbox:bookworm-slim`
 - One container per agent
-- Agent workspace access: `workspaceAccess: "none"` (default) uses `~/.openclaw/sandboxes`
+- Agent workspace access: `workspaceAccess: "none"` (default) uses `~/.tigerpaw/sandboxes`
   - `"ro"` keeps the sandbox workspace at `/workspace` and mounts the agent workspace read-only at `/agent` (disables `write`/`edit`/`apply_patch`)
   - `"rw"` mounts the agent workspace read/write at `/workspace`
 - Auto-prune: idle > 24h OR age > 7d
@@ -598,9 +598,9 @@ If you plan to install packages in `setupCommand`, note:
 - Break-glass override: `agents.defaults.sandbox.docker.dangerouslyAllowContainerNamespaceJoin: true`.
 - `readOnlyRoot: true` blocks package installs.
 - `user` must be root for `apt-get` (omit `user` or set `user: "0:0"`).
-  OpenClaw auto-recreates containers when `setupCommand` (or docker config) changes
+  Tigerpaw auto-recreates containers when `setupCommand` (or docker config) changes
   unless the container was **recently used** (within ~5 minutes). Hot containers
-  log a warning with the exact `openclaw sandbox recreate ...` command.
+  log a warning with the exact `tigerpaw sandbox recreate ...` command.
 
 ```json5
 {
@@ -610,9 +610,9 @@ If you plan to install packages in `setupCommand`, note:
         mode: "non-main", // off | non-main | all
         scope: "agent", // session | agent | shared (agent is default)
         workspaceAccess: "none", // none | ro | rw
-        workspaceRoot: "~/.openclaw/sandboxes",
+        workspaceRoot: "~/.tigerpaw/sandboxes",
         docker: {
-          image: "openclaw-sandbox:bookworm-slim",
+          image: "tigerpaw-sandbox:bookworm-slim",
           workdir: "/workspace",
           readOnlyRoot: true,
           tmpfs: ["/tmp", "/var/tmp", "/run"],
@@ -630,7 +630,7 @@ If you plan to install packages in `setupCommand`, note:
             nproc: 256,
           },
           seccompProfile: "/path/to/seccomp.json",
-          apparmorProfile: "openclaw-sandbox",
+          apparmorProfile: "tigerpaw-sandbox",
           dns: ["1.1.1.1", "8.8.8.8"],
           extraHosts: ["internal.service:10.0.0.5"],
         },
@@ -677,7 +677,7 @@ Multi-agent: override `agents.defaults.sandbox.{docker,browser,prune}.*` per age
 scripts/sandbox-setup.sh
 ```
 
-This builds `openclaw-sandbox:bookworm-slim` using `Dockerfile.sandbox`.
+This builds `tigerpaw-sandbox:bookworm-slim` using `Dockerfile.sandbox`.
 
 ### Sandbox common image (optional)
 
@@ -687,13 +687,13 @@ If you want a sandbox image with common build tooling (Node, Go, Rust, etc.), bu
 scripts/sandbox-common-setup.sh
 ```
 
-This builds `openclaw-sandbox-common:bookworm-slim`. To use it:
+This builds `tigerpaw-sandbox-common:bookworm-slim`. To use it:
 
 ```json5
 {
   agents: {
     defaults: {
-      sandbox: { docker: { image: "openclaw-sandbox-common:bookworm-slim" } },
+      sandbox: { docker: { image: "tigerpaw-sandbox-common:bookworm-slim" } },
     },
   },
 }
@@ -707,7 +707,7 @@ To run the browser tool inside the sandbox, build the browser image:
 scripts/sandbox-browser-setup.sh
 ```
 
-This builds `openclaw-sandbox-browser:bookworm-slim` using
+This builds `tigerpaw-sandbox-browser:bookworm-slim` using
 `Dockerfile.sandbox-browser`. The container runs Chromium with CDP enabled and
 an optional noVNC observer (headful via Xvfb).
 
@@ -716,9 +716,9 @@ Notes:
 - Headful (Xvfb) reduces bot blocking vs headless.
 - Headless can still be used by setting `agents.defaults.sandbox.browser.headless=true`.
 - No full desktop environment (GNOME) is needed; Xvfb provides the display.
-- Browser containers default to a dedicated Docker network (`openclaw-sandbox-browser`) instead of global `bridge`.
+- Browser containers default to a dedicated Docker network (`tigerpaw-sandbox-browser`) instead of global `bridge`.
 - Optional `agents.defaults.sandbox.browser.cdpSourceRange` restricts container-edge CDP ingress by CIDR (for example `172.21.0.1/32`).
-- noVNC observer access is password-protected by default; OpenClaw provides a short-lived observer token URL that serves a local bootstrap page and keeps the password in URL fragment (instead of URL query).
+- noVNC observer access is password-protected by default; Tigerpaw provides a short-lived observer token URL that serves a local bootstrap page and keeps the password in URL fragment (instead of URL query).
 - Browser container startup defaults are conservative for shared/container workloads, including:
   - `--remote-debugging-address=127.0.0.1`
   - `--remote-debugging-port=<derived from OPENCLAW_BROWSER_CDP_PORT>`
@@ -772,7 +772,7 @@ Custom browser image:
 {
   agents: {
     defaults: {
-      sandbox: { browser: { image: "my-openclaw-browser" } },
+      sandbox: { browser: { image: "my-tigerpaw-browser" } },
     },
   },
 }
@@ -792,14 +792,14 @@ Prune rules (`agents.defaults.sandbox.prune`) apply to browser containers too.
 Build your own image and point config to it:
 
 ```bash
-docker build -t my-openclaw-sbx -f Dockerfile.sandbox .
+docker build -t my-tigerpaw-sbx -f Dockerfile.sandbox .
 ```
 
 ```json5
 {
   agents: {
     defaults: {
-      sandbox: { docker: { image: "my-openclaw-sbx" } },
+      sandbox: { docker: { image: "my-tigerpaw-sbx" } },
     },
   },
 }
@@ -833,11 +833,11 @@ Example:
 
 ## Troubleshooting
 
-- Image missing: build with [`scripts/sandbox-setup.sh`](https://github.com/openclaw/openclaw/blob/main/scripts/sandbox-setup.sh) or set `agents.defaults.sandbox.docker.image`.
+- Image missing: build with [`scripts/sandbox-setup.sh`](https://github.com/varunrazdan/tigerpaw/blob/main/scripts/sandbox-setup.sh) or set `agents.defaults.sandbox.docker.image`.
 - Container not running: it will auto-create per session on demand.
 - Permission errors in sandbox: set `docker.user` to a UID:GID that matches your
   mounted workspace ownership (or chown the workspace folder).
-- Custom tools not found: OpenClaw runs commands with `sh -lc` (login shell), which
+- Custom tools not found: Tigerpaw runs commands with `sh -lc` (login shell), which
   sources `/etc/profile` and may reset PATH. Set `docker.env.PATH` to prepend your
   custom tool paths (e.g., `/custom/bin:/usr/local/share/npm-global/bin`), or add
   a script under `/etc/profile.d/` in your Dockerfile.

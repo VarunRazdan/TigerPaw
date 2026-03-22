@@ -1,5 +1,5 @@
 ---
-description: Deploy OpenClaw on Fly.io
+description: Deploy Tigerpaw on Fly.io
 title: Fly.io
 x-i18n:
   generated_at: "2026-02-03T07:52:55Z"
@@ -12,7 +12,7 @@ x-i18n:
 
 # Fly.io 部署
 
-**目标：** OpenClaw Gateway 网关运行在 [Fly.io](https://fly.io) 机器上，具有持久存储、自动 HTTPS 和 Discord/渠道访问。
+**目标：** Tigerpaw Gateway 网关运行在 [Fly.io](https://fly.io) 机器上，具有持久存储、自动 HTTPS 和 Discord/渠道访问。
 
 ## 你需要什么
 
@@ -32,14 +32,14 @@ x-i18n:
 
 ```bash
 # Clone the repo
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/varunrazdan/tigerpaw.git
+cd tigerpaw
 
 # Create a new Fly app (pick your own name)
-fly apps create my-openclaw
+fly apps create my-tigerpaw
 
 # Create a persistent volume (1GB is usually enough)
-fly volumes create openclaw_data --size 1 --region iad
+fly volumes create tigerpaw_data --size 1 --region iad
 ```
 
 **提示：** 选择离你近的区域。常见选项：`lhr`（伦敦）、`iad`（弗吉尼亚）、`sjc`（圣何塞）。
@@ -51,7 +51,7 @@ fly volumes create openclaw_data --size 1 --region iad
 **安全注意事项：** 默认配置暴露公共 URL。对于没有公共 IP 的加固部署，参见[私有部署](#私有部署加固)或使用 `fly.private.toml`。
 
 ```toml
-app = "my-openclaw"  # Your app name
+app = "my-tigerpaw"  # Your app name
 primary_region = "iad"
 
 [build]
@@ -79,7 +79,7 @@ primary_region = "iad"
   memory = "2048mb"
 
 [mounts]
-  source = "openclaw_data"
+  source = "tigerpaw_data"
   destination = "/data"
 ```
 
@@ -114,7 +114,7 @@ fly secrets set DISCORD_BOT_TOKEN=MTQ...
 
 - 非 loopback 绑定（`--bind lan`）出于安全需要 `OPENCLAW_GATEWAY_TOKEN`。
 - 像对待密码一样对待这些 token。
-- **优先使用环境变量而不是配置文件**来存储所有 API 密钥和 token。这可以避免密钥出现在 `openclaw.json` 中，防止意外暴露或记录。
+- **优先使用环境变量而不是配置文件**来存储所有 API 密钥和 token。这可以避免密钥出现在 `tigerpaw.json` 中，防止意外暴露或记录。
 
 ## 4）部署
 
@@ -150,7 +150,7 @@ fly ssh console
 
 ```bash
 mkdir -p /data
-cat > /data/openclaw.json << 'EOF'
+cat > /data/tigerpaw.json << 'EOF'
 {
   "agents": {
     "defaults": {
@@ -202,7 +202,7 @@ cat > /data/openclaw.json << 'EOF'
 EOF
 ```
 
-**注意：** 使用 `OPENCLAW_STATE_DIR=/data` 时，配置路径是 `/data/openclaw.json`。
+**注意：** 使用 `OPENCLAW_STATE_DIR=/data` 时，配置路径是 `/data/tigerpaw.json`。
 
 **注意：** Discord token 可以来自：
 
@@ -228,7 +228,7 @@ fly machine restart <machine-id>
 fly open
 ```
 
-或访问 `https://my-openclaw.fly.dev/`
+或访问 `https://my-tigerpaw.fly.dev/`
 
 粘贴你的 Gateway 网关 token（来自 `OPENCLAW_GATEWAY_TOKEN` 的那个）进行认证。
 
@@ -295,12 +295,12 @@ fly machine restart <machine-id>
 
 ### 配置未被读取
 
-如果使用 `--allow-unconfigured`，Gateway 网关会创建最小配置。你在 `/data/openclaw.json` 的自定义配置应该在重启时被读取。
+如果使用 `--allow-unconfigured`，Gateway 网关会创建最小配置。你在 `/data/tigerpaw.json` 的自定义配置应该在重启时被读取。
 
 验证配置是否存在：
 
 ```bash
-fly ssh console --command "cat /data/openclaw.json"
+fly ssh console --command "cat /data/tigerpaw.json"
 ```
 
 ### 通过 SSH 写入配置
@@ -309,17 +309,17 @@ fly ssh console --command "cat /data/openclaw.json"
 
 ```bash
 # Use echo + tee (pipe from local to remote)
-echo '{"your":"config"}' | fly ssh console -C "tee /data/openclaw.json"
+echo '{"your":"config"}' | fly ssh console -C "tee /data/tigerpaw.json"
 
 # Or use sftp
 fly sftp shell
-> put /local/path/config.json /data/openclaw.json
+> put /local/path/config.json /data/tigerpaw.json
 ```
 
 **注意：** 如果文件已存在，`fly sftp` 可能会失败。先删除：
 
 ```bash
-fly ssh console --command "rm /data/openclaw.json"
+fly ssh console --command "rm /data/tigerpaw.json"
 ```
 
 ### 状态未持久化
@@ -385,18 +385,18 @@ fly deploy -c fly.private.toml
 
 ```bash
 # List current IPs
-fly ips list -a my-openclaw
+fly ips list -a my-tigerpaw
 
 # Release public IPs
-fly ips release <public-ipv4> -a my-openclaw
-fly ips release <public-ipv6> -a my-openclaw
+fly ips release <public-ipv4> -a my-tigerpaw
+fly ips release <public-ipv6> -a my-tigerpaw
 
 # Switch to private config so future deploys don't re-allocate public IPs
 # (remove [http_service] or deploy with the private template)
 fly deploy -c fly.private.toml
 
 # Allocate private-only IPv6
-fly ips allocate-v6 --private -a my-openclaw
+fly ips allocate-v6 --private -a my-tigerpaw
 ```
 
 此后，`fly ips list` 应该只显示 `private` 类型的 IP：
@@ -414,7 +414,7 @@ v6       fdaa:x:x:x:x::x      private          global
 
 ```bash
 # Forward local port 3000 to the app
-fly proxy 3000:3000 -a my-openclaw
+fly proxy 3000:3000 -a my-tigerpaw
 
 # Then open http://localhost:3000 in browser
 ```
@@ -432,7 +432,7 @@ fly wireguard create
 **选项 3：仅 SSH**
 
 ```bash
-fly ssh console -a my-openclaw
+fly ssh console -a my-tigerpaw
 ```
 
 ### 私有部署的 Webhooks

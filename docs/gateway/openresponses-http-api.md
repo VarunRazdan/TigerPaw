@@ -8,7 +8,7 @@ title: "OpenResponses API"
 
 # OpenResponses API (HTTP)
 
-OpenClaw’s Gateway can serve an OpenResponses-compatible `POST /v1/responses` endpoint.
+Tigerpaw’s Gateway can serve an OpenResponses-compatible `POST /v1/responses` endpoint.
 
 This endpoint is **disabled by default**. Enable it in config first.
 
@@ -16,7 +16,7 @@ This endpoint is **disabled by default**. Enable it in config first.
 - Same port as the Gateway (WS + HTTP multiplex): `http://<gateway-host>:<port>/v1/responses`
 
 Under the hood, requests are executed as a normal Gateway agent run (same codepath as
-`openclaw agent`), so routing/permissions/config match your Gateway.
+`tigerpaw agent`), so routing/permissions/config match your Gateway.
 
 ## Authentication
 
@@ -37,7 +37,7 @@ Treat this endpoint as a **full operator-access** surface for the gateway instan
 - HTTP bearer auth here is not a narrow per-user scope model.
 - A valid Gateway token/password for this endpoint should be treated like an owner/operator credential.
 - Requests run through the same control-plane agent path as trusted operator actions.
-- There is no separate non-owner/per-user tool boundary on this endpoint; once a caller passes Gateway auth here, OpenClaw treats that caller as a trusted operator for this gateway.
+- There is no separate non-owner/per-user tool boundary on this endpoint; once a caller passes Gateway auth here, Tigerpaw treats that caller as a trusted operator for this gateway.
 - If the target agent policy allows sensitive tools, this endpoint can use them.
 - Keep this endpoint on loopback/tailnet/private ingress only; do not expose it directly to the public internet.
 
@@ -47,16 +47,16 @@ See [Security](/gateway/security) and [Remote access](/gateway/remote).
 
 No custom headers required: encode the agent id in the OpenResponses `model` field:
 
-- `model: "openclaw:<agentId>"` (example: `"openclaw:main"`, `"openclaw:beta"`)
+- `model: "tigerpaw:<agentId>"` (example: `"tigerpaw:main"`, `"tigerpaw:beta"`)
 - `model: "agent:<agentId>"` (alias)
 
-Or target a specific OpenClaw agent by header:
+Or target a specific Tigerpaw agent by header:
 
-- `x-openclaw-agent-id: <agentId>` (default: `main`)
+- `x-tigerpaw-agent-id: <agentId>` (default: `main`)
 
 Advanced:
 
-- `x-openclaw-session-key: <sessionKey>` to fully control session routing.
+- `x-tigerpaw-session-key: <sessionKey>` to fully control session routing.
 
 ## Enabling the endpoint
 
@@ -332,9 +332,9 @@ Non-streaming:
 curl -sS http://127.0.0.1:18789/v1/responses \
   -H 'Authorization: Bearer YOUR_TOKEN' \
   -H 'Content-Type: application/json' \
-  -H 'x-openclaw-agent-id: main' \
+  -H 'x-tigerpaw-agent-id: main' \
   -d '{
-    "model": "openclaw",
+    "model": "tigerpaw",
     "input": "hi"
   }'
 ```
@@ -345,9 +345,9 @@ Streaming:
 curl -N http://127.0.0.1:18789/v1/responses \
   -H 'Authorization: Bearer YOUR_TOKEN' \
   -H 'Content-Type: application/json' \
-  -H 'x-openclaw-agent-id: main' \
+  -H 'x-tigerpaw-agent-id: main' \
   -d '{
-    "model": "openclaw",
+    "model": "tigerpaw",
     "stream": true,
     "input": "hi"
   }'

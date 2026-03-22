@@ -30,11 +30,11 @@ Use this page for day-1 startup and day-2 operations of the Gateway service.
   <Step title="Start the Gateway">
 
 ```bash
-openclaw gateway --port 18789
+tigerpaw gateway --port 18789
 # debug/trace mirrored to stdio
-openclaw gateway --port 18789 --verbose
+tigerpaw gateway --port 18789 --verbose
 # force-kill listener on selected port, then start
-openclaw gateway --force
+tigerpaw gateway --force
 ```
 
   </Step>
@@ -42,9 +42,9 @@ openclaw gateway --force
   <Step title="Verify service health">
 
 ```bash
-openclaw gateway status
-openclaw status
-openclaw logs --follow
+tigerpaw gateway status
+tigerpaw status
+tigerpaw logs --follow
 ```
 
 Healthy baseline: `Runtime: running` and `RPC probe: ok`.
@@ -54,7 +54,7 @@ Healthy baseline: `Runtime: running` and `RPC probe: ok`.
   <Step title="Validate channel readiness">
 
 ```bash
-openclaw channels status --probe
+tigerpaw channels status --probe
 ```
 
   </Step>
@@ -94,15 +94,15 @@ Default mode is `gateway.reload.mode="hybrid"`.
 ## Operator command set
 
 ```bash
-openclaw gateway status
-openclaw gateway status --deep
-openclaw gateway status --json
-openclaw gateway install
-openclaw gateway restart
-openclaw gateway stop
-openclaw secrets reload
-openclaw logs --follow
-openclaw doctor
+tigerpaw gateway status
+tigerpaw gateway status --deep
+tigerpaw gateway status --json
+tigerpaw gateway install
+tigerpaw gateway restart
+tigerpaw gateway stop
+tigerpaw secrets reload
+tigerpaw logs --follow
+tigerpaw doctor
 ```
 
 ## Remote access
@@ -130,22 +130,22 @@ Use supervised runs for production-like reliability.
   <Tab title="macOS (launchd)">
 
 ```bash
-openclaw gateway install
-openclaw gateway status
-openclaw gateway restart
-openclaw gateway stop
+tigerpaw gateway install
+tigerpaw gateway status
+tigerpaw gateway restart
+tigerpaw gateway stop
 ```
 
-LaunchAgent labels are `ai.openclaw.gateway` (default) or `ai.openclaw.<profile>` (named profile). `openclaw doctor` audits and repairs service config drift.
+LaunchAgent labels are `ai.tigerpaw.gateway` (default) or `ai.tigerpaw.<profile>` (named profile). `tigerpaw doctor` audits and repairs service config drift.
 
   </Tab>
 
   <Tab title="Linux (systemd user)">
 
 ```bash
-openclaw gateway install
-systemctl --user enable --now openclaw-gateway[-<profile>].service
-openclaw gateway status
+tigerpaw gateway install
+systemctl --user enable --now tigerpaw-gateway[-<profile>].service
+tigerpaw gateway status
 ```
 
 For persistence after logout, enable lingering:
@@ -162,7 +162,7 @@ Use a system unit for multi-user/always-on hosts.
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now openclaw-gateway[-<profile>].service
+sudo systemctl enable --now tigerpaw-gateway[-<profile>].service
 ```
 
   </Tab>
@@ -183,8 +183,8 @@ Checklist per instance:
 Example:
 
 ```bash
-OPENCLAW_CONFIG_PATH=~/.openclaw/a.json OPENCLAW_STATE_DIR=~/.openclaw-a openclaw gateway --port 19001
-OPENCLAW_CONFIG_PATH=~/.openclaw/b.json OPENCLAW_STATE_DIR=~/.openclaw-b openclaw gateway --port 19002
+OPENCLAW_CONFIG_PATH=~/.tigerpaw/a.json OPENCLAW_STATE_DIR=~/.tigerpaw-a tigerpaw gateway --port 19001
+OPENCLAW_CONFIG_PATH=~/.tigerpaw/b.json OPENCLAW_STATE_DIR=~/.tigerpaw-b tigerpaw gateway --port 19002
 ```
 
 See: [Multiple gateways](/gateway/multiple-gateways).
@@ -192,9 +192,9 @@ See: [Multiple gateways](/gateway/multiple-gateways).
 ### Dev profile quick path
 
 ```bash
-openclaw --dev setup
-openclaw --dev gateway --allow-unconfigured
-openclaw --dev status
+tigerpaw --dev setup
+tigerpaw --dev gateway --allow-unconfigured
+tigerpaw --dev status
 ```
 
 Defaults include isolated state/config and base gateway port `19001`.
@@ -223,9 +223,9 @@ See full protocol docs: [Gateway Protocol](/gateway/protocol).
 ### Readiness
 
 ```bash
-openclaw gateway status
-openclaw channels status --probe
-openclaw health
+tigerpaw gateway status
+tigerpaw channels status --probe
+tigerpaw health
 ```
 
 ### Gap recovery

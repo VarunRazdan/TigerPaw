@@ -1,5 +1,5 @@
 ---
-summary: "Where OpenClaw loads environment variables and the precedence order"
+summary: "Where Tigerpaw loads environment variables and the precedence order"
 read_when:
   - You need to know which env vars are loaded, and in what order
   - You are debugging missing API keys in the Gateway
@@ -9,14 +9,14 @@ title: "Environment Variables"
 
 # Environment variables
 
-OpenClaw pulls environment variables from multiple sources. The rule is **never override existing values**.
+Tigerpaw pulls environment variables from multiple sources. The rule is **never override existing values**.
 
 ## Precedence (highest → lowest)
 
 1. **Process environment** (what the Gateway process already has from the parent shell/daemon).
 2. **`.env` in the current working directory** (dotenv default; does not override).
-3. **Global `.env`** at `~/.openclaw/.env` (aka `$OPENCLAW_STATE_DIR/.env`; does not override).
-4. **Config `env` block** in `~/.openclaw/openclaw.json` (applied only if missing).
+3. **Global `.env`** at `~/.tigerpaw/.env` (aka `$OPENCLAW_STATE_DIR/.env`; does not override).
+4. **Config `env` block** in `~/.tigerpaw/tigerpaw.json` (applied only if missing).
 5. **Optional login-shell import** (`env.shellEnv.enabled` or `OPENCLAW_LOAD_SHELL_ENV=1`), applied only for missing expected keys.
 
 If the config file is missing entirely, step 4 is skipped; shell import still runs if enabled.
@@ -58,11 +58,11 @@ Env var equivalents:
 
 ## Runtime-injected env vars
 
-OpenClaw also injects context markers into spawned child processes:
+Tigerpaw also injects context markers into spawned child processes:
 
 - `OPENCLAW_SHELL=exec`: set for commands run through the `exec` tool.
 - `OPENCLAW_SHELL=acp`: set for ACP runtime backend process spawns (for example `acpx`).
-- `OPENCLAW_SHELL=acp-client`: set for `openclaw acp client` when it spawns the ACP bridge process.
+- `OPENCLAW_SHELL=acp-client`: set for `tigerpaw acp client` when it spawns the ACP bridge process.
 - `OPENCLAW_SHELL=tui-local`: set for local TUI `!` shell commands.
 
 These are runtime markers (not required user config). They can be used in shell/profile logic
@@ -72,7 +72,7 @@ to apply context-specific rules.
 
 - `OPENCLAW_THEME=light`: force the light TUI palette when your terminal has a light background.
 - `OPENCLAW_THEME=dark`: force the dark TUI palette.
-- `COLORFGBG`: if your terminal exports it, OpenClaw uses the background color hint to auto-pick the TUI palette.
+- `COLORFGBG`: if your terminal exports it, Tigerpaw uses the background color hint to auto-pick the TUI palette.
 
 ## Env var substitution in config
 
@@ -94,7 +94,7 @@ See [Configuration: Env var substitution](/gateway/configuration#env-var-substit
 
 ## Secret refs vs `${ENV}` strings
 
-OpenClaw supports two env-driven patterns:
+Tigerpaw supports two env-driven patterns:
 
 - `${VAR}` string substitution in config values.
 - SecretRef objects (`{ source: "env", provider: "default", id: "VAR" }`) for fields that support secrets references.
@@ -105,9 +105,9 @@ Both resolve from process env at activation time. SecretRef details are document
 
 | Variable               | Purpose                                                                                                                                                                          |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPENCLAW_HOME`        | Override the home directory used for all internal path resolution (`~/.openclaw/`, agent dirs, sessions, credentials). Useful when running OpenClaw as a dedicated service user. |
-| `OPENCLAW_STATE_DIR`   | Override the state directory (default `~/.openclaw`).                                                                                                                            |
-| `OPENCLAW_CONFIG_PATH` | Override the config file path (default `~/.openclaw/openclaw.json`).                                                                                                             |
+| `OPENCLAW_HOME`        | Override the home directory used for all internal path resolution (`~/.tigerpaw/`, agent dirs, sessions, credentials). Useful when running Tigerpaw as a dedicated service user. |
+| `OPENCLAW_STATE_DIR`   | Override the state directory (default `~/.tigerpaw`).                                                                                                                            |
+| `OPENCLAW_CONFIG_PATH` | Override the config file path (default `~/.tigerpaw/tigerpaw.json`).                                                                                                             |
 
 ## Logging
 
