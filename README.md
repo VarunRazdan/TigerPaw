@@ -260,6 +260,10 @@ If you find Tigerpaw useful, consider supporting development:
 
 <a href="https://buymeacoffee.com/CrimesAnatomy"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
 
+<p align="center">
+  <a href="https://buymeacoffee.com/CrimesAnatomy"><img src=".github/buy-me-a-coffee-qr.png" alt="Donate QR Code" width="200" /></a>
+</p>
+
 ## License
 
 [MIT](LICENSE)
