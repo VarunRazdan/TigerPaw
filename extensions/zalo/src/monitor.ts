@@ -3,7 +3,7 @@ import type {
   MarkdownTableMode,
   OpenClawConfig,
   OutboundReplyPayload,
-} from "openclaw/plugin-sdk/zalo";
+} from "tigerpaw/plugin-sdk/zalo";
 import {
   createTypingCallbacks,
   createScopedPairingAccess,
@@ -19,7 +19,7 @@ import {
   resolveWebhookPath,
   waitForAbortSignal,
   warnMissingProviderGroupPolicyFallbackOnce,
-} from "openclaw/plugin-sdk/zalo";
+} from "tigerpaw/plugin-sdk/zalo";
 import type { ResolvedZaloAccount } from "./accounts.js";
 import {
   ZaloApiError,

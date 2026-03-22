@@ -1,0 +1,33 @@
+{
+  "id": "ibkr",
+  "kind": "trading",
+  "permissions": {
+    "network": ["localhost:5000", "api.ibkr.com"],
+    "trading": true,
+    "secrets": ["ibkr.accountId"]
+  },
+  "uiHints": {
+    "accountId": {
+      "label": "Account ID",
+      "sensitive": true,
+      "placeholder": "Your IBKR account ID",
+      "help": "Interactive Brokers account ID (or use ${IBKR_ACCOUNT_ID})"
+    },
+    "gatewayHost": {
+      "label": "Gateway Host",
+      "sensitive": false,
+      "placeholder": "localhost:5000",
+      "help": "IB Client Portal Gateway host:port (default localhost:5000)"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "accountId": { "type": "string" },
+      "gatewayHost": { "type": "string" },
+      "mode": { "type": "string", "enum": ["live", "paper"] }
+    },
+    "required": ["accountId"]
+  }
+}

@@ -61,7 +61,7 @@ echo "Enter your phone number for alerts (or leave blank to skip):"
 read -r PHONE_NUMBER
 
 # Update service file
-SERVICE_FILE="$SCRIPT_DIR/systemd/openclaw-auth-monitor.service"
+SERVICE_FILE="$SCRIPT_DIR/systemd/tigerpaw-auth-monitor.service"
 if [ -n "$NTFY_TOPIC" ]; then
     sed -i "s|# Environment=NOTIFY_NTFY=.*|Environment=NOTIFY_NTFY=$NTFY_TOPIC|" "$SERVICE_FILE"
 fi
@@ -73,10 +73,10 @@ fi
 echo ""
 echo "Installing systemd timer..."
 mkdir -p ~/.config/systemd/user
-cp "$SCRIPT_DIR/systemd/openclaw-auth-monitor.service" ~/.config/systemd/user/
-cp "$SCRIPT_DIR/systemd/openclaw-auth-monitor.timer" ~/.config/systemd/user/
+cp "$SCRIPT_DIR/systemd/tigerpaw-auth-monitor.service" ~/.config/systemd/user/
+cp "$SCRIPT_DIR/systemd/tigerpaw-auth-monitor.timer" ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now openclaw-auth-monitor.timer
+systemctl --user enable --now tigerpaw-auth-monitor.timer
 
 echo "Auth monitor installed and running."
 echo ""
@@ -110,7 +110,7 @@ echo ""
 echo "What's configured:"
 echo "  - Auth status: $SCRIPT_DIR/claude-auth-status.sh"
 echo "  - Mobile re-auth: $SCRIPT_DIR/mobile-reauth.sh"
-echo "  - Auth monitor: systemctl --user status openclaw-auth-monitor.timer"
+echo "  - Auth monitor: systemctl --user status tigerpaw-auth-monitor.timer"
 echo ""
 echo "Quick commands:"
 echo "  Check auth:  $SCRIPT_DIR/claude-auth-status.sh"

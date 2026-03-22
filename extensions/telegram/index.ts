@@ -1,5 +1,5 @@
-import type { ChannelPlugin, OpenClawPluginApi } from "openclaw/plugin-sdk/telegram";
-import { emptyPluginConfigSchema } from "openclaw/plugin-sdk/telegram";
+import type { ChannelPlugin, OpenClawPluginApi } from "tigerpaw/plugin-sdk/telegram";
+import { emptyPluginConfigSchema } from "tigerpaw/plugin-sdk/telegram";
 import { telegramPlugin } from "./src/channel.js";
 import { setTelegramRuntime } from "./src/runtime.js";
 

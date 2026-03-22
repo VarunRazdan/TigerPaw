@@ -1,4 +1,4 @@
-import type { LineChannelData, OpenClawPluginApi, ReplyPayload } from "openclaw/plugin-sdk/line";
+import type { LineChannelData, OpenClawPluginApi, ReplyPayload } from "tigerpaw/plugin-sdk/line";
 import {
   createActionCard,
   createImageCard,
@@ -7,7 +7,7 @@ import {
   createReceiptCard,
   type CardAction,
   type ListItem,
-} from "openclaw/plugin-sdk/line";
+} from "tigerpaw/plugin-sdk/line";
 
 const CARD_USAGE = `Usage: /card <type> "title" "body" [options]
 

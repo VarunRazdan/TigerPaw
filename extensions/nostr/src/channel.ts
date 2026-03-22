@@ -6,7 +6,7 @@ import {
   formatPairingApproveHint,
   mapAllowFromEntries,
   type ChannelPlugin,
-} from "openclaw/plugin-sdk/nostr";
+} from "tigerpaw/plugin-sdk/nostr";
 import type { NostrProfile } from "./config-schema.js";
 import { NostrConfigSchema } from "./config-schema.js";
 import type { MetricEvent, MetricsSnapshot } from "./metrics.js";

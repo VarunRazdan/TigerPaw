@@ -10,8 +10,8 @@ import {
   resolveMentionGatingWithBypass,
   resolveSenderScopedGroupPolicy,
   warnMissingProviderGroupPolicyFallbackOnce,
-} from "openclaw/plugin-sdk/googlechat";
-import type { OpenClawConfig } from "openclaw/plugin-sdk/googlechat";
+} from "tigerpaw/plugin-sdk/googlechat";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/googlechat";
 import type { ResolvedGoogleChatAccount } from "./accounts.js";
 import { sendGoogleChatMessage } from "./api.js";
 import type { GoogleChatCoreRuntime } from "./monitor-types.js";

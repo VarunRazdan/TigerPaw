@@ -1,5 +1,5 @@
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
-import { createAccountListHelpers, type OpenClawConfig } from "openclaw/plugin-sdk/zalo";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "tigerpaw/plugin-sdk/account-id";
+import { createAccountListHelpers, type OpenClawConfig } from "tigerpaw/plugin-sdk/zalo";
 import { resolveZaloToken } from "./token.js";
 import type { ResolvedZaloAccount, ZaloAccountConfig, ZaloConfig } from "./types.js";
 

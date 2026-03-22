@@ -22,7 +22,7 @@ import type {
   OpenClawConfig,
   OutboundDeliveryResult,
   RuntimeEnv,
-} from "openclaw/plugin-sdk/twitch";
+} from "tigerpaw/plugin-sdk/twitch";
 
 // ============================================================================
 // Twitch-Specific Types

@@ -47,6 +47,42 @@ export function isTruthyEnvValue(value?: string): boolean {
   return parseBooleanValue(value) === true;
 }
 
+/**
+ * Migrate OPENCLAW_* env vars to TIGERCLAW_* equivalents.
+ * If the TIGERCLAW_* variant is not set but OPENCLAW_* is, copy the value.
+ */
+function migrateOpenClawEnv(): void {
+  const prefix = "OPENCLAW_";
+  const newPrefix = "TIGERCLAW_";
+  for (const key of Object.keys(process.env)) {
+    if (key.startsWith(prefix)) {
+      const newKey = newPrefix + key.slice(prefix.length);
+      if (!process.env[newKey]?.trim()) {
+        process.env[newKey] = process.env[key];
+      }
+    }
+  }
+}
+
+/**
+ * Migrate TIGERCLAW_* env vars to TIGERPAW_* equivalents.
+ * If the TIGERPAW_* variant is not set but TIGERCLAW_* is, copy the value.
+ */
+function migrateTigerClawEnv(): void {
+  const prefix = "TIGERCLAW_";
+  const newPrefix = "TIGERPAW_";
+  for (const key of Object.keys(process.env)) {
+    if (key.startsWith(prefix)) {
+      const newKey = newPrefix + key.slice(prefix.length);
+      if (!process.env[newKey]?.trim()) {
+        process.env[newKey] = process.env[key];
+      }
+    }
+  }
+}
+
 export function normalizeEnv(): void {
+  migrateOpenClawEnv();
+  migrateTigerClawEnv();
   normalizeZaiEnv();
 }

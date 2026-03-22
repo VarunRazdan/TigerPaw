@@ -112,7 +112,7 @@ describe("channel plugin registry", () => {
 describe("channel plugin catalog", () => {
   it("includes Microsoft Teams", () => {
     const entry = getChannelPluginCatalogEntry("msteams");
-    expect(entry?.install.npmSpec).toBe("@openclaw/msteams");
+    expect(entry?.install.npmSpec).toBe("@tigerpaw/msteams");
     expect(entry?.meta.aliases).toContain("teams");
   });
 
@@ -130,7 +130,7 @@ describe("channel plugin catalog", () => {
         entries: [
           {
             name: "@openclaw/demo-channel",
-            openclaw: {
+            tigerpaw: {
               channel: {
                 id: "demo-channel",
                 label: "Demo Channel",

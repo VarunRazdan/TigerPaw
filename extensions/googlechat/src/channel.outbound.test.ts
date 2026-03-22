@@ -1,4 +1,4 @@
-import type { OpenClawConfig, PluginRuntime } from "openclaw/plugin-sdk/googlechat";
+import type { OpenClawConfig, PluginRuntime } from "tigerpaw/plugin-sdk/googlechat";
 import { describe, expect, it, vi } from "vitest";
 
 const uploadGoogleChatAttachmentMock = vi.hoisted(() => vi.fn());

@@ -1,0 +1,33 @@
+{
+  "id": "binance",
+  "kind": "trading",
+  "permissions": {
+    "network": ["api.binance.com", "testnet.binance.vision"],
+    "trading": true,
+    "secrets": ["binance.apiKey", "binance.apiSecret"]
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "API Key",
+      "sensitive": true,
+      "placeholder": "Your Binance API key",
+      "help": "API key for Binance (or use ${BINANCE_API_KEY})"
+    },
+    "apiSecret": {
+      "label": "API Secret",
+      "sensitive": true,
+      "placeholder": "Your Binance API secret",
+      "help": "API secret for Binance (or use ${BINANCE_API_SECRET})"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": { "type": "string" },
+      "apiSecret": { "type": "string" },
+      "mode": { "type": "string", "enum": ["live", "testnet"] }
+    },
+    "required": ["apiKey", "apiSecret"]
+  }
+}

@@ -102,7 +102,14 @@ describe("buildApiErrorObservationFields", () => {
   });
 
   it("truncates oversized raw and provider previews", () => {
-    const longMessage = "X".repeat(260);
+    // Use a message that won't be redacted by the base64 credential pattern
+    // ([A-Za-z0-9+/]{40,}) -- spaces break the pattern match.
+    const longMessage = Array.from({ length: 26 }, (_, i) => `segment ${i} `)
+      .join("")
+      .repeat(2)
+      .trim()
+      .slice(0, 260)
+      .padEnd(260, ".");
     const observed = buildApiErrorObservationFields(
       `{"type":"error","error":{"type":"server_error","message":"${longMessage}"},"request_id":"req_long"}`,
     );

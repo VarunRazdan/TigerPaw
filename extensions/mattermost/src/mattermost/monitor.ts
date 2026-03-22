@@ -4,7 +4,7 @@ import type {
   OpenClawConfig,
   ReplyPayload,
   RuntimeEnv,
-} from "openclaw/plugin-sdk/mattermost";
+} from "tigerpaw/plugin-sdk/mattermost";
 import {
   buildAgentMediaPayload,
   buildModelsProviderData,
@@ -30,7 +30,7 @@ import {
   warnMissingProviderGroupPolicyFallbackOnce,
   listSkillCommandsForAgents,
   type HistoryEntry,
-} from "openclaw/plugin-sdk/mattermost";
+} from "tigerpaw/plugin-sdk/mattermost";
 import { getMattermostRuntime } from "../runtime.js";
 import { resolveMattermostAccount } from "./accounts.js";
 import {

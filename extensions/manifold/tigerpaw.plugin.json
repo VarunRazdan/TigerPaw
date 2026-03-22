@@ -1,0 +1,27 @@
+{
+  "id": "manifold",
+  "kind": "trading",
+  "permissions": {
+    "network": ["api.manifold.markets"],
+    "trading": true,
+    "secrets": ["manifold.apiKey"]
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "API Key",
+      "sensitive": true,
+      "placeholder": "Your Manifold Markets API key",
+      "help": "API key for Manifold Markets (or use ${MANIFOLD_API_KEY}). Optional for read-only access; required for placing bets and selling shares."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string"
+      }
+    },
+    "required": []
+  }
+}

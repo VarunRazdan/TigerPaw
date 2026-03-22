@@ -9,16 +9,16 @@
 #   Or set OPENCLAW_PODMAN_QUADLET=1 (or 0) to choose without a flag.
 #
 # After this, start the gateway manually:
-#   ./scripts/run-openclaw-podman.sh launch
-#   ./scripts/run-openclaw-podman.sh launch setup   # onboarding wizard
-# Or as the openclaw user: sudo -u openclaw /home/openclaw/run-openclaw-podman.sh
+#   ./scripts/run-tigerpaw-podman.sh launch
+#   ./scripts/run-tigerpaw-podman.sh launch setup   # onboarding wizard
+# Or as the openclaw user: sudo -u openclaw /home/openclaw/run-tigerpaw-podman.sh
 # If you used --quadlet, you can also: sudo systemctl --machine openclaw@ --user start openclaw.service
 set -euo pipefail
 
 OPENCLAW_USER="${OPENCLAW_PODMAN_USER:-openclaw}"
 REPO_PATH="${OPENCLAW_REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
-RUN_SCRIPT_SRC="$REPO_PATH/scripts/run-openclaw-podman.sh"
-QUADLET_TEMPLATE="$REPO_PATH/scripts/podman/openclaw.container.in"
+RUN_SCRIPT_SRC="$REPO_PATH/scripts/run-tigerpaw-podman.sh"
+QUADLET_TEMPLATE="$REPO_PATH/scripts/podman/tigerpaw.container.in"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -210,7 +210,7 @@ fi
 OPENCLAW_HOME="$(resolve_user_home "$OPENCLAW_USER")"
 OPENCLAW_UID="$(id -u "$OPENCLAW_USER" 2>/dev/null || true)"
 OPENCLAW_CONFIG="$OPENCLAW_HOME/.openclaw"
-LAUNCH_SCRIPT_DST="$OPENCLAW_HOME/run-openclaw-podman.sh"
+LAUNCH_SCRIPT_DST="$OPENCLAW_HOME/run-tigerpaw-podman.sh"
 
 # Prefer systemd user services (Quadlet) for production. Enable lingering early so rootless Podman can run
 # without an interactive login.

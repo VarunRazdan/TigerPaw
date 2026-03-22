@@ -4,14 +4,14 @@ import type {
   WindowsSpawnProgram,
   WindowsSpawnProgramCandidate,
   WindowsSpawnResolution,
-} from "openclaw/plugin-sdk/acpx";
+} from "tigerpaw/plugin-sdk/acpx";
 import {
   applyWindowsSpawnProgramPolicy,
   listKnownProviderAuthEnvVarNames,
   materializeWindowsSpawnProgram,
   omitEnvKeysCaseInsensitive,
   resolveWindowsSpawnProgramCandidate,
-} from "openclaw/plugin-sdk/acpx";
+} from "tigerpaw/plugin-sdk/acpx";
 
 export type SpawnExit = {
   code: number | null;

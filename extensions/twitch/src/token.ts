@@ -13,7 +13,7 @@ import {
   DEFAULT_ACCOUNT_ID,
   normalizeAccountId,
   type OpenClawConfig,
-} from "openclaw/plugin-sdk/twitch";
+} from "tigerpaw/plugin-sdk/twitch";
 
 export type TwitchTokenSource = "env" | "config" | "none";
 

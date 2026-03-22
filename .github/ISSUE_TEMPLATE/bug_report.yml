@@ -57,7 +57,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: OpenClaw version
+      label: Tigerpaw version
       description: Exact version/build tested.
       placeholder: <version such as 2026.2.17>
     validations:
@@ -74,7 +74,7 @@ body:
     id: install_method
     attributes:
       label: Install method
-      description: How OpenClaw was installed or launched.
+      description: How Tigerpaw was installed or launched.
       placeholder: npm global / pnpm dev / docker / mac app
   - type: input
     id: model
@@ -89,7 +89,7 @@ body:
     attributes:
       label: Provider / routing chain
       description: Effective request path through gateways, proxies, providers, or model routers.
-      placeholder: openclaw -> cloudflare-ai-gateway -> minimax
+      placeholder: tigerpaw -> cloudflare-ai-gateway -> minimax
     validations:
       required: true
   - type: input
@@ -97,16 +97,16 @@ body:
     attributes:
       label: Config file / key location
       description: Optional. Relevant config source or key path if this bug depends on overrides or custom provider setup. Redact secrets.
-      placeholder: ~/.openclaw/openclaw.json ; models.providers.cloudflare-ai-gateway.baseUrl ; ~/.openclaw/agents/<agentId>/agent/models.json
+      placeholder: ~/.tigerpaw/tigerpaw.json ; models.providers.cloudflare-ai-gateway.baseUrl ; ~/.tigerpaw/agents/<agentId>/agent/models.json
   - type: textarea
     id: provider_setup_details
     attributes:
       label: Additional provider/model setup details
       description: Optional. Include redacted routing details, per-agent overrides, auth-profile interactions, env/config context, or anything else needed to explain the effective provider/model setup. Do not include API keys, tokens, or passwords.
       placeholder: |
-        Default route is openclaw -> cloudflare-ai-gateway -> minimax.
-        Previous setup was openclaw -> cloudflare-ai-gateway -> openrouter -> minimax.
-        Relevant config lives in ~/.openclaw/openclaw.json under models.providers.minimax and models.providers.cloudflare-ai-gateway.
+        Default route is tigerpaw -> cloudflare-ai-gateway -> minimax.
+        Previous setup was tigerpaw -> cloudflare-ai-gateway -> openrouter -> minimax.
+        Relevant config lives in ~/.tigerpaw/tigerpaw.json under models.providers.minimax and models.providers.cloudflare-ai-gateway.
   - type: textarea
     id: logs
     attributes:

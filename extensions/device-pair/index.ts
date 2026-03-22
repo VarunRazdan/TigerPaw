@@ -1,13 +1,13 @@
 import os from "node:os";
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/device-pair";
+import qrcode from "qrcode-terminal";
+import type { OpenClawPluginApi } from "tigerpaw/plugin-sdk/device-pair";
 import {
   approveDevicePairing,
   listDevicePairing,
   resolveGatewayBindUrl,
   runPluginCommandWithTimeout,
   resolveTailnetHostWithRunner,
-} from "openclaw/plugin-sdk/device-pair";
-import qrcode from "qrcode-terminal";
+} from "tigerpaw/plugin-sdk/device-pair";
 import {
   armPairNotifyOnce,
   formatPendingRequests,

@@ -1,4 +1,4 @@
-import { MarkdownConfigSchema } from "openclaw/plugin-sdk/twitch";
+import { MarkdownConfigSchema } from "tigerpaw/plugin-sdk/twitch";
 import { z } from "zod";
 
 /**

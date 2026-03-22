@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/googlechat";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/googlechat";
 import { describe, expect, it } from "vitest";
 import { resolveGoogleChatAccount } from "./accounts.js";
 

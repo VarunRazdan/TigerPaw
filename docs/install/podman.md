@@ -40,13 +40,13 @@ Optional build-time env vars (set before running `setup-podman.sh`):
 **2. Start gateway** (manual, for quick smoke testing):
 
 ```bash
-./scripts/run-openclaw-podman.sh launch
+./scripts/run-tigerpaw-podman.sh launch
 ```
 
 **3. Onboarding wizard** (e.g. to add channels or providers):
 
 ```bash
-./scripts/run-openclaw-podman.sh launch setup
+./scripts/run-tigerpaw-podman.sh launch setup
 ```
 
 Then open `http://127.0.0.1:18789/` and use the token from `~openclaw/.openclaw/.env` (or the value printed by setup).
@@ -69,7 +69,7 @@ To add quadlet **after** an initial setup that did not use it, re-run: `./setup-
 `setup-podman.sh` creates a dedicated system user `openclaw`:
 
 - **Shell:** `nologin` — no interactive login; reduces attack surface.
-- **Home:** e.g. `/home/openclaw` — holds `~/.openclaw` (config, workspace) and the launch script `run-openclaw-podman.sh`.
+- **Home:** e.g. `/home/openclaw` — holds `~/.openclaw` (config, workspace) and the launch script `run-tigerpaw-podman.sh`.
 - **Rootless Podman:** The user must have a **subuid** and **subgid** range. Many distros assign these automatically when the user is created. If setup prints a warning, add lines to `/etc/subuid` and `/etc/subgid`:
 
   ```text
@@ -79,18 +79,18 @@ To add quadlet **after** an initial setup that did not use it, re-run: `./setup-
   Then start the gateway as that user (e.g. from cron or systemd):
 
   ```bash
-  sudo -u openclaw /home/openclaw/run-openclaw-podman.sh
-  sudo -u openclaw /home/openclaw/run-openclaw-podman.sh setup
+  sudo -u openclaw /home/openclaw/run-tigerpaw-podman.sh
+  sudo -u openclaw /home/openclaw/run-tigerpaw-podman.sh setup
   ```
 
 - **Config:** Only `openclaw` and root can access `/home/openclaw/.openclaw`. To edit config: use the Control UI once the gateway is running, or `sudo -u openclaw $EDITOR /home/openclaw/.openclaw/openclaw.json`.
 
 ## Environment and config
 
-- **Token:** Stored in `~openclaw/.openclaw/.env` as `OPENCLAW_GATEWAY_TOKEN`. `setup-podman.sh` and `run-openclaw-podman.sh` generate it if missing (uses `openssl`, `python3`, or `od`).
+- **Token:** Stored in `~openclaw/.openclaw/.env` as `OPENCLAW_GATEWAY_TOKEN`. `setup-podman.sh` and `run-tigerpaw-podman.sh` generate it if missing (uses `openssl`, `python3`, or `od`).
 - **Optional:** In that `.env` you can set provider keys (e.g. `GROQ_API_KEY`, `OLLAMA_API_KEY`) and other OpenClaw env vars.
 - **Host ports:** By default the script maps `18789` (gateway) and `18790` (bridge). Override the **host** port mapping with `OPENCLAW_PODMAN_GATEWAY_HOST_PORT` and `OPENCLAW_PODMAN_BRIDGE_HOST_PORT` when launching.
-- **Gateway bind:** By default, `run-openclaw-podman.sh` starts the gateway with `--bind loopback` for safe local access. To expose on LAN, set `OPENCLAW_GATEWAY_BIND=lan` and configure `gateway.controlUi.allowedOrigins` (or explicitly enable host-header fallback) in `openclaw.json`.
+- **Gateway bind:** By default, `run-tigerpaw-podman.sh` starts the gateway with `--bind loopback` for safe local access. To expose on LAN, set `OPENCLAW_GATEWAY_BIND=lan` and configure `gateway.controlUi.allowedOrigins` (or explicitly enable host-header fallback) in `openclaw.json`.
 - **Paths:** Host config and workspace default to `~openclaw/.openclaw` and `~openclaw/.openclaw/workspace`. Override the host paths used by the launch script with `OPENCLAW_CONFIG_DIR` and `OPENCLAW_WORKSPACE_DIR`.
 
 ## Storage model
@@ -114,7 +114,7 @@ To add quadlet **after** an initial setup that did not use it, re-run: `./setup-
 - **Gateway start blocked (missing `gateway.mode=local`):** Ensure `~openclaw/.openclaw/openclaw.json` exists and sets `gateway.mode="local"`. `setup-podman.sh` creates this file if missing.
 - **Rootless Podman fails for user openclaw:** Check `/etc/subuid` and `/etc/subgid` contain a line for `openclaw` (e.g. `openclaw:100000:65536`). Add it if missing and restart.
 - **Container name in use:** The launch script uses `podman run --replace`, so the existing container is replaced when you start again. To clean up manually: `podman rm -f openclaw`.
-- **Script not found when running as openclaw:** Ensure `setup-podman.sh` was run so that `run-openclaw-podman.sh` is copied to openclaw’s home (e.g. `/home/openclaw/run-openclaw-podman.sh`).
+- **Script not found when running as openclaw:** Ensure `setup-podman.sh` was run so that `run-tigerpaw-podman.sh` is copied to openclaw’s home (e.g. `/home/openclaw/run-tigerpaw-podman.sh`).
 - **Quadlet service not found or fails to start:** Run `sudo systemctl --machine openclaw@ --user daemon-reload` after editing the `.container` file. Quadlet requires cgroups v2: `podman info --format '{{.Host.CgroupsVersion}}'` should show `2`.
 
 ## Optional: run as your own user

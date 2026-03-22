@@ -5,7 +5,7 @@ import type {
   OpenClawPluginApi,
   OpenClawPluginCommandDefinition,
   PluginCommandContext,
-} from "openclaw/plugin-sdk/phone-control";
+} from "tigerpaw/plugin-sdk/phone-control";
 import { describe, expect, it, vi } from "vitest";
 import registerPhoneControl from "./index.js";
 

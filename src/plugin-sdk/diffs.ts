@@ -2,7 +2,7 @@
 // Keep this list additive and scoped to symbols used under extensions/diffs.
 
 export type { OpenClawConfig } from "../config/config.js";
-export { resolvePreferredOpenClawTmpDir } from "../infra/tmp-openclaw-dir.js";
+export { resolvePreferredOpenClawTmpDir } from "../infra/tmp-tigerpaw-dir.js";
 export type {
   AnyAgentTool,
   OpenClawPluginApi,

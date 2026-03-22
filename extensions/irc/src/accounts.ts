@@ -1,9 +1,9 @@
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
-import { tryReadSecretFileSync } from "openclaw/plugin-sdk/core";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "tigerpaw/plugin-sdk/account-id";
+import { tryReadSecretFileSync } from "tigerpaw/plugin-sdk/core";
 import {
   createAccountListHelpers,
   normalizeResolvedSecretInputString,
-} from "openclaw/plugin-sdk/irc";
+} from "tigerpaw/plugin-sdk/irc";
 import type { CoreConfig, IrcAccountConfig, IrcNickServConfig } from "./types.js";
 
 const TRUTHY_ENV = new Set(["true", "1", "yes", "on"]);

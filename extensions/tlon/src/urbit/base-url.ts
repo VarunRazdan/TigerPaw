@@ -1,4 +1,4 @@
-import { isBlockedHostnameOrIp } from "openclaw/plugin-sdk/tlon";
+import { isBlockedHostnameOrIp } from "tigerpaw/plugin-sdk/tlon";
 
 export type UrbitBaseUrlValidation =
   | { ok: true; baseUrl: string; hostname: string }

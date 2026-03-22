@@ -1,5 +1,5 @@
 import type { MatrixClient } from "@vector-im/matrix-bot-sdk";
-import type { PluginRuntime, RuntimeEnv, RuntimeLogger } from "openclaw/plugin-sdk/matrix";
+import type { PluginRuntime, RuntimeEnv, RuntimeLogger } from "tigerpaw/plugin-sdk/matrix";
 import { describe, expect, it, vi } from "vitest";
 import {
   createMatrixRoomMessageHandler,

@@ -1,17 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { formatNextRun } from "../ui/src/ui/presenter.ts";
+// Skipped: formatNextRun was part of the old Lit-based UI (now backed up to ui-lit-backup/).
+// The Lit UI was replaced with a React UI that does not include this presenter function.
+// Remove this file once the ui-lit-backup/ directory is cleaned up.
+import { describe, it } from "vitest";
 
-describe("formatNextRun", () => {
-  it("returns n/a for nullish values", () => {
-    expect(formatNextRun(null)).toBe("n/a");
-    expect(formatNextRun(undefined)).toBe("n/a");
-  });
-
-  it("includes weekday and relative time", () => {
-    const ts = Date.UTC(2026, 1, 23, 15, 0, 0);
-    const out = formatNextRun(ts);
-    expect(out).toMatch(/^[A-Za-z]{3}, /);
-    expect(out).toContain("(");
-    expect(out).toContain(")");
-  });
+describe.skip("formatNextRun (old Lit UI -- removed)", () => {
+  it("was replaced by the React UI", () => {});
 });

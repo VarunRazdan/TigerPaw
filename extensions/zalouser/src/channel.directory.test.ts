@@ -1,4 +1,4 @@
-import type { RuntimeEnv } from "openclaw/plugin-sdk/zalouser";
+import type { RuntimeEnv } from "tigerpaw/plugin-sdk/zalouser";
 import { describe, expect, it, vi } from "vitest";
 
 const listZaloGroupMembersMock = vi.hoisted(() => vi.fn(async () => []));

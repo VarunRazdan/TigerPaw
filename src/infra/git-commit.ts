@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveGitHeadPath } from "./git-root.js";
-import { resolveOpenClawPackageRootSync } from "./openclaw-root.js";
+import { resolveOpenClawPackageRootSync } from "./tigerpaw-root.js";
 
 const formatCommit = (value?: string | null) => {
   if (!value) {

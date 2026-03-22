@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { MANIFEST_KEY } from "../compat/legacy-names.js";
+import { LEGACY_MANIFEST_KEYS, MANIFEST_KEY } from "../compat/legacy-names.js";
 import { fileExists, readJsonFile, resolveArchiveKind } from "../infra/archive.js";
 import { resolveExistingInstallPath, withExtractedArchiveRoot } from "../infra/install-flow.js";
 import { installFromValidatedNpmSpecArchive } from "../infra/install-from-npm-spec.js";
@@ -113,7 +113,16 @@ export function resolveHookInstallDir(hookId: string, hooksDir?: string): string
 }
 
 async function ensureOpenClawHooks(manifest: HookPackageManifest) {
-  const hooks = manifest[MANIFEST_KEY]?.hooks;
+  let hooks = manifest[MANIFEST_KEY]?.hooks;
+  if (!Array.isArray(hooks)) {
+    for (const legacyKey of LEGACY_MANIFEST_KEYS) {
+      const legacy = (manifest as Record<string, { hooks?: string[] }>)[legacyKey]?.hooks;
+      if (Array.isArray(legacy)) {
+        hooks = legacy;
+        break;
+      }
+    }
+  }
   if (!Array.isArray(hooks)) {
     throw new Error("package.json missing openclaw.hooks");
   }

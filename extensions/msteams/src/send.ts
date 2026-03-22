@@ -1,5 +1,5 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/msteams";
-import { loadOutboundMediaFromUrl } from "openclaw/plugin-sdk/msteams";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/msteams";
+import { loadOutboundMediaFromUrl } from "tigerpaw/plugin-sdk/msteams";
 import { createMSTeamsConversationStoreFs } from "./conversation-store-fs.js";
 import {
   classifyMSTeamsSendError,

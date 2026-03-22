@@ -123,3 +123,23 @@ dist/protocol.schema.json
 # Synthing
 **/.stfolder/
 .dev-state
+
+# ── TigerClaw Trading ──
+
+# Trading state & credentials (NEVER COMMIT)
+*.enc
+*.pem
+!test-fixtures/**/*.pem
+audit.jsonl
+audit.jsonl.*
+policy-state.json
+
+# Old Lit UI backup
+ui-lit-backup/
+ui 2/
+
+# Packaged tarballs
+*.tgz
+
+# Private dev notes
+PRIVATE_DEV_NOTES.md

@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Onboarding
-    url: https://discord.gg/clawd
-    about: "New to OpenClaw? Join Discord for setup guidance in #help."
+    url: https://github.com/varunrazdan/tigerpaw/discussions
+    about: "New to Tigerpaw? Start a discussion for setup guidance."
   - name: Support
-    url: https://discord.gg/clawd
-    about: "Get help from the OpenClaw community on Discord in #help."
+    url: https://github.com/varunrazdan/tigerpaw/discussions
+    about: "Get help from the Tigerpaw community."

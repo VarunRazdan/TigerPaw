@@ -1,5 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -12,26 +14,29 @@ function normalizeBase(input: string): string {
   if (trimmed === "./") {
     return "./";
   }
-  if (trimmed.endsWith("/")) {
-    return trimmed;
-  }
-  return `${trimmed}/`;
+  return trimmed.endsWith("/") ? trimmed : `${trimmed}/`;
 }
 
 export default defineConfig(() => {
-  const envBase = process.env.OPENCLAW_CONTROL_UI_BASE_PATH?.trim();
+  const envBase =
+    process.env.TIGERPAW_CONTROL_UI_BASE_PATH?.trim() ||
+    process.env.TIGERCLAW_CONTROL_UI_BASE_PATH?.trim() ||
+    process.env.OPENCLAW_CONTROL_UI_BASE_PATH?.trim();
   const base = envBase ? normalizeBase(envBase) : "./";
+
   return {
     base,
+    plugins: [react(), tailwindcss()],
     publicDir: path.resolve(here, "public"),
-    optimizeDeps: {
-      include: ["lit/directives/repeat.js"],
+    resolve: {
+      alias: {
+        "@": path.resolve(here, "src"),
+      },
     },
     build: {
       outDir: path.resolve(here, "../dist/control-ui"),
       emptyOutDir: true,
       sourcemap: true,
-      // Keep CI/onboard logs clean; current control UI chunking is intentionally above 500 kB.
       chunkSizeWarningLimit: 1024,
     },
     server: {

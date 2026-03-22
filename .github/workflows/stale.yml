@@ -52,13 +52,12 @@ jobs:
             Please add updates or it will be closed.
           close-issue-message: |
             Closing due to inactivity.
-            If this is still an issue, please retry on the latest OpenClaw release and share updated details.
+            If this is still an issue, please retry on the latest Tigerpaw release and share updated details.
             If you are absolutely sure it still happens on the latest release, open a new issue with fresh repro steps.
           close-issue-reason: not_planned
           close-pr-message: |
             Closing due to inactivity.
-            If you believe this PR should be revived, post in #pr-thunderdome-dangerzone on Discord to talk to a maintainer.
-            That channel is the escape hatch for high-quality PRs that get auto-closed.
+            If you believe this PR should be revived, reopen it or contact maintainers via GitHub Discussions.
       - name: Check stale state cache
         id: stale-state
         if: always()
@@ -108,13 +107,12 @@ jobs:
             Please add updates or it will be closed.
           close-issue-message: |
             Closing due to inactivity.
-            If this is still an issue, please retry on the latest OpenClaw release and share updated details.
+            If this is still an issue, please retry on the latest Tigerpaw release and share updated details.
             If you are absolutely sure it still happens on the latest release, open a new issue with fresh repro steps.
           close-issue-reason: not_planned
           close-pr-message: |
             Closing due to inactivity.
-            If you believe this PR should be revived, post in #pr-thunderdome-dangerzone on Discord to talk to a maintainer.
-            That channel is the escape hatch for high-quality PRs that get auto-closed.
+            If you believe this PR should be revived, reopen it or contact maintainers via GitHub Discussions.
 
   lock-closed-issues:
     permissions:

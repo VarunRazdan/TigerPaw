@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { promisify } from "node:util";
 import { danger, shouldLogVerbose } from "../globals.js";
-import { markOpenClawExecEnv } from "../infra/openclaw-exec-env.js";
+import { markOpenClawExecEnv } from "../infra/tigerpaw-exec-env.js";
 import { logDebug, logError } from "../logger.js";
 import { resolveCommandStdio } from "./spawn-utils.js";
 import { resolveWindowsCommandShim } from "./windows-command.js";

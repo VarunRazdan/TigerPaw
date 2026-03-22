@@ -1,5 +1,5 @@
-import { normalizeAccountId } from "openclaw/plugin-sdk/account-id";
-import { createAccountListHelpers } from "openclaw/plugin-sdk/matrix";
+import { normalizeAccountId } from "tigerpaw/plugin-sdk/account-id";
+import { createAccountListHelpers } from "tigerpaw/plugin-sdk/matrix";
 import { hasConfiguredSecretInput } from "../secret-input.js";
 import type { CoreConfig, MatrixConfig } from "../types.js";
 import { resolveMatrixConfigForAccount } from "./client.js";

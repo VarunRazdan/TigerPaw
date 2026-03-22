@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/mattermost";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/mattermost";
 import { expect, vi } from "vitest";
 
 export function createMattermostTestConfig(): OpenClawConfig {

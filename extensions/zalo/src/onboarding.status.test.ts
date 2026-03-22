@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/zalo";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/zalo";
 import { describe, expect, it } from "vitest";
 import { zaloOnboardingAdapter } from "./onboarding.js";
 

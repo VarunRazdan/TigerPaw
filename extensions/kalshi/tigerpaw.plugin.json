@@ -1,0 +1,50 @@
+{
+  "id": "kalshi",
+  "kind": "trading",
+  "permissions": {
+    "network": ["trading-api.kalshi.com", "demo-api.kalshi.co"],
+    "trading": true,
+    "secrets": ["kalshi.apiKeyId", "kalshi.privateKeyPath"]
+  },
+  "uiHints": {
+    "apiKeyId": {
+      "label": "API Key ID",
+      "sensitive": true,
+      "placeholder": "Your Kalshi API key ID",
+      "help": "API key ID for Kalshi (or use ${KALSHI_API_KEY_ID})"
+    },
+    "privateKeyPath": {
+      "label": "Private Key Path",
+      "sensitive": true,
+      "placeholder": "/path/to/kalshi-private-key.pem",
+      "help": "Path to the PEM file containing your RSA private key for API authentication (or use ${KALSHI_PRIVATE_KEY_PATH})"
+    },
+    "mode": {
+      "label": "Trading Mode",
+      "sensitive": false,
+      "placeholder": "demo",
+      "help": "Use \"demo\" for simulated trading on demo-api.kalshi.co (no real money) or \"live\" for real trading on trading-api.kalshi.com. Defaults to \"demo\"."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string"
+      },
+      "apiKeyId": {
+        "type": "string"
+      },
+      "privateKeyPath": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string",
+        "enum": ["demo", "live"],
+        "default": "demo"
+      }
+    },
+    "required": ["email", "apiKeyId", "privateKeyPath"]
+  }
+}

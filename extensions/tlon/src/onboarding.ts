@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/tlon";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/tlon";
 import {
   formatDocsLink,
   patchScopedAccountConfig,
@@ -6,7 +6,7 @@ import {
   DEFAULT_ACCOUNT_ID,
   type ChannelOnboardingAdapter,
   type WizardPrompter,
-} from "openclaw/plugin-sdk/tlon";
+} from "tigerpaw/plugin-sdk/tlon";
 import { buildTlonAccountFields } from "./account-fields.js";
 import type { TlonResolvedAccount } from "./types.js";
 import { listTlonAccountIds, resolveTlonAccount } from "./types.js";

@@ -4,7 +4,7 @@ import type {
   OpenClawConfig,
   SecretInput,
   WizardPrompter,
-} from "openclaw/plugin-sdk/zalo";
+} from "tigerpaw/plugin-sdk/zalo";
 import {
   buildSingleChannelSecretPromptState,
   DEFAULT_ACCOUNT_ID,
@@ -15,7 +15,7 @@ import {
   runSingleChannelSecretStep,
   resolveAccountIdForConfigure,
   setTopLevelChannelDmPolicyWithAllowFrom,
-} from "openclaw/plugin-sdk/zalo";
+} from "tigerpaw/plugin-sdk/zalo";
 import { listZaloAccountIds, resolveDefaultZaloAccountId, resolveZaloAccount } from "./accounts.js";
 
 const channel = "zalo" as const;

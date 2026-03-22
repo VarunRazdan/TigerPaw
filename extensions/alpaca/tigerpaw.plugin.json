@@ -1,0 +1,47 @@
+{
+  "id": "alpaca",
+  "kind": "trading",
+  "permissions": {
+    "network": ["api.alpaca.markets", "paper-api.alpaca.markets", "data.alpaca.markets"],
+    "trading": true,
+    "secrets": ["alpaca.apiKeyId", "alpaca.apiSecretKey"]
+  },
+  "uiHints": {
+    "apiKeyId": {
+      "label": "API Key ID",
+      "sensitive": true,
+      "placeholder": "Your Alpaca API key ID",
+      "help": "API key ID for Alpaca (or use ${ALPACA_API_KEY_ID})"
+    },
+    "apiSecretKey": {
+      "label": "API Secret Key",
+      "sensitive": true,
+      "placeholder": "Your Alpaca API secret key",
+      "help": "API secret key for Alpaca (or use ${ALPACA_API_SECRET_KEY})"
+    },
+    "mode": {
+      "label": "Trading Mode",
+      "sensitive": false,
+      "placeholder": "paper",
+      "help": "Use \"paper\" for simulated trading (no real money) or \"live\" for real trading. Defaults to \"paper\"."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKeyId": {
+        "type": "string"
+      },
+      "apiSecretKey": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string",
+        "enum": ["paper", "live"],
+        "default": "paper"
+      }
+    },
+    "required": ["apiKeyId", "apiSecretKey"]
+  }
+}

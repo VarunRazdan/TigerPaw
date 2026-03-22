@@ -1,0 +1,15 @@
+{
+  "name": "@tigerpaw/kalshi",
+  "version": "2026.3.11",
+  "private": true,
+  "description": "Tigerpaw Kalshi event contracts trading extension",
+  "type": "module",
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "tigerpaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

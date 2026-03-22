@@ -1,5 +1,5 @@
-import { createPluginRuntimeStore } from "openclaw/plugin-sdk/compat";
-import type { PluginRuntime } from "openclaw/plugin-sdk/matrix";
+import { createPluginRuntimeStore } from "tigerpaw/plugin-sdk/compat";
+import type { PluginRuntime } from "tigerpaw/plugin-sdk/matrix";
 
 const { setRuntime: setMatrixRuntime, getRuntime: getMatrixRuntime } =
   createPluginRuntimeStore<PluginRuntime>("Matrix runtime not initialized");

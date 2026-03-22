@@ -1,4 +1,4 @@
-import { DEFAULT_ACCOUNT_ID } from "openclaw/plugin-sdk/account-id";
+import { DEFAULT_ACCOUNT_ID } from "tigerpaw/plugin-sdk/account-id";
 import {
   buildSingleChannelSecretPromptState,
   hasConfiguredSecretInput,
@@ -7,7 +7,7 @@ import {
   type OpenClawConfig,
   type SecretInput,
   type WizardPrompter,
-} from "openclaw/plugin-sdk/mattermost";
+} from "tigerpaw/plugin-sdk/mattermost";
 import {
   listMattermostAccountIds,
   resolveDefaultMattermostAccountId,

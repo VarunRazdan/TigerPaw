@@ -13,6 +13,7 @@ import type { GatewayRequestHandler } from "../gateway/server-methods/types.js";
 import type { InternalHookHandler } from "../hooks/internal-hooks.js";
 import type { HookEntry } from "../hooks/types.js";
 import type { RuntimeEnv } from "../runtime.js";
+import type { TradingPolicyConfig } from "../trading/policy-engine.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 import type { PluginRuntime } from "./runtime/types.js";
 
@@ -297,6 +298,8 @@ export type OpenClawPluginApi = {
     factory: import("../context-engine/registry.js").ContextEngineFactory,
   ) => void;
   resolvePath: (input: string) => string;
+  /** Trading policy config injected from root config when trading is enabled. */
+  tradingPolicyConfig?: TradingPolicyConfig;
   /** Register a lifecycle hook handler */
   on: <K extends PluginHookName>(
     hookName: K,

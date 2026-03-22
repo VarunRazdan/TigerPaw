@@ -10,7 +10,7 @@ import {
   sanitizeHostExecEnv,
   sanitizeSystemRunEnvOverrides,
 } from "./host-env-security.js";
-import { OPENCLAW_CLI_ENV_VALUE } from "./openclaw-exec-env.js";
+import { OPENCLAW_CLI_ENV_VALUE } from "./tigerpaw-exec-env.js";
 
 describe("isDangerousHostEnvVarName", () => {
   it("matches dangerous keys and prefixes case-insensitively", () => {

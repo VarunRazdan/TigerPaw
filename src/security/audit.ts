@@ -1248,6 +1248,90 @@ export async function runSecurityAudit(opts: SecurityAuditOptions): Promise<Secu
     });
   }
 
+  // Trading safety audit checks.
+  findings.push(...collectTradingSecurityFindings(cfg));
+
   const summary = countBySeverity(findings);
   return { ts: Date.now(), summary, findings, deep };
+}
+
+// ---------------------------------------------------------------------------
+// Trading security findings
+// ---------------------------------------------------------------------------
+
+function collectTradingSecurityFindings(cfg: OpenClawConfig): SecurityAuditFinding[] {
+  const findings: SecurityAuditFinding[] = [];
+  const trading = (cfg as Record<string, unknown>).trading as
+    | { enabled?: boolean; mode?: string; policy?: Record<string, unknown> }
+    | undefined;
+
+  if (!trading?.enabled) {
+    return findings;
+  }
+
+  // WARN if live trading with auto-approval mode.
+  if (
+    trading.mode === "live" &&
+    (trading.policy as Record<string, unknown>)?.approvalMode === "auto"
+  ) {
+    findings.push({
+      checkId: "trading-live-manual-recommended",
+      severity: "warn",
+      title: "Live trading with auto-approval mode",
+      detail:
+        'Live trading is using approvalMode "auto" — trades execute without any human confirmation.',
+      remediation:
+        'Consider switching to approvalMode "confirm" or "manual" for live trading to add a human review step.',
+    });
+  }
+
+  // WARN if daily spend or daily loss limits are very high.
+  const limits = (trading.policy as Record<string, unknown>)?.limits as
+    | Record<string, number>
+    | undefined;
+  if (limits) {
+    if (typeof limits.maxDailySpendUsd === "number" && limits.maxDailySpendUsd > 1000) {
+      findings.push({
+        checkId: "trading-live-high-limits",
+        severity: "warn",
+        title: "High daily spend limit",
+        detail: `Daily spend limit is $${limits.maxDailySpendUsd} (above $1,000 warning threshold).`,
+        remediation: "Review whether this limit is appropriate for your risk tolerance.",
+      });
+    }
+    if (typeof limits.dailyLossLimitPercent === "number" && limits.dailyLossLimitPercent > 10) {
+      findings.push({
+        checkId: "trading-live-high-loss-limit",
+        severity: "warn",
+        title: "High daily loss limit",
+        detail: `Daily loss limit is ${limits.dailyLossLimitPercent}% (above 10% warning threshold).`,
+        remediation: "Review whether this loss tolerance is appropriate for your portfolio.",
+      });
+    }
+    if (
+      typeof limits.maxPortfolioDrawdownPercent !== "number" ||
+      !Number.isFinite(limits.maxPortfolioDrawdownPercent)
+    ) {
+      findings.push({
+        checkId: "trading-drawdown-limit-missing",
+        severity: "warn",
+        title: "Portfolio drawdown limit not set",
+        detail: "No maxPortfolioDrawdownPercent limit is configured.",
+        remediation:
+          "Set a portfolio drawdown limit to automatically pause trading when losses accumulate.",
+      });
+    }
+  }
+
+  // INFO reminder to test kill switch.
+  findings.push({
+    checkId: "trading-no-kill-switch-tested",
+    severity: "info",
+    title: "Kill switch test reminder",
+    detail:
+      "Verify the kill switch works by running: tigerpaw trading kill && tigerpaw trading resume",
+    remediation: "Test the kill switch periodically to ensure it halts all trading activity.",
+  });
+
+  return findings;
 }

@@ -1,5 +1,5 @@
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/account-id";
-import { fetchWithSsrFGuard } from "openclaw/plugin-sdk/matrix";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "tigerpaw/plugin-sdk/account-id";
+import { fetchWithSsrFGuard } from "tigerpaw/plugin-sdk/matrix";
 import { getMatrixRuntime } from "../../runtime.js";
 import {
   normalizeResolvedSecretInputString,

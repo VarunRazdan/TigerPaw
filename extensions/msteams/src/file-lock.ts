@@ -1,1 +1,1 @@
-export { withFileLock } from "openclaw/plugin-sdk/msteams";
+export { withFileLock } from "tigerpaw/plugin-sdk/msteams";

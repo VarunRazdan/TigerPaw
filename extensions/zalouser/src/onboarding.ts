@@ -3,7 +3,7 @@ import type {
   ChannelOnboardingDmPolicy,
   OpenClawConfig,
   WizardPrompter,
-} from "openclaw/plugin-sdk/zalouser";
+} from "tigerpaw/plugin-sdk/zalouser";
 import {
   DEFAULT_ACCOUNT_ID,
   formatResolvedUnresolvedNote,
@@ -13,7 +13,7 @@ import {
   promptChannelAccessConfig,
   resolveAccountIdForConfigure,
   setTopLevelChannelDmPolicyWithAllowFrom,
-} from "openclaw/plugin-sdk/zalouser";
+} from "tigerpaw/plugin-sdk/zalouser";
 import {
   listZalouserAccountIds,
   resolveDefaultZalouserAccountId,

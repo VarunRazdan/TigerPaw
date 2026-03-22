@@ -7,7 +7,7 @@ import {
 } from "./redact-snapshot.js";
 import { __test__ } from "./schema.hints.js";
 import type { ConfigUiHints } from "./schema.js";
-import type { ConfigFileSnapshot } from "./types.openclaw.js";
+import type { ConfigFileSnapshot } from "./types.tigerpaw.js";
 import { OpenClawSchema } from "./zod-schema.js";
 
 const { mapSensitivePaths } = __test__;

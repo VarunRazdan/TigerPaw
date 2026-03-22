@@ -2,7 +2,7 @@ import type {
   ChannelDirectoryEntry,
   OpenClawConfig,
   RuntimeEnv,
-} from "openclaw/plugin-sdk/mattermost";
+} from "tigerpaw/plugin-sdk/mattermost";
 import { listMattermostAccountIds, resolveMattermostAccount } from "./accounts.js";
 import {
   createMattermostClient,

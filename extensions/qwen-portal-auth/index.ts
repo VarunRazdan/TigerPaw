@@ -3,7 +3,7 @@ import {
   emptyPluginConfigSchema,
   type OpenClawPluginApi,
   type ProviderAuthContext,
-} from "openclaw/plugin-sdk/qwen-portal-auth";
+} from "tigerpaw/plugin-sdk/qwen-portal-auth";
 import { loginQwenPortalOAuth } from "./oauth.js";
 
 const PROVIDER_ID = "qwen-portal";

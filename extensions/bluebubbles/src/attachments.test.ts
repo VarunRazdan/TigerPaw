@@ -1,4 +1,4 @@
-import type { PluginRuntime } from "openclaw/plugin-sdk/bluebubbles";
+import type { PluginRuntime } from "tigerpaw/plugin-sdk/bluebubbles";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "./test-mocks.js";
 import { downloadBlueBubblesAttachment, sendBlueBubblesAttachment } from "./attachments.js";

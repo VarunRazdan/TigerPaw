@@ -3,8 +3,8 @@ import {
   buildNestedDmConfigSchema,
   DmPolicySchema,
   GroupPolicySchema,
-} from "openclaw/plugin-sdk/compat";
-import { MarkdownConfigSchema, ToolPolicySchema } from "openclaw/plugin-sdk/matrix";
+} from "tigerpaw/plugin-sdk/compat";
+import { MarkdownConfigSchema, ToolPolicySchema } from "tigerpaw/plugin-sdk/matrix";
 import { z } from "zod";
 import { buildSecretInputSchema } from "./secret-input.js";
 

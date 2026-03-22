@@ -1,20 +1,38 @@
 {
-  "name": "openclaw",
+  "name": "@greatlyrecommended/tigerpaw",
   "version": "2026.3.11",
-  "description": "Multi-channel AI gateway with extensible messaging integrations",
-  "keywords": [],
-  "homepage": "https://github.com/openclaw/openclaw#readme",
+  "description": "Multi-channel AI trading gateway with extensible messaging and real-money trading integrations",
+  "keywords": [
+    "ai",
+    "alpaca",
+    "binance",
+    "chatbot",
+    "coinbase",
+    "discord",
+    "gateway",
+    "kalshi",
+    "multi-channel",
+    "polymarket",
+    "prediction-markets",
+    "risk-management",
+    "slack",
+    "telegram",
+    "trading"
+  ],
+  "homepage": "https://github.com/varunrazdan/tigerpaw#readme",
   "bugs": {
-    "url": "https://github.com/openclaw/openclaw/issues"
+    "url": "https://github.com/varunrazdan/tigerpaw/issues"
   },
   "license": "MIT",
-  "author": "",
+  "author": "Varun Razdan",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openclaw/openclaw.git"
+    "url": "git+https://github.com/varunrazdan/tigerpaw.git"
   },
   "bin": {
-    "openclaw": "openclaw.mjs"
+    "openclaw": "openclaw.mjs",
+    "tigerclaw": "tigerclaw.mjs",
+    "tigerpaw": "tigerpaw.mjs"
   },
   "directories": {
     "doc": "docs",
@@ -24,12 +42,14 @@
     "CHANGELOG.md",
     "LICENSE",
     "openclaw.mjs",
-    "README-header.png",
+    "tigerclaw.mjs",
+    "tigerpaw.mjs",
     "README.md",
     "assets/",
     "dist/",
     "docs/",
     "extensions/",
+    "!extensions/**/node_modules",
     "skills/"
   ],
   "type": "module",
@@ -79,6 +99,10 @@
     "./plugin-sdk/msteams": {
       "types": "./dist/plugin-sdk/msteams.d.ts",
       "default": "./dist/plugin-sdk/msteams.js"
+    },
+    "./trading": {
+      "types": "./dist/trading/index.d.ts",
+      "default": "./dist/trading/index.js"
     },
     "./plugin-sdk/acpx": {
       "types": "./dist/plugin-sdk/acpx.d.ts",
@@ -212,7 +236,7 @@
       "types": "./dist/plugin-sdk/keyed-async-queue.d.ts",
       "default": "./dist/plugin-sdk/keyed-async-queue.js"
     },
-    "./cli-entry": "./openclaw.mjs"
+    "./cli-entry": "./tigerpaw.mjs"
   },
   "scripts": {
     "android:assemble": "cd apps/android && ./gradlew :app:assembleDebug",
@@ -223,10 +247,11 @@
     "android:run": "cd apps/android && ./gradlew :app:installDebug && adb shell am start -n ai.openclaw.app/.MainActivity",
     "android:test": "cd apps/android && ./gradlew :app:testDebugUnitTest",
     "android:test:integration": "OPENCLAW_LIVE_TEST=1 OPENCLAW_LIVE_ANDROID_NODE=1 vitest run --config vitest.live.config.ts src/gateway/android-node.capabilities.live.test.ts",
-    "build": "pnpm canvas:a2ui:bundle && node scripts/tsdown-build.mjs && node scripts/copy-plugin-sdk-root-alias.mjs && pnpm build:plugin-sdk:dts && node --import tsx scripts/write-plugin-sdk-entry-dts.ts && node --import tsx scripts/canvas-a2ui-copy.ts && node --import tsx scripts/copy-hook-metadata.ts && node --import tsx scripts/copy-export-html-templates.ts && node --import tsx scripts/write-build-info.ts && node --import tsx scripts/write-cli-startup-metadata.ts && node --import tsx scripts/write-cli-compat.ts",
+    "build": "pnpm canvas:a2ui:bundle && node scripts/tsdown-build.mjs && node scripts/copy-plugin-sdk-root-alias.mjs && pnpm build:plugin-sdk:dts && pnpm build:trading:dts && node --import tsx scripts/write-plugin-sdk-entry-dts.ts && node --import tsx scripts/canvas-a2ui-copy.ts && node --import tsx scripts/copy-hook-metadata.ts && node --import tsx scripts/copy-export-html-templates.ts && node --import tsx scripts/write-build-info.ts && node --import tsx scripts/write-cli-startup-metadata.ts && node --import tsx scripts/write-cli-compat.ts",
     "build:docker": "node scripts/tsdown-build.mjs && node scripts/copy-plugin-sdk-root-alias.mjs && pnpm build:plugin-sdk:dts && node --import tsx scripts/write-plugin-sdk-entry-dts.ts && node --import tsx scripts/canvas-a2ui-copy.ts && node --import tsx scripts/copy-hook-metadata.ts && node --import tsx scripts/copy-export-html-templates.ts && node --import tsx scripts/write-build-info.ts && node --import tsx scripts/write-cli-startup-metadata.ts && node --import tsx scripts/write-cli-compat.ts",
     "build:plugin-sdk:dts": "tsc -p tsconfig.plugin-sdk.dts.json",
     "build:strict-smoke": "pnpm canvas:a2ui:bundle && node scripts/tsdown-build.mjs && node scripts/copy-plugin-sdk-root-alias.mjs && pnpm build:plugin-sdk:dts",
+    "build:trading:dts": "tsc -p tsconfig.trading.dts.json",
     "canvas:a2ui:bundle": "bash scripts/bundle-a2ui.sh",
     "check": "pnpm check:host-env-policy:swift && pnpm format:check && pnpm tsgo && pnpm lint && pnpm lint:tmp:no-random-messaging && pnpm lint:tmp:channel-agnostic-boundaries && pnpm lint:tmp:no-raw-channel-fetch && pnpm lint:agent:ingress-owner && pnpm lint:plugins:no-register-http-handler && pnpm lint:plugins:no-monolithic-plugin-sdk-entry-imports && pnpm lint:webhook:no-low-level-body-read && pnpm lint:auth:no-pairing-store-group && pnpm lint:auth:pairing-account-scope",
     "check:docs": "pnpm format:docs:check && pnpm lint:docs && pnpm docs:check-links",
@@ -289,8 +314,6 @@
     "mac:package": "bash scripts/package-mac-app.sh",
     "mac:restart": "bash scripts/restart-mac.sh",
     "moltbot:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
-    "openclaw": "node scripts/run-node.mjs",
-    "openclaw:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
     "plugins:sync": "node --import tsx scripts/sync-plugin-versions.ts",
     "prepack": "pnpm build && pnpm ui:build",
     "prepare": "command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config core.hooksPath git-hooks || exit 0",
@@ -298,7 +321,7 @@
     "protocol:gen": "node --import tsx scripts/protocol-gen.ts",
     "protocol:gen:swift": "node --import tsx scripts/protocol-gen-swift.ts",
     "release:check": "node --import tsx scripts/release-check.ts",
-    "release:openclaw:npm:check": "node --import tsx scripts/openclaw-npm-release-check.ts",
+    "release:tigerclaw:npm:check": "node --import tsx scripts/tigerclaw-npm-release-check.ts",
     "start": "node scripts/run-node.mjs",
     "test": "node scripts/test-parallel.mjs",
     "test:all": "pnpm lint && pnpm build && pnpm test && pnpm test:e2e && pnpm test:live && pnpm test:docker:all",
@@ -331,6 +354,8 @@
     "test:ui": "pnpm lint:ui:no-raw-window-open && pnpm --dir ui test",
     "test:voicecall:closedloop": "vitest run extensions/voice-call/src/manager.test.ts extensions/voice-call/src/media-stream.test.ts src/plugins/voice-call.plugin.test.ts --maxWorkers=1",
     "test:watch": "vitest",
+    "tigerclaw": "node scripts/run-node.mjs",
+    "tigerclaw:rpc": "node scripts/run-node.mjs agent --mode rpc --json",
     "tui": "node scripts/run-node.mjs tui",
     "tui:dev": "OPENCLAW_PROFILE=dev CLAWDBOT_PROFILE=dev node scripts/run-node.mjs --dev tui",
     "ui:build": "node scripts/ui.js build",
@@ -404,6 +429,7 @@
     "@types/ws": "^8.18.1",
     "@typescript/native-preview": "7.0.0-dev.20260311.1",
     "@vitest/coverage-v8": "^4.0.18",
+    "fast-check": "^4.6.0",
     "jscpd": "4.0.8",
     "lit": "^3.3.2",
     "oxfmt": "0.38.0",

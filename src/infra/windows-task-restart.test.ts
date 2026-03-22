@@ -10,7 +10,7 @@ const resolvePreferredOpenClawTmpDirMock = vi.hoisted(() => vi.fn(() => os.tmpdi
 vi.mock("node:child_process", () => ({
   spawn: (...args: unknown[]) => spawnMock(...args),
 }));
-vi.mock("./tmp-openclaw-dir.js", () => ({
+vi.mock("./tmp-tigerpaw-dir.js", () => ({
   resolvePreferredOpenClawTmpDir: () => resolvePreferredOpenClawTmpDirMock(),
 }));
 

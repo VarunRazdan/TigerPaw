@@ -385,7 +385,7 @@ describe("backup commands", () => {
 
   it("backs up only the active config file when --only-config is requested", async () => {
     const stateDir = path.join(tempHome.home, ".openclaw");
-    const configPath = path.join(stateDir, "openclaw.json");
+    const configPath = path.join(stateDir, "tigerpaw.json");
     await fs.mkdir(path.join(stateDir, "credentials"), { recursive: true });
     await fs.writeFile(configPath, JSON.stringify({ theme: "config-only" }), "utf8");
     await fs.writeFile(path.join(stateDir, "state.txt"), "state\n", "utf8");

@@ -1,12 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
-import { MANIFEST_KEY } from "../compat/legacy-names.js";
+import { LEGACY_MANIFEST_KEYS, MANIFEST_KEY } from "../compat/legacy-names.js";
 import { openBoundaryFileSync } from "../infra/boundary-file-read.js";
 import { isRecord } from "../utils.js";
 import type { PluginConfigUiHint, PluginKind } from "./types.js";
 
-export const PLUGIN_MANIFEST_FILENAME = "openclaw.plugin.json";
-export const PLUGIN_MANIFEST_FILENAMES = [PLUGIN_MANIFEST_FILENAME] as const;
+export const PLUGIN_MANIFEST_FILENAME = "tigerpaw.plugin.json";
+export const PLUGIN_MANIFEST_FILENAMES = [
+  PLUGIN_MANIFEST_FILENAME,
+  "tigerpaw.plugin.json",
+  "openclaw.plugin.json",
+] as const;
 
 export type PluginManifest = {
   id: string;
@@ -178,7 +182,17 @@ export function getPackageManifestMetadata(
   if (!manifest) {
     return undefined;
   }
-  return manifest[MANIFEST_KEY];
+  const primary = manifest[MANIFEST_KEY];
+  if (primary) {
+    return primary;
+  }
+  for (const legacyKey of LEGACY_MANIFEST_KEYS) {
+    const legacy = (manifest as Record<string, OpenClawPackageManifest>)[legacyKey];
+    if (legacy) {
+      return legacy;
+    }
+  }
+  return undefined;
 }
 
 export function resolvePackageExtensionEntries(

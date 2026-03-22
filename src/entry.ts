@@ -9,11 +9,15 @@ import { shouldSkipRespawnForArgv } from "./cli/respawn-policy.js";
 import { normalizeWindowsArgv } from "./cli/windows-argv.js";
 import { isTruthyEnvValue, normalizeEnv } from "./infra/env.js";
 import { isMainModule } from "./infra/is-main.js";
-import { ensureOpenClawExecMarkerOnProcess } from "./infra/openclaw-exec-env.js";
+import { ensureOpenClawExecMarkerOnProcess } from "./infra/tigerpaw-exec-env.js";
 import { installProcessWarningFilter } from "./infra/warning-filter.js";
 import { attachChildProcessBridge } from "./process/child-process-bridge.js";
 
 const ENTRY_WRAPPER_PAIRS = [
+  { wrapperBasename: "tigerpaw.mjs", entryBasename: "entry.js" },
+  { wrapperBasename: "tigerpaw.js", entryBasename: "entry.js" },
+  { wrapperBasename: "tigerclaw.mjs", entryBasename: "entry.js" },
+  { wrapperBasename: "tigerclaw.js", entryBasename: "entry.js" },
   { wrapperBasename: "openclaw.mjs", entryBasename: "entry.js" },
   { wrapperBasename: "openclaw.js", entryBasename: "entry.js" },
 ] as const;
@@ -41,7 +45,7 @@ if (
 ) {
   // Imported as a dependency — skip all entry-point side effects.
 } else {
-  process.title = "openclaw";
+  process.title = "tigerpaw";
   ensureOpenClawExecMarkerOnProcess();
   installProcessWarningFilter();
   normalizeEnv();
@@ -54,6 +58,7 @@ if (
   }
 
   if (shouldForceReadOnlyAuthStore(process.argv)) {
+    process.env.TIGERPAW_AUTH_STORE_READONLY = "1";
     process.env.OPENCLAW_AUTH_STORE_READONLY = "1";
   }
 
@@ -81,10 +86,14 @@ if (
     if (shouldSkipRespawnForArgv(process.argv)) {
       return false;
     }
-    if (isTruthyEnvValue(process.env.OPENCLAW_NO_RESPAWN)) {
+    if (isTruthyEnvValue(process.env.TIGERCLAW_NO_RESPAWN ?? process.env.OPENCLAW_NO_RESPAWN)) {
       return false;
     }
-    if (isTruthyEnvValue(process.env.OPENCLAW_NODE_OPTIONS_READY)) {
+    if (
+      isTruthyEnvValue(
+        process.env.TIGERCLAW_NODE_OPTIONS_READY ?? process.env.OPENCLAW_NODE_OPTIONS_READY,
+      )
+    ) {
       return false;
     }
     if (hasExperimentalWarningSuppressed()) {
@@ -92,6 +101,7 @@ if (
     }
 
     // Respawn guard (and keep recursion bounded if something goes wrong).
+    process.env.TIGERPAW_NODE_OPTIONS_READY = "1";
     process.env.OPENCLAW_NODE_OPTIONS_READY = "1";
     // Pass flag as a Node CLI option, not via NODE_OPTIONS (--disable-warning is disallowed in NODE_OPTIONS).
     const child = spawn(
@@ -115,7 +125,7 @@ if (
 
     child.once("error", (error) => {
       console.error(
-        "[openclaw] Failed to respawn CLI:",
+        "[tigerpaw] Failed to respawn CLI:",
         error instanceof Error ? (error.stack ?? error.message) : error,
       );
       process.exit(1);
@@ -132,12 +142,12 @@ if (
     Promise.all([import("./version.js"), import("./infra/git-commit.js")])
       .then(([{ VERSION }, { resolveCommitHash }]) => {
         const commit = resolveCommitHash({ moduleUrl: import.meta.url });
-        console.log(commit ? `OpenClaw ${VERSION} (${commit})` : `OpenClaw ${VERSION}`);
+        console.log(commit ? `Tigerpaw ${VERSION} (${commit})` : `Tigerpaw ${VERSION}`);
         process.exit(0);
       })
       .catch((error) => {
         console.error(
-          "[openclaw] Failed to resolve version:",
+          "[tigerpaw] Failed to resolve version:",
           error instanceof Error ? (error.stack ?? error.message) : error,
         );
         process.exitCode = 1;
@@ -155,7 +165,7 @@ if (
       })
       .catch((error) => {
         console.error(
-          "[openclaw] Failed to display help:",
+          "[tigerpaw] Failed to display help:",
           error instanceof Error ? (error.stack ?? error.message) : error,
         );
         process.exitCode = 1;
@@ -169,7 +179,7 @@ if (
     const parsed = parseCliProfileArgs(process.argv);
     if (!parsed.ok) {
       // Keep it simple; Commander will handle rich help/errors after we strip flags.
-      console.error(`[openclaw] ${parsed.error}`);
+      console.error(`[tigerpaw] ${parsed.error}`);
       process.exit(2);
     }
 
@@ -184,7 +194,7 @@ if (
         .then(({ runCli }) => runCli(process.argv))
         .catch((error) => {
           console.error(
-            "[openclaw] Failed to start CLI:",
+            "[tigerpaw] Failed to start CLI:",
             error instanceof Error ? (error.stack ?? error.message) : error,
           );
           process.exitCode = 1;

@@ -1,0 +1,40 @@
+{
+  "id": "coinbase",
+  "kind": "trading",
+  "permissions": {
+    "network": ["api.coinbase.com", "advanced-trade.coinbase.com"],
+    "trading": true,
+    "secrets": ["coinbase.apiKey", "coinbase.apiSecret"]
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "API Key",
+      "sensitive": true,
+      "placeholder": "Your Coinbase Advanced Trade API key",
+      "help": "API key for Coinbase Advanced Trade (or use ${COINBASE_API_KEY})"
+    },
+    "apiSecret": {
+      "label": "API Secret",
+      "sensitive": true,
+      "placeholder": "Your Coinbase Advanced Trade API secret",
+      "help": "API secret for Coinbase Advanced Trade (or use ${COINBASE_API_SECRET})"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string"
+      },
+      "apiSecret": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string",
+        "enum": ["live", "sandbox"]
+      }
+    },
+    "required": ["apiKey", "apiSecret"]
+  }
+}

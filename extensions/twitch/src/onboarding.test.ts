@@ -11,11 +11,11 @@
  * - setTwitchAccount config updates
  */
 
-import type { WizardPrompter } from "openclaw/plugin-sdk/twitch";
+import type { WizardPrompter } from "tigerpaw/plugin-sdk/twitch";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TwitchAccountConfig } from "./types.js";
 
-vi.mock("openclaw/plugin-sdk/twitch", () => ({
+vi.mock("tigerpaw/plugin-sdk/twitch", () => ({
   formatDocsLink: (url: string, fallback: string) => fallback || url,
   promptChannelAccessConfig: vi.fn(async () => null),
 }));

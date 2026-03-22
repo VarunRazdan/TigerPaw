@@ -8,12 +8,12 @@ import {
   normalizeThinkLevel,
   resolvePreferredOpenClawTmpDir,
   supportsXHighThinking,
-} from "openclaw/plugin-sdk/llm-task";
+} from "tigerpaw/plugin-sdk/llm-task";
 // NOTE: This extension is intended to be bundled with OpenClaw.
 // When running from source (tests/dev), OpenClaw internals live under src/.
 // When running from a built install, internals live under dist/ (no src/ tree).
 // So we resolve internal imports dynamically with src-first, dist-fallback.
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/llm-task";
+import type { OpenClawPluginApi } from "tigerpaw/plugin-sdk/llm-task";
 
 type RunEmbeddedPiAgentFn = (params: Record<string, unknown>) => Promise<unknown>;
 

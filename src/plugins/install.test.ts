@@ -36,7 +36,7 @@ const DYNAMIC_ARCHIVE_TEMPLATE_PRESETS = [
     packageJson: {
       name: "@evil/..",
       version: "0.0.1",
-      openclaw: { extensions: ["./dist/index.js"] },
+      tigerpaw: { extensions: ["./dist/index.js"] },
     } as Record<string, unknown>,
   },
   {
@@ -45,7 +45,7 @@ const DYNAMIC_ARCHIVE_TEMPLATE_PRESETS = [
     packageJson: {
       name: "@evil/.",
       version: "0.0.1",
-      openclaw: { extensions: ["./dist/index.js"] },
+      tigerpaw: { extensions: ["./dist/index.js"] },
     } as Record<string, unknown>,
   },
   {
@@ -221,7 +221,7 @@ function setupManifestInstallFixture(params: { manifestId: string }) {
   fs.mkdirSync(stateDir, { recursive: true });
   fs.cpSync(manifestInstallTemplateDir, pluginDir, { recursive: true });
   fs.writeFileSync(
-    path.join(pluginDir, "openclaw.plugin.json"),
+    path.join(pluginDir, "tigerpaw.plugin.json"),
     JSON.stringify({
       id: params.manifestId,
       configSchema: { type: "object", properties: {} },
@@ -239,7 +239,7 @@ async function expectArchiveInstallReservedSegmentRejection(params: {
     packageJson: {
       name: params.packageName,
       version: "0.0.1",
-      openclaw: { extensions: ["./dist/index.js"] },
+      tigerpaw: { extensions: ["./dist/index.js"] },
     },
     outName: params.outName,
     withDistIndex: true,
@@ -344,7 +344,7 @@ beforeAll(async () => {
     JSON.stringify({
       name: "@openclaw/test-plugin",
       version: "0.0.1",
-      openclaw: { extensions: ["./dist/index.js"] },
+      tigerpaw: { extensions: ["./dist/index.js"] },
       dependencies: { "left-pad": "1.3.0" },
     }),
     "utf-8",
@@ -362,7 +362,7 @@ beforeAll(async () => {
     JSON.stringify({
       name: "@openclaw/cognee-openclaw",
       version: "0.0.1",
-      openclaw: { extensions: ["./dist/index.js"] },
+      tigerpaw: { extensions: ["./dist/index.js"] },
     }),
     "utf-8",
   );
@@ -372,7 +372,7 @@ beforeAll(async () => {
     "utf-8",
   );
   fs.writeFileSync(
-    path.join(manifestInstallTemplateDir, "openclaw.plugin.json"),
+    path.join(manifestInstallTemplateDir, "tigerpaw.plugin.json"),
     JSON.stringify({
       id: "manifest-template",
       configSchema: { type: "object", properties: {} },
@@ -551,7 +551,7 @@ describe("installPluginFromArchive", () => {
       JSON.stringify({
         name: "dangerous-plugin",
         version: "1.0.0",
-        openclaw: { extensions: ["index.js"] },
+        tigerpaw: { extensions: ["index.js"] },
       }),
     );
     fs.writeFileSync(
@@ -574,7 +574,7 @@ describe("installPluginFromArchive", () => {
       JSON.stringify({
         name: "hidden-entry-plugin",
         version: "1.0.0",
-        openclaw: { extensions: [".hidden/index.js"] },
+        tigerpaw: { extensions: [".hidden/index.js"] },
       }),
     );
     fs.writeFileSync(
@@ -601,7 +601,7 @@ describe("installPluginFromArchive", () => {
       JSON.stringify({
         name: "scan-fail-plugin",
         version: "1.0.0",
-        openclaw: { extensions: ["index.js"] },
+        tigerpaw: { extensions: ["index.js"] },
       }),
     );
     fs.writeFileSync(path.join(pluginDir, "index.js"), "export {};");
@@ -677,7 +677,7 @@ describe("installPluginFromDir", () => {
     expect(manifest.devDependencies?.vitest).toBe("^3.0.0");
   });
 
-  it("uses openclaw.plugin.json id as install key when it differs from package name", async () => {
+  it("uses tigerpaw.plugin.json id as install key when it differs from package name", async () => {
     const { pluginDir, extensionsDir } = setupManifestInstallFixture({
       manifestId: "memory-cognee",
     });

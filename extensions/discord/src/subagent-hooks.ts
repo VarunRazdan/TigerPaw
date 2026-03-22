@@ -1,10 +1,10 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/discord";
+import type { OpenClawPluginApi } from "tigerpaw/plugin-sdk/discord";
 import {
   autoBindSpawnedDiscordSubagent,
   listThreadBindingsBySessionKey,
   resolveDiscordAccount,
   unbindThreadBindingsBySessionKey,
-} from "openclaw/plugin-sdk/discord";
+} from "tigerpaw/plugin-sdk/discord";
 
 function summarizeError(err: unknown): string {
   if (err instanceof Error) {

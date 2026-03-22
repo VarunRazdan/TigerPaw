@@ -6,7 +6,7 @@ import {
   formatAllowFromLowercase,
   mapAllowFromEntries,
   runPassiveAccountLifecycle,
-} from "openclaw/plugin-sdk/compat";
+} from "tigerpaw/plugin-sdk/compat";
 import {
   applyAccountNameToChannelSection,
   buildBaseChannelStatusSummary,
@@ -20,7 +20,7 @@ import {
   type ChannelPlugin,
   type OpenClawConfig,
   type ChannelSetupInput,
-} from "openclaw/plugin-sdk/nextcloud-talk";
+} from "tigerpaw/plugin-sdk/nextcloud-talk";
 import {
   listNextcloudTalkAccountIds,
   resolveDefaultNextcloudTalkAccountId,

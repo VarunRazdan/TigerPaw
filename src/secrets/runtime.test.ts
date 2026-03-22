@@ -612,7 +612,7 @@ describe("secrets runtime snapshot", () => {
       return;
     }
     await withTempHome("openclaw-secrets-runtime-write-", async (home) => {
-      const configDir = path.join(home, ".openclaw");
+      const configDir = path.join(home, ".tigerpaw");
       const secretFile = path.join(configDir, "secrets.json");
       const agentDir = path.join(configDir, "agents", "main", "agent");
       const authStorePath = path.join(agentDir, "auth-profiles.json");
@@ -696,7 +696,7 @@ describe("secrets runtime snapshot", () => {
       return;
     }
     await withTempHome("openclaw-secrets-runtime-refresh-fail-", async (home) => {
-      const configDir = path.join(home, ".openclaw");
+      const configDir = path.join(home, ".tigerpaw");
       const secretFile = path.join(configDir, "secrets.json");
       const agentDir = path.join(configDir, "agents", "main", "agent");
       const authStorePath = path.join(agentDir, "auth-profiles.json");
@@ -855,7 +855,7 @@ describe("secrets runtime snapshot", () => {
       expect(getActiveRuntimeWebToolsMetadata()?.search.selectedProvider).toBe("gemini");
 
       const persistedConfig = JSON.parse(
-        await fs.readFile(path.join(home, ".openclaw", "openclaw.json"), "utf8"),
+        await fs.readFile(path.join(home, ".openclaw", "tigerpaw.json"), "utf8"),
       ) as OpenClawConfig;
       expect(persistedConfig.tools?.web?.search?.gemini?.apiKey).toEqual({
         source: "env",
@@ -867,8 +867,8 @@ describe("secrets runtime snapshot", () => {
 
   it("recomputes config-derived agent dirs when refreshing active secrets runtime snapshots", async () => {
     await withTempHome("openclaw-secrets-runtime-agent-dirs-", async (home) => {
-      const mainAgentDir = path.join(home, ".openclaw", "agents", "main", "agent");
-      const opsAgentDir = path.join(home, ".openclaw", "agents", "ops", "agent");
+      const mainAgentDir = path.join(home, ".tigerpaw", "agents", "main", "agent");
+      const opsAgentDir = path.join(home, ".tigerpaw", "agents", "ops", "agent");
       await fs.mkdir(mainAgentDir, { recursive: true });
       await fs.mkdir(opsAgentDir, { recursive: true });
       await fs.writeFile(
@@ -2343,7 +2343,7 @@ describe("secrets runtime snapshot", () => {
 
   it("does not write inherited auth stores during runtime secret activation", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-secrets-runtime-"));
-    const stateDir = path.join(root, ".openclaw");
+    const stateDir = path.join(root, ".tigerpaw");
     const mainAgentDir = path.join(stateDir, "agents", "main", "agent");
     const workerStorePath = path.join(stateDir, "agents", "worker", "agent", "auth-profiles.json");
     const prevStateDir = process.env.OPENCLAW_STATE_DIR;

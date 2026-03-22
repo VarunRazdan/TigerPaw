@@ -4,7 +4,7 @@ import {
   readStoreAllowFromForDmPolicy,
   resolveDmGroupAccessWithLists,
   resolveSenderScopedGroupPolicy,
-} from "openclaw/plugin-sdk/matrix";
+} from "tigerpaw/plugin-sdk/matrix";
 import {
   normalizeMatrixAllowList,
   resolveMatrixAllowListMatch,

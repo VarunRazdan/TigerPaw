@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/slack";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/slack";
 import { describe, expect, it, vi } from "vitest";
 
 const handleSlackActionMock = vi.fn();

@@ -1,12 +1,12 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { OpenClawConfig } from "openclaw/plugin-sdk/googlechat";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/googlechat";
 import {
   createWebhookInFlightLimiter,
   createReplyPrefixOptions,
   registerWebhookTargetWithPluginRoute,
   resolveInboundRouteEnvelopeBuilderWithRuntime,
   resolveWebhookPath,
-} from "openclaw/plugin-sdk/googlechat";
+} from "tigerpaw/plugin-sdk/googlechat";
 import { type ResolvedGoogleChatAccount } from "./accounts.js";
 import {
   downloadGoogleChatMedia,

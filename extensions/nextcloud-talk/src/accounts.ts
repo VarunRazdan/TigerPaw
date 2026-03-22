@@ -1,10 +1,10 @@
-import { tryReadSecretFileSync } from "openclaw/plugin-sdk/core";
+import { tryReadSecretFileSync } from "tigerpaw/plugin-sdk/core";
 import {
   createAccountListHelpers,
   DEFAULT_ACCOUNT_ID,
   normalizeAccountId,
   resolveAccountWithDefaultFallback,
-} from "openclaw/plugin-sdk/nextcloud-talk";
+} from "tigerpaw/plugin-sdk/nextcloud-talk";
 import { normalizeResolvedSecretInputString } from "./secret-input.js";
 import type { CoreConfig, NextcloudTalkAccountConfig } from "./types.js";
 

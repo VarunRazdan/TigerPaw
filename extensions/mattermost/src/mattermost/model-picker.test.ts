@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { OpenClawConfig } from "openclaw/plugin-sdk/mattermost";
-import { buildModelsProviderData } from "openclaw/plugin-sdk/mattermost";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/mattermost";
+import { buildModelsProviderData } from "tigerpaw/plugin-sdk/mattermost";
 import { describe, expect, it } from "vitest";
 import {
   buildMattermostAllowedModelRefs,

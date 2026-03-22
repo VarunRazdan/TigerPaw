@@ -52,10 +52,10 @@ describe("state + config path candidates", () => {
       throw new Error("OPENCLAW_HOME must be set for this assertion helper");
     }
     const resolvedHome = path.resolve(configuredHome);
-    expect(resolveStateDir(env)).toBe(path.join(resolvedHome, ".openclaw"));
+    expect(resolveStateDir(env)).toBe(path.join(resolvedHome, ".tigerpaw"));
 
     const candidates = resolveDefaultConfigCandidates(env);
-    expect(candidates[0]).toBe(path.join(resolvedHome, ".openclaw", "openclaw.json"));
+    expect(candidates[0]).toBe(path.join(resolvedHome, ".tigerpaw", "tigerpaw.json"));
   }
 
   it("uses OPENCLAW_STATE_DIR when set", () => {
@@ -85,24 +85,19 @@ describe("state + config path candidates", () => {
     const home = "/home/test";
     const resolvedHome = path.resolve(home);
     const candidates = resolveDefaultConfigCandidates({} as NodeJS.ProcessEnv, () => home);
-    const expected = [
-      path.join(resolvedHome, ".openclaw", "openclaw.json"),
-      path.join(resolvedHome, ".openclaw", "clawdbot.json"),
-      path.join(resolvedHome, ".openclaw", "moldbot.json"),
-      path.join(resolvedHome, ".openclaw", "moltbot.json"),
-      path.join(resolvedHome, ".clawdbot", "openclaw.json"),
-      path.join(resolvedHome, ".clawdbot", "clawdbot.json"),
-      path.join(resolvedHome, ".clawdbot", "moldbot.json"),
-      path.join(resolvedHome, ".clawdbot", "moltbot.json"),
-      path.join(resolvedHome, ".moldbot", "openclaw.json"),
-      path.join(resolvedHome, ".moldbot", "clawdbot.json"),
-      path.join(resolvedHome, ".moldbot", "moldbot.json"),
-      path.join(resolvedHome, ".moldbot", "moltbot.json"),
-      path.join(resolvedHome, ".moltbot", "openclaw.json"),
-      path.join(resolvedHome, ".moltbot", "clawdbot.json"),
-      path.join(resolvedHome, ".moltbot", "moldbot.json"),
-      path.join(resolvedHome, ".moltbot", "moltbot.json"),
+    // Each dir gets: tigerpaw.json + all LEGACY_CONFIG_FILENAMES (tigerclaw, openclaw, clawdbot, moldbot, moltbot)
+    const configNames = [
+      "tigerpaw.json",
+      "tigerclaw.json",
+      "openclaw.json",
+      "clawdbot.json",
+      "moldbot.json",
+      "moltbot.json",
     ];
+    const dirs = [".tigerpaw", ".tigerclaw", ".openclaw", ".clawdbot", ".moldbot", ".moltbot"];
+    const expected = dirs.flatMap((dir) =>
+      configNames.map((name) => path.join(resolvedHome, dir, name)),
+    );
     expect(candidates).toEqual(expected);
   });
 
@@ -146,7 +141,7 @@ describe("state + config path candidates", () => {
       const overrideDir = path.join(root, "override");
       const env = { OPENCLAW_STATE_DIR: overrideDir } as NodeJS.ProcessEnv;
       const resolved = resolveConfigPath(env, overrideDir, () => root);
-      expect(resolved).toBe(path.join(overrideDir, "openclaw.json"));
+      expect(resolved).toBe(path.join(overrideDir, "tigerpaw.json"));
     });
   });
 });

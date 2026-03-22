@@ -1,4 +1,4 @@
-import { resolveControlCommandGate } from "openclaw/plugin-sdk/mattermost";
+import { resolveControlCommandGate } from "tigerpaw/plugin-sdk/mattermost";
 import { describe, expect, it } from "vitest";
 import type { ResolvedMattermostAccount } from "./accounts.js";
 import {

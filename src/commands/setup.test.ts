@@ -15,7 +15,7 @@ describe("setupCommand", () => {
 
       await setupCommand(undefined, runtime);
 
-      const configPath = path.join(home, ".openclaw", "openclaw.json");
+      const configPath = path.join(home, ".openclaw", "tigerpaw.json");
       const raw = await fs.readFile(configPath, "utf-8");
 
       expect(raw).toContain('"mode": "local"');

@@ -1,5 +1,5 @@
 import HOST_ENV_SECURITY_POLICY_JSON from "./host-env-security-policy.json" with { type: "json" };
-import { markOpenClawExecEnv } from "./openclaw-exec-env.js";
+import { markOpenClawExecEnv } from "./tigerpaw-exec-env.js";
 
 const PORTABLE_ENV_VAR_KEY = /^[A-Za-z_][A-Za-z0-9_]*$/;
 

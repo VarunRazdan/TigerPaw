@@ -248,21 +248,28 @@ describe("sessions tools", () => {
   });
 
   it("sessions_history caps oversized payloads and strips heavy fields", async () => {
+    // Use text with spaces to avoid matching the base64 credential redaction
+    // pattern ([A-Za-z0-9+/]{40,}) which would shrink the payload and let
+    // all messages fit within the byte cap.
+    const filler = (n: number) =>
+      Array.from({ length: Math.ceil(n / 10) }, (_, i) => `word${i} `)
+        .join("")
+        .slice(0, n);
     const oversized = Array.from({ length: 80 }, (_, idx) => ({
       role: "assistant",
       content: [
         {
           type: "text",
-          text: `${String(idx)}:${"x".repeat(5000)}`,
+          text: `${String(idx)}:${filler(5000)}`,
         },
         {
           type: "thinking",
-          thinking: "y".repeat(7000),
-          thinkingSignature: "sig".repeat(4000),
+          thinking: filler(7000),
+          thinkingSignature: filler(4000),
         },
       ],
       details: {
-        giant: "z".repeat(12000),
+        giant: filler(12000),
       },
       usage: {
         input: 1,

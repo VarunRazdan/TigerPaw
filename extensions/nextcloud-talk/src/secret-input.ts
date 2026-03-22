@@ -3,7 +3,7 @@ import {
   hasConfiguredSecretInput,
   normalizeResolvedSecretInputString,
   normalizeSecretInputString,
-} from "openclaw/plugin-sdk/nextcloud-talk";
+} from "tigerpaw/plugin-sdk/nextcloud-talk";
 
 export {
   buildSecretInputSchema,

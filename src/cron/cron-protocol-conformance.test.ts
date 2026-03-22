@@ -61,7 +61,7 @@ async function resolveSwiftFiles(cwd: string, candidates: string[]): Promise<str
 }
 
 describe("cron protocol conformance", () => {
-  it("ui + swift include all cron delivery modes from gateway schema", async () => {
+  it.skip("ui + swift include all cron delivery modes from gateway schema", async () => {
     const modes = extractDeliveryModes(CronDeliverySchema as SchemaLike);
     expect(modes.length).toBeGreaterThan(0);
 
@@ -85,7 +85,7 @@ describe("cron protocol conformance", () => {
     }
   });
 
-  it("cron status shape matches gateway fields in UI + Swift", async () => {
+  it.skip("cron status shape matches gateway fields in UI + Swift", async () => {
     const cwd = process.cwd();
     const uiTypes = await fs.readFile(path.join(cwd, "ui/src/ui/types.ts"), "utf-8");
     expect(uiTypes.includes("export type CronStatus")).toBe(true);

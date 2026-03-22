@@ -15,7 +15,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { RateLimitError, type RequestClient } from "@buape/carbon";
 import type { RetryRunner } from "../infra/retry-policy.js";
-import { resolvePreferredOpenClawTmpDir } from "../infra/tmp-openclaw-dir.js";
+import { resolvePreferredOpenClawTmpDir } from "../infra/tmp-tigerpaw-dir.js";
 import { parseFfprobeCodecAndSampleRate, runFfmpeg, runFfprobe } from "../media/ffmpeg-exec.js";
 import { MEDIA_FFMPEG_MAX_AUDIO_DURATION_SECS } from "../media/ffmpeg-limits.js";
 import { unlinkIfExists } from "../media/temp-files.js";

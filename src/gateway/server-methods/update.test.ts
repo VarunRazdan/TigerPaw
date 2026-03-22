@@ -32,7 +32,7 @@ vi.mock("../../config/sessions.js", () => ({
   },
 }));
 
-vi.mock("../../infra/openclaw-root.js", () => ({
+vi.mock("../../infra/tigerpaw-root.js", () => ({
   resolveOpenClawPackageRoot: async () => "/tmp/openclaw",
 }));
 

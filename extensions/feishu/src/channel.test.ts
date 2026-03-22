@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "openclaw/plugin-sdk/feishu";
+import type { OpenClawConfig } from "tigerpaw/plugin-sdk/feishu";
 import { describe, expect, it, vi } from "vitest";
 
 const probeFeishuMock = vi.hoisted(() => vi.fn());

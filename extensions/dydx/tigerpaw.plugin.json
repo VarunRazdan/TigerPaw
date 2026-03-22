@@ -1,0 +1,33 @@
+{
+  "id": "dydx",
+  "kind": "trading",
+  "permissions": {
+    "network": ["indexer.dydx.trade", "indexer.v4testnet.dydx.exchange"],
+    "trading": true,
+    "secrets": ["dydx.mnemonic"]
+  },
+  "uiHints": {
+    "mnemonic": {
+      "label": "Mnemonic",
+      "sensitive": true,
+      "placeholder": "Your dYdX wallet mnemonic phrase",
+      "help": "Cosmos wallet mnemonic for dYdX v4 (or use ${DYDX_MNEMONIC})"
+    },
+    "address": {
+      "label": "Address",
+      "sensitive": false,
+      "placeholder": "dydx1...",
+      "help": "Your dYdX v4 address (derived from mnemonic if omitted)"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "mnemonic": { "type": "string" },
+      "address": { "type": "string" },
+      "mode": { "type": "string", "enum": ["mainnet", "testnet"] }
+    },
+    "required": ["mnemonic"]
+  }
+}

@@ -123,6 +123,10 @@ export default defineConfig([
     }),
   ),
   nodeBuildConfig({
+    entry: "src/trading/index.ts",
+    outDir: "dist/trading",
+  }),
+  nodeBuildConfig({
     entry: "src/extensionAPI.ts",
   }),
   nodeBuildConfig({

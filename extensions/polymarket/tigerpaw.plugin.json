@@ -1,0 +1,59 @@
+{
+  "id": "polymarket",
+  "kind": "trading",
+  "permissions": {
+    "network": ["clob.polymarket.com", "gamma-api.polymarket.com"],
+    "trading": true,
+    "secrets": [
+      "polymarket.apiKey",
+      "polymarket.apiSecret",
+      "polymarket.passphrase",
+      "polymarket.privateKey"
+    ]
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "API Key",
+      "sensitive": true,
+      "placeholder": "Your Polymarket CLOB API key",
+      "help": "API key for Polymarket CLOB (or use ${POLYMARKET_API_KEY})"
+    },
+    "apiSecret": {
+      "label": "API Secret",
+      "sensitive": true,
+      "placeholder": "Your Polymarket CLOB API secret",
+      "help": "API secret for Polymarket CLOB (or use ${POLYMARKET_API_SECRET})"
+    },
+    "passphrase": {
+      "label": "Passphrase",
+      "sensitive": true,
+      "placeholder": "Your Polymarket CLOB passphrase",
+      "help": "Passphrase for Polymarket CLOB (or use ${POLYMARKET_PASSPHRASE})"
+    },
+    "privateKey": {
+      "label": "Private Key",
+      "sensitive": true,
+      "placeholder": "Your Ethereum private key for signing",
+      "help": "Ethereum private key for on-chain signing (or use ${POLYMARKET_PRIVATE_KEY})"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string"
+      },
+      "apiSecret": {
+        "type": "string"
+      },
+      "passphrase": {
+        "type": "string"
+      },
+      "privateKey": {
+        "type": "string"
+      }
+    },
+    "required": ["apiKey", "apiSecret", "passphrase", "privateKey"]
+  }
+}

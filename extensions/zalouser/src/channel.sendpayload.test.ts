@@ -1,4 +1,4 @@
-import type { ReplyPayload } from "openclaw/plugin-sdk/zalouser";
+import type { ReplyPayload } from "tigerpaw/plugin-sdk/zalouser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   installSendPayloadContractSuite,

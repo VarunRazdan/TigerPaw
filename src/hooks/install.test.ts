@@ -97,7 +97,7 @@ function writeHookPackManifest(params: {
     JSON.stringify({
       name: "@openclaw/test-hooks",
       version: "0.0.1",
-      openclaw: { hooks: params.hooks },
+      tigerpaw: { hooks: params.hooks },
       ...(params.dependencies ? { dependencies: params.dependencies } : {}),
     }),
     "utf-8",

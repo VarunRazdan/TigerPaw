@@ -1,5 +1,5 @@
-import type { ChannelPlugin, OpenClawPluginApi } from "openclaw/plugin-sdk/irc";
-import { emptyPluginConfigSchema } from "openclaw/plugin-sdk/irc";
+import type { ChannelPlugin, OpenClawPluginApi } from "tigerpaw/plugin-sdk/irc";
+import { emptyPluginConfigSchema } from "tigerpaw/plugin-sdk/irc";
 import { ircPlugin } from "./src/channel.js";
 import { setIrcRuntime } from "./src/runtime.js";
 

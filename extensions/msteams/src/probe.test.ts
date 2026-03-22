@@ -1,4 +1,4 @@
-import type { MSTeamsConfig } from "openclaw/plugin-sdk/msteams";
+import type { MSTeamsConfig } from "tigerpaw/plugin-sdk/msteams";
 import { describe, expect, it, vi } from "vitest";
 
 const hostMockState = vi.hoisted(() => ({
