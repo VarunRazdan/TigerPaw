@@ -74,6 +74,12 @@
   <em>Configuration — JSON config editor with live validation</em>
 </p>
 
+<p align="center">
+  <img src=".github/screenshots/security.png" alt="Security Dashboard" width="720" />
+  <br />
+  <em>Security — Audit findings, credential status, and extension permissions</em>
+</p>
+
 ## Install
 
 ```bash
