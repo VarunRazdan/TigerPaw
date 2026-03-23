@@ -40,7 +40,7 @@ function LimitInput({
           type="number"
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-20 bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-neutral-200 font-mono text-right focus:border-orange-500 focus:outline-none"
+          className="w-20 bg-white/[0.05] border border-white/[0.08] rounded px-2 py-1 text-xs text-neutral-200 font-mono text-right focus:border-orange-500 focus:outline-none"
         />
         <span className="text-xs text-neutral-500 w-16">{unit}</span>
       </div>
@@ -67,10 +67,10 @@ function PlatformOverrideSection({
   const hasOverrides = override && Object.keys(override).length > 0;
 
   return (
-    <div className="border border-neutral-800 rounded-md">
+    <div className="border border-white/[0.08] rounded-xl hover:border-white/[0.12] transition-all duration-300">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-neutral-800/30 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white/[0.04] transition-all duration-300"
       >
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-neutral-300">{label}</span>
@@ -83,7 +83,7 @@ function PlatformOverrideSection({
         <span className="text-[10px] text-neutral-500">{expanded ? "▲" : "▼"}</span>
       </button>
       {expanded && (
-        <div className="px-3 pb-3 border-t border-neutral-800/50">
+        <div className="px-3 pb-3 border-t border-white/[0.04]">
           <p className="text-[10px] text-neutral-500 mt-2 mb-2">
             Override global limits for {label}. Leave blank to use global defaults.
           </p>
@@ -148,14 +148,14 @@ export function TradingSettingsPage() {
         </div>
         <NavLink
           to="/trading"
-          className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-neutral-700 hover:border-neutral-600 transition-colors"
+          className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"
         >
           ← Back to Trading
         </NavLink>
       </div>
 
       {/* Risk Tier */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Risk Tier</h3>
         <div className="grid grid-cols-3 gap-2">
           {(
@@ -168,10 +168,10 @@ export function TradingSettingsPage() {
               key={key}
               onClick={() => setPolicy({ tier: key })}
               className={cn(
-                "rounded-md border p-3 text-left transition-all",
+                "rounded-md border p-3 text-left transition-all duration-300 cursor-pointer",
                 tier === key
                   ? "border-orange-600 bg-orange-950/30"
-                  : "border-neutral-700 bg-neutral-800/50 hover:border-neutral-600",
+                  : "border-white/[0.08] bg-white/[0.04] hover:border-white/[0.15] hover:bg-white/[0.07]",
               )}
             >
               <div className="text-sm font-medium text-neutral-200">{preset.label}</div>
@@ -182,17 +182,17 @@ export function TradingSettingsPage() {
       </div>
 
       {/* Approval Mode */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Approval Mode</h3>
         <div className="space-y-2">
           {APPROVAL_MODES.map((mode) => (
             <label
               key={mode.value}
               className={cn(
-                "flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-all",
+                "flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-all duration-300",
                 approvalMode === mode.value
                   ? "border-orange-600 bg-orange-950/20"
-                  : "border-neutral-700 hover:border-neutral-600",
+                  : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.04]",
               )}
             >
               <input
@@ -213,7 +213,7 @@ export function TradingSettingsPage() {
       </div>
 
       {/* Per-Trade Limits */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Per-Trade Limits</h3>
         <LimitInput
           label="Max risk per trade"
@@ -230,7 +230,7 @@ export function TradingSettingsPage() {
       </div>
 
       {/* Daily Limits */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Daily Limits</h3>
         <LimitInput
           label="Daily loss limit"
@@ -253,7 +253,7 @@ export function TradingSettingsPage() {
       </div>
 
       {/* Portfolio Limits */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Portfolio Limits</h3>
         <LimitInput
           label="Max portfolio drawdown"
@@ -276,7 +276,7 @@ export function TradingSettingsPage() {
       </div>
 
       {/* Safety Controls */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Safety Controls</h3>
         <LimitInput
           label="Cooldown between trades"
@@ -293,7 +293,7 @@ export function TradingSettingsPage() {
       </div>
 
       {/* Per-Platform Overrides */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
         <h3 className="text-sm font-semibold text-neutral-300 mb-1">Per-Platform Overrides</h3>
         <p className="text-[10px] text-neutral-500 mb-3">
           Customize risk limits for individual platforms. These override the global limits above.
@@ -315,10 +315,10 @@ export function TradingSettingsPage() {
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button className="px-4 py-2 rounded-md bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold transition-colors">
+        <button className="px-4 py-2 rounded-md bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-orange-900/30">
           Save Policy
         </button>
-        <button className="px-4 py-2 rounded-md border border-neutral-700 hover:border-neutral-600 text-neutral-400 hover:text-neutral-200 text-sm transition-colors">
+        <button className="px-4 py-2 rounded-md border border-white/[0.08] hover:border-white/[0.15] text-neutral-400 hover:text-neutral-200 text-sm cursor-pointer transition-all duration-300 hover:bg-white/[0.04]">
           Reset to Tier Default
         </button>
       </div>

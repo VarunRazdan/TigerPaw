@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useSubmitOrder, type OrderStatus } from "@/hooks/use-submit-order";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 import {
@@ -67,7 +68,7 @@ function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
   ];
 
   return (
-    <div className="rounded-md border border-neutral-700 bg-neutral-800/40 p-3 space-y-1">
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.05] backdrop-blur-lg p-3 space-y-1">
       <div className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
         Policy Pre-Check
       </div>
@@ -83,6 +84,28 @@ function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
   );
 }
 
+function OrderResultBanner({ state }: { state: OrderStatus }) {
+  if (state.status === "idle" || state.status === "submitting") {
+    return null;
+  }
+
+  return (
+    <div
+      className={cn("rounded-lg p-3 text-sm mt-3 transition-all duration-300", {
+        "bg-green-900/30 border border-green-800 text-green-300": state.status === "success",
+        "bg-red-900/30 border border-red-800 text-red-300":
+          state.status === "denied" || state.status === "error",
+        "bg-amber-900/30 border border-amber-800 text-amber-300": state.status === "pending",
+      })}
+    >
+      {state.status === "success" && state.message}
+      {state.status === "denied" && `Order denied: ${state.reason}`}
+      {state.status === "pending" && `Awaiting ${state.approvalMode} approval`}
+      {state.status === "error" && state.message}
+    </div>
+  );
+}
+
 export function OrderEntryForm({
   extensionId,
   defaultSymbol = "",
@@ -93,6 +116,19 @@ export function OrderEntryForm({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<OrderFormValues | null>(null);
   const killSwitchActive = useTradingStore((s) => s.killSwitchActive);
+  const { state: orderState, submit, reset: resetOrder } = useSubmitOrder();
+
+  // Auto-dismiss result after 5 seconds
+  useEffect(() => {
+    if (
+      orderState.status === "success" ||
+      orderState.status === "denied" ||
+      orderState.status === "error"
+    ) {
+      const timer = setTimeout(() => resetOrder(), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [orderState.status, resetOrder]);
 
   const {
     register,
@@ -122,18 +158,30 @@ export function OrderEntryForm({
     setConfirmOpen(true);
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (!pendingOrder) {
       return;
     }
-    // In a real implementation, this would call the gateway API
-    console.log("Order submitted:", { extensionId, ...pendingOrder });
     setConfirmOpen(false);
+    await submit({
+      extensionId,
+      symbol: pendingOrder.symbol,
+      side: pendingOrder.side,
+      quantity: pendingOrder.quantity,
+      orderType: pendingOrder.orderType,
+      limitPrice: pendingOrder.limitPrice,
+      stopPrice: pendingOrder.stopPrice,
+    });
     setPendingOrder(null);
   }
 
   return (
-    <div className={cn("rounded-lg border border-neutral-800 bg-neutral-900/50 p-4", className)}>
+    <div
+      className={cn(
+        "rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4",
+        className,
+      )}
+    >
       <h3 className="text-sm font-semibold text-neutral-300 mb-3">Place Order</h3>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -143,7 +191,7 @@ export function OrderEntryForm({
           <input
             {...register("symbol")}
             placeholder="e.g. AAPL"
-            className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600"
+            className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
           />
           {errors.symbol && <span className="text-xs text-red-400">{errors.symbol.message}</span>}
         </div>
@@ -155,7 +203,7 @@ export function OrderEntryForm({
               "flex items-center justify-center py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border",
               watchSide === "buy"
                 ? "bg-green-800 border-green-700 text-green-100"
-                : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-neutral-200",
+                : "bg-white/[0.05] border-white/[0.08] text-neutral-400 hover:text-neutral-200",
             )}
           >
             <input type="radio" value="buy" {...register("side")} className="sr-only" />
@@ -166,7 +214,7 @@ export function OrderEntryForm({
               "flex items-center justify-center py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border",
               watchSide === "sell"
                 ? "bg-red-800 border-red-700 text-red-100"
-                : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-neutral-200",
+                : "bg-white/[0.05] border-white/[0.08] text-neutral-400 hover:text-neutral-200",
             )}
           >
             <input type="radio" value="sell" {...register("side")} className="sr-only" />
@@ -181,7 +229,7 @@ export function OrderEntryForm({
             type="number"
             step="any"
             {...register("quantity")}
-            className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600"
+            className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
           />
           {errors.quantity && (
             <span className="text-xs text-red-400">{errors.quantity.message}</span>
@@ -198,7 +246,7 @@ export function OrderEntryForm({
           <label className="text-xs text-neutral-500 block mb-1">Order Type</label>
           <select
             {...register("orderType")}
-            className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 focus:outline-none focus:border-orange-600"
+            className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
           >
             <option value="market">Market</option>
             <option value="limit">Limit</option>
@@ -216,7 +264,7 @@ export function OrderEntryForm({
               type="number"
               step="any"
               {...register("limitPrice")}
-              className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600"
+              className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
             />
           </div>
         )}
@@ -227,7 +275,7 @@ export function OrderEntryForm({
               type="number"
               step="any"
               {...register("stopPrice")}
-              className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600"
+              className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
             />
           </div>
         )}
@@ -239,7 +287,7 @@ export function OrderEntryForm({
               step="0.1"
               {...register("trailingPercent")}
               placeholder="e.g. 2.5"
-              className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600"
+              className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
             />
           </div>
         )}
@@ -248,13 +296,13 @@ export function OrderEntryForm({
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+          className="text-xs text-neutral-500 hover:text-neutral-300 cursor-pointer transition-colors"
         >
           {showAdvanced ? "Hide" : "Show"} advanced options
         </button>
 
         {showAdvanced && (
-          <div className="space-y-3 border-t border-neutral-800 pt-3">
+          <div className="space-y-3 border-t border-white/[0.08] pt-3">
             <div>
               <label className="text-xs text-neutral-500 block mb-1">Stop Loss</label>
               <input
@@ -262,7 +310,7 @@ export function OrderEntryForm({
                 step="any"
                 {...register("stopLoss")}
                 placeholder="Optional"
-                className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600"
+                className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
               />
             </div>
             <div>
@@ -272,7 +320,7 @@ export function OrderEntryForm({
                 step="any"
                 {...register("takeProfit")}
                 placeholder="Optional"
-                className="w-full px-3 py-1.5 rounded-md bg-neutral-800 border border-neutral-700 text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600"
+                className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
               />
             </div>
           </div>
@@ -284,10 +332,10 @@ export function OrderEntryForm({
         {/* Submit */}
         <button
           type="submit"
-          disabled={killSwitchActive}
+          disabled={killSwitchActive || orderState.status === "submitting"}
           className={cn(
-            "w-full py-2 rounded-md text-sm font-semibold transition-colors",
-            killSwitchActive
+            "w-full py-2 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300",
+            killSwitchActive || orderState.status === "submitting"
               ? "bg-neutral-700 text-neutral-500 cursor-not-allowed"
               : watchSide === "buy"
                 ? "bg-green-700 hover:bg-green-600 text-white"
@@ -296,8 +344,13 @@ export function OrderEntryForm({
         >
           {killSwitchActive
             ? "Trading Halted"
-            : `${watchSide === "buy" ? "Buy" : "Sell"} — Policy Gated`}
+            : orderState.status === "submitting"
+              ? "Submitting..."
+              : `${watchSide === "buy" ? "Buy" : "Sell"} — Policy Gated`}
         </button>
+
+        {/* Order result feedback */}
+        <OrderResultBanner state={orderState} />
       </form>
 
       {/* Confirmation dialog */}

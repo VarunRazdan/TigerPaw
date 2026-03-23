@@ -4,16 +4,17 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-orange-600 text-white shadow hover:bg-orange-500",
-        destructive: "bg-red-700 text-white shadow-sm hover:bg-red-600",
+        default: "bg-orange-600 text-white shadow hover:bg-orange-500 hover:shadow-md",
+        destructive: "bg-red-700 text-white shadow-sm hover:bg-red-600 hover:shadow-md",
         outline:
-          "border border-neutral-700 bg-transparent text-neutral-300 shadow-sm hover:bg-neutral-800 hover:text-neutral-100",
-        secondary: "bg-neutral-800 text-neutral-300 shadow-sm hover:bg-neutral-700",
-        ghost: "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200",
+          "border border-white/[0.08] bg-transparent text-neutral-300 shadow-sm hover:bg-white/[0.06] hover:text-neutral-100 hover:shadow-md hover:border-white/[0.14]",
+        secondary:
+          "bg-white/[0.06] text-neutral-300 shadow-sm hover:bg-white/[0.10] hover:shadow-md",
+        ghost: "text-neutral-400 hover:bg-white/[0.06] hover:text-neutral-200 hover:shadow-sm",
         link: "text-orange-400 underline-offset-4 hover:underline",
       },
       size: {

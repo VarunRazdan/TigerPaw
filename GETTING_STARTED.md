@@ -186,28 +186,87 @@ Add a `trading` block to your config:
 }
 ```
 
+### Trading Config Reference
+
+| Field                                | Type                                                          | Default          | Description                                     |
+| ------------------------------------ | ------------------------------------------------------------- | ---------------- | ----------------------------------------------- |
+| `trading.enabled`                    | `boolean`                                                     | `false`          | Enable the trading subsystem                    |
+| `trading.mode`                       | `"paper"` / `"live"`                                          | `"paper"`        | Paper simulates; live uses real money           |
+| `policy.tier`                        | `"conservative"` / `"moderate"` / `"aggressive"` / `"custom"` | `"conservative"` | Risk preset (`custom` = manual limits)          |
+| `policy.approvalMode`                | `"auto"` / `"confirm"` / `"manual"`                           | Varies by tier   | How orders are approved                         |
+| `policy.confirm.timeoutMs`           | `number`                                                      | `15000`          | Confirm mode timeout (ms)                       |
+| `policy.confirm.showNotification`    | `boolean`                                                     | `true`           | Show UI notification for confirm requests       |
+| `policy.manual.timeoutMs`            | `number`                                                      | `300000`         | Manual approval timeout (ms)                    |
+| `limits.maxDailySpendUsd`            | `number`                                                      | Tier-dependent   | Max cumulative daily notional spend (USD)       |
+| `limits.maxSingleTradeUsd`           | `number`                                                      | Tier-dependent   | Max single order size (USD)                     |
+| `limits.maxTradesPerDay`             | `number`                                                      | Tier-dependent   | Max trades per calendar day (UTC)               |
+| `limits.maxOpenPositions`            | `number`                                                      | Tier-dependent   | Max concurrent open positions                   |
+| `limits.maxRiskPerTradePercent`      | `number`                                                      | Tier-dependent   | Max % of portfolio risked per trade             |
+| `limits.maxSinglePositionPercent`    | `number`                                                      | Tier-dependent   | Max % of portfolio in one asset                 |
+| `limits.dailyLossLimitPercent`       | `number`                                                      | Tier-dependent   | Daily loss trigger (% of portfolio)             |
+| `limits.maxPortfolioDrawdownPercent` | `number`                                                      | Tier-dependent   | Drawdown from high-water mark trigger (%)       |
+| `limits.cooldownBetweenTradesMs`     | `number`                                                      | Tier-dependent   | Min time between trades (ms)                    |
+| `limits.consecutiveLossPause`        | `number`                                                      | Tier-dependent   | Consecutive losses before auto-pause            |
+| `policy.perExtension.<name>`         | `object`                                                      | --               | Override any limit or approvalMode per platform |
+| `auditLog.maxFileSizeMb`             | `number`                                                      | `50`             | Audit log rotation threshold (MB)               |
+| `auditLog.rotateCount`               | `number`                                                      | `5`              | Number of rotated log files to keep             |
+
+> **Live mode safety:** When `mode` is `"live"`, ALL limit fields must be finite positive numbers. Tigerpaw refuses to start with `Infinity` or missing limits in live mode. Paper mode allows relaxed limits for testing.
+
 ### Risk Tiers
 
-| Parameter        | Conservative | Moderate      | Aggressive |
-| ---------------- | ------------ | ------------- | ---------- |
-| Approval Mode    | Manual       | Confirm (15s) | Auto       |
-| Max Daily Spend  | $100         | $500          | $2,000     |
-| Max Single Trade | $25          | $100          | $500       |
-| Max Trades/Day   | 10           | 25            | 50         |
-| Daily Loss Limit | 3%           | 5%            | 10%        |
-| Cooldown         | 60s          | 30s           | 10s        |
+| Parameter              | Conservative | Moderate      | Aggressive |
+| ---------------------- | ------------ | ------------- | ---------- |
+| Approval Mode          | Manual       | Confirm (15s) | Auto       |
+| Max Daily Spend        | $100         | $500          | $2,000     |
+| Max Single Trade       | $25          | $100          | $500       |
+| Max Trades/Day         | 10           | 25            | 50         |
+| Max Open Positions     | 3            | 8             | 20         |
+| Risk Per Trade         | 1%           | 2%            | 5%         |
+| Single Position Cap    | 5%           | 10%           | 15%        |
+| Daily Loss Limit       | 3%           | 5%            | 10%        |
+| Portfolio Drawdown     | 10%          | 20%           | 30%        |
+| Cooldown               | 60s          | 30s           | 10s        |
+| Consecutive Loss Pause | 3            | 5             | 8          |
+
+Set `"tier": "custom"` to define your own limits without using a preset.
 
 ### Approval Modes
 
-- **Auto** - Trades within limits execute immediately
-- **Confirm** - 15-second confirmation popup (auto-approves on timeout)
-- **Manual** - Every trade requires explicit approval (5-minute timeout, auto-denies)
+- **Auto** -- Orders within limits execute immediately. Best for paper mode or aggressive tier.
+- **Confirm** -- 15-second confirmation popup in the UI. Auto-approves on timeout. Configurable via `confirm.timeoutMs`.
+- **Manual** -- Every trade requires explicit operator approval. Auto-denies after 5 minutes. Configurable via `manual.timeoutMs`.
+
+### Pre-Trade Validation Pipeline
+
+Every order passes through 12 sequential checks. The first failure denies the order. See the [README](README.md#pre-trade-validation-pipeline) for the full table.
+
+Key checks: kill switch, numeric sanity, cooldown, balance/risk, per-trade size, daily loss, position concentration, max positions, max trades/day, daily spend, and consecutive losses.
+
+### Per-Extension Overrides
+
+Override limits or approval mode for individual platforms:
+
+```json
+{
+  "policy": {
+    "tier": "moderate",
+    "perExtension": {
+      "alpaca": { "maxSingleTradeUsd": 200, "approvalMode": "manual" },
+      "polymarket": { "maxDailySpendUsd": 50, "maxOpenPositions": 5 },
+      "manifold": { "approvalMode": "auto" }
+    }
+  }
+}
+```
+
+Any limit field or `approvalMode` can be overridden per platform. Unset fields inherit from the global policy.
 
 ### Trading Extensions
 
 Configure the trading platform you want to use:
 
-**Alpaca (Stocks)**
+#### <img src="icons/trading-platforms/alpaca.svg" height="24" alt="Alpaca"> Alpaca (Stocks)
 
 ```json
 {
@@ -221,7 +280,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**Polymarket (Prediction Markets)**
+#### <img src="icons/trading-platforms/polymarket.svg" height="24" alt="Polymarket"> Polymarket (Prediction Markets)
 
 ```json
 {
@@ -236,7 +295,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**Kalshi (Event Contracts)**
+#### <img src="icons/trading-platforms/kalshi.svg" height="24" alt="Kalshi"> Kalshi (Event Contracts)
 
 ```json
 {
@@ -251,7 +310,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**Manifold (Play Money)**
+#### <img src="icons/trading-platforms/manifold.svg" height="24" alt="Manifold"> Manifold (Play Money)
 
 ```json
 {
@@ -263,7 +322,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**Coinbase (Crypto Spot)**
+#### <img src="icons/trading-platforms/coinbase.svg" height="24" alt="Coinbase"> Coinbase (Crypto Spot)
 
 ```json
 {
@@ -277,7 +336,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**Interactive Brokers (Stocks, Options, Futures)**
+#### <img src="icons/trading-platforms/interactive-brokers.svg" height="24" alt="Interactive Brokers"> Interactive Brokers (Stocks, Options, Futures)
 
 ```json
 {
@@ -291,7 +350,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**Binance (Crypto Spot)**
+#### <img src="icons/trading-platforms/binance.svg" height="24" alt="Binance"> Binance (Crypto Spot)
 
 ```json
 {
@@ -305,7 +364,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**Kraken (Crypto Spot + Margin)**
+#### <img src="icons/trading-platforms/kraken.svg" height="24" alt="Kraken"> Kraken (Crypto Spot + Margin)
 
 ```json
 {
@@ -318,7 +377,7 @@ Configure the trading platform you want to use:
 }
 ```
 
-**dYdX (Decentralized Perpetuals)**
+#### <img src="icons/trading-platforms/dydx.svg" height="24" alt="dYdX"> dYdX (Decentralized Perpetuals)
 
 ```json
 {
@@ -336,32 +395,78 @@ Configure the trading platform you want to use:
 Instantly halt all trading:
 
 ```bash
-tigerpaw trading kill               # Activate
+tigerpaw trading kill               # Activate (hard mode)
 tigerpaw trading resume             # Deactivate
 ```
 
-The kill switch also auto-activates when daily loss limits or drawdown limits are breached.
+Two modes:
+
+- **Hard** (default) -- Blocks ALL trading: buys, sells, and cancels all denied
+- **Soft** -- Allows sells and cancels (position exit only); blocks new buys
+
+Auto-activates when any of these thresholds are breached:
+
+1. Daily loss >= `dailyLossLimitPercent`
+2. Portfolio drawdown >= `maxPortfolioDrawdownPercent`
+3. Consecutive losses >= `consecutiveLossPause`
 
 ### Audit Log
 
-Every trade decision is logged to `~/.tigerpaw/trading/audit.jsonl` with tamper-evident HMAC-SHA256 chain linking. View trade history in the Trading Dashboard UI or export to CSV.
+Every trade decision is logged to `~/.tigerpaw/trading/audit.jsonl` with HMAC-SHA256 chain linking for tamper evidence. The log rotates at 50 MB (configurable via `auditLog.maxFileSizeMb`) and keeps 5 archived files (configurable via `auditLog.rotateCount`). Each entry records the action, actor, order snapshot, policy snapshot, and a chain hash linking to the previous entry.
+
+---
+
+## Using the Control UI
+
+After starting the gateway, open `http://localhost:18789` in your browser.
+
+### Placing Trades via the UI
+
+Each trading platform has a dedicated page with:
+
+- **TradingView Chart** -- Live charts (collapsible) with the platform's default symbol
+- **Order Entry Form** -- Select symbol, side (buy/sell), quantity, order type (market/limit/stop/stop_limit), and optional stop loss/take profit
+- **Policy Pre-Check** -- Real-time validation showing which policy checks pass or fail before you submit
+- **Confirmation Dialog** -- Review order details before execution
+
+Orders submitted through the UI go through the same 12-step policy validation pipeline as orders from messaging channels or AI agents.
+
+### Connecting Platforms
+
+Click "Not Connected" on any platform badge or the Dashboard extensions grid to open the setup dialog. The dialog shows:
+
+- Required credentials for each platform
+- Step-by-step setup instructions
+- A "Save to Config" button that writes credentials directly to `tigerpaw.json`
+- A clipboard fallback if the gateway is not running
 
 ---
 
 ## Supported Channels
 
-| Channel                             | Setup                   |
-| ----------------------------------- | ----------------------- |
-| Telegram                            | Bot token               |
-| Discord                             | Bot + App tokens        |
-| Slack                               | Bot + App tokens        |
-| Signal                              | signal-cli daemon       |
-| iMessage                            | macOS only              |
-| Web                                 | Built-in                |
-| WhatsApp                            | Browser-based extension |
-| Matrix                              | Extension               |
-| MS Teams                            | Extension               |
-| IRC, Line, Nostr, Google Chat, etc. | Extensions              |
+|                                                                     | Channel        | Setup                   |
+| ------------------------------------------------------------------- | -------------- | ----------------------- |
+| <img src="icons/messaging-channels/telegram.svg" height="20">       | Telegram       | Bot token               |
+| <img src="icons/messaging-channels/discord.svg" height="20">        | Discord        | Bot + App tokens        |
+| <img src="icons/messaging-channels/slack.svg" height="20">          | Slack          | Bot + App tokens        |
+| <img src="icons/messaging-channels/signal.svg" height="20">         | Signal         | signal-cli daemon       |
+| <img src="icons/messaging-channels/imessage.svg" height="20">       | iMessage       | macOS only              |
+| <img src="icons/messaging-channels/whatsapp.svg" height="20">       | WhatsApp       | Browser-based extension |
+| <img src="icons/messaging-channels/matrix.svg" height="20">         | Matrix         | Extension               |
+| <img src="icons/messaging-channels/ms-teams.svg" height="20">       | MS Teams       | Extension               |
+| <img src="icons/messaging-channels/irc.svg" height="20">            | IRC            | Extension               |
+| <img src="icons/messaging-channels/line.svg" height="20">           | Line           | Extension               |
+| <img src="icons/messaging-channels/nostr.svg" height="20">          | Nostr          | Extension               |
+| <img src="icons/messaging-channels/google-chat.svg" height="20">    | Google Chat    | Extension               |
+| <img src="icons/messaging-channels/mattermost.svg" height="20">     | Mattermost     | Extension               |
+| <img src="icons/messaging-channels/twitch.svg" height="20">         | Twitch         | Extension               |
+| <img src="icons/messaging-channels/feishu.svg" height="20">         | Feishu         | Extension               |
+| <img src="icons/messaging-channels/zalo.svg" height="20">           | Zalo           | Extension               |
+| <img src="icons/messaging-channels/tlon.svg" height="20">           | Tlon           | Extension               |
+| <img src="icons/messaging-channels/synology-chat.svg" height="20">  | Synology Chat  | Extension               |
+| <img src="icons/messaging-channels/nextcloud-talk.svg" height="20"> | Nextcloud Talk | Extension               |
+| <img src="icons/messaging-channels/lobster.svg" height="20">        | Lobster        | Extension               |
+| <img src="icons/messaging-channels/bluebubbles.svg" height="20">    | BlueBubbles    | Extension               |
 
 ---
 

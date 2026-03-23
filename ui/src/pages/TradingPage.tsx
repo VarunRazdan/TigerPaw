@@ -146,7 +146,7 @@ export function TradingPage() {
         </div>
         <NavLink
           to="/trading/settings"
-          className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-neutral-700 hover:border-neutral-600 transition-colors"
+          className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"
         >
           Risk Settings →
         </NavLink>
@@ -155,10 +155,10 @@ export function TradingPage() {
       {/* Summary banner */}
       <div
         className={cn(
-          "rounded-lg border p-3 flex items-center gap-4",
+          "rounded-2xl border p-3 flex items-center gap-4",
           killSwitchActive
             ? "border-red-800 bg-red-950/30"
-            : "border-neutral-800 bg-neutral-900/50",
+            : "border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30",
         )}
       >
         {killSwitchActive && (
@@ -169,7 +169,7 @@ export function TradingPage() {
         {!killSwitchActive && (
           <>
             <span className="text-neutral-400 text-xs">Daily Loss Limit:</span>
-            <div className="flex-1 max-w-md h-3 bg-neutral-800 rounded-full overflow-hidden">
+            <div className="flex-1 max-w-md h-3 bg-white/[0.06] rounded-full overflow-hidden">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-700",

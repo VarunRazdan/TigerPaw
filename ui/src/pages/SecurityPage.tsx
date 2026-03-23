@@ -51,10 +51,10 @@ const SEVERITY_STYLES: Record<
     badgeText: "text-amber-300",
   },
   info: {
-    bg: "bg-neutral-900/50",
-    border: "border-neutral-800",
-    badge: "bg-neutral-800",
-    badgeText: "text-neutral-400",
+    bg: "bg-white/[0.03]",
+    border: "border-white/[0.06]",
+    badge: "bg-white/[0.06] hover:bg-white/[0.10] transition-colors duration-200",
+    badgeText: "text-neutral-400 hover:text-neutral-300",
   },
 };
 
@@ -62,7 +62,13 @@ function FindingCard({ finding }: { finding: AuditFinding }) {
   const style = SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.info;
 
   return (
-    <div className={cn("rounded-lg border p-4", style.bg, style.border)}>
+    <div
+      className={cn(
+        "rounded-lg border p-4 hover:shadow-lg transition-all duration-300",
+        style.bg,
+        style.border,
+      )}
+    >
       <div className="flex items-start gap-2 mb-1">
         <span
           className={cn(
@@ -77,7 +83,7 @@ function FindingCard({ finding }: { finding: AuditFinding }) {
       </div>
       <p className="text-xs text-neutral-400 mt-1">{finding.detail}</p>
       {finding.remediation && (
-        <p className="text-xs text-neutral-500 mt-2 pl-3 border-l-2 border-neutral-700">
+        <p className="text-xs text-neutral-500 mt-2 pl-3 border-l-2 border-white/[0.08]">
           {finding.remediation}
         </p>
       )}
@@ -101,15 +107,15 @@ export function SecurityPage() {
 
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-lg border border-red-800/50 bg-red-950/20 p-4 text-center">
+        <div className="rounded-lg border border-red-800/50 bg-red-950/20 hover:bg-red-950/30 hover:border-red-700/60 transition-all duration-300 p-4 text-center">
           <div className="text-2xl font-bold text-red-400 font-mono">{criticalCount}</div>
           <div className="text-xs text-red-400/60">Critical</div>
         </div>
-        <div className="rounded-lg border border-amber-800/50 bg-amber-950/20 p-4 text-center">
+        <div className="rounded-lg border border-amber-800/50 bg-amber-950/20 hover:bg-amber-950/30 hover:border-amber-700/60 transition-all duration-300 p-4 text-center">
           <div className="text-2xl font-bold text-amber-400 font-mono">{warnCount}</div>
           <div className="text-xs text-amber-400/60">Warnings</div>
         </div>
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4 text-center">
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 text-center">
           <div className="text-2xl font-bold text-neutral-400 font-mono">{infoCount}</div>
           <div className="text-xs text-neutral-500">Info</div>
         </div>
@@ -126,7 +132,7 @@ export function SecurityPage() {
       </div>
 
       {/* Credential Status */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Credential Status</h3>
         <div className="space-y-2">
           {[
@@ -137,7 +143,7 @@ export function SecurityPage() {
           ].map((cred) => (
             <div
               key={cred.ext}
-              className="flex items-center justify-between py-1.5 border-b border-neutral-800/50 last:border-0"
+              className="flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.04] transition-colors duration-200 rounded-md px-2 -mx-2"
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm text-neutral-300">{cred.ext}</span>
@@ -153,7 +159,7 @@ export function SecurityPage() {
       </div>
 
       {/* Extension Permissions */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Extension Permissions</h3>
         <div className="space-y-3">
           {[
@@ -186,7 +192,7 @@ export function SecurityPage() {
                     "text-[10px] px-1.5 py-0.5 rounded",
                     ext.verified
                       ? "bg-green-900/50 text-green-400"
-                      : "bg-neutral-800 text-neutral-500",
+                      : "bg-white/[0.06] text-neutral-500 hover:bg-white/[0.10] hover:text-neutral-400 transition-colors duration-200",
                   )}
                 >
                   {ext.verified ? "verified" : "unverified"}
@@ -196,7 +202,7 @@ export function SecurityPage() {
                 {ext.perms.map((perm) => (
                   <span
                     key={perm}
-                    className="text-[11px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-500"
+                    className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-neutral-500 hover:bg-white/[0.10] hover:text-neutral-400 transition-colors duration-200"
                   >
                     {perm}
                   </span>

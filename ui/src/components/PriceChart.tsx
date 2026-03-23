@@ -58,20 +58,26 @@ export function PriceChart({
         fontSize: 10,
       },
       grid: {
-        vertLines: { color: "#1a1a1a" },
-        horzLines: { color: "#1a1a1a" },
+        vertLines: { color: "rgba(255,255,255,0.03)" },
+        horzLines: { color: "rgba(255,255,255,0.03)" },
       },
       width: containerRef.current.clientWidth,
       height,
       crosshair: {
-        vertLine: { color: "#404040", labelBackgroundColor: "#262626" },
-        horzLine: { color: "#404040", labelBackgroundColor: "#262626" },
+        vertLine: {
+          color: "rgba(255,255,255,0.08)",
+          labelBackgroundColor: "rgba(255,255,255,0.06)",
+        },
+        horzLine: {
+          color: "rgba(255,255,255,0.08)",
+          labelBackgroundColor: "rgba(255,255,255,0.06)",
+        },
       },
       timeScale: {
-        borderColor: "#262626",
+        borderColor: "rgba(255,255,255,0.06)",
       },
       rightPriceScale: {
-        borderColor: "#262626",
+        borderColor: "rgba(255,255,255,0.06)",
       },
     });
     chartRef.current = chart;
@@ -124,7 +130,12 @@ export function PriceChart({
   }, [data, stopLoss, takeProfit, height]);
 
   return (
-    <div className={cn("rounded-lg border border-neutral-800 bg-neutral-900/50 p-4", className)}>
+    <div
+      className={cn(
+        "rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4",
+        className,
+      )}
+    >
       <h3 className="text-sm font-semibold text-neutral-300 mb-2">Price Chart</h3>
       <div ref={containerRef} />
     </div>

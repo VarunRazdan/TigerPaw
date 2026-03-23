@@ -31,11 +31,11 @@ export function KillSwitchButton() {
             : "Kill switch OFF — click to halt all trading"
         }
         className={cn(
-          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all",
+          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-300 cursor-pointer",
           "border",
           killSwitchActive
-            ? "bg-red-900/80 border-red-700 text-red-100 hover:bg-red-800 animate-pulse"
-            : "bg-green-900/30 border-green-800/50 text-green-400 hover:bg-green-900/50",
+            ? "bg-red-900/80 border-red-700 text-red-100 hover:bg-red-800 hover:shadow-lg hover:shadow-red-900/40 animate-pulse"
+            : "bg-green-900/30 border-green-800/50 text-green-400 hover:bg-green-900/50 hover:shadow-lg hover:shadow-green-900/30",
         )}
       >
         <span

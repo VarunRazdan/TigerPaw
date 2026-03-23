@@ -72,14 +72,14 @@ export function DailyPnlBar() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="hidden sm:flex items-center gap-3 text-xs cursor-default">
+          <div className="hidden sm:flex items-center gap-3 text-xs cursor-pointer">
             <span className="text-neutral-500">Daily P&L:</span>
             <span className={cn("font-mono font-semibold", pnlColor)}>
               {pnlSign}${Math.abs(dailyPnlUsd).toFixed(2)}
             </span>
             <Sparkline data={sparklineData} />
             <div
-              className="w-24 h-2 bg-neutral-800 rounded-full overflow-hidden"
+              className="w-24 h-2 bg-white/[0.06] rounded-full overflow-hidden"
               title={`${usedPct}% of daily loss limit`}
             >
               <div
@@ -105,7 +105,7 @@ export function DailyPnlBar() {
             <div>
               Loss limit used: {usedPct}% ({lossPercent.toFixed(1)}% / {limitPercent}%)
             </div>
-            <div className="border-t border-neutral-700 pt-1 mt-1 whitespace-pre">
+            <div className="border-t border-white/[0.08] pt-1 mt-1 whitespace-pre">
               {platformSummary}
             </div>
           </div>

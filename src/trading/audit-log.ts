@@ -202,6 +202,8 @@ async function rotateIfNeeded(filePath: string, maxBytes: number, keep: number):
   }
 
   // Reset cached hash since the primary file is now empty.
+  // Each rotated file forms an independently verifiable chain starting from "0".
+  // Cross-file chain continuity is tracked via the rotation metadata (file ordering).
   lastEntryHash = "0";
 }
 

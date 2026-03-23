@@ -9,21 +9,12 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
+import { useTradingStore } from "@/stores/trading-store";
 
 type PnlDataPoint = {
   date: string;
   pnl: number;
 };
-
-const DEMO_DATA: PnlDataPoint[] = [
-  { date: "Mar 16", pnl: 120 },
-  { date: "Mar 17", pnl: -45 },
-  { date: "Mar 18", pnl: 230 },
-  { date: "Mar 19", pnl: -180 },
-  { date: "Mar 20", pnl: 65 },
-  { date: "Mar 21", pnl: -12 },
-  { date: "Mar 22", pnl: -47 },
-];
 
 function CustomTooltip({
   active,
@@ -39,7 +30,7 @@ function CustomTooltip({
   }
   const value = payload[0].value;
   return (
-    <div className="bg-neutral-900 border border-neutral-700 rounded px-3 py-2 shadow-lg">
+    <div className="bg-neutral-900/90 border border-white/[0.1] backdrop-blur-xl rounded px-3 py-2 shadow-lg">
       <div className="text-xs text-neutral-400">{label}</div>
       <div
         className={`text-sm font-mono font-bold ${value >= 0 ? "text-green-400" : "text-red-400"}`}
@@ -50,7 +41,9 @@ function CustomTooltip({
   );
 }
 
-export function PnlChart({ data = DEMO_DATA }: { data?: PnlDataPoint[] }) {
+export function PnlChart({ data: dataProp }: { data?: PnlDataPoint[] }) {
+  const storeHistory = useTradingStore((s) => s.pnlHistory);
+  const data = dataProp ?? storeHistory;
   const cumulativeData = useMemo(() => {
     let cum = 0;
     return data.map((d) => {
@@ -63,9 +56,9 @@ export function PnlChart({ data = DEMO_DATA }: { data?: PnlDataPoint[] }) {
     cumulativeData.length > 0 ? cumulativeData[cumulativeData.length - 1].cumulative : 0;
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-neutral-300">Daily P&L (7 days)</h3>
+        <h3 className="text-sm font-semibold text-neutral-300">Daily P&L ({data.length} days)</h3>
         <span
           className={`text-sm font-mono font-bold ${totalPnl >= 0 ? "text-green-400" : "text-red-400"}`}
         >

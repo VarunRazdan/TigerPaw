@@ -171,7 +171,7 @@ export function TradeHistoryTable() {
   const pageCount = table.getPageCount();
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-neutral-300">Trade History</h3>
         <div className="flex items-center gap-2">
@@ -179,11 +179,11 @@ export function TradeHistoryTable() {
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             placeholder="Filter..."
-            className="px-2 py-1 text-xs rounded-md bg-neutral-800 border border-neutral-700 text-neutral-300 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600 w-32"
+            className="px-2 py-1 text-xs rounded-md bg-white/[0.05] border border-white/[0.08] text-neutral-300 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600 w-32"
           />
           <button
             onClick={() => exportCsv(tradeHistory)}
-            className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors px-2 py-1 rounded border border-neutral-800 hover:border-neutral-700"
+            className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors px-2 py-1 rounded border border-white/[0.08] hover:border-white/[0.1] cursor-pointer"
           >
             Export CSV
           </button>
@@ -198,7 +198,7 @@ export function TradeHistoryTable() {
             <table className="w-full">
               <thead>
                 {table.getHeaderGroups().map((hg) => (
-                  <tr key={hg.id} className="text-xs text-neutral-500 border-b border-neutral-800">
+                  <tr key={hg.id} className="text-xs text-neutral-500 border-b border-white/[0.08]">
                     {hg.headers.map((header) => (
                       <th
                         key={header.id}
@@ -230,12 +230,12 @@ export function TradeHistoryTable() {
                       ? "hover:bg-green-950/20"
                       : result === "denied" || result === "rejected"
                         ? "hover:bg-red-950/20"
-                        : "hover:bg-neutral-800/30";
+                        : "hover:bg-white/[0.04]";
                   return (
                     <tr
                       key={row.id}
                       className={cn(
-                        "text-xs border-b border-neutral-800/50 transition-colors",
+                        "text-xs border-b border-white/[0.04] transition-colors duration-200",
                         rowBg,
                       )}
                     >
@@ -253,7 +253,7 @@ export function TradeHistoryTable() {
 
           {/* Pagination */}
           {pageCount > 1 && (
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-neutral-800">
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.08]">
               <span className="text-xs text-neutral-500">
                 Page {pageIndex + 1} of {pageCount}
               </span>
@@ -261,14 +261,14 @@ export function TradeHistoryTable() {
                 <button
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
-                  className="px-2 py-1 text-xs rounded border border-neutral-700 text-neutral-400 hover:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-2 py-1 text-xs rounded border border-white/[0.08] text-neutral-400 hover:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-200"
                 >
                   Prev
                 </button>
                 <button
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
-                  className="px-2 py-1 text-xs rounded border border-neutral-700 text-neutral-400 hover:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-2 py-1 text-xs rounded border border-white/[0.08] text-neutral-400 hover:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-200"
                 >
                   Next
                 </button>

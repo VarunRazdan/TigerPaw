@@ -163,9 +163,11 @@ function getPassphrase(): string {
     fs.writeFileSync(fallbackKeyPath, key, { mode: 0o600, encoding: "utf8" });
     return key;
   } catch {
-    // Read-only filesystem or other write failure -- fall back to predictable key.
-    log.warn("unable to persist fallback key; using predictable passphrase");
-    return `tigerpaw-fallback-${os.hostname()}-${os.userInfo().uid}`;
+    // Read-only filesystem or other write failure -- refuse to use a predictable key.
+    throw new Error(
+      "Cannot derive encryption key: no writable filesystem for key storage and TIGERPAW_PASSPHRASE env var not set. " +
+        "Set TIGERPAW_PASSPHRASE or ensure ~/.tigerpaw/ is writable.",
+    );
   }
 }
 

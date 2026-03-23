@@ -32,7 +32,7 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
       <button
         onClick={() => setEditing(true)}
         className={cn(
-          "text-xs text-neutral-500 hover:text-neutral-300 transition-colors",
+          "text-xs text-neutral-500 hover:text-neutral-300 cursor-pointer transition-all duration-200",
           className,
         )}
       >
@@ -59,7 +59,7 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
         value={sl}
         onChange={(e) => setSl(e.target.value)}
         placeholder="SL"
-        className="w-16 px-1.5 py-0.5 rounded bg-neutral-800 border border-red-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-red-600"
+        className="w-16 px-1.5 py-0.5 rounded bg-white/[0.05] border border-red-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-red-600 cursor-pointer transition-all duration-200"
       />
       <input
         type="number"
@@ -67,14 +67,17 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
         value={tp}
         onChange={(e) => setTp(e.target.value)}
         placeholder="TP"
-        className="w-16 px-1.5 py-0.5 rounded bg-neutral-800 border border-green-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-green-600"
+        className="w-16 px-1.5 py-0.5 rounded bg-white/[0.05] border border-green-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-green-600 cursor-pointer transition-all duration-200"
       />
-      <button onClick={save} className="text-xs text-green-400 hover:text-green-300 font-semibold">
+      <button
+        onClick={save}
+        className="text-xs text-green-400 hover:text-green-300 font-semibold cursor-pointer transition-all duration-200"
+      >
         OK
       </button>
       <button
         onClick={() => setEditing(false)}
-        className="text-xs text-neutral-500 hover:text-neutral-300"
+        className="text-xs text-neutral-500 hover:text-neutral-300 cursor-pointer transition-all duration-200"
       >
         X
       </button>

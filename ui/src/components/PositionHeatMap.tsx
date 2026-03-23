@@ -6,7 +6,7 @@ export function PositionHeatMap() {
 
   if (positions.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Position Heat Map</h3>
         <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
       </div>
@@ -16,7 +16,7 @@ export function PositionHeatMap() {
   const maxValue = Math.max(...positions.map((p) => p.valueUsd));
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
       <h3 className="text-sm font-semibold text-neutral-300 mb-3">Position Heat Map</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {positions.map((pos) => {
@@ -46,7 +46,7 @@ export function PositionHeatMap() {
             <div
               key={`${pos.extensionId}-${pos.symbol}`}
               className={cn(
-                "rounded-md border p-3 flex flex-col justify-between transition-colors",
+                "rounded-md border p-3 flex flex-col justify-between hover:scale-[1.02] cursor-pointer transition-all duration-300",
                 bgColor,
                 borderColor,
               )}

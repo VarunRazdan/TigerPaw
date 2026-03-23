@@ -84,4 +84,217 @@ describe("trading-store", () => {
     const { platforms } = useTradingStore.getState();
     expect(platforms.coinbase.api.authScheme).toBe("ES256 JWT (CDP Key)");
   });
+
+  // --- Extended tests ---
+
+  describe("setKillSwitch", () => {
+    it("sets active and reason", () => {
+      useTradingStore.getState().setKillSwitch(true, "Daily loss limit");
+      const s = useTradingStore.getState();
+      expect(s.killSwitchActive).toBe(true);
+      expect(s.killSwitchReason).toBe("Daily loss limit");
+    });
+
+    it("clears reason when deactivating", () => {
+      useTradingStore.getState().setKillSwitch(true, "Test");
+      useTradingStore.getState().setKillSwitch(false);
+      const s = useTradingStore.getState();
+      expect(s.killSwitchActive).toBe(false);
+      expect(s.killSwitchReason).toBeUndefined();
+    });
+  });
+
+  describe("setKillSwitchMode", () => {
+    it("sets mode to soft", () => {
+      useTradingStore.getState().setKillSwitchMode("soft");
+      expect(useTradingStore.getState().killSwitchMode).toBe("soft");
+    });
+
+    it("sets mode to hard", () => {
+      useTradingStore.getState().setKillSwitchMode("soft");
+      useTradingStore.getState().setKillSwitchMode("hard");
+      expect(useTradingStore.getState().killSwitchMode).toBe("hard");
+    });
+  });
+
+  describe("updateDailyMetrics", () => {
+    it("partially merges metrics", () => {
+      useTradingStore.getState().updateDailyMetrics({ dailyPnlUsd: 500 });
+      const s = useTradingStore.getState();
+      expect(s.dailyPnlUsd).toBe(500);
+      // Other metrics unchanged
+      expect(s.dailyTradeCount).toBe(initialState.dailyTradeCount);
+    });
+
+    it("can update multiple metrics at once", () => {
+      useTradingStore.getState().updateDailyMetrics({
+        dailyPnlUsd: -200,
+        consecutiveLosses: 3,
+        dailyTradeCount: 15,
+      });
+      const s = useTradingStore.getState();
+      expect(s.dailyPnlUsd).toBe(-200);
+      expect(s.consecutiveLosses).toBe(3);
+      expect(s.dailyTradeCount).toBe(15);
+    });
+  });
+
+  describe("setPositions", () => {
+    it("replaces the positions array", () => {
+      const newPositions = [
+        {
+          symbol: "GOOG",
+          extensionId: "alpaca",
+          quantity: 3,
+          valueUsd: 500,
+          unrealizedPnl: 10,
+          percentOfPortfolio: 1,
+        },
+      ];
+      useTradingStore.getState().setPositions(newPositions);
+      expect(useTradingStore.getState().positions).toEqual(newPositions);
+    });
+  });
+
+  describe("updatePositionStopLoss", () => {
+    it("updates matching symbol", () => {
+      useTradingStore.getState().updatePositionStopLoss("AAPL", 200);
+      const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
+      expect(pos?.stopLoss).toBe(200);
+    });
+
+    it("does not affect other positions", () => {
+      useTradingStore.getState().updatePositionStopLoss("AAPL", 200);
+      const tsla = useTradingStore.getState().positions.find((p) => p.symbol === "TSLA");
+      expect(tsla?.stopLoss).toBe(
+        initialState.positions.find((p) => p.symbol === "TSLA")?.stopLoss,
+      );
+    });
+
+    it("can clear stop loss with undefined", () => {
+      useTradingStore.getState().updatePositionStopLoss("AAPL", undefined);
+      const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
+      expect(pos?.stopLoss).toBeUndefined();
+    });
+  });
+
+  describe("updatePositionTakeProfit", () => {
+    it("updates matching symbol", () => {
+      useTradingStore.getState().updatePositionTakeProfit("AAPL", 250);
+      const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
+      expect(pos?.takeProfit).toBe(250);
+    });
+  });
+
+  describe("addPendingApproval", () => {
+    it("appends to existing approvals", () => {
+      const countBefore = useTradingStore.getState().pendingApprovals.length;
+      useTradingStore.getState().addPendingApproval({
+        id: "pa-new",
+        extensionId: "alpaca",
+        symbol: "GOOG",
+        side: "buy",
+        quantity: 5,
+        notionalUsd: 900,
+        riskPercent: 1.9,
+        mode: "confirm",
+        timeoutMs: 15_000,
+        createdAt: Date.now(),
+      });
+      expect(useTradingStore.getState().pendingApprovals).toHaveLength(countBefore + 1);
+    });
+  });
+
+  describe("removePendingApproval", () => {
+    it("removes by id", () => {
+      useTradingStore.getState().removePendingApproval("pa-1");
+      const ids = useTradingStore.getState().pendingApprovals.map((a) => a.id);
+      expect(ids).not.toContain("pa-1");
+    });
+
+    it("no-op for unknown id", () => {
+      const before = useTradingStore.getState().pendingApprovals.length;
+      useTradingStore.getState().removePendingApproval("nonexistent");
+      expect(useTradingStore.getState().pendingApprovals).toHaveLength(before);
+    });
+  });
+
+  describe("setTradeHistory", () => {
+    it("replaces history array", () => {
+      useTradingStore.getState().setTradeHistory([]);
+      expect(useTradingStore.getState().tradeHistory).toEqual([]);
+    });
+  });
+
+  describe("setPlatformStatus", () => {
+    it("adds or overwrites a platform", () => {
+      const newStatus = {
+        connected: true,
+        mode: "live" as const,
+        label: "TestExchange",
+        api: {
+          apiVersion: "v1",
+          authScheme: "API Key",
+          connectionMethod: "REST",
+          baseUrl: "api.test.com",
+          hasSandbox: false,
+        },
+      };
+      useTradingStore.getState().setPlatformStatus("test-exchange", newStatus);
+      expect(useTradingStore.getState().platforms["test-exchange"]).toEqual(newStatus);
+    });
+  });
+
+  describe("disconnectPlatform", () => {
+    it("sets connected to false", () => {
+      expect(useTradingStore.getState().platforms.alpaca.connected).toBe(true);
+      useTradingStore.getState().disconnectPlatform("alpaca");
+      expect(useTradingStore.getState().platforms.alpaca.connected).toBe(false);
+    });
+
+    it("no-op for unknown platform id", () => {
+      const before = { ...useTradingStore.getState().platforms };
+      useTradingStore.getState().disconnectPlatform("nonexistent");
+      expect(useTradingStore.getState().platforms).toEqual(before);
+    });
+
+    it("preserves other platform fields", () => {
+      const before = useTradingStore.getState().platforms.alpaca;
+      useTradingStore.getState().disconnectPlatform("alpaca");
+      const after = useTradingStore.getState().platforms.alpaca;
+      expect(after.mode).toBe(before.mode);
+      expect(after.label).toBe(before.label);
+      expect(after.api).toEqual(before.api);
+    });
+  });
+
+  describe("setPnlHistory", () => {
+    it("replaces pnl history array", () => {
+      const newHistory = [{ date: "Jan 1", pnl: 100 }];
+      useTradingStore.getState().setPnlHistory(newHistory);
+      expect(useTradingStore.getState().pnlHistory).toEqual(newHistory);
+    });
+  });
+
+  describe("initial demo data", () => {
+    it("has populated positions", () => {
+      expect(initialState.positions.length).toBeGreaterThan(0);
+    });
+
+    it("has populated trade history", () => {
+      expect(initialState.tradeHistory.length).toBeGreaterThan(0);
+    });
+
+    it("has populated pending approvals", () => {
+      expect(initialState.pendingApprovals.length).toBeGreaterThan(0);
+    });
+
+    it("has populated pnl history", () => {
+      expect(initialState.pnlHistory.length).toBeGreaterThan(0);
+    });
+
+    it("has non-zero portfolio value", () => {
+      expect(initialState.currentPortfolioValueUsd).toBeGreaterThan(0);
+    });
+  });
 });

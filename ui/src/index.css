@@ -1,1 +1,40 @@
 @import "tailwindcss";
+
+/*
+ * Apple-inspired glassmorphism dark theme
+ * ----------------------------------------
+ * Frosted glass panels on a deep dark background.
+ * Subtle white borders, soft blurs, and gentle depth.
+ */
+
+/* Ambient background — Perplexity-style dark grey with visible gradients */
+body {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 120, 50, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+    #1b1b1f;
+  min-height: 100vh;
+}
+
+/* Smooth scrollbar for the dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Selection */
+::selection {
+  background: rgba(249, 115, 22, 0.3);
+  color: white;
+}

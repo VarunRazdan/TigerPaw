@@ -38,12 +38,12 @@ function ApprovalCard({
   const timeoutFraction = totalSec > 0 ? remainingSec / totalSec : 0;
 
   return (
-    <div className="rounded-md border border-neutral-700 bg-neutral-800/60 p-3">
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.06] backdrop-blur-lg p-3 hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-neutral-200">
           {approval.side.toUpperCase()} {approval.quantity}x {approval.symbol}
         </span>
-        <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-700 text-neutral-400">
+        <span className="text-xs px-1.5 py-0.5 rounded bg-white/[0.08] text-neutral-400">
           {approval.extensionId}
         </span>
       </div>
@@ -57,19 +57,19 @@ function ApprovalCard({
       <div className="flex items-center gap-2 mb-2">
         <button
           onClick={() => onApprove(approval)}
-          className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-green-700 hover:bg-green-600 text-green-100 transition-colors"
+          className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-green-700 hover:bg-green-600 text-green-100 cursor-pointer transition-all duration-300 hover:shadow-md hover:shadow-green-900/30"
         >
           Approve
         </button>
         <button
           onClick={() => onDeny(approval)}
-          className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-red-800 hover:bg-red-700 text-red-100 transition-colors"
+          className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-red-800 hover:bg-red-700 text-red-100 cursor-pointer transition-all duration-300 hover:shadow-md hover:shadow-red-900/30"
         >
           Deny
         </button>
       </div>
       <div className="flex items-center gap-2 text-xs text-neutral-500">
-        <div className="flex-1 h-1 bg-neutral-700 rounded-full overflow-hidden">
+        <div className="flex-1 h-1 bg-white/[0.08] rounded-full overflow-hidden">
           <div
             className={cn(
               "h-full rounded-full transition-all",
@@ -127,7 +127,7 @@ export function ApprovalQueuePanel() {
   }, [pendingApprovals, handleAction]);
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-neutral-300">
           Pending Approvals
@@ -168,7 +168,7 @@ export function ApprovalQueuePanel() {
                 </span>
                 <button
                   onClick={() => handleUndo(entry)}
-                  className="font-semibold hover:underline ml-2"
+                  className="font-semibold hover:underline ml-2 cursor-pointer"
                 >
                   Undo ({remainSec}s)
                 </button>

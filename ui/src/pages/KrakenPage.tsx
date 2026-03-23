@@ -1,5 +1,12 @@
+import { useState, useEffect } from "react";
+import { ConnectDialog } from "@/components/ConnectDialog";
+import { OrderEntryForm } from "@/components/OrderEntryForm";
+import { TradingViewChart } from "@/components/TradingViewChart";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { fetchCryptoPrices, type CryptoPrice } from "@/lib/coingecko";
+import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
+import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
 const DEMO_BALANCES = [
@@ -11,79 +18,129 @@ const DEMO_BALANCES = [
 
 export function KrakenPage() {
   const platform = useTradingStore((s) => s.platforms.kraken);
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [prices, setPrices] = useState<CryptoPrice[]>([]);
+
+  useEffect(() => {
+    fetchCryptoPrices().then(setPrices);
+    const interval = setInterval(() => fetchCryptoPrices().then(setPrices), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
+        <img src="/icons/trading-platforms/kraken.svg" alt="" className="w-6 h-6" />
         <h1 className="text-xl font-bold text-neutral-100">Kraken</h1>
         <Badge
           className={
             platform?.connected
               ? "bg-green-900 text-green-300 border-green-800"
-              : "bg-neutral-800 text-neutral-400 border-neutral-700"
+              : "bg-white/[0.06] text-neutral-400 border-white/[0.08] cursor-pointer hover:bg-white/[0.10] hover:text-orange-400"
           }
+          onClick={() => !platform?.connected && setConnectOpen(true)}
         >
-          {platform?.connected ? "Connected" : "Not Connected"}
+          {platform?.connected ? "Connected" : "Not Connected — Click to Setup"}
         </Badge>
       </div>
+      <ConnectDialog
+        open={connectOpen}
+        onOpenChange={setConnectOpen}
+        info={TRADING_CONNECT_INFO.kraken}
+      />
+
+      {/* Live Crypto Prices */}
+      {prices.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {prices.map((p) => (
+            <div
+              key={p.id}
+              className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5"
+            >
+              <div className="text-xs text-neutral-500">{p.symbol}</div>
+              <div className="text-lg font-bold font-mono text-neutral-100">
+                ${p.priceUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </div>
+              <div
+                className={cn(
+                  "text-xs font-mono",
+                  p.change24h >= 0 ? "text-green-400" : "text-red-400",
+                )}
+              >
+                {p.change24h >= 0 ? "+" : ""}
+                {p.change24h.toFixed(2)}%
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* TradingView Chart */}
+      <TradingViewChart symbol="KRAKEN:XBTUSD" height={380} />
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3">
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
           <div className="text-xs text-neutral-500">Total Balance</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$49,417</div>
         </div>
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3">
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
           <div className="text-xs text-neutral-500">Trade Volume (30d)</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$12,340</div>
         </div>
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-3">
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
           <div className="text-xs text-neutral-500">Open Positions</div>
           <div className="text-lg font-bold font-mono text-neutral-100">0</div>
         </div>
       </div>
 
-      <Tabs defaultValue="balances">
-        <TabsList>
-          <TabsTrigger value="balances">Balances</TabsTrigger>
-          <TabsTrigger value="orders">Open Orders</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="balances">
+            <TabsList>
+              <TabsTrigger value="balances">Balances</TabsTrigger>
+              <TabsTrigger value="orders">Open Orders</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="balances">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50">
-            {DEMO_BALANCES.map((bal) => (
-              <div
-                key={bal.asset}
-                className="flex items-center justify-between p-3 border-b border-neutral-800/50 last:border-0"
-              >
-                <div>
-                  <div className="text-sm font-medium text-neutral-200">{bal.name}</div>
-                  <div className="text-xs text-neutral-500">
-                    {bal.asset} — {bal.balance}
+            <TabsContent value="balances">
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30">
+                {DEMO_BALANCES.map((bal) => (
+                  <div
+                    key={bal.asset}
+                    className="flex items-center justify-between p-3 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.04] transition-colors duration-200 cursor-pointer"
+                  >
+                    <div>
+                      <div className="text-sm font-medium text-neutral-200">{bal.name}</div>
+                      <div className="text-xs text-neutral-500">
+                        {bal.asset} — {bal.balance}
+                      </div>
+                    </div>
+                    <div className="text-sm font-mono text-neutral-200">
+                      ${bal.valueUsd.toLocaleString()}
+                    </div>
                   </div>
-                </div>
-                <div className="text-sm font-mono text-neutral-200">
-                  ${bal.valueUsd.toLocaleString()}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="orders">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-            <p className="text-xs text-neutral-600 py-4 text-center">No open orders</p>
-          </div>
-        </TabsContent>
+            <TabsContent value="orders">
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+                <p className="text-xs text-neutral-600 py-4 text-center">No open orders</p>
+              </div>
+            </TabsContent>
 
-        <TabsContent value="history">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-            <p className="text-xs text-neutral-600 py-4 text-center">
-              Trade history loads from audit log
-            </p>
-          </div>
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="history">
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+                <p className="text-xs text-neutral-600 py-4 text-center">
+                  Trade history loads from audit log
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <OrderEntryForm extensionId="kraken" defaultSymbol="XBTUSD" priceEstimate={68240} />
+      </div>
     </div>
   );
 }

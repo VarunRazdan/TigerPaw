@@ -41,7 +41,7 @@ function CircularGauge({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#262626"
+            stroke="rgba(255,255,255,0.08)"
             strokeWidth={strokeWidth}
           />
           {/* Value arc */}
@@ -101,7 +101,7 @@ function RiskBar({ label, current, limit, unit = "", format }: RiskBarProps) {
           {unit}
         </span>
       </div>
-      <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
         <div
           className={cn("h-full rounded-full transition-all duration-500", barColor)}
           style={{ width: `${pct}%` }}
@@ -128,11 +128,11 @@ export function RiskOverviewPanel() {
     s.positions.length > 0 ? Math.max(...s.positions.map((p) => p.percentOfPortfolio)) : 0;
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
       <h3 className="text-sm font-semibold text-neutral-300 mb-4">Risk Overview</h3>
 
       {/* Circular gauges for top metrics */}
-      <div className="flex justify-around mb-4 pb-4 border-b border-neutral-800">
+      <div className="flex justify-around mb-4 pb-4 border-b border-white/[0.08]">
         <CircularGauge
           label="Daily Loss"
           current={Number(dailyLossPercent.toFixed(1))}
