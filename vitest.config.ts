@@ -57,11 +57,23 @@ const pluginSdkSubpaths = [
 export default defineConfig({
   resolve: {
     // Keep this ordered: the base `openclaw/plugin-sdk` alias is a prefix match.
+    // Both `tigerpaw/` (current) and `openclaw/` (legacy) import prefixes are aliased
+    // so tests work regardless of which name extensions use.
     alias: [
-      ...pluginSdkSubpaths.map((subpath) => ({
-        find: `openclaw/plugin-sdk/${subpath}`,
-        replacement: path.join(repoRoot, "src", "plugin-sdk", `${subpath}.ts`),
-      })),
+      ...pluginSdkSubpaths.flatMap((subpath) => [
+        {
+          find: `tigerpaw/plugin-sdk/${subpath}`,
+          replacement: path.join(repoRoot, "src", "plugin-sdk", `${subpath}.ts`),
+        },
+        {
+          find: `openclaw/plugin-sdk/${subpath}`,
+          replacement: path.join(repoRoot, "src", "plugin-sdk", `${subpath}.ts`),
+        },
+      ]),
+      {
+        find: "tigerpaw/plugin-sdk",
+        replacement: path.join(repoRoot, "src", "plugin-sdk", "index.ts"),
+      },
       {
         find: "openclaw/plugin-sdk",
         replacement: path.join(repoRoot, "src", "plugin-sdk", "index.ts"),

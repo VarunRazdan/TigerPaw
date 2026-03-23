@@ -20,15 +20,24 @@ export { RISK_TIER_PRESETS, TradingPolicyEngine } from "./policy-engine.js";
 
 // Policy state
 export type { TradingPolicyState } from "./policy-state.js";
-export { loadPolicyState, savePolicyState, updatePolicyState } from "./policy-state.js";
+export {
+  loadPolicyState,
+  savePolicyState,
+  updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
+} from "./policy-state.js";
 
 // Kill switch
 export type { KillSwitchMode, KillSwitchStatus } from "./kill-switch.js";
 export {
   activateKillSwitch,
+  activatePlatformKillSwitch,
   autoActivateIfBreached,
   checkKillSwitch,
+  checkPlatformKillSwitch,
   deactivateKillSwitch,
+  deactivatePlatformKillSwitch,
   isOrderAllowedUnderKillSwitch,
 } from "./kill-switch.js";
 

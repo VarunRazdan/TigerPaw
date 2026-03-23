@@ -16,6 +16,8 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -24,6 +26,8 @@ import { krakenConfigSchema, BASE_URL, type KrakenConfig } from "./config.js";
 // -- Constants ---------------------------------------------------------------
 const SYNC_INTERVAL_MS = 60_000;
 const EXTENSION_ID = "kraken";
+/** Maximum age (ms) of a price before flagging as stale. */
+const STALE_PRICE_THRESHOLD_MS = 30_000;
 
 // -- Kraken API response types -----------------------------------------------
 type KrakenTicker = {
@@ -342,6 +346,7 @@ const krakenPlugin = {
 
           // Estimate price for policy evaluation: use provided price, else fetch ticker.
           let estimatedPrice = price ?? 0;
+          let priceStaleWarning: string | undefined;
           if (estimatedPrice === 0) {
             try {
               const tickerResult = await publicReq<Record<string, KrakenTicker>>(
@@ -351,6 +356,12 @@ const krakenPlugin = {
               if (key) {
                 const ticker = tickerResult[key];
                 estimatedPrice = side === "buy" ? parseFloat(ticker.a[0]) : parseFloat(ticker.b[0]);
+                // Low trade count today suggests illiquid market / stale pricing.
+                const tradesToday = ticker.t[0] ?? 0;
+                if (tradesToday < 5) {
+                  priceStaleWarning = `Low liquidity warning: only ${tradesToday} trade(s) today — price may be stale`;
+                  api.logger.warn(`kraken: low liquidity for ${p}: ${tradesToday} trades today`);
+                }
               }
             } catch {
               // If ticker fetch fails, proceed with 0 — policy engine will still check other limits.
@@ -445,8 +456,11 @@ const krakenPlugin = {
               `Order placed successfully.`,
               `TX ID(s): ${txids}`,
               `Description: ${r.descr.order}`,
-            ].join("\n");
-            return txtD(text, { txid: r.txid, description: r.descr.order });
+              priceStaleWarning ? `⚠ ${priceStaleWarning}` : null,
+            ]
+              .filter(Boolean)
+              .join("\n");
+            return txtD(text, { txid: r.txid, description: r.descr.order, priceStaleWarning });
           } catch (err) {
             api.logger.warn(`kraken: order failed: ${errMsg(err)}`);
             await writeAuditEntry({
@@ -630,9 +644,8 @@ const krakenPlugin = {
     api.registerService({
       id: "kraken-sync",
       start: () => {
-        api.logger.info(
-          `kraken-sync: starting balance/position sync (every ${SYNC_INTERVAL_MS / 1000}s)`,
-        );
+        const syncMs = cfg.syncIntervalMs ?? SYNC_INTERVAL_MS;
+        api.logger.info(`kraken-sync: starting balance/position sync (every ${syncMs / 1000}s)`);
         const sync = async () => {
           try {
             const [balances, positions] = await Promise.all([
@@ -670,8 +683,8 @@ const krakenPlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: posCount,
-              currentPortfolioValueUsd: estimatedPortfolio,
+              ...withPlatformPositionCount(state, EXTENSION_ID, posCount),
+              ...withPlatformPortfolio(state, EXTENSION_ID, estimatedPortfolio),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, estimatedPortfolio),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -690,7 +703,7 @@ const krakenPlugin = {
           }
         };
         sync();
-        syncTimer = setInterval(sync, SYNC_INTERVAL_MS);
+        syncTimer = setInterval(sync, syncMs);
       },
       stop: () => {
         if (syncTimer) {

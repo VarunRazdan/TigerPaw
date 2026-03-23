@@ -21,6 +21,8 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -29,6 +31,8 @@ import { dydxConfigSchema, getIndexerUrl, type DydxConfig } from "./config.js";
 // -- Constants ---------------------------------------------------------------
 const SYNC_INTERVAL_MS = 60_000;
 const EXTENSION_ID = "dydx";
+/** Low volume threshold for stale price warning (in USD). */
+const LOW_VOLUME_THRESHOLD_USD = 10_000;
 
 // -- dYdX v4 Indexer API types -----------------------------------------------
 type DydxMarket = {
@@ -310,8 +314,9 @@ const dydxPlugin = {
 
           const t = ticker.toUpperCase();
 
-          // Fetch oracle price for policy evaluation
+          // Fetch oracle price and market data for policy evaluation + risk warnings.
           let estimatedPrice = price ?? 0;
+          const warnings: string[] = [];
           if (estimatedPrice === 0) {
             try {
               const data = await indexerReq<{ markets: Record<string, DydxMarket> }>(
@@ -319,9 +324,44 @@ const dydxPlugin = {
                 "/v4/perpetualMarkets",
               );
               const market = data.markets[t];
-              if (market) estimatedPrice = parseFloat(market.oraclePrice);
+              if (market) {
+                estimatedPrice = parseFloat(market.oraclePrice);
+                // Low 24h volume warning — suggests stale pricing / low liquidity.
+                const vol24h = parseFloat(market.volume24H ?? "0");
+                if (vol24h < LOW_VOLUME_THRESHOLD_USD) {
+                  warnings.push(`Low liquidity: 24h volume ${$(vol24h)} — price may be unreliable`);
+                  api.logger.warn(`dydx: low volume for ${t}: ${$(vol24h)} 24h`);
+                }
+              }
             } catch {
               // If fetch fails, proceed with 0 — policy engine will still check other limits.
+            }
+          }
+
+          // Leverage/liquidation risk warning for perpetuals.
+          if (estimatedPrice > 0 && side === "buy") {
+            try {
+              const subaccountData = await indexerReq<{
+                subaccount: {
+                  equity: string;
+                  openPerpetualPositions: Record<string, DydxPosition>;
+                };
+              }>(cfg, `/v4/addresses/${cfg.address ?? "unknown"}/subaccountNumber/0`);
+              const equity = parseFloat(subaccountData.subaccount.equity ?? "0");
+              const orderNotional = size * estimatedPrice;
+              const existingNotional = Object.values(
+                subaccountData.subaccount.openPerpetualPositions ?? {},
+              ).reduce((sum, p) => sum + Math.abs(parseFloat(p.size ?? "0") * estimatedPrice), 0);
+              const projectedLeverage =
+                equity > 0 ? (existingNotional + orderNotional) / equity : 0;
+              if (projectedLeverage > 5) {
+                warnings.push(
+                  `High leverage warning: projected ${projectedLeverage.toFixed(1)}x — liquidation risk elevated`,
+                );
+                api.logger.warn(`dydx: high leverage for ${t}: ${projectedLeverage.toFixed(1)}x`);
+              }
+            } catch {
+              // Subaccount fetch failure is non-fatal — continue with policy check.
             }
           }
 
@@ -370,68 +410,25 @@ const dydxPlugin = {
             );
           }
 
-          // STUB: In production, this would sign and broadcast a Cosmos transaction
-          // to the dYdX v4 chain. For now, we log the order intent and write an
-          // audit trail entry.
-          const stubOrderId = randomUUID();
-          const notionalUsd = size * estimatedPrice;
-
-          api.logger.info(
-            `dydx: [STUB] placing ${side} ${type} order: ${size} ${t} @ ${estimatedPrice > 0 ? $(estimatedPrice) : "market"}`,
+          // dYdX v4 order placement requires Cosmos SDK transaction signing
+          // which is not yet integrated. Return an explicit error instead of
+          // faking success and corrupting policy state.
+          api.logger.warn(
+            `dydx: order placement not yet implemented (Cosmos SDK signing required)`,
           );
-
-          try {
-            // Post-trade: update policy state and write audit entry.
-            await updatePolicyState((state) => ({
-              ...state,
-              dailyTradeCount: state.dailyTradeCount + 1,
-              dailySpendUsd: state.dailySpendUsd + (side === "buy" ? notionalUsd : 0),
-              lastTradeAtMs: Date.now(),
-            }));
-            await writeAuditEntry({
-              extensionId: EXTENSION_ID,
-              action: "submitted",
-              actor: "agent",
-              orderSnapshot: buildTradeOrder({
-                symbol: t,
-                side: side as "buy" | "sell",
-                qty: size,
-                priceUsd: estimatedPrice,
-                orderType: (type === "market" ? "market" : "limit") as "market" | "limit",
-                limitPrice: price,
-              }),
-            });
-
-            const text = [
-              `Order submitted (stub — Cosmos tx signing not yet implemented).`,
-              `Stub Order ID: ${stubOrderId}`,
+          return txtD(
+            `dYdX order placement is not yet implemented — Cosmos SDK transaction signing is required.\n` +
+              `Read-only tools are available: dydx_get_markets, dydx_get_positions, dydx_get_balances, dydx_get_ticker.\n` +
               `Ticker: ${t} | Side: ${side.toUpperCase()} | Size: ${size} | Type: ${type}`,
-              price !== undefined ? `Limit Price: ${$(price)}` : null,
-              `Estimated Notional: ${$(notionalUsd)}`,
-              `Network: ${cfg.mode}`,
-            ]
-              .filter(Boolean)
-              .join("\n");
-            return txtD(text, {
-              orderId: stubOrderId,
+            {
+              error: "not_implemented",
+              stub: true,
               ticker: t,
               side,
               size,
               type,
-              notionalUsd,
-              network: cfg.mode,
-              stub: true,
-            });
-          } catch (err) {
-            api.logger.warn(`dydx: order failed: ${errMsg(err)}`);
-            await writeAuditEntry({
-              extensionId: EXTENSION_ID,
-              action: "rejected",
-              actor: "system",
-              error: errMsg(err),
-            });
-            return txtD(`Order failed: ${errMsg(err)}`, { error: errMsg(err) });
-          }
+            },
+          );
         },
       },
       { name: "dydx_place_order" },
@@ -455,25 +452,14 @@ const dydxPlugin = {
         },
         async execute(_id: string, params: unknown) {
           const { orderId, ticker } = params as { orderId: string; ticker?: string };
-          api.logger.info(
-            `dydx: [STUB] cancelling order ${orderId}${ticker ? ` (${ticker})` : ""}`,
+          api.logger.warn(
+            `dydx: cancel not yet implemented (Cosmos SDK signing required) — orderId: ${orderId}${ticker ? ` (${ticker})` : ""}`,
           );
-          try {
-            // STUB: In production, this would sign and broadcast a CancelOrder
-            // Cosmos transaction to the dYdX v4 chain.
-            await writeAuditEntry({
-              extensionId: EXTENSION_ID,
-              action: "cancelled",
-              actor: "agent",
-            });
-            return txtD(
-              `Order ${orderId} cancellation submitted (stub — Cosmos tx signing not yet implemented).`,
-              { orderId, status: "cancelled", stub: true },
-            );
-          } catch (err) {
-            api.logger.warn(`dydx: cancel failed for ${orderId}: ${errMsg(err)}`);
-            return txtD(`Cancel failed: ${errMsg(err)}`, { orderId, error: errMsg(err) });
-          }
+          return txtD(
+            `dYdX order cancellation is not yet implemented — Cosmos SDK transaction signing is required.\n` +
+              `Order ID: ${orderId}`,
+            { orderId, error: "not_implemented", stub: true },
+          );
         },
       },
       { name: "dydx_cancel_order" },
@@ -618,7 +604,8 @@ const dydxPlugin = {
     api.registerService({
       id: "dydx-sync",
       start: () => {
-        api.logger.info(`dydx-sync: starting position sync (every ${SYNC_INTERVAL_MS / 1000}s)`);
+        const syncMs = cfg.syncIntervalMs ?? SYNC_INTERVAL_MS;
+        api.logger.info(`dydx-sync: starting position sync (every ${syncMs / 1000}s)`);
         const sync = async () => {
           try {
             const addr = getSubaccountAddress(cfg);
@@ -651,8 +638,8 @@ const dydxPlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: count,
-              currentPortfolioValueUsd: equity,
+              ...withPlatformPositionCount(state, EXTENSION_ID, count),
+              ...withPlatformPortfolio(state, EXTENSION_ID, equity),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, equity),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -671,7 +658,7 @@ const dydxPlugin = {
           }
         };
         sync();
-        syncTimer = setInterval(sync, SYNC_INTERVAL_MS);
+        syncTimer = setInterval(sync, syncMs);
       },
       stop: () => {
         if (syncTimer) {

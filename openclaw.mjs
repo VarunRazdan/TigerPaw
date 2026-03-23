@@ -24,7 +24,7 @@ const ensureSupportedNodeVersion = () => {
   }
 
   process.stderr.write(
-    `tigerclaw: Node.js v${MIN_NODE_VERSION}+ is required (current: v${process.versions.node}).\n` +
+    `tigerpaw: Node.js v${MIN_NODE_VERSION}+ is required (current: v${process.versions.node}).\n` +
       "If you use nvm, run:\n" +
       `  nvm install ${MIN_NODE_MAJOR}\n` +
       `  nvm use ${MIN_NODE_MAJOR}\n` +

@@ -6,6 +6,7 @@ export type BinanceConfig = {
   apiKey: string;
   apiSecret: string;
   mode: "live" | "testnet";
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -41,7 +42,7 @@ export const binanceConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["apiKey", "apiSecret", "mode"];
+    const allowed = ["apiKey", "apiSecret", "mode", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`binance config has unknown keys: ${unknown.join(", ")}`);
@@ -62,10 +63,13 @@ export const binanceConfigSchema = {
       mode = cfg.mode;
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       apiKey: resolveEnvVars(cfg.apiKey),
       apiSecret: resolveEnvVars(cfg.apiSecret),
       mode,
+      syncIntervalMs,
     };
   },
 

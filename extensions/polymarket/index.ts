@@ -16,6 +16,8 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -543,9 +545,8 @@ const polymarketPlugin = {
     api.registerService({
       id: "polymarket-sync",
       start: () => {
-        api.logger.info(
-          `polymarket-sync: starting position sync (every ${POSITION_SYNC_INTERVAL_MS / 1000}s)`,
-        );
+        const syncMs = cfg.syncIntervalMs ?? POSITION_SYNC_INTERVAL_MS;
+        api.logger.info(`polymarket-sync: starting position sync (every ${syncMs / 1000}s)`);
         const syncPositions = async () => {
           try {
             const positions = await clobRequest<ClobPosition[]>(cfg, "GET", "/positions");
@@ -575,9 +576,12 @@ const polymarketPlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: count,
-              currentPortfolioValueUsd:
-                totalValue > 0 ? totalValue : state.currentPortfolioValueUsd,
+              ...withPlatformPositionCount(state, EXTENSION_ID, count),
+              ...withPlatformPortfolio(
+                state,
+                EXTENSION_ID,
+                totalValue > 0 ? totalValue : (state.portfolioByPlatform[EXTENSION_ID] ?? 0),
+              ),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, totalValue),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -595,7 +599,7 @@ const polymarketPlugin = {
           }
         };
         syncPositions();
-        syncTimer = setInterval(syncPositions, POSITION_SYNC_INTERVAL_MS);
+        syncTimer = setInterval(syncPositions, syncMs);
       },
       stop: () => {
         if (syncTimer) {

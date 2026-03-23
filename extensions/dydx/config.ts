@@ -6,6 +6,7 @@ export type DydxConfig = {
   mnemonic: string;
   address?: string;
   mode: "mainnet" | "testnet";
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ export const dydxConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["mnemonic", "address", "mode"];
+    const allowed = ["mnemonic", "address", "mode", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`dydx config has unknown keys: ${unknown.join(", ")}`);
@@ -69,10 +70,13 @@ export const dydxConfigSchema = {
       mode = cfg.mode;
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       mnemonic: resolveEnvVars(cfg.mnemonic),
       address,
       mode,
+      syncIntervalMs,
     };
   },
 

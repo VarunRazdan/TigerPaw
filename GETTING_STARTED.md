@@ -33,6 +33,24 @@ tigerpaw --version
 # Tigerpaw 2026.3.11
 ```
 
+> **Upgrading from OpenClaw?** Tigerpaw automatically detects and uses your
+> existing `~/.openclaw/` config. The `openclaw` CLI command still works as
+> an alias. No migration steps needed.
+
+---
+
+## First-Time Setup
+
+For guided interactive setup:
+
+```bash
+tigerpaw setup                      # Create minimal config
+tigerpaw channels add --interactive # Add messaging channel with wizard
+tigerpaw doctor                     # Verify everything works
+```
+
+Or follow the manual steps below.
+
 ---
 
 ## Quick Start
@@ -195,8 +213,8 @@ Configure the trading platform you want to use:
 {
   "plugins": {
     "alpaca": {
-      "apiKey": "${ALPACA_API_KEY}",
-      "secretKey": "${ALPACA_SECRET_KEY}",
+      "apiKeyId": "${ALPACA_API_KEY_ID}",
+      "apiSecretKey": "${ALPACA_API_SECRET_KEY}",
       "mode": "paper"
     }
   }
@@ -211,7 +229,8 @@ Configure the trading platform you want to use:
     "polymarket": {
       "apiKey": "${POLYMARKET_API_KEY}",
       "apiSecret": "${POLYMARKET_API_SECRET}",
-      "passphrase": "${POLYMARKET_PASSPHRASE}"
+      "passphrase": "${POLYMARKET_PASSPHRASE}",
+      "privateKey": "${POLYMARKET_PRIVATE_KEY}"
     }
   }
 }
@@ -223,8 +242,10 @@ Configure the trading platform you want to use:
 {
   "plugins": {
     "kalshi": {
+      "email": "${KALSHI_EMAIL}",
       "apiKeyId": "${KALSHI_API_KEY_ID}",
-      "privateKeyPath": "~/.kalshi/private.pem"
+      "privateKeyPath": "~/.kalshi/private.pem",
+      "mode": "demo"
     }
   }
 }

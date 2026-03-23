@@ -16,6 +16,8 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -805,7 +807,8 @@ const ibkrPlugin = {
     api.registerService({
       id: "ibkr-sync",
       start: () => {
-        api.logger.info(`ibkr-sync: starting position sync (every ${SYNC_INTERVAL_MS / 1000}s)`);
+        const syncMs = cfg.syncIntervalMs ?? SYNC_INTERVAL_MS;
+        api.logger.info(`ibkr-sync: starting position sync (every ${syncMs / 1000}s)`);
         const sync = async () => {
           try {
             const [positions, summary] = await Promise.all([
@@ -843,8 +846,8 @@ const ibkrPlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: count,
-              currentPortfolioValueUsd: nlv,
+              ...withPlatformPositionCount(state, EXTENSION_ID, count),
+              ...withPlatformPortfolio(state, EXTENSION_ID, nlv),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, nlv),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -863,7 +866,7 @@ const ibkrPlugin = {
           }
         };
         sync();
-        syncTimer = setInterval(sync, SYNC_INTERVAL_MS);
+        syncTimer = setInterval(sync, syncMs);
       },
       stop: () => {
         if (syncTimer) {

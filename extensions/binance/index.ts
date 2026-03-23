@@ -17,6 +17,8 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -25,6 +27,8 @@ import { binanceConfigSchema, getBaseUrl, type BinanceConfig } from "./config.js
 // -- Constants ---------------------------------------------------------------
 const SYNC_INTERVAL_MS = 60_000;
 const EXTENSION_ID = "binance";
+/** Maximum age (ms) of a price before flagging as stale. */
+const STALE_PRICE_THRESHOLD_MS = 30_000;
 
 // -- HMAC-SHA256 signing (Binance auth) --------------------------------------
 
@@ -78,6 +82,7 @@ function errMsg(err: unknown): string {
 
 // -- Binance API response types ----------------------------------------------
 type TickerPrice = { symbol: string; price: string };
+type Ticker24hr = { symbol: string; lastPrice: string; closeTime: number };
 type ExchangeInfoSymbol = {
   symbol: string;
   status: string;
@@ -307,12 +312,18 @@ const binancePlugin = {
 
           // Estimate price for policy evaluation: use limit price if available, else fetch latest.
           let estimatedPrice = price ?? stopPrice ?? 0;
+          let priceStaleWarning: string | undefined;
           if (estimatedPrice === 0) {
             try {
-              const ticker = await publicReq<TickerPrice>(cfg, "/api/v3/ticker/price", {
+              const ticker = await publicReq<Ticker24hr>(cfg, "/api/v3/ticker/24hr", {
                 symbol: sym,
               });
-              estimatedPrice = parseFloat(ticker.price);
+              estimatedPrice = parseFloat(ticker.lastPrice);
+              const age = Date.now() - ticker.closeTime;
+              if (age > STALE_PRICE_THRESHOLD_MS) {
+                priceStaleWarning = `Price data is ${Math.round(age / 1000)}s old — market may have low liquidity`;
+                api.logger.warn(`binance: stale price for ${sym}: ${Math.round(age / 1000)}s old`);
+              }
             } catch {
               // If price fetch fails, proceed with 0 — policy engine will still check other limits.
             }
@@ -406,6 +417,7 @@ const binancePlugin = {
               `Status: ${r.status}`,
               r.price !== "0.00000000" ? `Price: ${$(r.price)}` : null,
               r.stopPrice !== "0.00000000" ? `Stop Price: ${$(r.stopPrice)}` : null,
+              priceStaleWarning ? `⚠ ${priceStaleWarning}` : null,
             ]
               .filter(Boolean)
               .join("\n");
@@ -416,6 +428,7 @@ const binancePlugin = {
               qty: r.origQty,
               type: r.type,
               status: r.status,
+              priceStaleWarning,
             });
           } catch (err) {
             api.logger.warn(`binance: order failed: ${errMsg(err)}`);
@@ -757,7 +770,8 @@ const binancePlugin = {
     api.registerService({
       id: "binance-sync",
       start: () => {
-        api.logger.info(`binance-sync: starting balance sync (every ${SYNC_INTERVAL_MS / 1000}s)`);
+        const syncMs = cfg.syncIntervalMs ?? SYNC_INTERVAL_MS;
+        api.logger.info(`binance-sync: starting balance sync (every ${syncMs / 1000}s)`);
         const sync = async () => {
           try {
             const account = await signedReq<AccountInfo>(cfg, "GET", "/api/v3/account");
@@ -820,8 +834,8 @@ const binancePlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: nonZero.length,
-              currentPortfolioValueUsd: estimatedUsdValue,
+              ...withPlatformPositionCount(state, EXTENSION_ID, nonZero.length),
+              ...withPlatformPortfolio(state, EXTENSION_ID, estimatedUsdValue),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, estimatedUsdValue),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -840,7 +854,7 @@ const binancePlugin = {
           }
         };
         sync();
-        syncTimer = setInterval(sync, SYNC_INTERVAL_MS);
+        syncTimer = setInterval(sync, syncMs);
       },
       stop: () => {
         if (syncTimer) {

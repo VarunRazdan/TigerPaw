@@ -7,6 +7,7 @@ export type KalshiConfig = {
   apiKeyId: string;
   privateKeyPath: string;
   mode: "demo" | "live";
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -44,7 +45,7 @@ export const kalshiConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["email", "apiKeyId", "privateKeyPath", "mode"];
+    const allowed = ["email", "apiKeyId", "privateKeyPath", "mode", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`kalshi config has unknown keys: ${unknown.join(", ")}`);
@@ -68,11 +69,14 @@ export const kalshiConfigSchema = {
       mode = cfg.mode;
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       email: resolveEnvVars(cfg.email),
       apiKeyId: resolveEnvVars(cfg.apiKeyId),
       privateKeyPath: resolveEnvVars(cfg.privateKeyPath),
       mode,
+      syncIntervalMs,
     };
   },
 

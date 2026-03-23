@@ -16,6 +16,8 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -336,6 +338,26 @@ const alpacaPlugin = {
             });
 
           const sym = symbol.toUpperCase();
+
+          // PDT enforcement: block day trades when account is at the limit.
+          if (side === "buy") {
+            try {
+              const acct = await tradingReq<Account>(cfg, "GET", "/v2/account");
+              const equity = parseFloat(acct.equity ?? "0");
+              const dtCount = acct.daytrade_count ?? 0;
+              if (equity < PDT_EQUITY_THRESHOLD && dtCount >= PDT_LIMIT) {
+                api.logger.warn(
+                  `alpaca: PDT block — ${dtCount} day trades with equity ${$(equity)} (under ${$(PDT_EQUITY_THRESHOLD)})`,
+                );
+                return txtD(
+                  `Order blocked: PDT rule — ${dtCount} day trades used with equity ${$(equity)} (under ${$(PDT_EQUITY_THRESHOLD)}). Another day trade may restrict your account for 90 days.`,
+                  { error: "pdt_blocked", daytradeCount: dtCount, equity },
+                );
+              }
+            } catch {
+              // If account fetch fails, allow the order to proceed to policy engine.
+            }
+          }
 
           // Estimate price for policy evaluation: use limit_price if available, else fetch quote.
           let estimatedPrice = limit_price ?? stop_price ?? 0;
@@ -791,7 +813,8 @@ const alpacaPlugin = {
     api.registerService({
       id: "alpaca-sync",
       start: () => {
-        api.logger.info(`alpaca-sync: starting position sync (every ${SYNC_INTERVAL_MS / 1000}s)`);
+        const syncMs = cfg.syncIntervalMs ?? SYNC_INTERVAL_MS;
+        api.logger.info(`alpaca-sync: starting position sync (every ${syncMs / 1000}s)`);
         const sync = async () => {
           try {
             const [positions, account] = await Promise.all([
@@ -824,8 +847,8 @@ const alpacaPlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: count,
-              currentPortfolioValueUsd: equity,
+              ...withPlatformPositionCount(state, EXTENSION_ID, count),
+              ...withPlatformPortfolio(state, EXTENSION_ID, equity),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, equity),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -856,7 +879,7 @@ const alpacaPlugin = {
           }
         };
         sync();
-        syncTimer = setInterval(sync, SYNC_INTERVAL_MS);
+        syncTimer = setInterval(sync, syncMs);
       },
       stop: () => {
         if (syncTimer) {

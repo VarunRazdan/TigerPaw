@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { ApprovalQueuePanel } from "@/components/ApprovalQueuePanel";
+import { PlatformApiInfo } from "@/components/PlatformApiInfo";
 import { PositionsPanel } from "@/components/PositionsPanel";
 import { RiskOverviewPanel } from "@/components/RiskOverviewPanel";
 import { TradeHistoryTable } from "@/components/TradeHistoryTable";
@@ -111,8 +112,15 @@ function useDemoData() {
 export function TradingPage() {
   useDemoData();
 
-  const { dailyPnlUsd, currentPortfolioValueUsd, limits, killSwitchActive, tier, approvalMode } =
-    useTradingStore();
+  const {
+    dailyPnlUsd,
+    currentPortfolioValueUsd,
+    limits,
+    killSwitchActive,
+    tier,
+    approvalMode,
+    platforms,
+  } = useTradingStore();
 
   const lossPercent =
     currentPortfolioValueUsd > 0
@@ -187,6 +195,9 @@ export function TradingPage() {
 
       {/* Trade history */}
       <TradeHistoryTable />
+
+      {/* Platform API details (toggleable) */}
+      <PlatformApiInfo platforms={platforms} />
     </div>
   );
 }

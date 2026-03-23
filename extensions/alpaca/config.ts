@@ -6,6 +6,7 @@ export type AlpacaConfig = {
   apiKeyId: string;
   apiSecretKey: string;
   mode: "paper" | "live";
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ export const alpacaConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["apiKeyId", "apiSecretKey", "mode"];
+    const allowed = ["apiKeyId", "apiSecretKey", "mode", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`alpaca config has unknown keys: ${unknown.join(", ")}`);
@@ -64,10 +65,13 @@ export const alpacaConfigSchema = {
       mode = cfg.mode;
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       apiKeyId: resolveEnvVars(cfg.apiKeyId),
       apiSecretKey: resolveEnvVars(cfg.apiSecretKey),
       mode,
+      syncIntervalMs,
     };
   },
 

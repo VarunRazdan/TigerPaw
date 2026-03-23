@@ -10,12 +10,14 @@
  * TradingPolicyEngine — every order goes through evaluateOrder() before
  * reaching the Coinbase API.
  */
-import { randomUUID } from "node:crypto";
+import { createSign, randomUUID } from "node:crypto";
 import type { OpenClawPluginApi } from "tigerpaw/plugin-sdk/core";
 import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -60,15 +62,47 @@ type CoinbaseTicker = {
   best_ask: string;
 };
 
+// -- JWT helpers (Coinbase CDP Key auth, ES256) ------------------------------
+
+function base64url(buf: Buffer): string {
+  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function buildJwt(cfg: CoinbaseConfig, method: string, path: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const uri = `${method} ${new URL(path, getBaseUrl(cfg.mode)).host}${path}`;
+
+  const header = { alg: "ES256", kid: cfg.apiKey, nonce: randomUUID(), typ: "JWT" };
+  const payload = {
+    sub: cfg.apiKey,
+    iss: "coinbase-cloud",
+    nbf: now,
+    exp: now + 120,
+    aud: ["cdp_service"],
+    uri,
+  };
+
+  const segments = [
+    base64url(Buffer.from(JSON.stringify(header))),
+    base64url(Buffer.from(JSON.stringify(payload))),
+  ];
+  const signingInput = segments.join(".");
+
+  // The apiSecret is an EC P-256 private key in PEM format.
+  // Node.js crypto.createSign handles PEM keys natively.
+  const signer = createSign("SHA256");
+  signer.update(signingInput);
+  const signature = signer.sign({ key: cfg.apiSecret, dsaEncoding: "ieee-p1363" });
+
+  return `${signingInput}.${base64url(signature)}`;
+}
+
 // -- API helpers (native fetch, Node 22+) ------------------------------------
-function buildHeaders(cfg: CoinbaseConfig) {
-  // Coinbase Advanced Trade uses JWT auth. For production use, proper JWT
-  // signing with the API secret (ES256/HMAC) is required. This stub passes
-  // the API key as a Bearer token — real JWT signing needs crypto libs.
+function buildHeaders(cfg: CoinbaseConfig, method: string, path: string) {
   return {
     "Content-Type": "application/json",
     Accept: "application/json",
-    Authorization: `Bearer ${cfg.apiKey}`,
+    Authorization: `Bearer ${buildJwt(cfg, method, path)}`,
   };
 }
 
@@ -80,7 +114,7 @@ async function apiReq<T>(
 ): Promise<T> {
   const res = await fetch(`${getBaseUrl(cfg.mode)}${path}`, {
     method,
-    headers: buildHeaders(cfg),
+    headers: buildHeaders(cfg, method, path),
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -680,9 +714,8 @@ const coinbasePlugin = {
     api.registerService({
       id: "coinbase-sync",
       start: () => {
-        api.logger.info(
-          `coinbase-sync: starting position sync (every ${SYNC_INTERVAL_MS / 1000}s)`,
-        );
+        const syncMs = cfg.syncIntervalMs ?? SYNC_INTERVAL_MS;
+        api.logger.info(`coinbase-sync: starting position sync (every ${syncMs / 1000}s)`);
         const sync = async () => {
           try {
             const data = await apiReq<{ accounts: CoinbaseAccount[] }>(
@@ -736,8 +769,8 @@ const coinbasePlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: count,
-              currentPortfolioValueUsd: totalValueUsd,
+              ...withPlatformPositionCount(state, EXTENSION_ID, count),
+              ...withPlatformPortfolio(state, EXTENSION_ID, totalValueUsd),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, totalValueUsd),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -756,7 +789,7 @@ const coinbasePlugin = {
           }
         };
         sync();
-        syncTimer = setInterval(sync, SYNC_INTERVAL_MS);
+        syncTimer = setInterval(sync, syncMs);
       },
       stop: () => {
         if (syncTimer) {

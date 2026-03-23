@@ -102,14 +102,9 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
     >
       {/* Logo */}
       <div className="h-14 flex items-center px-3 border-b border-neutral-800 shrink-0">
-        <NavLink to="/" className="flex items-center gap-2">
-          <span className="text-lg font-bold text-orange-500">T</span>
-          {!collapsed && (
-            <>
-              <span className="text-lg font-bold text-orange-500">iger</span>
-              <span className="text-lg font-bold text-neutral-100">paw</span>
-            </>
-          )}
+        <NavLink to="/" className="flex items-center">
+          <span className="text-lg font-bold text-orange-500">T{!collapsed && "iger"}</span>
+          {!collapsed && <span className="text-lg font-bold text-neutral-100">paw</span>}
         </NavLink>
       </div>
 
@@ -220,7 +215,7 @@ export function Layout() {
             <MobileNav />
 
             {/* Mobile logo */}
-            <NavLink to="/" className="md:hidden flex items-center gap-1">
+            <NavLink to="/" className="md:hidden flex items-center">
               <span className="text-lg font-bold text-orange-500">Tiger</span>
               <span className="text-lg font-bold text-neutral-100">paw</span>
             </NavLink>

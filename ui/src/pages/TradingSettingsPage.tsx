@@ -1,6 +1,13 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useTradingStore, type RiskTier, type ApprovalMode } from "@/stores/trading-store";
+import {
+  useTradingStore,
+  type RiskTier,
+  type ApprovalMode,
+  type PerPlatformOverride,
+  type PolicyLimits,
+} from "@/stores/trading-store";
 
 const TIER_PRESETS: Record<Exclude<RiskTier, "custom">, { label: string; desc: string }> = {
   conservative: { label: "Conservative", desc: "Safest — manual approval, tight limits" },
@@ -41,8 +48,94 @@ function LimitInput({
   );
 }
 
+function PlatformOverrideSection({
+  platformId,
+  label,
+  override,
+  globalLimits,
+  onUpdate,
+  onClear,
+}: {
+  platformId: string;
+  label: string;
+  override?: PerPlatformOverride;
+  globalLimits: PolicyLimits;
+  onUpdate: (id: string, o: PerPlatformOverride) => void;
+  onClear: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const hasOverrides = override && Object.keys(override).length > 0;
+
+  return (
+    <div className="border border-neutral-800 rounded-md">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-neutral-800/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-neutral-300">{label}</span>
+          {hasOverrides && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-900/50 text-orange-400 border border-orange-800/50">
+              custom
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] text-neutral-500">{expanded ? "▲" : "▼"}</span>
+      </button>
+      {expanded && (
+        <div className="px-3 pb-3 border-t border-neutral-800/50">
+          <p className="text-[10px] text-neutral-500 mt-2 mb-2">
+            Override global limits for {label}. Leave blank to use global defaults.
+          </p>
+          <LimitInput
+            label="Max single trade"
+            value={override?.maxSingleTradeUsd ?? globalLimits.maxSingleTradeUsd}
+            unit="USD"
+            onChange={(v) => onUpdate(platformId, { ...override, maxSingleTradeUsd: v })}
+          />
+          <LimitInput
+            label="Max daily spend"
+            value={override?.maxDailySpendUsd ?? globalLimits.maxDailySpendUsd}
+            unit="USD"
+            onChange={(v) => onUpdate(platformId, { ...override, maxDailySpendUsd: v })}
+          />
+          <LimitInput
+            label="Max trades/day"
+            value={override?.maxTradesPerDay ?? globalLimits.maxTradesPerDay}
+            unit="trades"
+            onChange={(v) => onUpdate(platformId, { ...override, maxTradesPerDay: v })}
+          />
+          <LimitInput
+            label="Max open positions"
+            value={override?.maxOpenPositions ?? globalLimits.maxOpenPositions}
+            unit="positions"
+            onChange={(v) => onUpdate(platformId, { ...override, maxOpenPositions: v })}
+          />
+          {hasOverrides && (
+            <button
+              onClick={() => onClear(platformId)}
+              className="mt-2 text-[10px] text-red-400 hover:text-red-300 transition-colors"
+            >
+              Clear overrides (use global)
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TradingSettingsPage() {
-  const { tier, approvalMode, limits, setPolicy } = useTradingStore();
+  const {
+    tier,
+    approvalMode,
+    limits,
+    platforms,
+    perPlatformOverrides,
+    setPolicy,
+    setPlatformOverride,
+    clearPlatformOverride,
+  } = useTradingStore();
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -197,6 +290,27 @@ export function TradingSettingsPage() {
           unit="losses"
           onChange={(v) => setPolicy({ limits: { ...limits, consecutiveLossPause: v } })}
         />
+      </div>
+
+      {/* Per-Platform Overrides */}
+      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
+        <h3 className="text-sm font-semibold text-neutral-300 mb-1">Per-Platform Overrides</h3>
+        <p className="text-[10px] text-neutral-500 mb-3">
+          Customize risk limits for individual platforms. These override the global limits above.
+        </p>
+        <div className="space-y-1.5">
+          {Object.entries(platforms).map(([id, p]) => (
+            <PlatformOverrideSection
+              key={id}
+              platformId={id}
+              label={p.label}
+              override={perPlatformOverrides[id]}
+              globalLimits={limits}
+              onUpdate={setPlatformOverride}
+              onClear={clearPlatformOverride}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Actions */}

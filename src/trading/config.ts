@@ -7,6 +7,8 @@ export type TradingConfig = {
   mode: "paper" | "live";
   /** Trading policy configuration. */
   policy: TradingPolicyConfig;
+  /** Default sync interval in ms for all extensions. Extensions can override per-platform. */
+  syncIntervalMs?: number;
   /** Audit log settings. */
   auditLog: {
     /** Override the default audit log path (~/.tigerpaw/trading/audit.jsonl). */

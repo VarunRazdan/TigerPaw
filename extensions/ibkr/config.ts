@@ -6,6 +6,7 @@ export type IbkrConfig = {
   accountId: string;
   gatewayHost: string;
   mode: "paper" | "live";
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -41,7 +42,7 @@ export const ibkrConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["accountId", "gatewayHost", "mode"];
+    const allowed = ["accountId", "gatewayHost", "mode", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`ibkr config has unknown keys: ${unknown.join(", ")}`);
@@ -67,10 +68,13 @@ export const ibkrConfigSchema = {
       mode = cfg.mode;
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       accountId: resolveEnvVars(cfg.accountId),
       gatewayHost: resolveEnvVars(gatewayHost),
       mode,
+      syncIntervalMs,
     };
   },
 

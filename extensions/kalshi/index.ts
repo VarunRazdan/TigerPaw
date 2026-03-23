@@ -17,6 +17,8 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
+  withPlatformPositionCount,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -25,6 +27,8 @@ import { kalshiConfigSchema, getBaseUrl, type KalshiConfig } from "./config.js";
 // -- Constants ---------------------------------------------------------------
 const SYNC_INTERVAL_MS = 60_000;
 const EXTENSION_ID = "kalshi";
+/** Estimated Kalshi settlement fee rate (~2%), factored into notional for policy checks. */
+const SETTLEMENT_FEE_RATE = 0.02;
 
 // -- PEM key loading (read once at registration; fail fast if missing) -------
 let privateKeyPem: string | null = null;
@@ -333,9 +337,11 @@ const kalshiPlugin = {
           }
 
           // Kalshi prices are in cents; convert to USD for policy evaluation.
+          // Include estimated settlement fee (~2%) so the policy engine sees the true cost.
           const priceCents = side === "yes" ? (yes_price ?? 50) : (no_price ?? 50);
           const priceUsd = priceCents / 100;
-          const notionalUsd = count * priceUsd;
+          const rawNotionalUsd = count * priceUsd;
+          const notionalUsd = rawNotionalUsd * (1 + SETTLEMENT_FEE_RATE);
 
           // Fail-safe: block orders when policy engine is not configured.
           if (!policyEngine) {
@@ -538,7 +544,8 @@ const kalshiPlugin = {
     api.registerService({
       id: "kalshi-sync",
       start: () => {
-        api.logger.info(`kalshi-sync: starting position sync (every ${SYNC_INTERVAL_MS / 1000}s)`);
+        const syncMs = cfg.syncIntervalMs ?? SYNC_INTERVAL_MS;
+        api.logger.info(`kalshi-sync: starting position sync (every ${syncMs / 1000}s)`);
         const sync = async () => {
           try {
             const [posData, balance] = await Promise.all([
@@ -573,8 +580,8 @@ const kalshiPlugin = {
 
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              openPositionCount: positions.length,
-              currentPortfolioValueUsd: balanceUsd,
+              ...withPlatformPositionCount(state, EXTENSION_ID, positions.length),
+              ...withPlatformPortfolio(state, EXTENSION_ID, balanceUsd),
               highWaterMarkUsd: Math.max(state.highWaterMarkUsd, balanceUsd),
               positionsByAsset: { ...state.positionsByAsset, ...positionsByAsset },
             }));
@@ -592,7 +599,7 @@ const kalshiPlugin = {
           }
         };
         sync();
-        syncTimer = setInterval(sync, SYNC_INTERVAL_MS);
+        syncTimer = setInterval(sync, syncMs);
       },
       stop: () => {
         if (syncTimer) {

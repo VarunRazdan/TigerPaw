@@ -7,6 +7,7 @@
 
 export type ManifoldConfig = {
   apiKey?: string;
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -44,7 +45,7 @@ export const manifoldConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["apiKey"];
+    const allowed = ["apiKey", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`manifold config has unknown keys: ${unknown.join(", ")}`);
@@ -58,7 +59,9 @@ export const manifoldConfigSchema = {
       apiKey = resolveEnvVars(cfg.apiKey);
     }
 
-    return { apiKey };
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
+    return { apiKey, syncIntervalMs };
   },
 
   uiHints: {

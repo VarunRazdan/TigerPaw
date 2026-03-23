@@ -6,6 +6,7 @@ export type CoinbaseConfig = {
   apiKey: string;
   apiSecret: string;
   mode: "live" | "sandbox";
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -41,7 +42,7 @@ export const coinbaseConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["apiKey", "apiSecret", "mode"];
+    const allowed = ["apiKey", "apiSecret", "mode", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`coinbase config has unknown keys: ${unknown.join(", ")}`);
@@ -62,25 +63,28 @@ export const coinbaseConfigSchema = {
       mode = cfg.mode;
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       apiKey: resolveEnvVars(cfg.apiKey),
       apiSecret: resolveEnvVars(cfg.apiSecret),
       mode,
+      syncIntervalMs,
     };
   },
 
   uiHints: {
     apiKey: {
-      label: "API Key",
+      label: "CDP Key Name",
       sensitive: true,
-      placeholder: "Your Coinbase Advanced Trade API key",
-      help: "API key for Coinbase Advanced Trade (or use ${COINBASE_API_KEY})",
+      placeholder: "organizations/{org_id}/apiKeys/{key_id}",
+      help: "CDP key name from Coinbase Developer Platform (or use ${COINBASE_API_KEY})",
     },
     apiSecret: {
-      label: "API Secret",
+      label: "CDP Private Key (PEM)",
       sensitive: true,
-      placeholder: "Your Coinbase Advanced Trade API secret",
-      help: "API secret for Coinbase Advanced Trade (or use ${COINBASE_API_SECRET})",
+      placeholder: "-----BEGIN EC PRIVATE KEY-----\\n...",
+      help: "EC P-256 private key in PEM format for ES256 JWT signing (or use ${COINBASE_API_SECRET})",
     },
     mode: {
       label: "Trading Mode",

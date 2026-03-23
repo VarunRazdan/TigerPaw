@@ -29,8 +29,12 @@ export type TradingPolicyState = {
   highWaterMarkUsd: number;
   /** Current portfolio value in USD. */
   currentPortfolioValueUsd: number;
-  /** Number of currently open positions. */
+  /** Number of currently open positions (aggregated from all platforms). */
   openPositionCount: number;
+  /** Per-platform position count breakdown (keyed by extensionId). */
+  positionCountByPlatform: Record<string, number>;
+  /** Per-platform portfolio value breakdown (keyed by extensionId). */
+  portfolioByPlatform: Record<string, number>;
   /** Per-asset position tracking. */
   positionsByAsset: Record<
     string,
@@ -49,6 +53,16 @@ export type TradingPolicyState = {
     activatedBy?: string;
     reason?: string;
   };
+  /** Per-platform kill switches (keyed by extensionId). */
+  platformKillSwitches: Record<
+    string,
+    {
+      active: boolean;
+      activatedAt?: number;
+      activatedBy?: string;
+      reason?: string;
+    }
+  >;
 };
 
 function todayUtc(): string {
@@ -65,9 +79,12 @@ function createEmptyState(): TradingPolicyState {
     highWaterMarkUsd: 0,
     currentPortfolioValueUsd: 0,
     openPositionCount: 0,
+    positionCountByPlatform: {},
+    portfolioByPlatform: {},
     positionsByAsset: {},
     lastTradeAtMs: 0,
     killSwitch: { active: false },
+    platformKillSwitches: {},
   };
 }
 
@@ -132,6 +149,34 @@ export async function savePolicyState(state: TradingPolicyState): Promise<void> 
     await fs.rename(tmpPath, STATE_FILE);
     await fs.chmod(STATE_FILE, 0o600);
   });
+}
+
+/**
+ * Build a state update that sets a single platform's portfolio value and
+ * recomputes the aggregate `currentPortfolioValueUsd` from all platforms.
+ */
+export function withPlatformPortfolio(
+  state: TradingPolicyState,
+  extensionId: string,
+  valueUsd: number,
+): Pick<TradingPolicyState, "portfolioByPlatform" | "currentPortfolioValueUsd"> {
+  const updated = { ...state.portfolioByPlatform, [extensionId]: valueUsd };
+  const total = Object.values(updated).reduce((sum, v) => sum + v, 0);
+  return { portfolioByPlatform: updated, currentPortfolioValueUsd: total };
+}
+
+/**
+ * Build a state update that sets a single platform's position count and
+ * recomputes the aggregate `openPositionCount` from all platforms.
+ */
+export function withPlatformPositionCount(
+  state: TradingPolicyState,
+  extensionId: string,
+  count: number,
+): Pick<TradingPolicyState, "positionCountByPlatform" | "openPositionCount"> {
+  const updated = { ...state.positionCountByPlatform, [extensionId]: count };
+  const total = Object.values(updated).reduce((sum, v) => sum + v, 0);
+  return { positionCountByPlatform: updated, openPositionCount: total };
 }
 
 /**

@@ -54,11 +54,24 @@ export type PolicyLimits = {
   maxSingleTradeUsd: number;
 };
 
+export type PerPlatformOverride = Partial<PolicyLimits> & {
+  approvalMode?: ApprovalMode;
+};
+
+export type PlatformApiInfo = {
+  apiVersion: string;
+  authScheme: string;
+  connectionMethod: string;
+  baseUrl: string;
+  hasSandbox: boolean;
+};
+
 export type PlatformStatus = {
   connected: boolean;
   mode: "live" | "paper" | "demo" | "play";
   label: string;
   accountInfo?: Record<string, unknown>;
+  api: PlatformApiInfo;
 };
 
 export type PnlDataPoint = {
@@ -71,6 +84,7 @@ export type TradingState = {
   killSwitchActive: boolean;
   killSwitchMode: KillSwitchMode;
   killSwitchReason?: string;
+  platformKillSwitches: Record<string, { active: boolean; reason?: string }>;
 
   // Daily metrics
   dailyPnlUsd: number;
@@ -92,6 +106,9 @@ export type TradingState = {
 
   // Per-platform status
   platforms: Record<string, PlatformStatus>;
+
+  // Per-platform risk overrides
+  perPlatformOverrides: Record<string, PerPlatformOverride>;
 
   // P&L history for charts
   pnlHistory: PnlDataPoint[];
@@ -121,6 +138,9 @@ export type TradingState = {
   removePendingApproval: (id: string) => void;
   setTradeHistory: (history: TradeHistoryEntry[]) => void;
   setPlatformStatus: (id: string, status: PlatformStatus) => void;
+  setPlatformOverride: (id: string, override: PerPlatformOverride) => void;
+  clearPlatformOverride: (id: string) => void;
+  togglePlatformKillSwitch: (id: string) => void;
   setPnlHistory: (history: PnlDataPoint[]) => void;
 };
 
@@ -141,6 +161,7 @@ export const useTradingStore = create<TradingState>((set) => ({
   killSwitchActive: false,
   killSwitchMode: "hard",
   killSwitchReason: undefined,
+  platformKillSwitches: {},
   dailyPnlUsd: 0,
   dailySpendUsd: 0,
   dailyTradeCount: 0,
@@ -154,16 +175,116 @@ export const useTradingStore = create<TradingState>((set) => ({
   pendingApprovals: [],
   tradeHistory: [],
   platforms: {
-    alpaca: { connected: true, mode: "paper", label: "Alpaca" },
-    polymarket: { connected: true, mode: "live", label: "Polymarket" },
-    kalshi: { connected: true, mode: "demo", label: "Kalshi" },
-    manifold: { connected: true, mode: "play", label: "Manifold" },
-    coinbase: { connected: false, mode: "demo", label: "Coinbase" },
-    ibkr: { connected: false, mode: "paper", label: "IBKR" },
-    binance: { connected: false, mode: "demo", label: "Binance" },
-    kraken: { connected: false, mode: "demo", label: "Kraken" },
-    dydx: { connected: false, mode: "demo", label: "dYdX" },
+    alpaca: {
+      connected: true,
+      mode: "paper",
+      label: "Alpaca",
+      api: {
+        apiVersion: "v2",
+        authScheme: "API Key Headers",
+        connectionMethod: "REST",
+        baseUrl: "api.alpaca.markets",
+        hasSandbox: true,
+      },
+    },
+    polymarket: {
+      connected: true,
+      mode: "live",
+      label: "Polymarket",
+      api: {
+        apiVersion: "CLOB v1",
+        authScheme: "HMAC-SHA256",
+        connectionMethod: "REST",
+        baseUrl: "clob.polymarket.com",
+        hasSandbox: false,
+      },
+    },
+    kalshi: {
+      connected: true,
+      mode: "demo",
+      label: "Kalshi",
+      api: {
+        apiVersion: "v2",
+        authScheme: "RSA-SHA256",
+        connectionMethod: "REST",
+        baseUrl: "trading-api.kalshi.com",
+        hasSandbox: true,
+      },
+    },
+    manifold: {
+      connected: true,
+      mode: "play",
+      label: "Manifold",
+      api: {
+        apiVersion: "v0",
+        authScheme: "API Key Bearer",
+        connectionMethod: "REST",
+        baseUrl: "api.manifold.markets",
+        hasSandbox: false,
+      },
+    },
+    coinbase: {
+      connected: false,
+      mode: "demo",
+      label: "Coinbase",
+      api: {
+        apiVersion: "v3",
+        authScheme: "ES256 JWT (CDP Key)",
+        connectionMethod: "REST",
+        baseUrl: "api.coinbase.com",
+        hasSandbox: true,
+      },
+    },
+    ibkr: {
+      connected: false,
+      mode: "paper",
+      label: "IBKR",
+      api: {
+        apiVersion: "v1",
+        authScheme: "Session-based",
+        connectionMethod: "REST (Gateway)",
+        baseUrl: "localhost:5000",
+        hasSandbox: true,
+      },
+    },
+    binance: {
+      connected: false,
+      mode: "demo",
+      label: "Binance",
+      api: {
+        apiVersion: "v3",
+        authScheme: "HMAC-SHA256",
+        connectionMethod: "REST",
+        baseUrl: "api.binance.com",
+        hasSandbox: true,
+      },
+    },
+    kraken: {
+      connected: false,
+      mode: "demo",
+      label: "Kraken",
+      api: {
+        apiVersion: "v0",
+        authScheme: "HMAC-SHA512",
+        connectionMethod: "REST",
+        baseUrl: "api.kraken.com",
+        hasSandbox: false,
+      },
+    },
+    dydx: {
+      connected: false,
+      mode: "demo",
+      label: "dYdX",
+      api: {
+        apiVersion: "v4",
+        authScheme: "Cosmos SDK",
+        connectionMethod: "REST + gRPC",
+        baseUrl: "indexer.dydx.trade",
+        hasSandbox: true,
+      },
+    },
   },
+  perPlatformOverrides: {},
   pnlHistory: [],
 
   setKillSwitch: (active, reason) => set({ killSwitchActive: active, killSwitchReason: reason }),
@@ -197,5 +318,28 @@ export const useTradingStore = create<TradingState>((set) => ({
     set((s) => ({
       platforms: { ...s.platforms, [id]: status },
     })),
+  setPlatformOverride: (id, override) =>
+    set((s) => ({
+      perPlatformOverrides: { ...s.perPlatformOverrides, [id]: override },
+    })),
+  clearPlatformOverride: (id) =>
+    set((s) => {
+      const { [id]: _, ...rest } = s.perPlatformOverrides;
+      return { perPlatformOverrides: rest };
+    }),
+  togglePlatformKillSwitch: (id) =>
+    set((s) => {
+      const current = s.platformKillSwitches[id];
+      const isActive = current?.active ?? false;
+      return {
+        platformKillSwitches: {
+          ...s.platformKillSwitches,
+          [id]: {
+            active: !isActive,
+            reason: isActive ? undefined : "Manually activated",
+          },
+        },
+      };
+    }),
   setPnlHistory: (history) => set({ pnlHistory: history }),
 }));

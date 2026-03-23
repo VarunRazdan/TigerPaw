@@ -101,6 +101,99 @@ export async function deactivateKillSwitch(actor: AuditActor): Promise<void> {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Per-platform kill switch
+// ---------------------------------------------------------------------------
+
+/**
+ * Check whether a specific platform's kill switch is active.
+ * A platform is halted if EITHER the global kill switch OR the platform-specific
+ * kill switch is active.
+ */
+export async function checkPlatformKillSwitch(extensionId: string): Promise<KillSwitchStatus> {
+  const state = await loadPolicyState();
+
+  // Global kill switch takes precedence.
+  if (state.killSwitch.active) {
+    return {
+      active: true,
+      mode: (state.killSwitch as { mode?: KillSwitchMode }).mode ?? "hard",
+      activatedAt: state.killSwitch.activatedAt,
+      activatedBy: state.killSwitch.activatedBy,
+      reason: `global: ${state.killSwitch.reason ?? "no reason"}`,
+    };
+  }
+
+  // Per-platform kill switch.
+  const platformKs = state.platformKillSwitches[extensionId];
+  if (platformKs?.active) {
+    return {
+      active: true,
+      mode: "hard",
+      activatedAt: platformKs.activatedAt,
+      activatedBy: platformKs.activatedBy,
+      reason: platformKs.reason,
+    };
+  }
+
+  return { active: false };
+}
+
+/**
+ * Activate the kill switch for a specific platform only.
+ */
+export async function activatePlatformKillSwitch(
+  extensionId: string,
+  reason: string,
+  actor: AuditActor,
+): Promise<void> {
+  await updatePolicyState((state) => ({
+    ...state,
+    platformKillSwitches: {
+      ...state.platformKillSwitches,
+      [extensionId]: {
+        active: true,
+        activatedAt: Date.now(),
+        activatedBy: actor === "system" ? "system" : actor,
+        reason,
+      },
+    },
+  }));
+
+  log.warn(`platform kill switch activated for ${extensionId} by ${actor}: ${reason}`);
+
+  await writeAuditEntry({
+    extensionId,
+    action: "kill_switch_activated",
+    actor,
+    error: reason,
+  });
+}
+
+/**
+ * Deactivate the kill switch for a specific platform.
+ */
+export async function deactivatePlatformKillSwitch(
+  extensionId: string,
+  actor: AuditActor,
+): Promise<void> {
+  await updatePolicyState((state) => ({
+    ...state,
+    platformKillSwitches: {
+      ...state.platformKillSwitches,
+      [extensionId]: { active: false },
+    },
+  }));
+
+  log.info(`platform kill switch deactivated for ${extensionId} by ${actor}`);
+
+  await writeAuditEntry({
+    extensionId,
+    action: "policy_changed",
+    actor,
+  });
+}
+
 /**
  * Auto-activate the kill switch when risk limits are breached.
  * Called internally by the policy engine when daily loss, drawdown,

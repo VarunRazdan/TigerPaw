@@ -20,6 +20,7 @@ import {
   TradingPolicyEngine,
   writeAuditEntry,
   updatePolicyState,
+  withPlatformPortfolio,
   autoActivateIfBreached,
   type TradeOrder,
 } from "tigerpaw/trading";
@@ -342,10 +343,13 @@ const manifoldPlugin = {
             });
 
             // Post-trade: update policy state and write audit entry.
+            // NOTE: Manifold uses play money (Mana), not USD. We track trade
+            // count and timestamp but do NOT add to dailySpendUsd — doing so
+            // would inflate the spend tracker and trigger limits for real-money
+            // platforms.
             await updatePolicyState((state) => ({
               ...state,
               dailyTradeCount: state.dailyTradeCount + 1,
-              dailySpendUsd: state.dailySpendUsd + amount,
               lastTradeAtMs: Date.now(),
             }));
             await writeAuditEntry({
@@ -585,9 +589,8 @@ const manifoldPlugin = {
           api.logger.info("manifold-sync: skipping (no API key, read-only mode)");
           return;
         }
-        api.logger.info(
-          `manifold-sync: starting balance sync (every ${BALANCE_SYNC_INTERVAL_MS / 1000}s)`,
-        );
+        const syncMs = cfg.syncIntervalMs ?? BALANCE_SYNC_INTERVAL_MS;
+        api.logger.info(`manifold-sync: starting balance sync (every ${syncMs / 1000}s)`);
         const syncBalance = async () => {
           try {
             const user = await apiGet<ManifoldUser>(cfg, "/me");
@@ -597,10 +600,12 @@ const manifoldPlugin = {
             );
 
             // Persist balance data to policy state.
+            // NOTE: Manifold uses play money (Mana), not USD. We do NOT add
+            // the balance to portfolioByPlatform / currentPortfolioValueUsd
+            // because doing so would inflate the portfolio total and skew risk
+            // percentage calculations for real-money platforms.
             const updatedState = await updatePolicyState((state) => ({
               ...state,
-              currentPortfolioValueUsd: user.balance,
-              highWaterMarkUsd: Math.max(state.highWaterMarkUsd, user.balance),
             }));
 
             if (policyEngine) {
@@ -616,7 +621,7 @@ const manifoldPlugin = {
           }
         };
         syncBalance();
-        syncTimer = setInterval(syncBalance, BALANCE_SYNC_INTERVAL_MS);
+        syncTimer = setInterval(syncBalance, syncMs);
       },
       stop: () => {
         if (syncTimer) {

@@ -7,6 +7,7 @@ export type PolymarketConfig = {
   apiSecret: string;
   passphrase: string;
   privateKey: string;
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -34,7 +35,7 @@ export const polymarketConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["apiKey", "apiSecret", "passphrase", "privateKey"];
+    const allowed = ["apiKey", "apiSecret", "passphrase", "privateKey", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`polymarket config has unknown keys: ${unknown.join(", ")}`);
@@ -53,11 +54,14 @@ export const polymarketConfigSchema = {
       throw new Error("polymarket: privateKey is required (string)");
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       apiKey: resolveEnvVars(cfg.apiKey),
       apiSecret: resolveEnvVars(cfg.apiSecret),
       passphrase: resolveEnvVars(cfg.passphrase),
       privateKey: resolveEnvVars(cfg.privateKey),
+      syncIntervalMs,
     };
   },
 

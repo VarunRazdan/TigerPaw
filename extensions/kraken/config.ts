@@ -5,6 +5,7 @@
 export type KrakenConfig = {
   apiKey: string;
   apiSecret: string;
+  syncIntervalMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -38,7 +39,7 @@ export const krakenConfigSchema = {
     }
     const cfg = value as Record<string, unknown>;
 
-    const allowed = ["apiKey", "apiSecret"];
+    const allowed = ["apiKey", "apiSecret", "syncIntervalMs"];
     const unknown = Object.keys(cfg).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) {
       throw new Error(`kraken config has unknown keys: ${unknown.join(", ")}`);
@@ -51,9 +52,12 @@ export const krakenConfigSchema = {
       throw new Error("kraken: apiSecret is required (string)");
     }
 
+    const syncIntervalMs = typeof cfg.syncIntervalMs === "number" ? cfg.syncIntervalMs : undefined;
+
     return {
       apiKey: resolveEnvVars(cfg.apiKey),
       apiSecret: resolveEnvVars(cfg.apiSecret),
+      syncIntervalMs,
     };
   },
 

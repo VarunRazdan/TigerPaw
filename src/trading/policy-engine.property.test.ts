@@ -35,6 +35,7 @@ const defaultPolicyState = () => ({
   highWaterMarkUsd: 100_000,
   currentPortfolioValueUsd: 100_000,
   openPositionCount: 0,
+  positionCountByPlatform: {},
   positionsByAsset: {} as Record<
     string,
     { extensionId: string; valueUsd: number; percentOfPortfolio: number }

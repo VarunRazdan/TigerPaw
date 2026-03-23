@@ -49,6 +49,7 @@ function createSampleState(overrides: Partial<TradingPolicyState> = {}): Trading
     highWaterMarkUsd: 10_000,
     currentPortfolioValueUsd: 10_000,
     openPositionCount: 0,
+    positionCountByPlatform: {},
     positionsByAsset: {},
     lastTradeAtMs: 0,
     killSwitch: { active: false },

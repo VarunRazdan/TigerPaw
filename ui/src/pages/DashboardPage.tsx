@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { PlatformApiInfo } from "@/components/PlatformApiInfo";
 import { PnlChart } from "@/components/PnlChart";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
@@ -24,8 +25,14 @@ function StatCard({
 }
 
 export function DashboardPage() {
-  const { dailyPnlUsd, dailyTradeCount, currentPortfolioValueUsd, positions, killSwitchActive } =
-    useTradingStore();
+  const {
+    dailyPnlUsd,
+    dailyTradeCount,
+    currentPortfolioValueUsd,
+    positions,
+    killSwitchActive,
+    platforms,
+  } = useTradingStore();
 
   const pnlColor = dailyPnlUsd >= 0 ? "text-green-400" : "text-red-400";
   const pnlSign = dailyPnlUsd >= 0 ? "+" : "";
@@ -107,25 +114,23 @@ export function DashboardPage() {
       <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Trading Extensions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { name: "Alpaca", status: "paper", color: "text-blue-400" },
-            { name: "Polymarket", status: "connected", color: "text-green-400" },
-            { name: "Kalshi", status: "demo", color: "text-blue-400" },
-            { name: "Manifold", status: "play money", color: "text-purple-400" },
-            { name: "Coinbase", status: "not connected", color: "text-neutral-500" },
-            { name: "IBKR", status: "not connected", color: "text-neutral-500" },
-            { name: "Binance", status: "not connected", color: "text-neutral-500" },
-            { name: "Kraken", status: "not connected", color: "text-neutral-500" },
-            { name: "dYdX", status: "not connected", color: "text-neutral-500" },
-          ].map((ext) => (
-            <div key={ext.name} className="flex items-center gap-2 py-2">
-              <span className={cn("w-1.5 h-1.5 rounded-full", ext.color.replace("text-", "bg-"))} />
-              <span className="text-sm text-neutral-300">{ext.name}</span>
-              <span className="text-xs text-neutral-600 ml-auto">{ext.status}</span>
-            </div>
-          ))}
+          {Object.entries(platforms).map(([id, p]) => {
+            const statusText = p.connected ? p.mode : "not connected";
+            const dotColor = p.connected ? "bg-green-400" : "bg-neutral-600";
+            const textColor = p.connected ? "text-neutral-300" : "text-neutral-500";
+            return (
+              <div key={id} className="flex items-center gap-2 py-2">
+                <span className={cn("w-1.5 h-1.5 rounded-full", dotColor)} />
+                <span className={cn("text-sm", textColor)}>{p.label}</span>
+                <span className="text-xs text-neutral-600 ml-auto">{statusText}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
+
+      {/* Platform API details (toggleable) */}
+      <PlatformApiInfo platforms={platforms} />
     </div>
   );
 }
