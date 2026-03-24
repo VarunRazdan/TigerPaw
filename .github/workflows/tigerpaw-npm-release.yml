@@ -62,6 +62,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Install UI deps
+        run: cd ui && pnpm install --no-frozen-lockfile
+
       - name: Build UI
         run: pnpm ui:build
 
