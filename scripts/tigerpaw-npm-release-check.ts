@@ -26,7 +26,7 @@ export type ParsedReleaseVersion = {
 const STABLE_VERSION_REGEX = /^(?<year>\d{4})\.(?<month>[1-9]\d?)\.(?<day>[1-9]\d?)$/;
 const BETA_VERSION_REGEX =
   /^(?<year>\d{4})\.(?<month>[1-9]\d?)\.(?<day>[1-9]\d?)-beta\.(?<beta>[1-9]\d*)$/;
-const EXPECTED_REPOSITORY_URL = "https://github.com/varunrazdan/tigerpaw";
+const EXPECTED_REPOSITORY_URL = "https://github.com/VarunRazdan/TigerPaw";
 const MAX_CALVER_DISTANCE_DAYS = 2;
 
 function normalizeRepoUrl(value: unknown): string {

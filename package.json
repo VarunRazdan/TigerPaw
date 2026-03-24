@@ -27,7 +27,7 @@
   "author": "Varun Razdan",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/varunrazdan/tigerpaw.git"
+    "url": "git+https://github.com/VarunRazdan/TigerPaw.git"
   },
   "bin": {
     "openclaw": "openclaw.mjs",
