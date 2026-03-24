@@ -63,7 +63,7 @@ jobs:
         run: pnpm build
 
       - name: Build UI
-        run: cd ui && pnpm install --no-frozen-lockfile && pnpm run build
+        run: cd ui && npm install && npx vite build
 
       - name: Setup npm auth
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
