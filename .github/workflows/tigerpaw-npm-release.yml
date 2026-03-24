@@ -20,7 +20,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -84,16 +83,7 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish to GitHub Packages
-        run: |
-          set -euo pipefail
-          echo "@greatlyrecommended:registry=https://npm.pkg.github.com" > ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          if [[ "$PACKAGE_VERSION" == *-beta.* ]]; then
-            npm publish --access public --tag beta
-          else
-            npm publish --access public
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # GitHub Packages requires the npm scope to match the GitHub owner.
+      # The package scope (@greatlyrecommended) doesn't match the repo owner
+      # (VarunRazdan), so GitHub Packages publishing is skipped.
+      # To enable it, the package would need to be scoped as @varunrazdan/tigerpaw.
