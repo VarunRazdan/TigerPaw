@@ -44,15 +44,16 @@ jobs:
           # Fetch the full main ref so merge-base ancestry checks keep working
           # for older tagged commits that are still contained in main.
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
-          pnpm release:tigerpaw:npm:check
+          pnpm release:tigerclaw:npm:check
 
       - name: Ensure version is not already published
         run: |
           set -euo pipefail
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
 
-          if npm view "tigerpaw@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
-            echo "tigerpaw@${PACKAGE_VERSION} is already published on npm."
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} is already published on npm."
             exit 1
           fi
 
@@ -67,6 +68,11 @@ jobs:
       - name: Verify release contents
         run: pnpm release:check
 
+      - name: Setup npm auth
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish
         run: |
           set -euo pipefail
@@ -77,3 +83,5 @@ jobs:
           else
             npm publish --access public --provenance
           fi
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
