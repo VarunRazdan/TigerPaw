@@ -81,11 +81,12 @@ describe("collectReleasePackageMetadataErrors", () => {
   it("validates the expected npm package metadata", () => {
     expect(
       collectReleasePackageMetadataErrors({
-        name: "openclaw",
-        description: "Multi-channel AI gateway with extensible messaging integrations",
-        license: "MIT",
-        repository: { url: "git+https://github.com/openclaw/openclaw.git" },
-        bin: { openclaw: "openclaw.mjs" },
+        name: "@greatlyrecommended/tigerpaw",
+        description:
+          "Multi-channel AI trading gateway with extensible messaging and real-money trading integrations",
+        license: "Apache-2.0",
+        repository: { url: "git+https://github.com/VarunRazdan/TigerPaw.git" },
+        bin: { tigerpaw: "tigerpaw.mjs" },
       }),
     ).toEqual([]);
   });

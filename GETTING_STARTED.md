@@ -4,6 +4,18 @@ Tigerpaw is a multi-channel AI gateway with real-money trading capabilities. It 
 
 ---
 
+## Why Local-First?
+
+Tigerpaw runs entirely on your machine. This matters for trading:
+
+- **Your API keys stay local** -- Exchange credentials are stored in `~/.tigerpaw/` with OS keychain integration (macOS Keychain, Linux secret-tool). They're never sent to a cloud service.
+- **Your data stays local** -- Trade history, positions, and strategies never leave your disk.
+- **The dashboard is local-only** -- Binds to `127.0.0.1:18789` by default. Not accessible from your network or the internet.
+- **You control the kill switch** -- Auto-activates on limit breach. No cloud dependency to halt trading.
+- **Institutional-grade risk controls** -- Every order passes through a 12-step validation pipeline. Daily spend caps, position limits, drawdown protection, and cooldown timers prevent the behavioral mistakes that wipe out 70-80% of retail traders.
+
+---
+
 ## Installation
 
 ### Prerequisites
@@ -439,6 +451,63 @@ Click "Not Connected" on any platform badge or the Dashboard extensions grid to 
 - Step-by-step setup instructions
 - A "Save to Config" button that writes credentials directly to `tigerpaw.json`
 - A clipboard fallback if the gateway is not running
+
+### Dashboard Auto-Open
+
+```bash
+tigerpaw dashboard              # Opens browser automatically
+tigerpaw dashboard --no-open    # Just print the URL
+```
+
+The auto-open is platform-aware:
+
+- **macOS**: Uses `open`
+- **Linux**: Uses `xdg-open` (requires X11/Wayland)
+- **WSL**: Uses `wslview`
+- **SSH sessions**: Skipped automatically (prints URL instead)
+
+---
+
+## Notifications
+
+Trading events appear as toast notifications in the dashboard. No configuration needed.
+
+### Browser Notifications (Optional)
+
+To receive desktop notifications when the dashboard tab is in the background:
+
+1. Click the notification bell icon in the dashboard header
+2. Enable "Browser Notifications"
+3. Allow notifications when your browser prompts
+
+Browser notifications are local-only -- they use the browser's Notification API and never send data to external services.
+
+### Notification Events
+
+| Event                 | When                                                    |
+| --------------------- | ------------------------------------------------------- |
+| Order Approved        | An order passed all 12 policy checks                    |
+| Order Denied          | An order was blocked (shows which check failed)         |
+| Order Pending         | Waiting for manual or confirm-mode approval             |
+| Kill Switch Activated | Trading halted due to limit breach or manual activation |
+| Limit Warning         | Daily spend or loss approaching 80% of configured limit |
+
+---
+
+## Advanced: Exposing the Dashboard
+
+By default, Tigerpaw binds to `127.0.0.1` (localhost only). If you need to access it from another device on your network:
+
+```bash
+tigerpaw gateway run --bind lan --auth token --token "your-secret-token"
+```
+
+> **Warning**: This exposes the dashboard to your entire local network. Always use a strong auth token. For remote access, prefer SSH port forwarding:
+
+```bash
+ssh -L 18789:localhost:18789 your-server
+# Then open http://localhost:18789 on your local machine
+```
 
 ---
 

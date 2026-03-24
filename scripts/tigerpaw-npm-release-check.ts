@@ -127,8 +127,8 @@ export function collectReleasePackageMetadataErrors(pkg: PackageJson): string[] 
   if (!pkg.description?.trim()) {
     errors.push("package.json description must be non-empty.");
   }
-  if (pkg.license !== "MIT") {
-    errors.push(`package.json license must be "MIT"; found "${pkg.license ?? ""}".`);
+  if (pkg.license !== "Apache-2.0") {
+    errors.push(`package.json license must be "Apache-2.0"; found "${pkg.license ?? ""}".`);
   }
   if (actualRepositoryUrl !== EXPECTED_REPOSITORY_URL) {
     errors.push(

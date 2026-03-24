@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@greatlyrecommended/tigerpaw"><img src="https://img.shields.io/npm/v/@greatlyrecommended/tigerpaw?color=orange" alt="npm" /></a>
   <a href="https://github.com/varunrazdan/tigerpaw/actions/workflows/ci.yml"><img src="https://github.com/varunrazdan/tigerpaw/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
-  <a href="https://github.com/varunrazdan/tigerpaw/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT" /></a>
+  <a href="https://github.com/varunrazdan/tigerpaw/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" />
 </p>
 
@@ -20,6 +20,8 @@
 ## Table of Contents
 
 - [Features](#features)
+- [Why Tigerpaw?](#why-tigerpaw)
+- [Support](#support)
 - [Screenshots](#screenshots)
 - [Install](#install)
 - [Quick Start](#quick-start)
@@ -33,6 +35,9 @@
   - [Kill Switch](#kill-switch)
   - [Pre-Trade Validation Pipeline](#pre-trade-validation-pipeline)
   - [Audit Log](#audit-log)
+  - [Order Execution](#order-execution)
+- [Control UI](#control-ui)
+- [Notifications](#notifications)
 - [CLI Commands](#cli-commands)
 - [Development](#development)
 - [Security](#security)
@@ -78,6 +83,59 @@
 - **3 Approval Modes** -- Auto, confirm (15s timeout), or manual (5min timeout)
 - **3 Risk Tiers** -- Conservative, moderate, aggressive presets
 - **React Control UI** -- Dashboard with real-time positions, P&L charts, TradingView embeds, order entry, risk management, and approval queue
+- **Real-Time Notifications** -- In-app toast alerts for order approvals, denials, kill switch changes, and limit warnings
+
+## Why Tigerpaw?
+
+### The Problem
+
+**70-80% of retail traders lose money.** The most common causes aren't bad strategies -- they're behavioral: overtrading, ignoring stop losses, risking too much per trade, and emotional decisions after losses. Cloud-hosted trading bots make this worse by operating as black boxes with no guardrails -- one misconfigured algorithm can drain an account in minutes.
+
+Meanwhile, cloud trading platforms introduce security risks that most traders don't think about:
+
+- **API key exposure**: Stolen credentials drove 22% of breaches in 2025. Cloud platforms store your exchange API keys on their servers -- one breach and every connected account is compromised.
+- **No data sovereignty**: Your trading history, positions, and strategies live on someone else's infrastructure.
+- **Single point of failure**: When a cloud provider goes down, you lose access to your positions with no manual override.
+
+### The Solution
+
+Tigerpaw runs **entirely on your machine**. Your API keys never leave your computer. Your trading data stays on your disk. The gateway binds to `localhost` by default -- it's not even reachable from your local network, let alone the internet.
+
+But local-first alone isn't enough. Tigerpaw adds **institutional-grade risk controls** that prevent the mistakes that wipe out retail accounts:
+
+| Protection                       | What It Prevents                                                             |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| **Daily spend cap**              | Can't accidentally deploy your entire portfolio in one day                   |
+| **Per-trade size limit**         | No single trade can risk more than a configured % of your portfolio          |
+| **Position concentration limit** | Can't go all-in on one asset                                                 |
+| **Daily loss limit**             | Auto-activates kill switch when losses hit your threshold                    |
+| **Drawdown protection**          | Stops trading when portfolio drops from its peak                             |
+| **Cooldown timer**               | Prevents revenge trading after a loss                                        |
+| **Consecutive loss pause**       | Automatic pause after N losing trades in a row                               |
+| **Kill switch**                  | Instant halt -- manual or auto-triggered, blocks all new orders              |
+| **Approval modes**               | Require manual confirmation before every trade (or auto-approve with limits) |
+
+These aren't optional add-ons -- they're built into the core. **Every order goes through a 12-step validation pipeline before it can execute.** There is no way to bypass it.
+
+### Who Is This For?
+
+- **Developers** building AI trading agents who need safety rails between their code and real money
+- **Quantitative traders** who want local execution with institutional-style risk management
+- **Privacy-conscious traders** who don't want their API keys or strategies on third-party servers
+- **Anyone** who wants to connect AI agents to trading platforms without worrying about runaway algorithms
+
+> _"The best risk management is the kind you can't turn off."_
+> -- Tigerpaw's kill switch auto-activates when limits are breached. You can't accidentally trade through a drawdown.
+
+## Support
+
+If you find Tigerpaw useful, consider supporting development:
+
+<a href="https://buymeacoffee.com/CrimesAnatomy"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
+
+<p align="center">
+  <a href="https://buymeacoffee.com/CrimesAnatomy"><img src=".github/buy-me-a-coffee-qr.png" alt="Donate QR Code" width="200" /></a>
+</p>
 
 ## Screenshots
 
@@ -387,6 +445,27 @@ The gateway serves a React dashboard at `http://localhost:18789` with:
 - **Security** -- Audit findings, credential rotation status, extension permissions
 - **Config** -- JSON config editor with live validation
 
+## Notifications
+
+Tigerpaw sends real-time notifications for trading events -- entirely local, no external services:
+
+- **In-app toasts** -- Color-coded alerts for order approvals, denials, kill switch changes, and limit warnings
+- **Notification bell** -- Badge counter in the dashboard header showing undismissed notifications
+- **Browser notifications** (opt-in) -- Desktop notifications via the browser Notification API when the dashboard tab is open
+
+Events tracked:
+
+| Event                   | Severity | Description                                  |
+| ----------------------- | -------- | -------------------------------------------- |
+| Order approved          | Success  | Order passed all policy checks               |
+| Order denied            | Error    | Order blocked by policy engine (with reason) |
+| Order pending           | Info     | Awaiting manual/confirm approval             |
+| Kill switch activated   | Error    | Trading halted (with trigger reason)         |
+| Kill switch deactivated | Success  | Trading resumed                              |
+| Limit warning           | Warning  | Approaching 80% of a configured limit        |
+
+No remote alerts are sent by default. Notifications stay on your machine unless you configure messaging channels separately.
+
 ## Development
 
 ```bash
@@ -424,16 +503,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Tigerpaw began as a fork of [OpenClaw](https://github.com/nicepkg/openclaw) by Peter Steinberger, originally a multi-channel AI messaging gateway. It has since been extensively rebuilt with a policy-gated trading engine, 9 exchange integrations, HMAC-signed request authentication, tamper-evident audit logging, and a React trading dashboard — transforming it into a full trading gateway with hardened security.
 
-## Support
-
-If you find Tigerpaw useful, consider supporting development:
-
-<a href="https://buymeacoffee.com/CrimesAnatomy"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
-
-<p align="center">
-  <a href="https://buymeacoffee.com/CrimesAnatomy"><img src=".github/buy-me-a-coffee-qr.png" alt="Donate QR Code" width="200" /></a>
-</p>
-
 ## License
 
-[MIT](LICENSE)
+[Apache License 2.0](LICENSE)

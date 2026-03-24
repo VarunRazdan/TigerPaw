@@ -14,6 +14,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { DailyPnlBar } from "./DailyPnlBar";
 import { KillSwitchButton } from "./KillSwitchButton";
+import { NotificationBell } from "./TradingNotificationToast";
 import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 
@@ -256,9 +257,10 @@ export function Layout() {
               Multi-Platform Trading Partner
             </span>
 
-            {/* Right side: Kill Switch + PnL */}
+            {/* Right side: Notifications + Kill Switch + PnL */}
             <div className="ml-auto flex items-center gap-4">
               <DailyPnlBar />
+              <NotificationBell />
               <KillSwitchButton />
             </div>
           </div>

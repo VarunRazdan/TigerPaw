@@ -1,7 +1,8 @@
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { writeAuditEntry } from "./audit-log.js";
+import { emitTradingEvent } from "./event-emitter.js";
 import {
-  checkKillSwitch,
+  checkPlatformKillSwitch,
   isOrderAllowedUnderKillSwitch,
   autoActivateIfBreached,
 } from "./kill-switch.js";
@@ -301,7 +302,21 @@ export class TradingPolicyEngine {
    * Resolve the effective approval mode for an extension.
    */
   private resolveApprovalMode(extensionId: string): ApprovalMode {
-    return this.config.perExtension?.[extensionId]?.approvalMode ?? this.config.approvalMode;
+    const perExt = this.config.perExtension?.[extensionId]?.approvalMode;
+    if (!perExt) {
+      return this.config.approvalMode;
+    }
+
+    // Per-extension override must not weaken (reduce strictness below) global mode.
+    // Strictness order: manual > confirm > auto.
+    const STRICTNESS: Record<ApprovalMode, number> = { manual: 2, confirm: 1, auto: 0 };
+    if (STRICTNESS[perExt] < STRICTNESS[this.config.approvalMode]) {
+      log.warn(
+        `perExtension "${extensionId}" tried to weaken approvalMode from "${this.config.approvalMode}" to "${perExt}" — using global mode`,
+      );
+      return this.config.approvalMode;
+    }
+    return perExt;
   }
 
   /**
@@ -323,7 +338,7 @@ export class TradingPolicyEngine {
   async evaluateOrder(order: TradeOrder): Promise<PolicyDecision> {
     // Step 1: Kill switch (highest priority gate).
     // In "soft" mode, sells and cancellations are allowed through.
-    const killStatus = await checkKillSwitch();
+    const killStatus = await checkPlatformKillSwitch(order.extensionId);
     if (killStatus.active && !isOrderAllowedUnderKillSwitch(killStatus, order.side)) {
       const reason = `kill switch active (${killStatus.mode ?? "hard"} mode): ${killStatus.reason ?? "no reason provided"}`;
       log.warn(`order ${order.id} denied: ${reason}`);
@@ -334,6 +349,19 @@ export class TradingPolicyEngine {
         orderSnapshot: order,
         policySnapshot: this.config,
         error: reason,
+      });
+      emitTradingEvent({
+        type: "trading.order.denied",
+        timestamp: Date.now(),
+        payload: {
+          orderId: order.id,
+          extensionId: order.extensionId,
+          symbol: order.symbol,
+          side: order.side,
+          notionalUsd: order.notionalUsd,
+          reason,
+          failedStep: "kill_switch",
+        },
       });
       return {
         outcome: "denied",
@@ -363,6 +391,19 @@ export class TradingPolicyEngine {
         policySnapshot: this.config,
         error: reason,
       });
+      emitTradingEvent({
+        type: "trading.order.denied",
+        timestamp: Date.now(),
+        payload: {
+          orderId: order.id,
+          extensionId: order.extensionId,
+          symbol: order.symbol,
+          side: order.side,
+          notionalUsd: order.notionalUsd,
+          reason,
+          failedStep: "kill_switch_auto",
+        },
+      });
       return {
         outcome: "denied",
         reason,
@@ -383,6 +424,19 @@ export class TradingPolicyEngine {
           orderSnapshot: order,
           policySnapshot: this.config,
           error: denial,
+        });
+        emitTradingEvent({
+          type: "trading.order.denied",
+          timestamp: Date.now(),
+          payload: {
+            orderId: order.id,
+            extensionId: order.extensionId,
+            symbol: order.symbol,
+            side: order.side,
+            notionalUsd: order.notionalUsd,
+            reason: denial,
+            failedStep: step.name,
+          },
         });
         return {
           outcome: "denied",
@@ -405,6 +459,18 @@ export class TradingPolicyEngine {
         orderSnapshot: order,
         policySnapshot: this.config,
       });
+      emitTradingEvent({
+        type: "trading.order.approved",
+        timestamp: Date.now(),
+        payload: {
+          orderId: order.id,
+          extensionId: order.extensionId,
+          symbol: order.symbol,
+          side: order.side,
+          notionalUsd: order.notionalUsd,
+          approvalMode: "auto",
+        },
+      });
       return {
         outcome: "approved",
         reason: "all pre-trade checks passed; auto-approved",
@@ -420,6 +486,18 @@ export class TradingPolicyEngine {
         actor: "agent",
         orderSnapshot: order,
         policySnapshot: this.config,
+      });
+      emitTradingEvent({
+        type: "trading.order.pending",
+        timestamp: Date.now(),
+        payload: {
+          orderId: order.id,
+          extensionId: order.extensionId,
+          symbol: order.symbol,
+          side: order.side,
+          notionalUsd: order.notionalUsd,
+          approvalMode: "confirm",
+        },
       });
       return {
         outcome: "pending_confirmation",
@@ -437,6 +515,18 @@ export class TradingPolicyEngine {
       actor: "agent",
       orderSnapshot: order,
       policySnapshot: this.config,
+    });
+    emitTradingEvent({
+      type: "trading.order.pending",
+      timestamp: Date.now(),
+      payload: {
+        orderId: order.id,
+        extensionId: order.extensionId,
+        symbol: order.symbol,
+        side: order.side,
+        notionalUsd: order.notionalUsd,
+        approvalMode: "manual",
+      },
     });
     return {
       outcome: "pending_confirmation",

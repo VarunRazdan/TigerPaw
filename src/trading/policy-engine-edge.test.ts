@@ -24,6 +24,7 @@ vi.mock("../logging/subsystem.js", () => ({
 
 vi.mock("./kill-switch.js", () => ({
   checkKillSwitch: vi.fn(async () => ({ active: false, mode: "hard" })),
+  checkPlatformKillSwitch: vi.fn(async () => ({ active: false, mode: "hard" })),
   isOrderAllowedUnderKillSwitch: vi.fn(() => true),
   autoActivateIfBreached: vi.fn(async () => false),
 }));

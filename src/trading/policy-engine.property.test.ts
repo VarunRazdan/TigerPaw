@@ -51,6 +51,10 @@ vi.mock("./kill-switch.js", () => ({
     active: mockKillSwitchActive,
     mode: mockKillSwitchMode,
   })),
+  checkPlatformKillSwitch: vi.fn(async () => ({
+    active: mockKillSwitchActive,
+    mode: mockKillSwitchMode,
+  })),
   isOrderAllowedUnderKillSwitch: vi.fn(
     (killStatus: { active: boolean; mode?: string }, orderSide: string) => {
       if (!killStatus.active) {

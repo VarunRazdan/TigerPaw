@@ -1,5 +1,6 @@
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { writeAuditEntry, type AuditActor } from "./audit-log.js";
+import { emitTradingEvent } from "./event-emitter.js";
 import { loadPolicyState, updatePolicyState, type TradingPolicyState } from "./policy-state.js";
 
 const log = createSubsystemLogger("trading/kill-switch");
@@ -80,6 +81,12 @@ export async function activateKillSwitch(
     actor,
     error: reason,
   });
+
+  emitTradingEvent({
+    type: "trading.killswitch.activated",
+    timestamp: now,
+    payload: { reason, mode },
+  });
 }
 
 /**
@@ -98,6 +105,12 @@ export async function deactivateKillSwitch(actor: AuditActor): Promise<void> {
     extensionId: "system",
     action: "policy_changed",
     actor,
+  });
+
+  emitTradingEvent({
+    type: "trading.killswitch.deactivated",
+    timestamp: Date.now(),
+    payload: {},
   });
 }
 
@@ -168,6 +181,12 @@ export async function activatePlatformKillSwitch(
     actor,
     error: reason,
   });
+
+  emitTradingEvent({
+    type: "trading.killswitch.activated",
+    timestamp: Date.now(),
+    payload: { extensionId, reason },
+  });
 }
 
 /**
@@ -191,6 +210,12 @@ export async function deactivatePlatformKillSwitch(
     extensionId,
     action: "policy_changed",
     actor,
+  });
+
+  emitTradingEvent({
+    type: "trading.killswitch.deactivated",
+    timestamp: Date.now(),
+    payload: { extensionId },
   });
 }
 

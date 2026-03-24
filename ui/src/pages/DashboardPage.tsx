@@ -193,8 +193,10 @@ function MarketPrices() {
         {prices.map((p) => (
           <div key={p.id} className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-neutral-200">{p.name}</div>
-              <div className="text-xs text-neutral-500">{p.symbol}</div>
+              <div className="text-sm font-medium text-neutral-200">
+                <span className="font-bold">{p.symbol}</span>
+                <span className="text-neutral-500 ml-1.5">{p.name}</span>
+              </div>
             </div>
             <div className="text-right">
               <div className="text-sm font-bold font-mono text-neutral-100">

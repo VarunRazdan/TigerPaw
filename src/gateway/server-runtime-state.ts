@@ -6,6 +6,7 @@ import type { CliDeps } from "../cli/deps.js";
 import type { createSubsystemLogger } from "../logging/subsystem.js";
 import type { PluginRegistry } from "../plugins/registry.js";
 import type { RuntimeEnv } from "../runtime.js";
+import { onTradingEvent } from "../trading/event-emitter.js";
 import type { AuthRateLimiter } from "./auth-rate-limit.js";
 import type { ResolvedGatewayAuth } from "./auth.js";
 import type { ChatAbortControllerEntry } from "./chat-abort.js";
@@ -109,6 +110,12 @@ export async function createGatewayRuntimeState(params: {
 
   const clients = new Set<GatewayWsClient>();
   const { broadcast, broadcastToConnIds } = createGatewayBroadcaster({ clients });
+
+  // Wire trading events to gateway broadcast so connected UI clients receive
+  // real-time order approvals, denials, kill switch changes, and limit warnings.
+  const _unsubTradingEvents = onTradingEvent((event) => {
+    broadcast(event.type, event.payload, { dropIfSlow: true });
+  });
 
   const handleHooksRequest = createGatewayHooksRequestHandler({
     deps: params.deps,

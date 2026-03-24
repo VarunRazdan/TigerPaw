@@ -129,6 +129,36 @@ export function validateTradingConfig(config: TradingConfig): TradingConfigValid
     }
   }
 
+  // Validate per-extension overrides in live mode — they must not weaken limits.
+  if (config.mode === "live" && config.policy.perExtension) {
+    const numericLimitKeys: Array<keyof TradingPolicyConfig["limits"]> = [
+      "maxDailySpendUsd",
+      "maxSingleTradeUsd",
+      "maxRiskPerTradePercent",
+      "dailyLossLimitPercent",
+      "maxPortfolioDrawdownPercent",
+      "maxSinglePositionPercent",
+      "maxTradesPerDay",
+      "maxOpenPositions",
+      "cooldownBetweenTradesMs",
+      "consecutiveLossPause",
+    ];
+    for (const [extId, overrides] of Object.entries(config.policy.perExtension)) {
+      if (!overrides) {
+        continue;
+      }
+      for (const key of numericLimitKeys) {
+        const val = overrides[key];
+        if (val !== undefined && (!Number.isFinite(val) || val < 0)) {
+          errors.push({
+            field: `policy.perExtension.${extId}.${key}`,
+            message: `Live mode requires finite non-negative ${key} in perExtension override for "${extId}" (got ${val})`,
+          });
+        }
+      }
+    }
+  }
+
   // Cross-field consistency checks.
   const lim = config.policy.limits;
   if (lim.maxRiskPerTradePercent > lim.dailyLossLimitPercent) {

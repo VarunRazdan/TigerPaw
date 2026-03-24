@@ -46,6 +46,11 @@ vi.mock("./kill-switch.js", () => ({
     reason: mockKillSwitchReason,
     mode: "hard",
   })),
+  checkPlatformKillSwitch: vi.fn(async () => ({
+    active: mockKillSwitchActive,
+    reason: mockKillSwitchReason,
+    mode: "hard",
+  })),
   isOrderAllowedUnderKillSwitch: vi.fn(
     (killStatus: { active: boolean; mode?: string }, orderSide: string) => {
       if (!killStatus.active) {
@@ -248,11 +253,11 @@ describe("TradingPolicyEngine", () => {
   });
 
   describe("per-extension overrides", () => {
-    it("uses per-extension approval mode override", async () => {
+    it("prevents per-extension override from weakening approval mode", async () => {
       const config: TradingPolicyConfig = {
-        ...RISK_TIER_PRESETS.moderate,
+        ...RISK_TIER_PRESETS.moderate, // moderate defaults to "confirm"
         perExtension: {
-          manifold: { approvalMode: "auto" },
+          manifold: { approvalMode: "auto" }, // tries to weaken to "auto"
         },
       };
 
@@ -261,8 +266,27 @@ describe("TradingPolicyEngine", () => {
         makeOrder({ extensionId: "manifold", notionalUsd: 10 }),
       );
 
-      expect(decision.outcome).toBe("approved");
-      expect(decision.approvalMode).toBe("auto");
+      // Should NOT weaken — stays at "confirm" (global mode)
+      expect(decision.outcome).toBe("pending_confirmation");
+      expect(decision.approvalMode).toBe("confirm");
+    });
+
+    it("allows per-extension override to strengthen approval mode", async () => {
+      const config: TradingPolicyConfig = {
+        ...RISK_TIER_PRESETS.aggressive, // aggressive defaults to "auto"
+        perExtension: {
+          alpaca: { approvalMode: "manual" }, // strengthens to "manual"
+        },
+      };
+
+      const engine = new TradingPolicyEngine(config);
+      const decision = await engine.evaluateOrder(
+        makeOrder({ extensionId: "alpaca", notionalUsd: 10 }),
+      );
+
+      // Should strengthen — "manual" is stricter than "auto"
+      expect(decision.outcome).toBe("pending_confirmation");
+      expect(decision.approvalMode).toBe("manual");
     });
 
     it("uses per-extension limit overrides", async () => {

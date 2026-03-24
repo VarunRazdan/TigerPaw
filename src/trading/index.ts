@@ -41,6 +41,10 @@ export {
   isOrderAllowedUnderKillSwitch,
 } from "./kill-switch.js";
 
+// Events
+export type { TradingEvent, TradingEventPayload, TradingEventType } from "./events.js";
+export { emitTradingEvent, onTradingEvent } from "./event-emitter.js";
+
 // Config
 export type { TradingConfig, TradingConfigValidationError } from "./config.js";
 export {

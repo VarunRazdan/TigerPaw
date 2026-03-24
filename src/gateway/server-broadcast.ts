@@ -5,6 +5,7 @@ import { logWs, shouldLogWs, summarizeAgentEventForWsLog } from "./ws-log.js";
 const ADMIN_SCOPE = "operator.admin";
 const APPROVALS_SCOPE = "operator.approvals";
 const PAIRING_SCOPE = "operator.pairing";
+const TRADING_SCOPE = "operator.trading";
 
 const EVENT_SCOPE_GUARDS: Record<string, string[]> = {
   "exec.approval.requested": [APPROVALS_SCOPE],
@@ -13,6 +14,15 @@ const EVENT_SCOPE_GUARDS: Record<string, string[]> = {
   "device.pair.resolved": [PAIRING_SCOPE],
   "node.pair.requested": [PAIRING_SCOPE],
   "node.pair.resolved": [PAIRING_SCOPE],
+  "trading.order.approved": [TRADING_SCOPE],
+  "trading.order.denied": [TRADING_SCOPE],
+  "trading.order.pending": [TRADING_SCOPE],
+  "trading.order.submitted": [TRADING_SCOPE],
+  "trading.order.filled": [TRADING_SCOPE],
+  "trading.order.failed": [TRADING_SCOPE],
+  "trading.killswitch.activated": [TRADING_SCOPE],
+  "trading.killswitch.deactivated": [TRADING_SCOPE],
+  "trading.limit.warning": [TRADING_SCOPE],
 };
 
 export type GatewayBroadcastStateVersion = {
