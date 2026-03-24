@@ -51,6 +51,8 @@ function createSampleState(overrides: Partial<TradingPolicyState> = {}): Trading
     openPositionCount: 0,
     positionCountByPlatform: {},
     positionsByAsset: {},
+    portfolioByPlatform: {},
+    platformKillSwitches: {},
     lastTradeAtMs: 0,
     killSwitch: { active: false },
     ...overrides,

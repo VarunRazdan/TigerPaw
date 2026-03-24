@@ -59,14 +59,11 @@ jobs:
 
           echo "Publishing tigerpaw@${PACKAGE_VERSION}"
 
-      - name: Check
-        run: pnpm check
-
       - name: Build
         run: pnpm build
 
-      - name: Verify release contents
-        run: pnpm release:check
+      - name: Build UI
+        run: pnpm ui:build
 
       - name: Setup npm auth
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc

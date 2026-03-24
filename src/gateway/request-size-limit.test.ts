@@ -74,7 +74,7 @@ describe("rejectOversizedBody", () => {
 describe("collectBodyWithLimit", () => {
   function makeStreamReq() {
     const emitter = new EventEmitter();
-    (emitter as Record<string, unknown>).destroy = vi.fn();
+    (emitter as unknown as Record<string, unknown>).destroy = vi.fn();
     return emitter;
   }
 
