@@ -42,7 +42,7 @@ Verify installation:
 
 ```bash
 tigerpaw --version
-# Tigerpaw 2026.3.26
+# Tigerpaw 2026.x.x
 ```
 
 > **Upgrading from OpenClaw?** Tigerpaw automatically detects and uses your
@@ -90,10 +90,7 @@ The **Control UI** (React dashboard) is served at `http://localhost:18789/`.
 ### 2. Add a Messaging Channel
 
 ```bash
-# Interactive wizard
-tigerpaw channels add --interactive
-
-# Or directly
+# Add a channel directly
 tigerpaw channels add --channel telegram --token "123456:ABC-your-bot-token"
 tigerpaw channels add --channel discord --bot-token "..." --app-token "..."
 ```
@@ -213,8 +210,10 @@ Add a `trading` block to your config:
 | `policy.tier`                        | `"conservative"` / `"moderate"` / `"aggressive"` / `"custom"` | `"conservative"` | Risk preset (`custom` = manual limits)          |
 | `policy.approvalMode`                | `"auto"` / `"confirm"` / `"manual"`                           | Varies by tier   | How orders are approved                         |
 | `policy.confirm.timeoutMs`           | `number`                                                      | `15000`          | Confirm mode timeout (ms)                       |
+| `policy.confirm.timeoutAction`       | `"approve"` / `"deny"`                                        | `"deny"`         | What happens when confirm times out             |
 | `policy.confirm.showNotification`    | `boolean`                                                     | `true`           | Show UI notification for confirm requests       |
 | `policy.manual.timeoutMs`            | `number`                                                      | `300000`         | Manual approval timeout (ms)                    |
+| `policy.manual.timeoutAction`        | `"approve"` / `"deny"`                                        | `"deny"`         | What happens when manual approval times out     |
 | `limits.maxDailySpendUsd`            | `number`                                                      | Tier-dependent   | Max cumulative daily notional spend (USD)       |
 | `limits.maxSingleTradeUsd`           | `number`                                                      | Tier-dependent   | Max single order size (USD)                     |
 | `limits.maxTradesPerDay`             | `number`                                                      | Tier-dependent   | Max trades per calendar day (UTC)               |
@@ -235,7 +234,7 @@ Add a `trading` block to your config:
 
 | Parameter              | Conservative | Moderate      | Aggressive |
 | ---------------------- | ------------ | ------------- | ---------- |
-| Approval Mode          | Manual       | Confirm (15s) | Auto       |
+| Approval Mode          | Manual       | Confirm (30s) | Auto       |
 | Max Daily Spend        | $100         | $500          | $2,000     |
 | Max Single Trade       | $25          | $100          | $500       |
 | Max Trades/Day         | 10           | 25            | 50         |
@@ -252,8 +251,8 @@ Set `"tier": "custom"` to define your own limits without using a preset.
 ### Approval Modes
 
 - **Auto** -- Orders within limits execute immediately. Best for paper mode or aggressive tier.
-- **Confirm** -- 15-second confirmation popup in the UI. Auto-approves on timeout. Configurable via `confirm.timeoutMs`.
-- **Manual** -- Every trade requires explicit operator approval. Auto-denies after 5 minutes. Configurable via `manual.timeoutMs`.
+- **Confirm** -- Confirmation popup in the UI. Configurable timeout (default 30s for moderate, 15s for others) and timeout action (`"deny"` by default). Set via `confirm.timeoutMs` and `confirm.timeoutAction`.
+- **Manual** -- Every trade requires explicit operator approval. Configurable timeout (default 5 minutes) and timeout action (`"deny"` by default). Set via `manual.timeoutMs` and `manual.timeoutAction`.
 
 ### Pre-Trade Validation Pipeline
 
@@ -428,11 +427,11 @@ Get started: [dYdX](https://dydx.trade/) → Export your Cosmos wallet mnemonic
 
 ### Kill Switch
 
-Instantly halt all trading:
+Instantly halt all trading via the dashboard UI (kill switch button) or from any messaging channel:
 
-```bash
-tigerpaw trading kill               # Activate (hard mode)
-tigerpaw trading resume             # Deactivate
+```
+"Stop all trading" → AI calls trading_killswitch_activate
+"Resume trading"   → AI calls trading_killswitch_deactivate
 ```
 
 Two modes:
@@ -683,7 +682,7 @@ tigerpaw gateway status             # Check gateway status
 # Channels
 tigerpaw channels list              # List configured channels
 tigerpaw channels status --probe    # Health check with RPC probe
-tigerpaw channels add --interactive # Add channel wizard
+tigerpaw channels add --channel telegram --token "..." # Add channel
 
 # Configuration
 tigerpaw config get                 # Show config

@@ -82,7 +82,7 @@
 - **Policy-Gated Trading** -- Every order goes through a 12-step validation pipeline before execution
 - **Risk Management** -- Daily spend limits, position limits, drawdown protection, cooldowns, kill switch
 - **Tamper-Evident Audit Log** -- HMAC-SHA256 chain-linked JSONL logging for every trade decision
-- **3 Approval Modes** -- Auto, confirm (15s timeout), or manual (5min timeout)
+- **3 Approval Modes** -- Auto, confirm (configurable timeout + deny/approve on timeout), or manual (configurable timeout)
 - **3 Risk Tiers** -- Conservative, moderate, aggressive presets
 - **React Control UI** -- Dashboard with real-time positions, P&L charts, TradingView embeds, order entry, risk management, and approval queue
 - **Real-Time Notifications** -- In-app toast alerts for order approvals, denials, kill switch changes, and limit warnings
@@ -247,8 +247,8 @@ Add a `trading` block to your config:
     "policy": {
       "tier": "conservative",
       "approvalMode": "confirm",
-      "confirm": { "timeoutMs": 15000, "showNotification": true },
-      "manual": { "timeoutMs": 300000 },
+      "confirm": { "timeoutMs": 30000, "showNotification": true, "timeoutAction": "deny" },
+      "manual": { "timeoutMs": 300000, "timeoutAction": "deny" },
       "limits": {
         "maxDailySpendUsd": 100,
         "maxSingleTradeUsd": 25,
@@ -283,8 +283,10 @@ Add a `trading` block to your config:
 | `policy.tier`                        | `"conservative"` / `"moderate"` / `"aggressive"` / `"custom"` | `"conservative"` | Risk preset (`custom` = manual limits)          |
 | `policy.approvalMode`                | `"auto"` / `"confirm"` / `"manual"`                           | Varies by tier   | How orders are approved                         |
 | `policy.confirm.timeoutMs`           | `number`                                                      | `15000`          | Confirm mode timeout (ms)                       |
+| `policy.confirm.timeoutAction`       | `"approve"` / `"deny"`                                        | `"deny"`         | What happens when confirm times out             |
 | `policy.confirm.showNotification`    | `boolean`                                                     | `true`           | Show UI notification for confirm requests       |
 | `policy.manual.timeoutMs`            | `number`                                                      | `300000`         | Manual approval timeout (ms)                    |
+| `policy.manual.timeoutAction`        | `"approve"` / `"deny"`                                        | `"deny"`         | What happens when manual approval times out     |
 | `limits.maxDailySpendUsd`            | `number`                                                      | Tier-dependent   | Max cumulative daily notional spend (USD)       |
 | `limits.maxSingleTradeUsd`           | `number`                                                      | Tier-dependent   | Max single order size (USD)                     |
 | `limits.maxTradesPerDay`             | `number`                                                      | Tier-dependent   | Max trades per calendar day (UTC)               |
@@ -337,7 +339,7 @@ See [GETTING_STARTED.md](GETTING_STARTED.md) for all platform configurations.
 
 | Parameter              | Conservative | Moderate      | Aggressive |
 | ---------------------- | ------------ | ------------- | ---------- |
-| Approval Mode          | Manual       | Confirm (15s) | Auto       |
+| Approval Mode          | Manual       | Confirm (30s) | Auto       |
 | Max Daily Spend        | $100         | $500          | $2,000     |
 | Max Single Trade       | $25          | $100          | $500       |
 | Max Trades/Day         | 10           | 25            | 50         |
@@ -373,14 +375,16 @@ Any limit field or `approvalMode` can be overridden per platform. Unset fields i
 ### Approval Modes
 
 - **Auto** -- Orders within limits execute immediately. Best for paper mode or aggressive tier.
-- **Confirm** -- 15-second confirmation popup in the UI. Auto-approves on timeout. Configurable via `confirm.timeoutMs`.
-- **Manual** -- Every trade requires explicit operator approval. Auto-denies after 5 minutes. Configurable via `manual.timeoutMs`.
+- **Confirm** -- Confirmation popup in the UI. Configurable timeout (default 30s for moderate tier, 15s for others) and timeout action (`"deny"` by default — order is rejected if not confirmed in time). Set via `confirm.timeoutMs` and `confirm.timeoutAction`.
+- **Manual** -- Every trade requires explicit operator approval. Configurable timeout (default 5 minutes) and timeout action (`"deny"` by default). Set via `manual.timeoutMs` and `manual.timeoutAction`.
 
 ### Kill Switch
 
-```bash
-tigerpaw trading kill     # Halt all trading immediately (hard mode)
-tigerpaw trading resume   # Resume trading
+Activate via the dashboard UI (kill switch button) or from any messaging channel:
+
+```
+"Stop all trading" → AI calls trading_killswitch_activate
+"Resume trading"   → AI calls trading_killswitch_deactivate
 ```
 
 Two modes:

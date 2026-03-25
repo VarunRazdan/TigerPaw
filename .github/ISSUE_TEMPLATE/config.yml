@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Onboarding
-    url: https://github.com/varunrazdan/tigerpaw/discussions
+    url: https://github.com/varunrazdan/tigerpaw/issues
     about: "New to Tigerpaw? Start a discussion for setup guidance."
   - name: Support
-    url: https://github.com/varunrazdan/tigerpaw/discussions
+    url: https://github.com/varunrazdan/tigerpaw/issues
     about: "Get help from the Tigerpaw community."
