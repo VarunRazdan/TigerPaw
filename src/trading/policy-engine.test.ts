@@ -143,7 +143,8 @@ describe("TradingPolicyEngine", () => {
 
       expect(decision.outcome).toBe("pending_confirmation");
       expect(decision.approvalMode).toBe("confirm");
-      expect(decision.timeoutMs).toBe(15_000);
+      expect(decision.timeoutMs).toBe(30_000);
+      expect(decision.timeoutAction).toBe("deny");
     });
 
     it("returns pending_confirmation in manual mode", async () => {
@@ -153,6 +154,7 @@ describe("TradingPolicyEngine", () => {
       expect(decision.outcome).toBe("pending_confirmation");
       expect(decision.approvalMode).toBe("manual");
       expect(decision.timeoutMs).toBe(300_000);
+      expect(decision.timeoutAction).toBe("deny");
     });
 
     it("denies when per-trade size exceeds limit", async () => {

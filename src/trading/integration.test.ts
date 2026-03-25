@@ -61,8 +61,8 @@ function makeConfig(overrides: Partial<TradingPolicyConfig> = {}): TradingPolicy
       maxDailySpendUsd: 500,
       maxSingleTradeUsd: 100,
     },
-    confirm: { timeoutMs: 60000, showNotification: true },
-    manual: { timeoutMs: 300000 },
+    confirm: { timeoutMs: 60000, showNotification: true, timeoutAction: "deny" },
+    manual: { timeoutMs: 300000, timeoutAction: "deny" },
     ...overrides,
   };
 }

@@ -24,14 +24,24 @@ import {
 
 const TIER_PRESETS: Record<Exclude<RiskTier, "custom">, { label: string; desc: string }> = {
   conservative: { label: "Conservative", desc: "Safest — manual approval, tight limits" },
-  moderate: { label: "Moderate", desc: "Balanced — confirm with auto-approve timeout" },
+  moderate: { label: "Moderate", desc: "Balanced — confirm with deny-on-timeout" },
   aggressive: { label: "Aggressive", desc: "Fast — auto-approval, wide limits" },
 };
 
 const APPROVAL_MODES: { value: ApprovalMode; label: string; desc: string }[] = [
   { value: "auto", label: "Auto", desc: "Trades within limits execute instantly" },
-  { value: "confirm", label: "Confirm", desc: "15s popup, auto-approves if no response" },
+  { value: "confirm", label: "Confirm", desc: "Popup with configurable timeout and action" },
   { value: "manual", label: "Manual", desc: "Every trade needs explicit approval" },
+];
+
+const TIMEOUT_OPTIONS = [
+  { value: 10_000, label: "10s" },
+  { value: 15_000, label: "15s" },
+  { value: 30_000, label: "30s" },
+  { value: 60_000, label: "1m" },
+  { value: 120_000, label: "2m" },
+  { value: 300_000, label: "5m" },
+  { value: 600_000, label: "10m" },
 ];
 
 function LimitInput({
@@ -692,6 +702,10 @@ export function TradingSettingsPage() {
     tier,
     approvalMode,
     limits,
+    confirmTimeoutMs,
+    confirmTimeoutAction,
+    manualTimeoutMs,
+    manualTimeoutAction,
     platforms,
     perPlatformOverrides,
     setPolicy,
@@ -784,6 +798,143 @@ export function TradingSettingsPage() {
             </label>
           ))}
         </div>
+
+        {/* Confirm mode settings */}
+        {(approvalMode === "confirm" || approvalMode === "manual") && (
+          <div className="mt-4 pt-3 border-t border-[var(--glass-divider)] space-y-4">
+            {approvalMode === "confirm" && (
+              <div>
+                <div className="text-xs font-medium text-neutral-300 mb-2">
+                  Confirm Mode Settings
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-neutral-300">Timeout</div>
+                      <div className="text-[10px] text-neutral-500">
+                        How long to wait for your response
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {TIMEOUT_OPTIONS.filter((o) => o.value <= 120_000).map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setPolicy({ confirmTimeoutMs: opt.value })}
+                          className={cn(
+                            "px-2 py-1 rounded text-[11px] font-mono transition-all duration-200 cursor-pointer border",
+                            confirmTimeoutMs === opt.value
+                              ? "border-orange-600 bg-orange-950/30 text-orange-300"
+                              : "border-[var(--glass-border)] bg-[var(--glass-divider)] text-neutral-500 hover:text-neutral-300 hover:border-[var(--glass-border-hover-strong)]",
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-neutral-300">If no response</div>
+                      <div className="text-[10px] text-neutral-500">
+                        What happens when the timeout expires
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setPolicy({ confirmTimeoutAction: "deny" })}
+                        className={cn(
+                          "px-3 py-1 rounded text-[11px] font-semibold transition-all duration-200 cursor-pointer border",
+                          confirmTimeoutAction === "deny"
+                            ? "border-red-600 bg-red-950/30 text-red-300"
+                            : "border-[var(--glass-border)] bg-[var(--glass-divider)] text-neutral-500 hover:text-neutral-300 hover:border-[var(--glass-border-hover-strong)]",
+                        )}
+                      >
+                        Deny trade
+                      </button>
+                      <button
+                        onClick={() => setPolicy({ confirmTimeoutAction: "approve" })}
+                        className={cn(
+                          "px-3 py-1 rounded text-[11px] font-semibold transition-all duration-200 cursor-pointer border",
+                          confirmTimeoutAction === "approve"
+                            ? "border-green-600 bg-green-950/30 text-green-300"
+                            : "border-[var(--glass-border)] bg-[var(--glass-divider)] text-neutral-500 hover:text-neutral-300 hover:border-[var(--glass-border-hover-strong)]",
+                        )}
+                      >
+                        Auto-approve
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {approvalMode === "manual" && (
+              <div>
+                <div className="text-xs font-medium text-neutral-300 mb-2">
+                  Manual Mode Settings
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-neutral-300">Timeout</div>
+                      <div className="text-[10px] text-neutral-500">
+                        How long to wait for your approval
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {TIMEOUT_OPTIONS.filter((o) => o.value >= 60_000).map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setPolicy({ manualTimeoutMs: opt.value })}
+                          className={cn(
+                            "px-2 py-1 rounded text-[11px] font-mono transition-all duration-200 cursor-pointer border",
+                            manualTimeoutMs === opt.value
+                              ? "border-orange-600 bg-orange-950/30 text-orange-300"
+                              : "border-[var(--glass-border)] bg-[var(--glass-divider)] text-neutral-500 hover:text-neutral-300 hover:border-[var(--glass-border-hover-strong)]",
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-neutral-300">If no response</div>
+                      <div className="text-[10px] text-neutral-500">
+                        What happens when the timeout expires
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setPolicy({ manualTimeoutAction: "deny" })}
+                        className={cn(
+                          "px-3 py-1 rounded text-[11px] font-semibold transition-all duration-200 cursor-pointer border",
+                          manualTimeoutAction === "deny"
+                            ? "border-red-600 bg-red-950/30 text-red-300"
+                            : "border-[var(--glass-border)] bg-[var(--glass-divider)] text-neutral-500 hover:text-neutral-300 hover:border-[var(--glass-border-hover-strong)]",
+                        )}
+                      >
+                        Deny trade
+                      </button>
+                      <button
+                        onClick={() => setPolicy({ manualTimeoutAction: "approve" })}
+                        className={cn(
+                          "px-3 py-1 rounded text-[11px] font-semibold transition-all duration-200 cursor-pointer border",
+                          manualTimeoutAction === "approve"
+                            ? "border-green-600 bg-green-950/30 text-green-300"
+                            : "border-[var(--glass-border)] bg-[var(--glass-divider)] text-neutral-500 hover:text-neutral-300 hover:border-[var(--glass-border-hover-strong)]",
+                        )}
+                      >
+                        Auto-approve
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Per-Trade Limits */}

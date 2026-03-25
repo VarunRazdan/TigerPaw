@@ -64,9 +64,11 @@ export const DEFAULT_TRADING_CONFIG: TradingConfig = {
     confirm: {
       timeoutMs: 15_000,
       showNotification: true,
+      timeoutAction: "deny",
     },
     manual: {
       timeoutMs: 300_000,
+      timeoutAction: "deny",
     },
   },
   auditLog: {

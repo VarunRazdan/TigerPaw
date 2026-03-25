@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type ApprovalMode = "auto" | "confirm" | "manual";
+export type TimeoutAction = "approve" | "deny";
 export type RiskTier = "conservative" | "moderate" | "aggressive" | "custom";
 export type KillSwitchMode = "hard" | "soft";
 
@@ -98,6 +99,10 @@ export type TradingState = {
   approvalMode: ApprovalMode;
   tier: RiskTier;
   limits: PolicyLimits;
+  confirmTimeoutMs: number;
+  confirmTimeoutAction: TimeoutAction;
+  manualTimeoutMs: number;
+  manualTimeoutAction: TimeoutAction;
 
   // Positions & approvals
   positions: Position[];
@@ -133,7 +138,20 @@ export type TradingState = {
       >
     >,
   ) => void;
-  setPolicy: (policy: Partial<Pick<TradingState, "approvalMode" | "tier" | "limits">>) => void;
+  setPolicy: (
+    policy: Partial<
+      Pick<
+        TradingState,
+        | "approvalMode"
+        | "tier"
+        | "limits"
+        | "confirmTimeoutMs"
+        | "confirmTimeoutAction"
+        | "manualTimeoutMs"
+        | "manualTimeoutAction"
+      >
+    >,
+  ) => void;
   setPositions: (positions: Position[]) => void;
   updatePositionStopLoss: (symbol: string, stopLoss: number | undefined) => void;
   updatePositionTakeProfit: (symbol: string, takeProfit: number | undefined) => void;
@@ -176,6 +194,10 @@ export const useTradingStore = create<TradingState>((set) => ({
   approvalMode: "confirm",
   tier: "moderate",
   limits: DEFAULT_LIMITS,
+  confirmTimeoutMs: 30_000,
+  confirmTimeoutAction: "deny",
+  manualTimeoutMs: 300_000,
+  manualTimeoutAction: "deny",
   positions: [
     {
       symbol: "AAPL",

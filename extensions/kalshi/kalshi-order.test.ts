@@ -76,8 +76,8 @@ describe("Kalshi order flow", () => {
           maxDailySpendUsd: 500,
           maxSingleTradeUsd: 100,
         },
-        confirm: { timeoutMs: 60000, showNotification: true },
-        manual: { timeoutMs: 300000 },
+        confirm: { timeoutMs: 60000, showNotification: true, timeoutAction: "deny" },
+        manual: { timeoutMs: 300000, timeoutAction: "deny" },
       },
       logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
       registerTool: vi.fn((def: ToolDef) => {

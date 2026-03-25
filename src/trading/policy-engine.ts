@@ -17,6 +17,9 @@ const log = createSubsystemLogger("trading/policy-engine");
 
 export type ApprovalMode = "auto" | "confirm" | "manual";
 
+/** What happens when a confirm/manual approval times out without a response. */
+export type TimeoutAction = "approve" | "deny";
+
 export type RiskTier = "conservative" | "moderate" | "aggressive" | "custom";
 
 export type TradingPolicyConfig = {
@@ -37,9 +40,13 @@ export type TradingPolicyConfig = {
   confirm: {
     timeoutMs: number;
     showNotification: boolean;
+    /** What to do when confirm times out. Default: "deny". */
+    timeoutAction: TimeoutAction;
   };
   manual: {
     timeoutMs: number;
+    /** What to do when manual approval times out. Default: "deny". */
+    timeoutAction: TimeoutAction;
   };
   perExtension?: Record<
     string,
@@ -76,6 +83,8 @@ export type PolicyDecision = {
   approvalMode: ApprovalMode;
   /** Timeout in ms for confirm/manual modes. */
   timeoutMs?: number;
+  /** What happens on timeout: "approve" or "deny". */
+  timeoutAction?: TimeoutAction;
 };
 
 // ---------------------------------------------------------------------------
@@ -98,8 +107,8 @@ export const RISK_TIER_PRESETS: Record<Exclude<RiskTier, "custom">, TradingPolic
       maxDailySpendUsd: 100,
       maxSingleTradeUsd: 25,
     },
-    confirm: { timeoutMs: 15_000, showNotification: true },
-    manual: { timeoutMs: 300_000 },
+    confirm: { timeoutMs: 15_000, showNotification: true, timeoutAction: "deny" },
+    manual: { timeoutMs: 300_000, timeoutAction: "deny" },
   },
   moderate: {
     tier: "moderate",
@@ -116,8 +125,8 @@ export const RISK_TIER_PRESETS: Record<Exclude<RiskTier, "custom">, TradingPolic
       maxDailySpendUsd: 500,
       maxSingleTradeUsd: 100,
     },
-    confirm: { timeoutMs: 15_000, showNotification: true },
-    manual: { timeoutMs: 300_000 },
+    confirm: { timeoutMs: 30_000, showNotification: true, timeoutAction: "deny" },
+    manual: { timeoutMs: 300_000, timeoutAction: "deny" },
   },
   aggressive: {
     tier: "aggressive",
@@ -134,8 +143,8 @@ export const RISK_TIER_PRESETS: Record<Exclude<RiskTier, "custom">, TradingPolic
       maxDailySpendUsd: 2000,
       maxSingleTradeUsd: 500,
     },
-    confirm: { timeoutMs: 15_000, showNotification: true },
-    manual: { timeoutMs: 300_000 },
+    confirm: { timeoutMs: 15_000, showNotification: true, timeoutAction: "approve" },
+    manual: { timeoutMs: 300_000, timeoutAction: "deny" },
   },
 };
 
@@ -479,7 +488,10 @@ export class TradingPolicyEngine {
     }
 
     if (mode === "confirm") {
-      log.info(`order ${order.id} pending confirmation (${this.config.confirm.timeoutMs}ms)`);
+      const timeoutAction = this.config.confirm.timeoutAction ?? "deny";
+      log.info(
+        `order ${order.id} pending confirmation (${this.config.confirm.timeoutMs}ms, on timeout: ${timeoutAction})`,
+      );
       await writeAuditEntry({
         extensionId: order.extensionId,
         action: "order_requested",
@@ -501,14 +513,18 @@ export class TradingPolicyEngine {
       });
       return {
         outcome: "pending_confirmation",
-        reason: "all pre-trade checks passed; awaiting operator confirmation",
+        reason: `all pre-trade checks passed; awaiting operator confirmation (${timeoutAction} on timeout)`,
         approvalMode: "confirm",
         timeoutMs: this.config.confirm.timeoutMs,
+        timeoutAction,
       };
     }
 
     // Manual mode.
-    log.info(`order ${order.id} pending manual approval (${this.config.manual.timeoutMs}ms)`);
+    const manualTimeoutAction = this.config.manual.timeoutAction ?? "deny";
+    log.info(
+      `order ${order.id} pending manual approval (${this.config.manual.timeoutMs}ms, on timeout: ${manualTimeoutAction})`,
+    );
     await writeAuditEntry({
       extensionId: order.extensionId,
       action: "order_requested",
@@ -530,9 +546,10 @@ export class TradingPolicyEngine {
     });
     return {
       outcome: "pending_confirmation",
-      reason: "all pre-trade checks passed; awaiting manual operator approval",
+      reason: `all pre-trade checks passed; awaiting manual operator approval (${manualTimeoutAction} on timeout)`,
       approvalMode: "manual",
       timeoutMs: this.config.manual.timeoutMs,
+      timeoutAction: manualTimeoutAction,
     };
   }
 }
