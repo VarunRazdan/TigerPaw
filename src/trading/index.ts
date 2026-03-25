@@ -46,9 +46,17 @@ export type { TradingEvent, TradingEventPayload, TradingEventType } from "./even
 export { emitTradingEvent, onTradingEvent } from "./event-emitter.js";
 
 // Config
-export type { TradingConfig, TradingConfigValidationError } from "./config.js";
+export type {
+  TradingConfig,
+  TradingConfigValidationError,
+  TradingNotificationsConfig,
+  TradingNotificationTarget,
+} from "./config.js";
 export {
   DEFAULT_TRADING_CONFIG,
   resolveEffectiveApprovalMode,
   validateTradingConfig,
 } from "./config.js";
+
+// Notification dispatch
+export { startTradingNotificationDispatch } from "./notification-dispatch.js";

@@ -506,6 +506,10 @@ To receive desktop notifications when the dashboard tab is in the background:
 
 Browser notifications are local-only -- they use the browser's Notification API and never send data to external services.
 
+### Per-Platform Filtering
+
+Go to **Settings > Notifications > Notify by Platform** to toggle notifications per trading platform. For example, you can enable notifications for Polymarket only and disable all others. Global events (kill switch, limit warnings) are always shown.
+
 ### Notification Events
 
 | Event                 | When                                                    |
@@ -516,22 +520,128 @@ Browser notifications are local-only -- they use the browser's Notification API 
 | Kill Switch Activated | Trading halted due to limit breach or manual activation |
 | Limit Warning         | Daily spend or loss approaching 80% of configured limit |
 
----
+### Proactive Channel Notifications
 
-## Advanced: Exposing the Dashboard
+Push trading alerts to any messaging channel (Telegram, Discord, Slack, etc.) by adding notification targets to your config:
 
-By default, Tigerpaw binds to `127.0.0.1` (localhost only). If you need to access it from another device on your network:
-
-```bash
-tigerpaw gateway run --bind lan --auth token --token "your-secret-token"
+```json
+{
+  "trading": {
+    "notifications": {
+      "enabled": true,
+      "targets": [
+        { "channel": "telegram", "to": "YOUR_CHAT_ID" },
+        {
+          "channel": "discord",
+          "to": "YOUR_CHANNEL_ID",
+          "events": ["trading.order.denied", "trading.killswitch.activated"]
+        }
+      ]
+    }
+  }
+}
 ```
 
-> **Warning**: This exposes the dashboard to your entire local network. Always use a strong auth token. For remote access, prefer SSH port forwarding:
+| Field       | Type        | Description                                                         |
+| ----------- | ----------- | ------------------------------------------------------------------- |
+| `channel`   | `string`    | Messaging platform (`telegram`, `discord`, `slack`, `signal`, etc.) |
+| `to`        | `string`    | Chat/channel/user ID on the platform                                |
+| `accountId` | `string?`   | For multi-account channels (optional)                               |
+| `threadId`  | `string?`   | For threaded channels (optional)                                    |
+| `events`    | `string[]?` | Filter events (omit to receive all)                                 |
+
+The channel must already be configured and connected. Notifications are delivered best-effort -- a failed delivery does not block trading.
+
+---
+
+## Remote Dashboard Access
+
+By default, the dashboard binds to `localhost:18789` and is only accessible on the machine running Tigerpaw. Most users running Tigerpaw on a headless server interact via messaging channels -- but sometimes you need the full dashboard from your phone or laptop.
+
+### Option 1: Tailscale (Recommended)
+
+End-to-end encrypted via WireGuard. Not even Tailscale's relay servers can decrypt your traffic.
+
+**Requirement:** Install Tailscale on both the server AND every device you want to access the dashboard from.
+
+```bash
+# 1. Install Tailscale on the server
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+
+# 2. Install Tailscale on your phone/laptop and sign in to the same network
+
+# 3. Configure Tigerpaw
+tigerpaw config set gateway.bind tailnet
+tigerpaw config set gateway.tailscale.mode serve
+tigerpaw config set gateway.auth.mode token
+
+# 4. Restart the gateway
+tigerpaw gateway run
+```
+
+Open `http://<tailscale-ip>:18789` from any device on your Tailnet.
+
+### Option 2: Cloudflare Tunnel
+
+Free public HTTPS. Only requires `cloudflared` on the server -- nothing to install on client devices.
+
+> **Note:** Cloudflare terminates TLS at their edge, meaning they can technically see your dashboard traffic in transit. Your API keys are never sent to the dashboard, so they remain safe.
+
+```bash
+# 1. Install cloudflared on the server
+# https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+
+# 2. Start a quick tunnel
+cloudflared tunnel --url http://localhost:18789
+# Outputs: https://random-name.cfargotunnel.com
+
+# 3. Add the tunnel URL to your config
+tigerpaw config set gateway.controlUi.allowedOrigins '["https://random-name.cfargotunnel.com"]'
+tigerpaw config set gateway.auth.mode token
+
+# 4. Restart the gateway
+tigerpaw gateway run
+```
+
+### Option 3: SSH Port Forwarding
+
+No additional software needed. Works from any device with SSH access to the server.
 
 ```bash
 ssh -L 18789:localhost:18789 your-server
 # Then open http://localhost:18789 on your local machine
 ```
+
+### Comparison
+
+| Method                | Encryption                | Install on client? | Persistent URL?    | Best for                        |
+| --------------------- | ------------------------- | ------------------ | ------------------ | ------------------------------- |
+| **Tailscale**         | End-to-end (WireGuard)    | Yes                | Yes (Tailscale IP) | Privacy-sensitive, multi-device |
+| **Cloudflare Tunnel** | TLS (CF decrypts at edge) | No                 | Yes (tunnel URL)   | Easy access from anywhere       |
+| **SSH tunnel**        | SSH                       | No (if SSH exists) | No (per-session)   | Quick one-off access            |
+
+### What stays local regardless of access mode
+
+- API keys and exchange credentials (stored in `~/.tigerpaw/`, never sent to dashboard)
+- Trade execution (orders placed from the server, not the browser)
+- Audit logs and trade records
+- Kill switch state changes (UI sends commands to localhost gateway)
+
+### Trading Bot Commands
+
+If you mainly interact via messaging channels, the `trading-commands` extension gives you trading data without needing the dashboard at all:
+
+| Ask your AI agent...        | Tool invoked                  |
+| --------------------------- | ----------------------------- |
+| "What's my portfolio?"      | `trading_portfolio_summary`   |
+| "How's my P&L today?"       | `trading_daily_metrics`       |
+| "Show my positions"         | `trading_positions`           |
+| "Stop all trading"          | `trading_killswitch_activate` |
+| "Am I close to any limits?" | `trading_risk_status`         |
+| "Show recent trades"        | `trading_recent_trades`       |
+
+These work from Telegram, Discord, Slack, or any connected channel -- no dashboard access needed.
 
 ---
 

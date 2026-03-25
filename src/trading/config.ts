@@ -1,4 +1,25 @@
+import type { TradingEventType } from "./events.js";
 import type { TradingPolicyConfig } from "./policy-engine.js";
+
+export type TradingNotificationTarget = {
+  /** Channel to send notifications to (e.g. "telegram", "discord", "slack"). */
+  channel: string;
+  /** Target ID — chat ID, channel ID, user ID depending on the channel. */
+  to: string;
+  /** Account ID for multi-account channels (optional). */
+  accountId?: string;
+  /** Thread/topic ID for threaded channels (optional). */
+  threadId?: string;
+  /** Which events to send. Omit to receive all events. */
+  events?: TradingEventType[];
+};
+
+export type TradingNotificationsConfig = {
+  /** Enable proactive trading notifications to messaging channels. Default: false. */
+  enabled?: boolean;
+  /** Channels to send notifications to. */
+  targets?: TradingNotificationTarget[];
+};
 
 export type TradingConfig = {
   /** Enable the trading subsystem. Default: false. */
@@ -9,6 +30,8 @@ export type TradingConfig = {
   policy: TradingPolicyConfig;
   /** Default sync interval in ms for all extensions. Extensions can override per-platform. */
   syncIntervalMs?: number;
+  /** Proactive notifications to messaging channels for trading events. */
+  notifications?: TradingNotificationsConfig;
   /** Audit log settings. */
   auditLog: {
     /** Override the default audit log path (~/.tigerpaw/trading/audit.jsonl). */

@@ -7,6 +7,7 @@ import type { createSubsystemLogger } from "../logging/subsystem.js";
 import type { PluginRegistry } from "../plugins/registry.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { onTradingEvent } from "../trading/event-emitter.js";
+import { startTradingNotificationDispatch } from "../trading/notification-dispatch.js";
 import type { AuthRateLimiter } from "./auth-rate-limit.js";
 import type { ResolvedGatewayAuth } from "./auth.js";
 import type { ChatAbortControllerEntry } from "./chat-abort.js";
@@ -116,6 +117,17 @@ export async function createGatewayRuntimeState(params: {
   const _unsubTradingEvents = onTradingEvent((event) => {
     broadcast(event.type, event.payload, { dropIfSlow: true });
   });
+
+  // Wire proactive trading notifications to messaging channels (Telegram, Discord, etc.)
+  const tradingNotifConfig = params.cfg.trading?.notifications;
+  const _unsubTradingNotifications =
+    tradingNotifConfig?.enabled && tradingNotifConfig.targets?.length
+      ? startTradingNotificationDispatch({
+          cfg: params.cfg,
+          notificationsConfig: tradingNotifConfig,
+          deps: params.deps,
+        })
+      : undefined;
 
   const handleHooksRequest = createGatewayHooksRequestHandler({
     deps: params.deps,

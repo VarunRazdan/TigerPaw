@@ -86,6 +86,8 @@
 - **3 Risk Tiers** -- Conservative, moderate, aggressive presets
 - **React Control UI** -- Dashboard with real-time positions, P&L charts, TradingView embeds, order entry, risk management, and approval queue
 - **Real-Time Notifications** -- In-app toast alerts for order approvals, denials, kill switch changes, and limit warnings
+- **Trading Bot Commands** -- 8 unified trading tools accessible from any messaging channel -- portfolio summary, P&L, positions, kill switch, risk status
+- **Remote Dashboard Access** -- Access your dashboard from any device via Tailscale (end-to-end encrypted) or Cloudflare Tunnel (free HTTPS)
 
 ## Why Tigerpaw?
 
@@ -446,9 +448,40 @@ The gateway serves a React dashboard at `http://localhost:18789` with:
 - **Trading Hub** -- Positions, trade history, approval queue, and risk gauges
 - **Platform Pages** -- Dedicated pages for each of the 9 trading platforms with TradingView charts (collapsible), order entry forms, and platform-specific data
 - **Channels** -- Manage 20+ messaging integrations
-- **Settings** -- Risk tier selection, approval mode, per-extension overrides
+- **Settings** -- Risk tier selection, approval mode, per-extension overrides, remote access configuration
 - **Security** -- Audit findings, credential rotation status, extension permissions
 - **Config** -- JSON config editor with live validation
+
+### Remote Dashboard Access
+
+By default the dashboard is only accessible on the machine running Tigerpaw. To access it from other devices:
+
+| Method                   | Encryption                        | Install Required             | Best For                  |
+| ------------------------ | --------------------------------- | ---------------------------- | ------------------------- |
+| **Local only** (default) | N/A                               | None                         | Single-machine use        |
+| **Tailscale**            | End-to-end (WireGuard)            | Server + every client device | Privacy-sensitive setups  |
+| **Cloudflare Tunnel**    | TLS (Cloudflare decrypts at edge) | Server only (`cloudflared`)  | Easy access from anywhere |
+
+Configure in **Settings > Dashboard Access** or during first-run setup (`tigerpaw start`). See [GETTING_STARTED.md](GETTING_STARTED.md) for step-by-step instructions.
+
+> **Your API keys never leave your machine** regardless of access mode. Remote access only exposes the dashboard UI -- trade execution and credential storage remain local.
+
+### Trading Bot Commands
+
+The `trading-commands` extension provides 8 tools accessible from any connected messaging channel:
+
+| Command                         | Description                                      |
+| ------------------------------- | ------------------------------------------------ |
+| `trading_portfolio_summary`     | Portfolio value per platform, total, drawdown    |
+| `trading_daily_metrics`         | P&L, spend, trades, consecutive losses vs limits |
+| `trading_positions`             | All open positions with value and % allocation   |
+| `trading_killswitch_status`     | Global + per-platform kill switch state          |
+| `trading_killswitch_activate`   | Halt all trading with reason                     |
+| `trading_killswitch_deactivate` | Resume trading                                   |
+| `trading_risk_status`           | % utilization of each limit with progress bars   |
+| `trading_recent_trades`         | Recent trade decisions from the audit log        |
+
+These work from Telegram, Discord, Slack, or any connected channel -- ask your AI agent "What's my portfolio?" or "Stop all trading" and it invokes the right tool.
 
 ## Notifications
 
@@ -457,6 +490,7 @@ Tigerpaw sends real-time notifications for trading events -- entirely local, no 
 - **In-app toasts** -- Color-coded alerts for order approvals, denials, kill switch changes, and limit warnings
 - **Notification bell** -- Badge counter in the dashboard header showing undismissed notifications
 - **Browser notifications** (opt-in) -- Desktop notifications via the browser Notification API when the dashboard tab is open
+- **Per-platform filtering** -- Enable or disable notifications per trading platform (e.g. only Polymarket alerts)
 
 Events tracked:
 
@@ -469,7 +503,35 @@ Events tracked:
 | Kill switch deactivated | Success  | Trading resumed                              |
 | Limit warning           | Warning  | Approaching 80% of a configured limit        |
 
-No remote alerts are sent by default. Notifications stay on your machine unless you configure messaging channels separately.
+### Per-Platform Filtering
+
+In **Settings > Notifications**, toggle notifications on or off for each trading platform independently. For example, enable notifications only for Polymarket and disable all others. Global events (kill switch activation, limit warnings without a specific platform) are always shown regardless of filter settings.
+
+### Proactive Channel Notifications
+
+Optionally push trading alerts to any messaging channel (Telegram, Discord, Slack, etc.):
+
+```json
+{
+  "trading": {
+    "notifications": {
+      "enabled": true,
+      "targets": [
+        { "channel": "telegram", "to": "123456789" },
+        {
+          "channel": "discord",
+          "to": "channel-id",
+          "events": ["trading.order.denied", "trading.killswitch.activated"]
+        }
+      ]
+    }
+  }
+}
+```
+
+Each target can filter which events it receives via the `events` array. Omit `events` to receive all trading notifications. Supported events: `trading.order.approved`, `trading.order.denied`, `trading.order.pending`, `trading.order.submitted`, `trading.order.filled`, `trading.order.failed`, `trading.killswitch.activated`, `trading.killswitch.deactivated`, `trading.limit.warning`.
+
+No remote alerts are sent by default. Notifications stay on your machine unless you configure the above.
 
 ## Development
 

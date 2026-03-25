@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { useTradingEvents } from "@/hooks/use-trading-events";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/stores/theme-store";
 import { DailyPnlBar } from "./DailyPnlBar";
@@ -111,18 +112,30 @@ function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean
       end={item.end}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-200",
-          collapsed && "justify-center px-2",
+          "flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-300 ease-in-out overflow-hidden",
+          collapsed && "justify-center px-2 gap-0",
           isActive
             ? "bg-[var(--glass-border)] text-neutral-100 shadow-sm shadow-black/30 border border-[var(--glass-active-border)]"
             : "text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] hover:shadow-sm",
         )
       }
     >
-      <span className={cn("shrink-0 transition-transform duration-200", collapsed && "scale-125")}>
+      <span
+        className={cn(
+          "shrink-0 transition-transform duration-300 ease-in-out",
+          collapsed && "scale-110",
+        )}
+      >
         {item.icon}
       </span>
-      {!collapsed && <span>{item.label}</span>}
+      <span
+        className={cn(
+          "whitespace-nowrap transition-all duration-300 ease-in-out",
+          collapsed ? "w-0 opacity-0 overflow-hidden" : "w-auto opacity-100",
+        )}
+      >
+        {item.label}
+      </span>
     </NavLink>
   );
 }
@@ -138,13 +151,29 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
       {/* Logo */}
       <div
         className={cn(
-          "h-14 flex items-center border-b border-[var(--glass-chrome-border)] shrink-0",
+          "h-14 flex items-center border-b border-[var(--glass-chrome-border)] shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
           collapsed ? "justify-center" : "px-3",
         )}
       >
-        <NavLink to="/" className="flex items-center tracking-tight">
-          <span className="text-lg font-bold text-orange-500">{collapsed ? "T" : "Tiger"}</span>
-          <span className="text-lg font-bold text-neutral-100">{collapsed ? "P" : "Paw"}</span>
+        <NavLink to="/" className="flex items-center tracking-tight overflow-hidden">
+          <span className="text-lg font-bold text-orange-500 shrink-0">T</span>
+          <span
+            className={cn(
+              "text-lg font-bold text-orange-500 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100",
+            )}
+          >
+            iger
+          </span>
+          <span className="text-lg font-bold text-neutral-100 shrink-0">P</span>
+          <span
+            className={cn(
+              "text-lg font-bold text-neutral-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden",
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100",
+            )}
+          >
+            aw
+          </span>
         </NavLink>
       </div>
 
@@ -152,12 +181,22 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
         {NAV_GROUPS.map((group) => (
           <div key={group.title}>
-            {!collapsed && (
-              <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
-                {group.title}
-              </div>
-            )}
-            {collapsed && <Separator className="mb-2" />}
+            <div
+              className={cn(
+                "px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap",
+                collapsed ? "h-0 opacity-0 mb-0" : "h-4 opacity-100",
+              )}
+            >
+              {group.title}
+            </div>
+            <div
+              className={cn(
+                "transition-all duration-300 ease-in-out overflow-hidden",
+                collapsed ? "h-px opacity-100 mb-2" : "h-0 opacity-0 mb-0",
+              )}
+            >
+              <Separator />
+            </div>
             <div className="space-y-0.5">
               {group.items.map((item) => (
                 <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
@@ -172,12 +211,21 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
         <button
           onClick={onToggle}
           className={cn(
-            "w-full flex items-center py-2 rounded-md bg-[var(--glass-subtle)] border border-[var(--glass-border)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)] hover:border-[var(--glass-border-hover)] cursor-pointer transition-all duration-200",
+            "w-full flex items-center py-2 rounded-md bg-[var(--glass-subtle)] border border-[var(--glass-border)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)] hover:border-[var(--glass-border-hover)] cursor-pointer transition-all duration-300 ease-in-out overflow-hidden",
             collapsed ? "justify-center" : "px-3 gap-2",
           )}
         >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          {!collapsed && <span className="text-xs">Compact</span>}
+          <span className="shrink-0 transition-transform duration-300 ease-in-out">
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </span>
+          <span
+            className={cn(
+              "text-xs whitespace-nowrap transition-all duration-300 ease-in-out",
+              collapsed ? "w-0 opacity-0 overflow-hidden" : "w-auto opacity-100",
+            )}
+          >
+            Compact
+          </span>
         </button>
       </div>
     </aside>
@@ -243,6 +291,7 @@ function MobileNav() {
 export function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const theme = useThemeStore((s) => s.theme);
+  const { connected: gatewayConnected } = useTradingEvents();
 
   // Apply theme to document root so CSS [data-theme] selectors activate
   useEffect(() => {
@@ -283,7 +332,16 @@ export function Layout() {
             {/* Right side: Notifications + Kill Switch + PnL */}
             <div className="ml-auto flex items-center gap-4">
               <DailyPnlBar />
-              <NotificationBell />
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={cn(
+                    "w-1.5 h-1.5 rounded-full transition-colors duration-500",
+                    gatewayConnected ? "bg-green-400" : "bg-neutral-600",
+                  )}
+                  title={gatewayConnected ? "Gateway connected" : "Gateway disconnected"}
+                />
+                <NotificationBell />
+              </div>
               <KillSwitchButton />
             </div>
           </div>

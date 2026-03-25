@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import {
   AlertDialog,
@@ -10,7 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { saveConfigPatch } from "@/lib/save-config";
 import { cn } from "@/lib/utils";
+import { useNotificationStore } from "@/stores/notification-store";
 import { useThemeStore, THEMES, type ThemeId } from "@/stores/theme-store";
 import {
   useTradingStore,
@@ -261,6 +263,430 @@ function ThemeSelector() {
   );
 }
 
+type RemoteAccessMode = "local" | "tailscale" | "cloudflare";
+
+function RemoteAccessSection() {
+  const [mode, setMode] = useState<RemoteAccessMode>("local");
+  const [tunnelUrl, setTunnelUrl] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const configPatch = useMemo(() => {
+    if (mode === "local") {
+      return { gateway: { bind: "loopback", tailscale: { mode: "off" } } };
+    }
+    if (mode === "tailscale") {
+      return {
+        gateway: {
+          bind: "tailnet",
+          tailscale: { mode: "serve" },
+          auth: { mode: "token" },
+        },
+      };
+    }
+    // cloudflare
+    const patch: Record<string, unknown> = {
+      gateway: {
+        bind: "loopback",
+        tailscale: { mode: "off" },
+        auth: { mode: "token" },
+      },
+    };
+    if (tunnelUrl.trim()) {
+      (patch.gateway as Record<string, unknown>).controlUi = {
+        allowedOrigins: [tunnelUrl.trim()],
+      };
+    }
+    return patch;
+  }, [mode, tunnelUrl]);
+
+  async function handleSave() {
+    setSaveStatus("saving");
+    setSaveError(null);
+    const result = await saveConfigPatch(configPatch);
+    if (result.ok) {
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 4000);
+    } else {
+      setSaveStatus("error");
+      setSaveError(result.error);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-1">Dashboard Access</h3>
+      <p className="text-[11px] text-neutral-500 mb-3">
+        How you access the Tigerpaw dashboard. API keys and trade execution always stay on this
+        machine.
+      </p>
+
+      <div className="space-y-2">
+        {/* Local Only */}
+        <label
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-300",
+            mode === "local"
+              ? "border-orange-600 bg-orange-950/20"
+              : "border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-divider)]",
+          )}
+        >
+          <input
+            type="radio"
+            name="remoteAccess"
+            checked={mode === "local"}
+            onChange={() => setMode("local")}
+            className="mt-0.5 accent-orange-500"
+          />
+          <div>
+            <div className="text-sm font-medium text-neutral-200">
+              Local only{" "}
+              <span className="text-[10px] text-green-400 font-normal ml-1">most secure</span>
+            </div>
+            <div className="text-xs text-neutral-500">
+              Dashboard only accessible on this machine (localhost:18789)
+            </div>
+          </div>
+        </label>
+
+        {/* Tailscale */}
+        <label
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-300",
+            mode === "tailscale"
+              ? "border-orange-600 bg-orange-950/20"
+              : "border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-divider)]",
+          )}
+        >
+          <input
+            type="radio"
+            name="remoteAccess"
+            checked={mode === "tailscale"}
+            onChange={() => setMode("tailscale")}
+            className="mt-0.5 accent-orange-500"
+          />
+          <div>
+            <div className="text-sm font-medium text-neutral-200">
+              Tailscale{" "}
+              <span className="text-[10px] text-blue-400 font-normal ml-1">
+                end-to-end encrypted
+              </span>
+            </div>
+            <div className="text-xs text-neutral-500">
+              Access from your devices via WireGuard mesh VPN. Requires Tailscale on both server and
+              client devices.
+            </div>
+          </div>
+        </label>
+
+        {/* Cloudflare Tunnel */}
+        <label
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-300",
+            mode === "cloudflare"
+              ? "border-orange-600 bg-orange-950/20"
+              : "border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-divider)]",
+          )}
+        >
+          <input
+            type="radio"
+            name="remoteAccess"
+            checked={mode === "cloudflare"}
+            onChange={() => setMode("cloudflare")}
+            className="mt-0.5 accent-orange-500"
+          />
+          <div>
+            <div className="text-sm font-medium text-neutral-200">
+              Cloudflare Tunnel{" "}
+              <span className="text-[10px] text-amber-400 font-normal ml-1">easiest setup</span>
+            </div>
+            <div className="text-xs text-neutral-500">
+              Access from anywhere via HTTPS. Only requires{" "}
+              <code className="text-[10px] bg-[var(--glass-input-bg)] px-1 rounded">
+                cloudflared
+              </code>{" "}
+              on the server.
+            </div>
+          </div>
+        </label>
+      </div>
+
+      {/* Security warning for non-local modes */}
+      {mode !== "local" && (
+        <div className="mt-3 rounded-xl border border-amber-800/50 bg-amber-950/20 p-3 text-xs">
+          <div className="font-semibold text-amber-400 mb-2">What stays on your machine:</div>
+          <ul className="space-y-1 text-neutral-400 mb-3">
+            <li className="flex items-center gap-1.5">
+              <span className="text-green-400">✓</span> API keys and exchange credentials
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-green-400">✓</span> Audit logs and trade records
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-green-400">✓</span> Order execution (trades placed from this
+              machine)
+            </li>
+          </ul>
+          <div className="font-semibold text-amber-400 mb-2">What becomes remotely viewable:</div>
+          <ul className="space-y-1 text-neutral-400">
+            <li className="flex items-center gap-1.5">
+              <span className="text-amber-400">→</span> Dashboard UI (positions, P&L, charts)
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-amber-400">→</span> Kill switch toggle
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-amber-400">→</span> Trade approval queue
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {/* Tailscale-specific instructions */}
+      {mode === "tailscale" && (
+        <div className="mt-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-input-bg)] p-3 text-xs space-y-2">
+          <div className="font-medium text-neutral-300">Setup</div>
+          <ol className="space-y-1.5 text-neutral-400 list-decimal list-inside">
+            <li>
+              Install{" "}
+              <a
+                href="https://tailscale.com/download"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                Tailscale
+              </a>{" "}
+              on this server <strong className="text-neutral-300">and</strong> every device you want
+              to access the dashboard from
+            </li>
+            <li>Sign in to the same Tailscale network on both</li>
+            <li>
+              Click &quot;Save &amp; Restart&quot; below — the dashboard will bind to your Tailscale
+              IP
+            </li>
+            <li>
+              Open{" "}
+              <code className="bg-[var(--glass-input-bg)] px-1 rounded text-[10px]">
+                http://&lt;tailscale-ip&gt;:18789
+              </code>{" "}
+              from any connected device
+            </li>
+          </ol>
+          <p className="text-[10px] text-neutral-500 mt-2">
+            Tailscale uses WireGuard — traffic is encrypted end-to-end. Not even Tailscale&apos;s
+            relay servers can decrypt your data.
+          </p>
+        </div>
+      )}
+
+      {/* Cloudflare-specific instructions */}
+      {mode === "cloudflare" && (
+        <div className="mt-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-input-bg)] p-3 text-xs space-y-2">
+          <div className="font-medium text-neutral-300">Setup</div>
+          <ol className="space-y-1.5 text-neutral-400 list-decimal list-inside">
+            <li>
+              Install{" "}
+              <a
+                href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                cloudflared
+              </a>{" "}
+              on this server (no install needed on your phone/laptop)
+            </li>
+            <li>
+              Run:{" "}
+              <code className="bg-[var(--glass-input-bg)] px-1 rounded text-[10px]">
+                cloudflared tunnel --url http://localhost:18789
+              </code>
+            </li>
+            <li>Copy the tunnel URL below and click &quot;Save &amp; Restart&quot;</li>
+          </ol>
+          <div className="mt-2">
+            <label className="text-[10px] text-neutral-500 block mb-1">Tunnel URL</label>
+            <input
+              type="text"
+              value={tunnelUrl}
+              onChange={(e) => setTunnelUrl(e.target.value)}
+              placeholder="https://your-tunnel.cfargotunnel.com"
+              className="w-full bg-[var(--glass-input-bg)] border border-[var(--glass-border)] rounded px-2 py-1.5 text-xs text-neutral-200 placeholder:text-neutral-600 focus:border-orange-500 focus:outline-none"
+            />
+          </div>
+          <p className="text-[10px] text-amber-500 mt-1">
+            Cloudflare decrypts traffic at their edge — they can technically see dashboard data in
+            transit. Your API keys are never sent to the dashboard, so they remain safe.
+          </p>
+        </div>
+      )}
+
+      {/* Save button */}
+      {mode !== "local" && (
+        <div className="mt-3">
+          <button
+            onClick={handleSave}
+            disabled={saveStatus === "saving" || (mode === "cloudflare" && !tunnelUrl.trim())}
+            className={cn(
+              "px-4 py-2 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300",
+              saveStatus === "saved"
+                ? "bg-green-700 text-white"
+                : "bg-orange-600 hover:bg-orange-500 text-white hover:shadow-lg hover:shadow-orange-900/30",
+              (saveStatus === "saving" || (mode === "cloudflare" && !tunnelUrl.trim())) &&
+                "opacity-50 cursor-not-allowed",
+            )}
+          >
+            {saveStatus === "saving"
+              ? "Saving..."
+              : saveStatus === "saved"
+                ? "Saved — Restart Gateway to Apply"
+                : "Save & Restart Gateway"}
+          </button>
+          {saveStatus === "error" && saveError && (
+            <p className="text-xs text-red-400 mt-1.5">{saveError}</p>
+          )}
+          {saveStatus === "error" && !saveError && (
+            <p className="text-xs text-red-400 mt-1.5">
+              Gateway not reachable — start Tigerpaw first
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={cn(
+        "relative w-10 h-5 rounded-full transition-colors duration-200 cursor-pointer shrink-0",
+        enabled ? "bg-orange-600" : "bg-neutral-700",
+      )}
+    >
+      <span
+        className={cn(
+          "absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200",
+          enabled && "translate-x-5",
+        )}
+      />
+    </button>
+  );
+}
+
+function NotificationSettings() {
+  const toastsEnabled = useNotificationStore((s) => s.toastsEnabled);
+  const setToastsEnabled = useNotificationStore((s) => s.setToastsEnabled);
+  const browserNotificationsEnabled = useNotificationStore((s) => s.browserNotificationsEnabled);
+  const setBrowserNotifications = useNotificationStore((s) => s.setBrowserNotifications);
+  const platformFilters = useNotificationStore((s) => s.platformFilters);
+  const setPlatformFilter = useNotificationStore((s) => s.setPlatformFilter);
+  const { platforms } = useTradingStore();
+
+  const handleBrowserToggle = (enabled: boolean) => {
+    if (
+      enabled &&
+      typeof globalThis.Notification !== "undefined" &&
+      Notification.permission === "default"
+    ) {
+      void Notification.requestPermission().then((perm) => {
+        setBrowserNotifications(perm === "granted");
+      });
+    } else {
+      setBrowserNotifications(enabled);
+    }
+  };
+
+  const allEnabled = Object.values(platformFilters).every(Boolean);
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">Notifications</h3>
+      <div className="space-y-3">
+        {/* Toast popups */}
+        <label className="flex items-center justify-between cursor-pointer">
+          <div>
+            <div className="text-sm text-neutral-200">Toast Popups</div>
+            <div className="text-[11px] text-neutral-500">
+              Show temporary notifications in the bottom-right corner
+            </div>
+          </div>
+          <ToggleSwitch enabled={toastsEnabled} onToggle={() => setToastsEnabled(!toastsEnabled)} />
+        </label>
+
+        {/* Browser notifications */}
+        <label className="flex items-center justify-between cursor-pointer">
+          <div>
+            <div className="text-sm text-neutral-200">Browser Notifications</div>
+            <div className="text-[11px] text-neutral-500">
+              Desktop alerts for errors and warnings (even when tab is in background)
+            </div>
+          </div>
+          <ToggleSwitch
+            enabled={browserNotificationsEnabled}
+            onToggle={() => handleBrowserToggle(!browserNotificationsEnabled)}
+          />
+        </label>
+
+        {/* Per-platform filters */}
+        <div className="pt-2 border-t border-[var(--glass-divider)]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs font-medium text-neutral-400">Notify by Platform</div>
+            <button
+              onClick={() => {
+                const newVal = !allEnabled;
+                for (const id of Object.keys(platformFilters)) {
+                  setPlatformFilter(id, newVal);
+                }
+              }}
+              className="text-[10px] text-orange-500/70 hover:text-orange-400 transition-colors cursor-pointer"
+            >
+              {allEnabled ? "Disable All" : "Enable All"}
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {Object.entries(platforms).map(([id, p]) => {
+              const enabled = platformFilters[id] !== false;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setPlatformFilter(id, !enabled)}
+                  className={cn(
+                    "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-all duration-200 cursor-pointer border",
+                    enabled
+                      ? "border-orange-600/40 bg-orange-950/20 text-neutral-200"
+                      : "border-[var(--glass-border)] bg-[var(--glass-divider)] text-neutral-500",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "w-1.5 h-1.5 rounded-full shrink-0 transition-colors",
+                      enabled ? "bg-orange-500" : "bg-neutral-600",
+                    )}
+                  />
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="text-[10px] text-neutral-600 mt-2">
+            Global events (kill switch, limit warnings) are always shown regardless of platform
+            filter.
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="text-[10px] text-neutral-600 pt-1 border-t border-[var(--glass-divider)]">
+          Up to 50 notifications are kept in memory. The bell badge shows up to 9+. Notifications
+          persist until dismissed or cleared.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function TradingSettingsPage() {
   const {
     tier,
@@ -295,6 +721,12 @@ export function TradingSettingsPage() {
 
       {/* Data Source */}
       <DataModeSelector />
+
+      {/* Remote Dashboard Access */}
+      <RemoteAccessSection />
+
+      {/* Notifications */}
+      <NotificationSettings />
 
       {/* Risk Tier */}
       <div className="rounded-2xl glass-panel p-4 transition-all duration-300">

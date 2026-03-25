@@ -1,6 +1,6 @@
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 function Sparkline({
   data,
@@ -69,9 +69,9 @@ export function DailyPnlBar() {
     .join("\n");
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
+    <TooltipPrimitive.Provider delayDuration={200}>
+      <TooltipPrimitive.Root>
+        <TooltipPrimitive.Trigger asChild>
           <div className="hidden sm:flex items-center gap-3 text-xs cursor-pointer">
             <span className="text-neutral-500">Daily P&L:</span>
             <span className={cn("font-mono font-semibold", pnlColor)}>
@@ -93,24 +93,30 @@ export function DailyPnlBar() {
             </div>
             <span className="text-neutral-600">{usedPct}%</span>
           </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="text-xs space-y-1">
-            <div>
-              Daily P&L:{" "}
-              <span className={pnlColor}>
-                {pnlSign}${Math.abs(dailyPnlUsd).toFixed(2)}
-              </span>
+        </TooltipPrimitive.Trigger>
+        <TooltipPrimitive.Portal>
+          <TooltipPrimitive.Content
+            sideOffset={8}
+            className="z-50 rounded-xl border border-[var(--glass-chrome-border)] bg-[var(--glass-tooltip)] backdrop-blur-xl px-3 py-2 text-xs text-neutral-200 shadow-lg shadow-black/30"
+          >
+            <div className="space-y-1">
+              <div>
+                Daily P&L:{" "}
+                <span className={pnlColor}>
+                  {pnlSign}${Math.abs(dailyPnlUsd).toFixed(2)}
+                </span>
+              </div>
+              <div>
+                Loss limit used: {usedPct}% ({lossPercent.toFixed(1)}% / {limitPercent}%)
+              </div>
+              <div className="border-t border-[var(--glass-subtle-hover)] pt-1 mt-1 whitespace-pre">
+                {platformSummary}
+              </div>
             </div>
-            <div>
-              Loss limit used: {usedPct}% ({lossPercent.toFixed(1)}% / {limitPercent}%)
-            </div>
-            <div className="border-t border-[var(--glass-subtle-hover)] pt-1 mt-1 whitespace-pre">
-              {platformSummary}
-            </div>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+            <TooltipPrimitive.Arrow className="fill-[var(--glass-tooltip)]" />
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
+      </TooltipPrimitive.Root>
+    </TooltipPrimitive.Provider>
   );
 }

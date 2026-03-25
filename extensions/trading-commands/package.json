@@ -1,0 +1,12 @@
+{
+  "name": "@tigerpaw/trading-commands",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Unified cross-platform trading tools for messaging channels",
+  "type": "module",
+  "tigerpaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

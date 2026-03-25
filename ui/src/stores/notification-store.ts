@@ -12,21 +12,116 @@ export type TradingNotification = {
   dismissed: boolean;
 };
 
+/** Per-platform notification filter. Key = platform ID, value = enabled. */
+export type PlatformNotificationFilters = Record<string, boolean>;
+
 type NotificationState = {
   notifications: TradingNotification[];
   browserNotificationsEnabled: boolean;
+  toastsEnabled: boolean;
+  platformFilters: PlatformNotificationFilters;
   addNotification: (n: Omit<TradingNotification, "id" | "dismissed">) => void;
   dismissNotification: (id: string) => void;
   clearAll: () => void;
   setBrowserNotifications: (enabled: boolean) => void;
+  setToastsEnabled: (enabled: boolean) => void;
+  setPlatformFilter: (platformId: string, enabled: boolean) => void;
+  isPlatformEnabled: (platformId: string) => boolean;
   undismissedCount: () => number;
 };
 
-let nextId = 1;
+const DEMO_NOTIFICATIONS: TradingNotification[] = [
+  {
+    id: "demo-1",
+    type: "trading.order.approved",
+    title: "Order Approved: AAPL BUY",
+    description: "Auto-approved — AAPL BUY 10 shares $2,190.00 via alpaca",
+    severity: "success",
+    timestamp: Date.now() - 45_000,
+    dismissed: false,
+  },
+  {
+    id: "demo-2",
+    type: "trading.order.denied",
+    title: "Order Denied: TSLA BUY",
+    description: "Daily spend limit exceeded — TSLA BUY 3 shares $850.00 via alpaca",
+    severity: "error",
+    timestamp: Date.now() - 120_000,
+    dismissed: false,
+  },
+  {
+    id: "demo-3",
+    type: "trading.killswitch.activated",
+    title: "Kill Switch Activated",
+    description: "Hard mode [global] — daily loss limit breached (3.2%)",
+    severity: "error",
+    timestamp: Date.now() - 300_000,
+    dismissed: false,
+  },
+  {
+    id: "demo-4",
+    type: "trading.limit.warning",
+    title: "Limit Warning: dailySpend",
+    description: "Daily spend at 82% of $100 limit",
+    severity: "warning",
+    timestamp: Date.now() - 600_000,
+    dismissed: false,
+  },
+  {
+    id: "demo-5",
+    type: "trading.order.pending",
+    title: "Order Pending: NVDA BUY",
+    description: "Awaiting manual approval — NVDA BUY 5 shares $1,340.00 via alpaca",
+    severity: "info",
+    timestamp: Date.now() - 900_000,
+    dismissed: false,
+  },
+  {
+    id: "demo-6",
+    type: "trading.order.filled",
+    title: "Order Filled: BTC-USD",
+    description: "BTC-USD BUY $500.00 via coinbase",
+    severity: "success",
+    timestamp: Date.now() - 1_200_000,
+    dismissed: false,
+  },
+  {
+    id: "demo-7",
+    type: "trading.killswitch.deactivated",
+    title: "Kill Switch Deactivated",
+    description: "Global kill switch off — trading resumed",
+    severity: "success",
+    timestamp: Date.now() - 1_800_000,
+    dismissed: true,
+  },
+  {
+    id: "demo-8",
+    type: "trading.order.denied",
+    title: "Order Denied: Will Bitcoin hit $150k?",
+    description: "Max open positions reached — via polymarket",
+    severity: "error",
+    timestamp: Date.now() - 2_400_000,
+    dismissed: true,
+  },
+];
+
+let nextId = 100;
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
-  notifications: [],
+  notifications: DEMO_NOTIFICATIONS,
   browserNotificationsEnabled: false,
+  toastsEnabled: true,
+  platformFilters: {
+    alpaca: true,
+    polymarket: true,
+    kalshi: true,
+    manifold: true,
+    coinbase: true,
+    ibkr: true,
+    binance: true,
+    kraken: true,
+    dydx: true,
+  },
 
   addNotification: (n) => {
     const id = `notif-${nextId++}`;
@@ -64,6 +159,19 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     })),
 
   setBrowserNotifications: (enabled) => set({ browserNotificationsEnabled: enabled }),
+
+  setToastsEnabled: (enabled) => set({ toastsEnabled: enabled }),
+
+  setPlatformFilter: (platformId, enabled) =>
+    set((s) => ({
+      platformFilters: { ...s.platformFilters, [platformId]: enabled },
+    })),
+
+  isPlatformEnabled: (platformId) => {
+    const val = get().platformFilters[platformId];
+    // Undefined (not in filters) defaults to enabled
+    return val ?? true;
+  },
 
   undismissedCount: () => get().notifications.filter((n) => !n.dismissed).length,
 }));

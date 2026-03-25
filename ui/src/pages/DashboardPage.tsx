@@ -32,7 +32,7 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="rounded-2xl glass-panel-interactive p-4 hover:shadow-xl hover:shadow-black/40 transition-all duration-300">
+    <div className="rounded-2xl glass-panel p-4">
       <div className="text-xs text-neutral-500 mb-1">{label}</div>
       <div className={cn("text-2xl font-bold font-mono", color ?? "text-neutral-100")}>{value}</div>
       {subtext && <div className="text-xs text-neutral-500 mt-1">{subtext}</div>}

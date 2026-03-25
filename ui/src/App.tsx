@@ -1,5 +1,6 @@
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { ToastNotifications } from "./components/ToastNotifications";
 import { AlpacaPage } from "./pages/AlpacaPage";
 import { BinancePage } from "./pages/BinancePage";
 import { ChannelsPage } from "./pages/ChannelsPage";
@@ -41,5 +42,10 @@ const router = createHashRouter([
 ]);
 
 export function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastNotifications />
+    </>
+  );
 }

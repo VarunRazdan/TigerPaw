@@ -1,0 +1,13 @@
+{
+  "id": "trading-commands",
+  "kind": "trading",
+  "permissions": {
+    "trading": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {},
+    "required": []
+  }
+}

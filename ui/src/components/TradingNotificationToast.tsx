@@ -1,7 +1,11 @@
 import { Bell, X, CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useNotificationStore, type NotificationSeverity } from "@/stores/notification-store";
+import {
+  useNotificationStore,
+  type NotificationSeverity,
+  eventSeverity,
+} from "@/stores/notification-store";
 
 function SeverityIcon({ severity }: { severity: NotificationSeverity }) {
   switch (severity) {
@@ -23,12 +27,54 @@ const SEVERITY_BG: Record<NotificationSeverity, string> = {
   info: "bg-blue-900/20",
 };
 
+const DEMO_EVENTS = [
+  {
+    type: "trading.order.approved",
+    title: "Order Approved: AAPL BUY",
+    description: "Auto-approved — AAPL BUY 10 shares $2,190.00 via alpaca",
+  },
+  {
+    type: "trading.order.denied",
+    title: "Order Denied: TSLA BUY",
+    description: "Daily spend limit exceeded — TSLA BUY 3 shares $850.00",
+  },
+  {
+    type: "trading.killswitch.activated",
+    title: "Kill Switch Activated",
+    description: "Hard mode [global] — daily loss limit breached (3.2%)",
+  },
+  {
+    type: "trading.limit.warning",
+    title: "Limit Warning: dailySpend",
+    description: "Daily spend at 82% of $100 limit",
+  },
+  {
+    type: "trading.order.filled",
+    title: "Order Filled: BTC-USD",
+    description: "BTC-USD BUY $500.00 via coinbase",
+  },
+];
+let demoIdx = 0;
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const notifications = useNotificationStore((s) => s.notifications);
   const undismissedCount = notifications.filter((n) => !n.dismissed).length;
   const dismissNotification = useNotificationStore((s) => s.dismissNotification);
   const clearAll = useNotificationStore((s) => s.clearAll);
+  const addNotification = useNotificationStore((s) => s.addNotification);
+
+  const fireTestNotification = () => {
+    const demo = DEMO_EVENTS[demoIdx % DEMO_EVENTS.length];
+    demoIdx++;
+    addNotification({
+      type: demo.type,
+      title: demo.title,
+      description: demo.description,
+      severity: eventSeverity(demo.type),
+      timestamp: Date.now(),
+    });
+  };
 
   return (
     <div className="relative">
@@ -55,14 +101,25 @@ export function NotificationBell() {
               <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                 Notifications
               </span>
-              {undismissedCount > 0 && (
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={clearAll}
-                  className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors cursor-pointer"
+                  onClick={fireTestNotification}
+                  className="text-[10px] text-orange-500/70 hover:text-orange-400 transition-colors cursor-pointer"
                 >
-                  Clear all
+                  Test
                 </button>
-              )}
+                {undismissedCount > 0 && (
+                  <button
+                    onClick={() => {
+                      clearAll();
+                      setOpen(false);
+                    }}
+                    className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
             </div>
 
             {notifications.length === 0 ? (
