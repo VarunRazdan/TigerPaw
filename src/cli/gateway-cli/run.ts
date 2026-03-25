@@ -35,7 +35,7 @@ import {
   toOptionString,
 } from "./shared.js";
 
-type GatewayRunOpts = {
+export type GatewayRunOpts = {
   port?: unknown;
   bind?: unknown;
   token?: unknown;
@@ -54,6 +54,9 @@ type GatewayRunOpts = {
   rawStreamPath?: unknown;
   dev?: boolean;
   reset?: boolean;
+  open?: boolean;
+  /** Called once after the gateway server is ready. */
+  onReady?: () => void | Promise<void>;
 };
 
 const gatewayLog = createSubsystemLogger("gateway");
@@ -157,7 +160,7 @@ function resolveGatewayRunOptions(opts: GatewayRunOpts, command?: Command): Gate
   return resolved;
 }
 
-async function runGatewayCommand(opts: GatewayRunOpts) {
+export async function runGatewayCommand(opts: GatewayRunOpts) {
   const isDevProfile = process.env.OPENCLAW_PROFILE?.trim().toLowerCase() === "dev";
   const devMode = Boolean(opts.dev) || isDevProfile;
   if (opts.reset && !devMode) {
@@ -198,7 +201,7 @@ async function runGatewayCommand(opts: GatewayRunOpts) {
     await ensureDevGatewayConfig({ reset: Boolean(opts.reset) });
   }
 
-  const cfg = loadConfig();
+  let cfg = loadConfig();
   const portOverride = parsePort(opts.port);
   if (opts.port !== undefined && portOverride === null) {
     defaultRuntime.error("Invalid port");
@@ -314,20 +317,23 @@ async function runGatewayCommand(opts: GatewayRunOpts) {
   const snapshot = await readConfigFileSnapshot().catch(() => null);
   const configExists = snapshot?.exists ?? fs.existsSync(CONFIG_PATH);
   const configAuditPath = path.join(resolveStateDir(process.env), "logs", "config-audit.jsonl");
-  const mode = cfg.gateway?.mode;
+  let mode = cfg.gateway?.mode;
   if (!opts.allowUnconfigured && mode !== "local") {
     if (!configExists) {
-      defaultRuntime.error(
-        `Missing config. Run \`${formatCliCommand("openclaw setup")}\` or set gateway.mode=local (or pass --allow-unconfigured).`,
-      );
+      // First-run: auto-create minimal config instead of erroring.
+      gatewayLog.info("No config found — running first-time setup...");
+      const { setupCommand } = await import("../../commands/setup.js");
+      await setupCommand(undefined, defaultRuntime);
+      cfg = loadConfig();
+      mode = cfg.gateway?.mode;
     } else {
       defaultRuntime.error(
         `Gateway start blocked: set gateway.mode=local (current: ${mode ?? "unset"}) or pass --allow-unconfigured.`,
       );
       defaultRuntime.error(`Config write audit: ${configAuditPath}`);
+      defaultRuntime.exit(1);
+      return;
     }
-    defaultRuntime.exit(1);
-    return;
   }
   const miskeys = extractGatewayMiskeys(snapshot?.parsed);
   const authOverride =
@@ -422,6 +428,7 @@ async function runGatewayCommand(opts: GatewayRunOpts) {
     await runGatewayLoop({
       runtime: defaultRuntime,
       lockPort: port,
+      onReady: opts.onReady,
       start: async () =>
         await startGatewayServer(port, {
           bind,
@@ -436,7 +443,7 @@ async function runGatewayCommand(opts: GatewayRunOpts) {
     ) {
       const errMessage = describeUnknownError(err);
       defaultRuntime.error(
-        `Gateway failed to start: ${errMessage}\nIf the gateway is supervised, stop it with: ${formatCliCommand("openclaw gateway stop")}`,
+        `Gateway failed to start: ${errMessage}\nIf the gateway is supervised, stop it with: ${formatCliCommand("tigerpaw gateway stop")}`,
       );
       try {
         const diagnostics = await inspectPortUsage(port);
@@ -502,7 +509,15 @@ export function addGatewayRunCommand(cmd: Command): Command {
     .option("--compact", 'Alias for "--ws-log compact"', false)
     .option("--raw-stream", "Log raw model stream events to jsonl", false)
     .option("--raw-stream-path <path>", "Raw stream jsonl path")
+    .option("--open", "Open the dashboard in the browser after startup", false)
     .action(async (opts, command) => {
-      await runGatewayCommand(resolveGatewayRunOptions(opts, command));
+      const resolved = resolveGatewayRunOptions(opts, command);
+      if (resolved.open) {
+        resolved.onReady = async () => {
+          const { dashboardCommand } = await import("../../commands/dashboard.js");
+          await dashboardCommand(defaultRuntime);
+        };
+      }
+      await runGatewayCommand(resolved);
     });
 }

@@ -15,7 +15,7 @@ const DEMO_EVENTS = [
 
 function EventCard({ event }: { event: (typeof DEMO_EVENTS)[0] }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
       <div className="flex items-center gap-2 mb-2">
         <Badge variant="outline" className="text-[10px]">
           {event.series}
@@ -66,7 +66,7 @@ export function KalshiPage() {
           className={cn(
             platform?.connected
               ? "bg-green-900 text-green-300 border-green-800"
-              : "bg-white/[0.06] text-neutral-400 border-white/[0.08] cursor-pointer hover:bg-white/[0.10] hover:text-orange-400",
+              : "bg-[var(--glass-subtle-hover)] text-neutral-400 border-[var(--glass-subtle-hover)] cursor-pointer hover:bg-[var(--glass-border)] hover:text-orange-400",
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
@@ -80,19 +80,19 @@ export function KalshiPage() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-3">
+        <div className="rounded-2xl glass-panel p-3">
           <div className="text-xs text-neutral-500">Balance</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$500.00</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-3">
+        <div className="rounded-2xl glass-panel p-3">
           <div className="text-xs text-neutral-500">Positions</div>
           <div className="text-lg font-bold font-mono text-neutral-100">{positions.length}</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-3">
+        <div className="rounded-2xl glass-panel p-3">
           <div className="text-xs text-neutral-500">Pending Payouts</div>
           <div className="text-lg font-bold font-mono text-green-400">$84.00</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-3">
+        <div className="rounded-2xl glass-panel p-3">
           <div className="text-xs text-neutral-500">Total P&L</div>
           <div className="text-lg font-bold font-mono text-red-400">-$29.60</div>
         </div>
@@ -114,7 +114,7 @@ export function KalshiPage() {
         </TabsContent>
 
         <TabsContent value="positions">
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+          <div className="rounded-2xl glass-panel p-4">
             {positions.length === 0 ? (
               <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
             ) : (
@@ -122,7 +122,7 @@ export function KalshiPage() {
                 {positions.map((pos) => (
                   <div
                     key={pos.symbol}
-                    className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.04] transition-colors duration-200 cursor-pointer"
+                    className="flex items-center justify-between py-2 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 cursor-pointer"
                   >
                     <div>
                       <div className="text-sm font-medium text-neutral-200">{pos.symbol}</div>
@@ -149,7 +149,7 @@ export function KalshiPage() {
         </TabsContent>
 
         <TabsContent value="history">
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+          <div className="rounded-2xl glass-panel p-4">
             <p className="text-xs text-neutral-600 py-4 text-center">
               Order history loads from audit log
             </p>

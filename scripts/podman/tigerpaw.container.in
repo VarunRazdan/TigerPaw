@@ -1,18 +1,18 @@
-# OpenClaw gateway — Podman Quadlet (rootless)
-# Installed by setup-podman.sh into openclaw's ~/.config/containers/systemd/
-# {{OPENCLAW_HOME}} is replaced at install time.
+# Tigerpaw gateway — Podman Quadlet (rootless)
+# Installed by setup-podman.sh into tigerpaw's ~/.config/containers/systemd/
+# {{TIGERPAW_HOME}} is replaced at install time.
 
 [Unit]
-Description=OpenClaw gateway (rootless Podman)
+Description=Tigerpaw gateway (rootless Podman)
 
 [Container]
-Image=openclaw:local
-ContainerName=openclaw
+Image=tigerpaw:local
+ContainerName=tigerpaw
 UserNS=keep-id
 # Keep container UID/GID aligned with the invoking user so mounted config is readable.
 User=%U:%G
-Volume={{OPENCLAW_HOME}}/.openclaw:/home/node/.openclaw:Z
-EnvironmentFile={{OPENCLAW_HOME}}/.openclaw/.env
+Volume={{TIGERPAW_HOME}}/.tigerpaw:/home/node/.tigerpaw:Z
+EnvironmentFile={{TIGERPAW_HOME}}/.tigerpaw/.env
 Environment=HOME=/home/node
 Environment=TERM=xterm-256color
 PublishPort=18789:18789

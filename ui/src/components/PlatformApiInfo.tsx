@@ -18,7 +18,8 @@ const AUTH_SCHEME_COLORS: Record<string, string> = {
   "API Key Bearer": "bg-amber-900 text-amber-300 border-amber-800",
   "Bearer JWT": "bg-purple-900 text-purple-300 border-purple-800",
   "ES256 JWT (CDP Key)": "bg-purple-900 text-purple-300 border-purple-800",
-  "Session-based": "bg-white/[0.06] text-neutral-300 border-white/[0.08]",
+  "Session-based":
+    "bg-[var(--glass-subtle-hover)] text-neutral-300 border-[var(--glass-subtle-hover)]",
   "Cosmos SDK": "bg-indigo-900 text-indigo-300 border-indigo-800",
 };
 
@@ -27,10 +28,10 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
   const { platformKillSwitches, togglePlatformKillSwitch } = useTradingStore();
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30">
+    <div className="rounded-2xl glass-panel">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/[0.04] transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[var(--glass-divider)] transition-colors cursor-pointer"
       >
         <h3 className="text-sm font-semibold text-neutral-300">Platform API Details</h3>
         <span className="text-xs text-neutral-500">{expanded ? "Hide ▲" : "Show ▼"}</span>
@@ -41,7 +42,7 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-neutral-500 border-b border-white/[0.08]">
+                <tr className="text-neutral-500 border-b border-[var(--glass-border)]">
                   <th className="text-left py-2 pr-3 font-medium">Platform</th>
                   <th className="text-left py-2 pr-3 font-medium">API</th>
                   <th className="text-left py-2 pr-3 font-medium">Auth Scheme</th>
@@ -57,7 +58,7 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
                     <tr
                       key={id}
                       className={cn(
-                        "border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition-colors duration-200",
+                        "border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-subtle)] transition-colors duration-200",
                         !platform.connected && "opacity-50",
                       )}
                     >
@@ -85,7 +86,7 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
                               className={cn(
                                 "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium border cursor-default",
                                 AUTH_SCHEME_COLORS[platform.api.authScheme] ??
-                                  "bg-white/[0.06] text-neutral-300 border-white/[0.08]",
+                                  "bg-[var(--glass-subtle-hover)] text-neutral-300 border-[var(--glass-subtle-hover)]",
                               )}
                             >
                               {platform.api.authScheme}

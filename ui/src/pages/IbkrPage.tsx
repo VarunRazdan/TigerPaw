@@ -51,7 +51,7 @@ export function IbkrPage() {
           className={cn(
             platform?.connected
               ? "bg-green-900 text-green-300 border-green-800"
-              : "bg-white/[0.06] text-neutral-400 border-white/[0.08] cursor-pointer hover:bg-white/[0.10] hover:text-orange-400",
+              : "bg-[var(--glass-subtle-hover)] text-neutral-400 border-[var(--glass-subtle-hover)] cursor-pointer hover:bg-[var(--glass-border)] hover:text-orange-400",
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
@@ -71,19 +71,19 @@ export function IbkrPage() {
       <TradingViewChart symbol="NASDAQ:AAPL" height={380} />
 
       <div className="grid grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
+        <div className="rounded-2xl glass-panel px-3 py-3.5">
           <div className="text-xs text-neutral-500">Net Liq. Value</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$125,400</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
+        <div className="rounded-2xl glass-panel px-3 py-3.5">
           <div className="text-xs text-neutral-500">Buying Power</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$250,800</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
+        <div className="rounded-2xl glass-panel px-3 py-3.5">
           <div className="text-xs text-neutral-500">Margin Used</div>
           <div className="text-lg font-bold font-mono text-amber-400">$18,200</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
+        <div className="rounded-2xl glass-panel px-3 py-3.5">
           <div className="text-xs text-neutral-500">Daily P&L</div>
           <div className="text-lg font-bold font-mono text-green-400">+$1,045</div>
         </div>
@@ -99,10 +99,10 @@ export function IbkrPage() {
             </TabsList>
 
             <TabsContent value="positions">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 overflow-x-auto">
+              <div className="rounded-2xl glass-panel overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-xs text-neutral-500 border-b border-white/[0.08]">
+                    <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
                       <th className="py-2 px-3 text-left font-medium">Symbol</th>
                       <th className="py-2 px-3 text-left font-medium">Description</th>
                       <th className="py-2 px-3 text-right font-medium">Qty</th>
@@ -115,7 +115,7 @@ export function IbkrPage() {
                     {DEMO_POSITIONS.map((pos) => (
                       <tr
                         key={pos.symbol}
-                        className="text-xs border-b border-white/[0.04] hover:bg-white/[0.04] transition-colors duration-200"
+                        className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200"
                       >
                         <td className="py-2 px-3 font-medium text-neutral-200">{pos.symbol}</td>
                         <td className="py-2 px-3 text-neutral-400">{pos.description}</td>
@@ -144,13 +144,13 @@ export function IbkrPage() {
             </TabsContent>
 
             <TabsContent value="orders">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+              <div className="rounded-2xl glass-panel p-4">
                 <p className="text-xs text-neutral-600 py-4 text-center">No open orders</p>
               </div>
             </TabsContent>
 
             <TabsContent value="history">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+              <div className="rounded-2xl glass-panel p-4">
                 <p className="text-xs text-neutral-600 py-4 text-center">
                   Trade history loads from audit log
                 </p>

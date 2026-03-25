@@ -50,14 +50,14 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          tags: openclaw-dockerfile-smoke:local
+          tags: tigerpaw-dockerfile-smoke:local
           load: true
           push: false
           provenance: false
 
       - name: Run root Dockerfile CLI smoke
         run: |
-          docker run --rm --entrypoint sh openclaw-dockerfile-smoke:local -lc 'which openclaw && openclaw --version'
+          docker run --rm --entrypoint sh tigerpaw-dockerfile-smoke:local -lc 'which tigerpaw && tigerpaw --version'
 
       # This smoke only validates that the build-arg path preinstalls selected
       # extension deps without breaking image build or basic CLI startup. It
@@ -68,22 +68,22 @@ jobs:
           context: .
           file: ./Dockerfile
           build-args: |
-            OPENCLAW_EXTENSIONS=diagnostics-otel
-          tags: openclaw-ext-smoke:local
+            TIGERPAW_EXTENSIONS=diagnostics-otel
+          tags: tigerpaw-ext-smoke:local
           load: true
           push: false
           provenance: false
 
       - name: Smoke test Dockerfile with extension build arg
         run: |
-          docker run --rm --entrypoint sh openclaw-ext-smoke:local -lc 'which openclaw && openclaw --version'
+          docker run --rm --entrypoint sh tigerpaw-ext-smoke:local -lc 'which tigerpaw && tigerpaw --version'
 
       - name: Build installer smoke image
         uses: useblacksmith/build-push-action@v2
         with:
           context: ./scripts/docker
           file: ./scripts/docker/install-sh-smoke/Dockerfile
-          tags: openclaw-install-smoke:local
+          tags: tigerpaw-install-smoke:local
           load: true
           push: false
           provenance: false
@@ -94,7 +94,7 @@ jobs:
         with:
           context: ./scripts/docker
           file: ./scripts/docker/install-sh-nonroot/Dockerfile
-          tags: openclaw-install-nonroot:local
+          tags: tigerpaw-install-nonroot:local
           load: true
           push: false
           provenance: false

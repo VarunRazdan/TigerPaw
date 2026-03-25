@@ -44,7 +44,7 @@ export function SlippageTracker() {
 
   if (!stats) {
     return (
-      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+      <div className="rounded-2xl glass-panel p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Slippage Tracker</h3>
         <p className="text-xs text-neutral-600 py-4 text-center">
           No filled orders with price data yet
@@ -54,7 +54,7 @@ export function SlippageTracker() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+    <div className="rounded-2xl glass-panel p-4">
       <h3 className="text-sm font-semibold text-neutral-300 mb-3">Slippage Tracker</h3>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -102,7 +102,7 @@ export function SlippageTracker() {
           .map((entry, i) => (
             <div
               key={i}
-              className="flex items-center justify-between text-xs py-1 border-b border-white/[0.04] last:border-0"
+              className="flex items-center justify-between text-xs py-1 border-b border-[var(--glass-divider)] last:border-0"
             >
               <span className="text-neutral-400">
                 {entry.side.toUpperCase()} {entry.symbol}

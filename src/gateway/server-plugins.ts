@@ -202,6 +202,8 @@ export function loadGatewayPlugins(params: {
         : `[plugins] ${diag.message}`;
       if (diag.level === "error") {
         params.log.error(message);
+      } else if (diag.level === "debug") {
+        params.log.debug(message);
       } else {
         params.log.info(message);
       }

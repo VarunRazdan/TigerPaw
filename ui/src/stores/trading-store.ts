@@ -68,7 +68,7 @@ export type PlatformApiInfo = {
 
 export type PlatformStatus = {
   connected: boolean;
-  mode: "live" | "paper" | "demo" | "play";
+  mode: "live" | "paper" | "demo" | "play" | "sandbox" | "testnet" | "mainnet";
   label: string;
   accountInfo?: Record<string, unknown>;
   api: PlatformApiInfo;
@@ -113,6 +113,9 @@ export type TradingState = {
   // P&L history for charts
   pnlHistory: PnlDataPoint[];
 
+  // Demo mode
+  demoMode: boolean;
+
   // Actions
   setKillSwitch: (active: boolean, reason?: string) => void;
   toggleKillSwitch: () => void;
@@ -143,6 +146,7 @@ export type TradingState = {
   togglePlatformKillSwitch: (id: string) => void;
   disconnectPlatform: (id: string) => void;
   setPnlHistory: (history: PnlDataPoint[]) => void;
+  setDemoMode: (enabled: boolean) => void;
 };
 
 const DEFAULT_LIMITS: PolicyLimits = {
@@ -424,7 +428,7 @@ export const useTradingStore = create<TradingState>((set) => ({
     },
     coinbase: {
       connected: true,
-      mode: "demo",
+      mode: "sandbox",
       label: "Coinbase",
       api: {
         apiVersion: "v3",
@@ -448,7 +452,7 @@ export const useTradingStore = create<TradingState>((set) => ({
     },
     binance: {
       connected: false,
-      mode: "demo",
+      mode: "testnet",
       label: "Binance",
       api: {
         apiVersion: "v3",
@@ -472,7 +476,7 @@ export const useTradingStore = create<TradingState>((set) => ({
     },
     dydx: {
       connected: false,
-      mode: "demo",
+      mode: "testnet",
       label: "dYdX",
       api: {
         apiVersion: "v4",
@@ -500,6 +504,8 @@ export const useTradingStore = create<TradingState>((set) => ({
     { date: "Mar 22", pnl: 155 },
     { date: "Mar 23", pnl: 178.5 },
   ],
+
+  demoMode: true,
 
   setKillSwitch: (active, reason) => set({ killSwitchActive: active, killSwitchReason: reason }),
   toggleKillSwitch: () =>
@@ -566,4 +572,5 @@ export const useTradingStore = create<TradingState>((set) => ({
       };
     }),
   setPnlHistory: (history) => set({ pnlHistory: history }),
+  setDemoMode: (enabled) => set({ demoMode: enabled }),
 }));

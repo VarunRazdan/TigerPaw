@@ -20,7 +20,11 @@
     "paths": {
       "openclaw/plugin-sdk": ["./src/plugin-sdk/index.ts"],
       "openclaw/plugin-sdk/*": ["./src/plugin-sdk/*.ts"],
-      "openclaw/plugin-sdk/account-id": ["./src/plugin-sdk/account-id.ts"]
+      "openclaw/plugin-sdk/account-id": ["./src/plugin-sdk/account-id.ts"],
+      "tigerpaw/plugin-sdk": ["./src/plugin-sdk/index.ts"],
+      "tigerpaw/plugin-sdk/*": ["./src/plugin-sdk/*.ts"],
+      "tigerpaw/plugin-sdk/account-id": ["./src/plugin-sdk/account-id.ts"],
+      "tigerpaw/trading": ["./src/trading/index.ts"]
     }
   },
   "include": ["src/**/*", "extensions/**/*"],

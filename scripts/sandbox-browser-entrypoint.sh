@@ -17,7 +17,7 @@ dedupe_chrome_args() {
 }
 
 export DISPLAY=:1
-export HOME=/tmp/openclaw-home
+export HOME=/tmp/tigerpaw-home
 export XDG_CONFIG_HOME="${HOME}/.config"
 export XDG_CACHE_HOME="${HOME}/.cache"
 

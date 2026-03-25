@@ -36,7 +36,7 @@ export function KrakenPage() {
           className={
             platform?.connected
               ? "bg-green-900 text-green-300 border-green-800"
-              : "bg-white/[0.06] text-neutral-400 border-white/[0.08] cursor-pointer hover:bg-white/[0.10] hover:text-orange-400"
+              : "bg-[var(--glass-subtle-hover)] text-neutral-400 border-[var(--glass-subtle-hover)] cursor-pointer hover:bg-[var(--glass-border)] hover:text-orange-400"
           }
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
@@ -53,10 +53,7 @@ export function KrakenPage() {
       {prices.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {prices.map((p) => (
-            <div
-              key={p.id}
-              className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5"
-            >
+            <div key={p.id} className="rounded-2xl glass-panel px-3 py-3.5">
               <div className="text-xs text-neutral-500">{p.symbol}</div>
               <div className="text-lg font-bold font-mono text-neutral-100">
                 ${p.priceUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
@@ -79,15 +76,15 @@ export function KrakenPage() {
       <TradingViewChart symbol="KRAKEN:XBTUSD" height={380} />
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
+        <div className="rounded-2xl glass-panel px-3 py-3.5">
           <div className="text-xs text-neutral-500">Total Balance</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$49,417</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
+        <div className="rounded-2xl glass-panel px-3 py-3.5">
           <div className="text-xs text-neutral-500">Trade Volume (30d)</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$12,340</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 px-3 py-3.5">
+        <div className="rounded-2xl glass-panel px-3 py-3.5">
           <div className="text-xs text-neutral-500">Open Positions</div>
           <div className="text-lg font-bold font-mono text-neutral-100">0</div>
         </div>
@@ -103,11 +100,11 @@ export function KrakenPage() {
             </TabsList>
 
             <TabsContent value="balances">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30">
+              <div className="rounded-2xl glass-panel">
                 {DEMO_BALANCES.map((bal) => (
                   <div
                     key={bal.asset}
-                    className="flex items-center justify-between p-3 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.04] transition-colors duration-200 cursor-pointer"
+                    className="flex items-center justify-between p-3 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 cursor-pointer"
                   >
                     <div>
                       <div className="text-sm font-medium text-neutral-200">{bal.name}</div>
@@ -124,13 +121,13 @@ export function KrakenPage() {
             </TabsContent>
 
             <TabsContent value="orders">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+              <div className="rounded-2xl glass-panel p-4">
                 <p className="text-xs text-neutral-600 py-4 text-center">No open orders</p>
               </div>
             </TabsContent>
 
             <TabsContent value="history">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+              <div className="rounded-2xl glass-panel p-4">
                 <p className="text-xs text-neutral-600 py-4 text-center">
                   Trade history loads from audit log
                 </p>

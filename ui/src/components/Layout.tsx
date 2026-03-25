@@ -9,9 +9,10 @@ import {
   ChevronRight,
   Menu,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useThemeStore } from "@/stores/theme-store";
 import { DailyPnlBar } from "./DailyPnlBar";
 import { KillSwitchButton } from "./KillSwitchButton";
 import { NotificationBell } from "./TradingNotificationToast";
@@ -113,12 +114,14 @@ function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean
           "flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-200",
           collapsed && "justify-center px-2",
           isActive
-            ? "bg-white/[0.10] text-neutral-100 shadow-sm shadow-black/30 border border-white/[0.08]"
-            : "text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.07] hover:shadow-sm",
+            ? "bg-[var(--glass-border)] text-neutral-100 shadow-sm shadow-black/30 border border-[var(--glass-active-border)]"
+            : "text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] hover:shadow-sm",
         )
       }
     >
-      {item.icon}
+      <span className={cn("shrink-0 transition-transform duration-200", collapsed && "scale-125")}>
+        {item.icon}
+      </span>
       {!collapsed && <span>{item.label}</span>}
     </NavLink>
   );
@@ -128,15 +131,20 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col border-r border-white/[0.08] bg-black/30 backdrop-blur-2xl transition-all duration-300",
+        "hidden md:flex flex-col h-screen sticky top-0 border-r border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] backdrop-blur-2xl transition-all duration-300",
         collapsed ? "w-14" : "w-56",
       )}
     >
       {/* Logo */}
-      <div className="h-14 flex items-center px-3 border-b border-white/[0.08] shrink-0">
-        <NavLink to="/" className="flex items-center">
-          <span className="text-lg font-bold text-orange-500">T{!collapsed && "iger"}</span>
-          {!collapsed && <span className="text-lg font-bold text-neutral-100">paw</span>}
+      <div
+        className={cn(
+          "h-14 flex items-center border-b border-[var(--glass-chrome-border)] shrink-0",
+          collapsed ? "justify-center" : "px-3",
+        )}
+      >
+        <NavLink to="/" className="flex items-center tracking-tight">
+          <span className="text-lg font-bold text-orange-500">{collapsed ? "T" : "Tiger"}</span>
+          <span className="text-lg font-bold text-neutral-100">{collapsed ? "P" : "Paw"}</span>
         </NavLink>
       </div>
 
@@ -160,12 +168,16 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
       </nav>
 
       {/* Collapse toggle */}
-      <div className="p-2 border-t border-white/[0.08]">
+      <div className="p-2 border-t border-[var(--glass-chrome-border)] shrink-0">
         <button
           onClick={onToggle}
-          className="w-full flex items-center justify-center py-2 rounded-md text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.06] cursor-pointer transition-all duration-200"
+          className={cn(
+            "w-full flex items-center py-2 rounded-md bg-[var(--glass-subtle)] border border-[var(--glass-border)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)] hover:border-[var(--glass-border-hover)] cursor-pointer transition-all duration-200",
+            collapsed ? "justify-center" : "px-3 gap-2",
+          )}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {!collapsed && <span className="text-xs">Compact</span>}
         </button>
       </div>
     </aside>
@@ -185,10 +197,10 @@ function MobileNav() {
       </button>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-64 p-0">
-          <SheetHeader className="p-4 border-b border-white/[0.06]">
+          <SheetHeader className="p-4 border-b border-[var(--glass-subtle-hover)]">
             <SheetTitle>
               <span className="text-orange-500">Tiger</span>
-              <span className="text-neutral-100">paw</span>
+              <span className="text-neutral-100">Paw</span>
             </SheetTitle>
             <SheetDescription className="sr-only">Navigation menu</SheetDescription>
           </SheetHeader>
@@ -230,9 +242,20 @@ function MobileNav() {
 
 export function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const theme = useThemeStore((s) => s.theme);
+
+  // Apply theme to document root so CSS [data-theme] selectors activate
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "tiger-gold") {
+      root.removeAttribute("data-theme");
+    } else {
+      root.setAttribute("data-theme", theme);
+    }
+  }, [theme]);
 
   return (
-    <div className="min-h-screen flex bg-[#1B1B1F]">
+    <div className="min-h-screen flex bg-transparent relative z-[1]">
       {/* Desktop sidebar */}
       <SidebarNav
         collapsed={sidebarCollapsed}
@@ -242,14 +265,14 @@ export function Layout() {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="border-b border-white/[0.08] bg-black/40 backdrop-blur-2xl sticky top-0 z-40">
+        <header className="border-b border-[var(--glass-chrome-border)] bg-[var(--glass-header)] backdrop-blur-2xl sticky top-0 z-40">
           <div className="px-4 h-14 flex items-center gap-4">
             <MobileNav />
 
             {/* Mobile logo */}
             <NavLink to="/" className="md:hidden flex items-center">
               <span className="text-lg font-bold text-orange-500">Tiger</span>
-              <span className="text-lg font-bold text-neutral-100">paw</span>
+              <span className="text-lg font-bold text-neutral-100">Paw</span>
             </NavLink>
 
             {/* Tagline — desktop only */}

@@ -1,6 +1,6 @@
 # Changelog
 
-Docs: https://docs.openclaw.ai
+Docs: https://github.com/varunrazdan/tigerpaw
 
 ## Unreleased
 

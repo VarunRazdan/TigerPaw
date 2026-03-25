@@ -30,7 +30,7 @@ export function registerBrowserCli(program: Command) {
           true,
         )}\n\n${theme.muted("Docs:")} ${formatDocsLink(
           "/cli/browser",
-          "docs.openclaw.ai/cli/browser",
+          "docs.tigerpaw.dev/cli/browser",
         )}\n`,
     )
     .action(() => {

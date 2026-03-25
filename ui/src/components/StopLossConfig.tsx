@@ -59,7 +59,7 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
         value={sl}
         onChange={(e) => setSl(e.target.value)}
         placeholder="SL"
-        className="w-16 px-1.5 py-0.5 rounded bg-white/[0.05] border border-red-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-red-600 cursor-pointer transition-all duration-200"
+        className="w-16 px-1.5 py-0.5 rounded bg-[var(--glass-input-bg)] border border-red-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-red-600 cursor-pointer transition-all duration-200"
       />
       <input
         type="number"
@@ -67,7 +67,7 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
         value={tp}
         onChange={(e) => setTp(e.target.value)}
         placeholder="TP"
-        className="w-16 px-1.5 py-0.5 rounded bg-white/[0.05] border border-green-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-green-600 cursor-pointer transition-all duration-200"
+        className="w-16 px-1.5 py-0.5 rounded bg-[var(--glass-input-bg)] border border-green-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-green-600 cursor-pointer transition-all duration-200"
       />
       <button
         onClick={save}

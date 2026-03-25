@@ -2,8 +2,8 @@
 
 FROM node:22-bookworm-slim@sha256:3cfe526ec8dd62013b8843e8e5d4877e297b886e5aace4a59fec25dc20736e45
 
-RUN --mount=type=cache,id=openclaw-install-sh-smoke-apt-cache,target=/var/cache/apt,sharing=locked \
-  --mount=type=cache,id=openclaw-install-sh-smoke-apt-lists,target=/var/lib/apt,sharing=locked \
+RUN --mount=type=cache,id=tigerpaw-install-sh-smoke-apt-cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,id=tigerpaw-install-sh-smoke-apt-lists,target=/var/lib/apt,sharing=locked \
   set -eux; \
   for attempt in 1 2 3; do \
     if apt-get update -o Acquire::Retries=3; then break; fi; \
@@ -23,6 +23,6 @@ RUN --mount=type=cache,id=openclaw-install-sh-smoke-apt-cache,target=/var/cache/
 
 COPY install-sh-common/cli-verify.sh /usr/local/install-sh-common/cli-verify.sh
 COPY install-sh-common/version-parse.sh /usr/local/install-sh-common/version-parse.sh
-COPY --chmod=755 install-sh-smoke/run.sh /usr/local/bin/openclaw-install-smoke
+COPY --chmod=755 install-sh-smoke/run.sh /usr/local/bin/tigerpaw-install-smoke
 
-ENTRYPOINT ["/usr/local/bin/openclaw-install-smoke"]
+ENTRYPOINT ["/usr/local/bin/tigerpaw-install-smoke"]

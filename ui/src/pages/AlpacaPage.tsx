@@ -11,7 +11,7 @@ import { useTradingStore } from "@/stores/trading-store";
 function AccountCard() {
   const { currentPortfolioValueUsd } = useTradingStore();
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+    <div className="rounded-2xl glass-panel p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-neutral-300">Account</h3>
         <Badge variant="secondary">Paper</Badge>
@@ -56,7 +56,7 @@ function PositionRow({
   pnl: number;
 }) {
   return (
-    <tr className="text-xs border-b border-white/[0.04] hover:bg-white/[0.04] transition-colors duration-200">
+    <tr className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200">
       <td className="py-2 pr-2 font-medium text-neutral-200">{symbol}</td>
       <td className="py-2 pr-2 text-neutral-400 font-mono text-right">{qty}</td>
       <td className="py-2 pr-2 text-neutral-400 font-mono text-right">${avgEntry.toFixed(2)}</td>
@@ -82,7 +82,7 @@ export function AlpacaPage() {
           className={cn(
             platform?.connected
               ? "bg-green-900 text-green-300 border-green-800"
-              : "bg-white/[0.06] text-neutral-400 border-white/[0.08] cursor-pointer hover:bg-white/[0.10] hover:text-orange-400",
+              : "bg-[var(--glass-subtle-hover)] text-neutral-400 border-[var(--glass-subtle-hover)] cursor-pointer hover:bg-[var(--glass-border)] hover:text-orange-400",
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
@@ -111,13 +111,13 @@ export function AlpacaPage() {
               <TabsTrigger value="orders">Order History</TabsTrigger>
             </TabsList>
             <TabsContent value="positions">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+              <div className="rounded-2xl glass-panel p-4">
                 {positions.length === 0 ? (
                   <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
                 ) : (
                   <table className="w-full">
                     <thead>
-                      <tr className="text-xs text-neutral-500 border-b border-white/[0.08]">
+                      <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
                         <th className="py-1.5 pr-2 text-left font-medium">Symbol</th>
                         <th className="py-1.5 pr-2 text-right font-medium">Qty</th>
                         <th className="py-1.5 pr-2 text-right font-medium">Avg Entry</th>
@@ -142,7 +142,7 @@ export function AlpacaPage() {
               </div>
             </TabsContent>
             <TabsContent value="orders">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+              <div className="rounded-2xl glass-panel p-4">
                 <p className="text-xs text-neutral-600 py-4 text-center">
                   Order history loads from audit log
                 </p>

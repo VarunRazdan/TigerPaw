@@ -263,6 +263,7 @@ function recordPluginError(params: {
   error: unknown;
   logPrefix: string;
   diagnosticMessagePrefix: string;
+  explicitlyEnabled?: boolean;
 }) {
   const errorText = String(params.error);
   const deprecatedApiHint =
@@ -270,13 +271,24 @@ function recordPluginError(params: {
       ? "deprecated api.registerHttpHandler(...) was removed; use api.registerHttpRoute(...) for plugin-owned routes or registerPluginHttpRoute(...) for dynamic lifecycle routes"
       : null;
   const displayError = deprecatedApiHint ? `${deprecatedApiHint} (${errorText})` : errorText;
-  params.logger.error(`${params.logPrefix}${displayError}`);
+
+  // Missing-module errors for auto-discovered (non-configured) plugins are expected
+  // when optional dependencies aren't installed. Downgrade to debug to avoid scary
+  // red output on every startup.
+  const isMissingModule = errorText.includes("Cannot find module");
+  const quiet = isMissingModule && !params.explicitlyEnabled;
+
+  if (quiet) {
+    params.logger.debug?.(`${params.logPrefix}${displayError}`);
+  } else {
+    params.logger.error(`${params.logPrefix}${displayError}`);
+  }
   params.record.status = "error";
   params.record.error = displayError;
   params.registry.plugins.push(params.record);
   params.seenIds.set(params.pluginId, params.origin);
   params.registry.diagnostics.push({
-    level: "error",
+    level: quiet ? "debug" : "error",
     pluginId: params.record.id,
     source: params.record.source,
     message: `${params.diagnosticMessagePrefix}${displayError}`,
@@ -686,6 +698,7 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
         error: err,
         logPrefix: `[plugins] ${record.id} failed to load from ${record.source}: `,
         diagnosticMessagePrefix: "failed to load plugin: ",
+        explicitlyEnabled: entry?.enabled === true,
       });
       continue;
     }
@@ -800,8 +813,12 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
   }
 
   if (typeof memorySlot === "string" && !memorySlotMatched) {
+    // Only warn at visible level if user explicitly configured slots.memory in their config.
+    // When it's just the built-in default (memory-core) failing because the dependency isn't
+    // installed, a debug-level message avoids confusing new users.
+    const userConfiguredSlot = cfg?.plugins?.slots && "memory" in (cfg.plugins.slots as object);
     registry.diagnostics.push({
-      level: "warn",
+      level: userConfiguredSlot ? "warn" : "debug",
       message: `memory slot plugin not found or not marked as memory: ${memorySlot}`,
     });
   }

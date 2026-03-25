@@ -123,7 +123,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
                     {cred.envVar && (
                       <Badge
                         variant="outline"
-                        className="text-[10px] cursor-pointer hover:bg-white/[0.08] transition-colors"
+                        className="text-[10px] cursor-pointer hover:bg-[var(--glass-subtle-hover)] transition-colors"
                         onClick={() => copyToClipboard(cred.envVar, cred.envVar)}
                       >
                         {copied === cred.envVar ? "Copied!" : `$${cred.envVar}`}
@@ -155,7 +155,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
               Config Preview
             </button>
             {showPreview && (
-              <pre className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-xs text-neutral-400 overflow-x-auto font-mono whitespace-pre-wrap">
+              <pre className="rounded-xl border border-[var(--glass-border)] bg-[var(--glass-subtle)] p-3 text-xs text-neutral-400 overflow-x-auto font-mono whitespace-pre-wrap">
                 {configSnippet}
               </pre>
             )}
@@ -222,7 +222,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           href={info.setupUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-center text-sm text-orange-400 hover:text-orange-300 transition-all duration-200 py-2.5 rounded-xl border border-white/[0.08] hover:border-orange-600/40 hover:bg-white/[0.04] hover:shadow-md cursor-pointer"
+          className="block text-center text-sm text-orange-400 hover:text-orange-300 transition-all duration-200 py-2.5 rounded-xl border border-[var(--glass-border)] hover:border-orange-600/40 hover:bg-[var(--glass-divider)] hover:shadow-md cursor-pointer"
         >
           Open {info.name} Setup Page →
         </a>

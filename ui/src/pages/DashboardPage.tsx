@@ -32,7 +32,7 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 hover:bg-white/[0.07] hover:border-white/[0.14] hover:shadow-xl hover:shadow-black/40 transition-all duration-300">
+    <div className="rounded-2xl glass-panel-interactive p-4 hover:shadow-xl hover:shadow-black/40 transition-all duration-300">
       <div className="text-xs text-neutral-500 mb-1">{label}</div>
       <div className={cn("text-2xl font-bold font-mono", color ?? "text-neutral-100")}>{value}</div>
       {subtext && <div className="text-xs text-neutral-500 mt-1">{subtext}</div>}
@@ -43,10 +43,13 @@ function StatCard({
 function modeColor(mode: string): string {
   switch (mode) {
     case "live":
+    case "mainnet":
       return "text-green-400";
     case "paper":
       return "text-blue-400";
     case "demo":
+    case "sandbox":
+    case "testnet":
       return "text-amber-400";
     case "play":
       return "text-purple-400";
@@ -82,7 +85,7 @@ function ExtensionsGrid({
 
   return (
     <>
-      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+      <div className="rounded-2xl glass-panel p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Trading Extensions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(platforms).map(([id, p]) => (
@@ -92,8 +95,8 @@ function ExtensionsGrid({
               className={cn(
                 "flex items-center gap-2 py-2 px-2 -mx-2 rounded-lg transition-colors duration-200",
                 !p.connected && TRADING_CONNECT_INFO[id]
-                  ? "cursor-pointer hover:bg-white/[0.06]"
-                  : "hover:bg-white/[0.04] cursor-default",
+                  ? "cursor-pointer hover:bg-[var(--glass-subtle-hover)]"
+                  : "hover:bg-[var(--glass-divider)] cursor-default",
               )}
             >
               <PlatformIcon platformId={id} className="w-4 h-4" />
@@ -187,7 +190,7 @@ function MarketPrices() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+    <div className="rounded-2xl glass-panel p-4">
       <h3 className="text-sm font-semibold text-neutral-300 mb-3">Market Prices</h3>
       <div className="grid grid-cols-3 gap-4">
         {prices.map((p) => (
@@ -227,6 +230,7 @@ export function DashboardPage() {
     positions,
     killSwitchActive,
     platforms,
+    demoMode,
   } = useTradingStore();
 
   const pnlColor = dailyPnlUsd >= 0 ? "text-green-400" : "text-red-400";
@@ -234,9 +238,20 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-100">Tigerpaw Dashboard</h1>
-        <p className="text-sm text-neutral-500 mt-1">Your AI trades. You decide.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-100">Tigerpaw Dashboard</h1>
+          <p className="text-sm text-neutral-500 mt-1">Your AI trades. You decide.</p>
+        </div>
+        {demoMode && (
+          <NavLink
+            to="/trading/settings"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-700/50 bg-amber-950/30 text-amber-400 text-xs font-medium hover:bg-amber-950/50 transition-all duration-200 cursor-pointer"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            Demo Data
+          </NavLink>
+        )}
       </div>
 
       {killSwitchActive && (
@@ -273,7 +288,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <NavLink
           to="/trading"
-          className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:bg-white/[0.07] hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
+          className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
         >
           <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
             Trading Hub →
@@ -285,7 +300,7 @@ export function DashboardPage() {
 
         <NavLink
           to="/trading/settings"
-          className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:bg-white/[0.07] hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
+          className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
         >
           <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
             Risk Settings →
@@ -297,7 +312,7 @@ export function DashboardPage() {
 
         <NavLink
           to="/security"
-          className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:bg-white/[0.07] hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
+          className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
         >
           <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
             Security →

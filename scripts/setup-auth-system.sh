@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup OpenClaw Auth Management System
+# Setup Tigerpaw Auth Management System
 # Run this once to set up:
 # 1. Long-lived Claude Code token
 # 2. Auth monitoring with notifications
@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "=== OpenClaw Auth System Setup ==="
+echo "=== Tigerpaw Auth System Setup ==="
 echo ""
 
 # Step 1: Check current auth status
@@ -49,14 +49,14 @@ echo ""
 # Check for ntfy
 echo "  ntfy.sh: Free push notifications to your phone"
 echo "  1. Install ntfy app on your phone"
-echo "  2. Subscribe to a topic (e.g., 'openclaw-alerts')"
+echo "  2. Subscribe to a topic (e.g., 'tigerpaw-alerts')"
 echo ""
 echo "Enter ntfy.sh topic (or leave blank to skip):"
 read -r NTFY_TOPIC
 
 # Phone notification
 echo ""
-echo "  OpenClaw message: Send warning via OpenClaw itself"
+echo "  Tigerpaw message: Send warning via Tigerpaw itself"
 echo "Enter your phone number for alerts (or leave blank to skip):"
 read -r PHONE_NUMBER
 

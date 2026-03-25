@@ -163,6 +163,6 @@ describe("cli integration: qr + dashboard token SecretRef", () => {
     expect(joined).toContain("Dashboard URL: http://127.0.0.1:18789/");
     expect(joined).not.toContain("#token=");
     expect(joined).toContain("Token auto-auth unavailable");
-    expect(joined).toContain("Set OPENCLAW_GATEWAY_TOKEN");
+    expect(joined).toContain("Set TIGERPAW_GATEWAY_TOKEN");
   });
 });

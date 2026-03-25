@@ -130,12 +130,7 @@ export function PriceChart({
   }, [data, stopLoss, takeProfit, height]);
 
   return (
-    <div
-      className={cn(
-        "rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4",
-        className,
-      )}
-    >
+    <div className={cn("rounded-2xl glass-panel p-4", className)}>
       <h3 className="text-sm font-semibold text-neutral-300 mb-2">Price Chart</h3>
       <div ref={containerRef} />
     </div>

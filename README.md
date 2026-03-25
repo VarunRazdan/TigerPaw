@@ -26,6 +26,7 @@
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
+  - [Environment Variables](#environment-variables)
   - [Trading Setup](#trading-setup)
   - [Trading Config Reference](#trading-config-reference)
   - [Trading Platforms](#trading-platforms)
@@ -40,6 +41,7 @@
 - [Notifications](#notifications)
 - [CLI Commands](#cli-commands)
 - [Development](#development)
+- [Troubleshooting](#troubleshooting)
 - [Security](#security)
 - [Contributing](#contributing)
 - [Acknowledgments](#acknowledgments)
@@ -195,14 +197,17 @@ pnpm build
 ## Quick Start
 
 ```bash
-# Start the gateway (serves the Control UI at http://localhost:18789)
-tigerpaw gateway run --dev --allow-unconfigured
+tigerpaw start
+```
 
-# Add a messaging channel
-tigerpaw channels add --interactive
+That's it. `tigerpaw start` creates a config with safe defaults (paper mode, localhost, conservative risk tier), starts the gateway, and opens the dashboard at `http://localhost:18789`.
 
-# Check system health
-tigerpaw doctor
+### Manual Setup (Advanced)
+
+```bash
+tigerpaw setup                     # Create config + workspace
+tigerpaw gateway run --open        # Start gateway + open browser
+tigerpaw doctor                    # Check system health
 ```
 
 ## Configuration
@@ -212,6 +217,20 @@ Config lives at `~/.tigerpaw/tigerpaw.json`.
 ```bash
 tigerpaw config set gateway.port 18789
 tigerpaw config get
+```
+
+### Environment Variables
+
+| Variable                 | Purpose                                           |
+| ------------------------ | ------------------------------------------------- |
+| `TIGERPAW_STATE_DIR`     | Override state directory (default: `~/.tigerpaw`) |
+| `TIGERPAW_GATEWAY_PORT`  | Gateway port override                             |
+| `TIGERPAW_GATEWAY_TOKEN` | Gateway auth token                                |
+
+Credentials use `SecretRef` syntax -- never hardcode API keys:
+
+```json
+{ "apiKey": "${MY_ENV_VAR}" }
 ```
 
 ### Trading Setup
@@ -284,17 +303,17 @@ Add a `trading` block to your config:
 
 Configure the platform you want to use in the `plugins` section:
 
-|                                                                         | Platform                        | Config Key   | Mode               | Order Types                              | Auth         |
-| ----------------------------------------------------------------------- | ------------------------------- | ------------ | ------------------ | ---------------------------------------- | ------------ |
-| <img src="icons/trading-platforms/alpaca.svg" height="20">              | Alpaca (stocks)                 | `alpaca`     | `paper` / `live`   | market, limit, stop, stop_limit, bracket | API Key      |
-| <img src="icons/trading-platforms/polymarket.svg" height="20">          | Polymarket (prediction markets) | `polymarket` | `live`             | limit                                    | HMAC-SHA256  |
-| <img src="icons/trading-platforms/kalshi.svg" height="20">              | Kalshi (event contracts)        | `kalshi`     | `demo` / `live`    | market, limit                            | RSA-SHA256   |
-| <img src="icons/trading-platforms/manifold.svg" height="20">            | Manifold (play money)           | `manifold`   | `live`             | market (implicit)                        | Bearer token |
-| <img src="icons/trading-platforms/coinbase.svg" height="20">            | Coinbase (crypto)               | `coinbase`   | `sandbox` / `live` | market, limit, stop_limit                | ES256 JWT    |
-| <img src="icons/trading-platforms/interactive-brokers.svg" height="20"> | Interactive Brokers             | `ibkr`       | `paper` / `live`   | MKT, LMT, STP, STP_LIMIT, bracket        | Session      |
-| <img src="icons/trading-platforms/binance.svg" height="20">             | Binance (crypto)                | `binance`    | `testnet` / `live` | MARKET, LIMIT, STOP_LOSS_LIMIT, OCO      | HMAC-SHA256  |
-| <img src="icons/trading-platforms/kraken.svg" height="20">              | Kraken (crypto + margin)        | `kraken`     | `live`             | market, limit, stop-loss + leverage      | HMAC-SHA512  |
-| <img src="icons/trading-platforms/dydx.svg" height="20">                | dYdX (perpetuals)               | `dydx`       | `testnet` / `live` | market, limit (read-only)                | Cosmos SDK   |
+|                                                                         | Platform                        | Config Key   | Mode                  | Order Types                              | Auth         |
+| ----------------------------------------------------------------------- | ------------------------------- | ------------ | --------------------- | ---------------------------------------- | ------------ |
+| <img src="icons/trading-platforms/alpaca.svg" height="20">              | Alpaca (stocks)                 | `alpaca`     | `paper` / `live`      | market, limit, stop, stop_limit, bracket | API Key      |
+| <img src="icons/trading-platforms/polymarket.svg" height="20">          | Polymarket (prediction markets) | `polymarket` | `live`                | limit                                    | HMAC-SHA256  |
+| <img src="icons/trading-platforms/kalshi.svg" height="20">              | Kalshi (event contracts)        | `kalshi`     | `demo` / `live`       | market, limit                            | RSA-SHA256   |
+| <img src="icons/trading-platforms/manifold.svg" height="20">            | Manifold (play money)           | `manifold`   | play money only       | market (implicit)                        | Bearer token |
+| <img src="icons/trading-platforms/coinbase.svg" height="20">            | Coinbase (crypto)               | `coinbase`   | `sandbox` / `live`    | market, limit, stop_limit                | ES256 JWT    |
+| <img src="icons/trading-platforms/interactive-brokers.svg" height="20"> | Interactive Brokers             | `ibkr`       | `paper` / `live`      | MKT, LMT, STP, STP_LIMIT, bracket        | Session      |
+| <img src="icons/trading-platforms/binance.svg" height="20">             | Binance (crypto)                | `binance`    | `testnet` / `live`    | MARKET, LIMIT, STOP_LOSS_LIMIT, OCO      | HMAC-SHA256  |
+| <img src="icons/trading-platforms/kraken.svg" height="20">              | Kraken (crypto + margin)        | `kraken`     | `live`                | market, limit, stop-loss + leverage      | HMAC-SHA512  |
+| <img src="icons/trading-platforms/dydx.svg" height="20">                | dYdX (perpetuals)               | `dydx`       | `testnet` / `mainnet` | market, limit (read-only)                | Cosmos SDK   |
 
 Example (Alpaca):
 
@@ -408,20 +427,6 @@ The Control UI includes order entry forms on each platform page. Orders are subm
 
 Orders can also be placed via messaging channels -- any connected AI agent can invoke trading tools, subject to the same policy gates.
 
-## Environment Variables
-
-| Variable                 | Purpose                                           |
-| ------------------------ | ------------------------------------------------- |
-| `TIGERPAW_STATE_DIR`     | Override state directory (default: `~/.tigerpaw`) |
-| `TIGERPAW_GATEWAY_PORT`  | Gateway port override                             |
-| `TIGERPAW_GATEWAY_TOKEN` | Gateway auth token                                |
-
-Credentials use `SecretRef` syntax -- never hardcode API keys:
-
-```json
-{ "apiKey": "${MY_ENV_VAR}" }
-```
-
 ## CLI Commands
 
 ```bash
@@ -476,6 +481,17 @@ pnpm test:fast      # Unit tests
 pnpm test           # All tests
 ```
 
+## Troubleshooting
+
+| Problem                           | Fix                                                                                                                        |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `Missing config` error on startup | Run `tigerpaw start` (auto-creates config) or `tigerpaw setup`                                                             |
+| Dashboard shows blank page        | Clear browser cache, check `http://localhost:18789` is accessible                                                          |
+| Trades not executing              | Check `tigerpaw doctor` — verify the platform is connected and trading is enabled                                          |
+| Kill switch stuck on              | Run `tigerpaw trading resume` or click the kill switch button in the dashboard                                             |
+| Port already in use               | Another instance may be running — check with `lsof -i :18789` or change port via `tigerpaw config set gateway.port <port>` |
+| `openclaw` commands not found     | Use `tigerpaw` instead — the legacy `openclaw` alias works only if the old package was installed                           |
+
 ## File Locations
 
 | Purpose         | Path                                    |
@@ -488,7 +504,7 @@ pnpm test           # All tests
 
 ## Security
 
-- **Policy-gated trading**: Every order passes through 10 pre-trade checks; extensions fail-safe (block orders) when the policy engine is unavailable
+- **Policy-gated trading**: Every order passes through 12 pre-trade checks; extensions fail-safe (block orders) when the policy engine is unavailable
 - **HMAC-signed requests**: API secrets are never sent as plaintext headers
 - **Tamper-evident audit log**: HMAC-SHA256 chain-linked JSONL for every trade decision
 - **Kill switch**: Instant halt with auto-activation on limit breach

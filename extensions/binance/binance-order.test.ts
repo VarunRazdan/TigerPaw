@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const _mockEvaluateOrder = vi.fn();
 vi.mock("tigerpaw/trading", () => ({
-  TradingPolicyEngine: function () {
+  TradingPolicyEngine: function (this: Record<string, unknown>) {
     this.evaluateOrder = _mockEvaluateOrder;
   },
   writeAuditEntry: vi.fn().mockResolvedValue(undefined),

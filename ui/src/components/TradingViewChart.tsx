@@ -1,6 +1,7 @@
 import { BarChart3, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useThemeStore, THEMES } from "@/stores/theme-store";
 
 type Props = {
   symbol: string;
@@ -25,6 +26,8 @@ export function TradingViewChart({
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = `tv-widget-${symbol.replace(/[^a-zA-Z0-9]/g, "-")}`;
+  const theme = useThemeStore((s) => s.theme);
+  const themeInfo = THEMES[theme];
 
   useEffect(() => {
     if (collapsed) {
@@ -57,14 +60,14 @@ export function TradingViewChart({
         theme: "dark",
         style: "1",
         locale: "en",
-        toolbar_bg: "#1B1B1F",
+        toolbar_bg: themeInfo.chartToolbar,
         enable_publishing: false,
         hide_top_toolbar: false,
         hide_legend: false,
         save_image: false,
         width: "100%",
         height,
-        backgroundColor: "rgba(27, 27, 31, 1)",
+        backgroundColor: themeInfo.chartBg,
         gridColor: "rgba(255, 255, 255, 0.04)",
       });
     });
@@ -76,18 +79,13 @@ export function TradingViewChart({
         container.innerHTML = "";
       }
     };
-  }, [symbol, interval, height, collapsed]);
+  }, [symbol, interval, height, collapsed, theme, themeInfo.chartBg, themeInfo.chartToolbar]);
 
   return (
-    <div
-      className={cn(
-        "rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 overflow-hidden",
-        className,
-      )}
-    >
+    <div className={cn("rounded-2xl glass-panel overflow-hidden", className)}>
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
+        className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-divider)] transition-all duration-200 cursor-pointer"
       >
         <span className="flex items-center gap-1.5">
           <BarChart3 className="w-3.5 h-3.5" />

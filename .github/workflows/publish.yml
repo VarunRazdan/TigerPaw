@@ -1,0 +1,70 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: publish-npm-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22.x"
+  PNPM_VERSION: "10.23.0"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node environment
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          install-bun: "false"
+          use-sticky-disk: "false"
+
+      - name: Setup npm auth
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Ensure version is not already published
+        run: |
+          set -euo pipefail
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} is already published on npm."
+            exit 1
+          fi
+
+          echo "Publishing ${PACKAGE_NAME}@${PACKAGE_VERSION}"
+
+      - name: Build
+        run: pnpm build
+
+      - name: Build UI
+        run: pnpm ui:build
+
+      - name: Publish
+        run: |
+          set -euo pipefail
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
+          if [[ "$PACKAGE_VERSION" == *-beta.* ]]; then
+            npm publish --access public --tag beta
+          else
+            npm publish --access public
+          fi
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

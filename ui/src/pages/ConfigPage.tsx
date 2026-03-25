@@ -44,17 +44,17 @@ export function ConfigPage() {
         <p className="text-xs text-neutral-500 mt-0.5">Edit tigerpaw.json — secrets are masked</p>
       </div>
 
-      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-white/[0.05]">
+      <div className="rounded-2xl glass-panel overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--glass-subtle-hover)] bg-[var(--glass-input-bg)]">
           <span className="text-xs text-neutral-500 font-mono">~/.tigerpaw/tigerpaw.json</span>
-          <button className="text-xs text-neutral-400 hover:text-neutral-200 px-2 py-1 rounded border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] cursor-pointer transition-all duration-300">
+          <button className="text-xs text-neutral-400 hover:text-neutral-200 px-2 py-1 rounded border border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-input-bg)] cursor-pointer transition-all duration-300">
             Save
           </button>
         </div>
         <textarea
           value={config}
           onChange={(e) => setConfig(e.target.value)}
-          className="w-full h-[500px] bg-neutral-950/50 text-neutral-300 text-xs font-mono p-4 focus:outline-none resize-none hover:bg-white/[0.07] transition-all duration-200"
+          className="w-full h-[500px] bg-neutral-950/50 text-neutral-300 text-xs font-mono p-4 focus:outline-none resize-none hover:bg-[var(--glass-subtle-hover)] transition-all duration-200"
           spellCheck={false}
         />
       </div>

@@ -1,6 +1,15 @@
 node_modules
 **/node_modules/
 .env
+
+# AI tool instructions — never publish
+CLAUDE.md
+**/CLAUDE.md
+AGENTS.md
+.cursorrules
+.cursor/
+.aider*
+.copilot-instructions.md
 docker-compose.extra.yml
 dist
 pnpm-lock.yaml
@@ -146,3 +155,6 @@ PRIVATE_DEV_NOTES.md
 
 # Screenshots (local only)
 /screenshots/
+
+# Background design assets (large PNGs)
+assets/Tigerclaw Backgrounds/

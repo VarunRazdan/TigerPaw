@@ -120,6 +120,7 @@ export function TradingPage() {
     tier,
     approvalMode,
     platforms,
+    demoMode,
   } = useTradingStore();
 
   const lossPercent =
@@ -144,21 +145,30 @@ export function TradingPage() {
             <span className="text-neutral-300 capitalize">{tier}</span>
           </p>
         </div>
-        <NavLink
-          to="/trading/settings"
-          className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"
-        >
-          Risk Settings →
-        </NavLink>
+        <div className="flex items-center gap-2">
+          {demoMode && (
+            <NavLink
+              to="/trading/settings"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-700/50 bg-amber-950/30 text-amber-400 text-xs font-medium hover:bg-amber-950/50 transition-all duration-200 cursor-pointer"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Demo Data
+            </NavLink>
+          )}
+          <NavLink
+            to="/trading/settings"
+            className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-input-bg)] transition-all duration-300 cursor-pointer"
+          >
+            Risk Settings →
+          </NavLink>
+        </div>
       </div>
 
       {/* Summary banner */}
       <div
         className={cn(
           "rounded-2xl border p-3 flex items-center gap-4",
-          killSwitchActive
-            ? "border-red-800 bg-red-950/30"
-            : "border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30",
+          killSwitchActive ? "border-red-800 bg-red-950/30" : "glass-panel",
         )}
       >
         {killSwitchActive && (
@@ -169,7 +179,7 @@ export function TradingPage() {
         {!killSwitchActive && (
           <>
             <span className="text-neutral-400 text-xs">Daily Loss Limit:</span>
-            <div className="flex-1 max-w-md h-3 bg-white/[0.06] rounded-full overflow-hidden">
+            <div className="flex-1 max-w-md h-3 bg-[var(--glass-subtle-hover)] rounded-full overflow-hidden">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-700",

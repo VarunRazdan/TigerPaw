@@ -41,6 +41,19 @@ const coreEntries: CoreCliEntry[] = [
   {
     commands: [
       {
+        name: "start",
+        description: "Start Tigerpaw (auto-setup, gateway, dashboard)",
+        hasSubcommands: false,
+      },
+    ],
+    register: async ({ program }) => {
+      const mod = await import("./register.start.js");
+      mod.registerStartCommand(program);
+    },
+  },
+  {
+    commands: [
+      {
         name: "setup",
         description: "Initialize local config and agent workspace",
         hasSubcommands: false,
@@ -96,7 +109,7 @@ const coreEntries: CoreCliEntry[] = [
     commands: [
       {
         name: "backup",
-        description: "Create and verify local backup archives for OpenClaw state",
+        description: "Create and verify local backup archives for Tigerpaw state",
         hasSubcommands: true,
       },
     ],
@@ -206,7 +219,7 @@ const coreEntries: CoreCliEntry[] = [
     commands: [
       {
         name: "browser",
-        description: "Manage OpenClaw's dedicated browser (Chrome/Chromium)",
+        description: "Manage Tigerpaw's dedicated browser (Chrome/Chromium)",
         hasSubcommands: true,
       },
     ],

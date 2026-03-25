@@ -1,23 +1,262 @@
 @import "tailwindcss";
 
 /*
- * Apple-inspired glassmorphism dark theme
- * ----------------------------------------
- * Frosted glass panels on a deep dark background.
- * Subtle white borders, soft blurs, and gentle depth.
+ * Tigerpaw — Dual Theme System
+ * ─────────────────────────────
+ * Tiger Gold:     Warm amber orbs, tiger-stripe texture, frosted warm glass
+ * Midnight Steel: Cool neutral glass on dark grey with subtle blue/purple gradients
+ *
+ * All colors use CSS custom properties so themes switch instantly via
+ * [data-theme] attribute on <html>.
  */
 
-/* Ambient background — Perplexity-style dark grey with visible gradients */
+/* ══════════════════════════════════════════════════════════════
+   Glass Design Tokens — Tiger Gold (default)
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Panel glass ── */
+  --glass-bg: rgba(30, 22, 12, 0.25);
+  --glass-bg-hover: rgba(30, 22, 12, 0.35);
+  --glass-border: rgba(212, 165, 80, 0.12);
+  --glass-border-hover: rgba(212, 165, 80, 0.2);
+  --glass-inset: rgba(255, 200, 100, 0.06);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --glass-blur: blur(24px) saturate(140%);
+
+  /* ── Secondary / inner elements ── */
+  --glass-subtle: rgba(212, 165, 80, 0.05);
+  --glass-subtle-hover: rgba(212, 165, 80, 0.08);
+  --glass-divider: rgba(212, 165, 80, 0.06);
+  --glass-light-border: rgba(212, 165, 80, 0.08);
+  --glass-input-bg: rgba(212, 165, 80, 0.07);
+
+  /* ── Chrome / UI structure ── */
+  --glass-chrome-border: rgba(212, 165, 80, 0.1);
+  --glass-active-border: rgba(212, 165, 80, 0.15);
+  --glass-hover-strong: rgba(212, 165, 80, 0.18);
+  --glass-border-hover-strong: rgba(212, 165, 80, 0.22);
+  --glass-sidebar: rgba(10, 9, 8, 0.6);
+  --glass-header: rgba(10, 9, 8, 0.7);
+
+  /* ── Overlays ── */
+  --glass-tooltip: rgba(15, 12, 8, 0.9);
+  --glass-overlay: rgba(15, 12, 8, 0.92);
+  --glass-dropdown: rgba(15, 12, 8, 0.95);
+
+  /* ── Body ── */
+  --body-bg: #0a0908;
+
+  /* ── Scrollbar ── */
+  --scrollbar-thumb: rgba(212, 165, 80, 0.1);
+  --scrollbar-thumb-hover: rgba(212, 165, 80, 0.18);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Glass Design Tokens — Midnight Steel
+   ══════════════════════════════════════════════════════════════ */
+[data-theme="midnight-steel"] {
+  /* ── Panel glass ── */
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-hover: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.14);
+  --glass-inset: rgba(255, 255, 255, 0.04);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.35);
+  --glass-blur: blur(24px) saturate(120%);
+
+  /* ── Secondary / inner elements ── */
+  --glass-subtle: rgba(255, 255, 255, 0.03);
+  --glass-subtle-hover: rgba(255, 255, 255, 0.06);
+  --glass-divider: rgba(255, 255, 255, 0.04);
+  --glass-light-border: rgba(255, 255, 255, 0.06);
+  --glass-input-bg: rgba(255, 255, 255, 0.05);
+
+  /* ── Chrome / UI structure ── */
+  --glass-chrome-border: rgba(255, 255, 255, 0.07);
+  --glass-active-border: rgba(255, 255, 255, 0.1);
+  --glass-hover-strong: rgba(255, 255, 255, 0.12);
+  --glass-border-hover-strong: rgba(255, 255, 255, 0.16);
+  --glass-sidebar: rgba(0, 0, 0, 0.3);
+  --glass-header: rgba(0, 0, 0, 0.4);
+
+  /* ── Overlays ── */
+  --glass-tooltip: rgba(20, 20, 24, 0.92);
+  --glass-overlay: rgba(20, 20, 24, 0.95);
+  --glass-dropdown: rgba(20, 20, 24, 0.97);
+
+  /* ── Body ── */
+  --body-bg: #1b1b1f;
+
+  /* ── Scrollbar ── */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Composite Glass Classes ── */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-inset);
+}
+
+.glass-panel-interactive {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-inset);
+  transition: all 300ms;
+  cursor: pointer;
+}
+.glass-panel-interactive:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow:
+    var(--glass-shadow-hover),
+    inset 0 1px 0 var(--glass-inset);
+}
+
+/* ── Body Background ── */
 body {
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 120, 50, 0.1) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
-    #1b1b1f;
+  background: var(--body-bg);
   min-height: 100vh;
 }
 
-/* Smooth scrollbar for the dark theme */
+/* ── Animated Amber Orb Background (Tiger Gold only) ── */
+.orb-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Hide orbs in Midnight Steel — show subtle cool gradients instead */
+[data-theme="midnight-steel"] .orb-bg {
+  display: none;
+}
+[data-theme="midnight-steel"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+}
+
+.orb-bg .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+  animation: float 20s ease-in-out infinite;
+}
+
+/* Primary amber — top left */
+.orb-bg .orb:nth-child(1) {
+  width: 50vmax;
+  height: 50vmax;
+  background: radial-gradient(circle, #d4850a 0%, #a35200 40%, transparent 70%);
+  top: -10%;
+  left: -10%;
+  opacity: 0.55;
+}
+
+/* Gold — bottom right */
+.orb-bg .orb:nth-child(2) {
+  width: 40vmax;
+  height: 40vmax;
+  background: radial-gradient(circle, #e8a020 0%, #c47000 40%, transparent 70%);
+  bottom: -15%;
+  right: -5%;
+  opacity: 0.55;
+  animation-delay: -7s;
+  animation-duration: 25s;
+}
+
+/* Soft yellow — center */
+.orb-bg .orb:nth-child(3) {
+  width: 35vmax;
+  height: 35vmax;
+  background: radial-gradient(circle, #f5c842 0%, #b88a15 40%, transparent 70%);
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.3;
+  animation-delay: -13s;
+  animation-duration: 30s;
+}
+
+/* Deep saddlebrown — bottom left */
+.orb-bg .orb:nth-child(4) {
+  width: 25vmax;
+  height: 25vmax;
+  background: radial-gradient(circle, #8b4513 0%, #5a2d0e 40%, transparent 70%);
+  bottom: 10%;
+  left: 20%;
+  opacity: 0.4;
+  animation-delay: -4s;
+  animation-duration: 22s;
+}
+
+/* Tiger-stripe texture overlay */
+.orb-bg .stripes {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0px,
+    transparent 40px,
+    rgba(120, 80, 20, 0.06) 40px,
+    rgba(120, 80, 20, 0.06) 42px
+  );
+  pointer-events: none;
+}
+
+/* Noise texture overlay */
+.orb-bg .noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(2vw, -3vh) scale(1.05);
+  }
+  66% {
+    transform: translate(-1.5vw, 2vh) scale(0.97);
+  }
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .orb-bg .orb {
+    animation: none;
+  }
+}
+
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -26,14 +265,14 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* Selection */
+/* ── Selection ── */
 ::selection {
   background: rgba(249, 115, 22, 0.3);
   color: white;

@@ -14,11 +14,21 @@ export function resolveDefaultAgentWorkspaceDir(
   homedir: () => string = os.homedir,
 ): string {
   const home = resolveRequiredHomeDir(env, homedir);
-  const profile = env.OPENCLAW_PROFILE?.trim();
+  const profile = (env.TIGERPAW_PROFILE ?? env.OPENCLAW_PROFILE)?.trim();
   if (profile && profile.toLowerCase() !== "default") {
-    return path.join(home, ".openclaw", `workspace-${profile}`);
+    // Prefer existing legacy workspace dir if it exists, otherwise use new name
+    const legacyProfileDir = path.join(home, ".openclaw", `workspace-${profile}`);
+    if (syncFs.existsSync(legacyProfileDir)) {
+      return legacyProfileDir;
+    }
+    return path.join(home, ".tigerpaw", `workspace-${profile}`);
   }
-  return path.join(home, ".openclaw", "workspace");
+  // Prefer existing legacy workspace if it exists, otherwise use new name
+  const legacyDir = path.join(home, ".openclaw", "workspace");
+  if (syncFs.existsSync(legacyDir)) {
+    return legacyDir;
+  }
+  return path.join(home, ".tigerpaw", "workspace");
 }
 
 export const DEFAULT_AGENT_WORKSPACE_DIR = resolveDefaultAgentWorkspaceDir();

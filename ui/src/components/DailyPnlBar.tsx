@@ -79,7 +79,7 @@ export function DailyPnlBar() {
             </span>
             <Sparkline data={sparklineData} />
             <div
-              className="w-24 h-2 bg-white/[0.06] rounded-full overflow-hidden"
+              className="w-24 h-2 bg-[var(--glass-subtle-hover)] rounded-full overflow-hidden"
               title={`${usedPct}% of daily loss limit`}
             >
               <div
@@ -105,7 +105,7 @@ export function DailyPnlBar() {
             <div>
               Loss limit used: {usedPct}% ({lossPercent.toFixed(1)}% / {limitPercent}%)
             </div>
-            <div className="border-t border-white/[0.08] pt-1 mt-1 whitespace-pre">
+            <div className="border-t border-[var(--glass-subtle-hover)] pt-1 mt-1 whitespace-pre">
               {platformSummary}
             </div>
           </div>

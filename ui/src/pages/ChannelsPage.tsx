@@ -49,7 +49,7 @@ export function ChannelsPage() {
                       setConnectIcon(channel.icon);
                     }
                   }}
-                  className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 flex items-center gap-3 cursor-pointer hover:bg-white/[0.08] hover:border-white/[0.15] hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-300"
+                  className="rounded-2xl glass-panel-interactive p-4 flex items-center gap-3 cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <img
                     src={`/icons/messaging-channels/${channel.icon}.svg`}

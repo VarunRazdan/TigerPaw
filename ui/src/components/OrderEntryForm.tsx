@@ -68,7 +68,7 @@ function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
   ];
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.05] backdrop-blur-lg p-3 space-y-1">
+    <div className="rounded-xl glass-panel p-3 space-y-1">
       <div className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
         Policy Pre-Check
       </div>
@@ -176,12 +176,7 @@ export function OrderEntryForm({
   }
 
   return (
-    <div
-      className={cn(
-        "rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4",
-        className,
-      )}
-    >
+    <div className={cn("rounded-2xl glass-panel p-4", className)}>
       <h3 className="text-sm font-semibold text-neutral-300 mb-3">Place Order</h3>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -191,7 +186,7 @@ export function OrderEntryForm({
           <input
             {...register("symbol")}
             placeholder="e.g. AAPL"
-            className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+            className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
           />
           {errors.symbol && <span className="text-xs text-red-400">{errors.symbol.message}</span>}
         </div>
@@ -203,7 +198,7 @@ export function OrderEntryForm({
               "flex items-center justify-center py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border",
               watchSide === "buy"
                 ? "bg-green-800 border-green-700 text-green-100"
-                : "bg-white/[0.05] border-white/[0.08] text-neutral-400 hover:text-neutral-200",
+                : "bg-[var(--glass-input-bg)] border-[var(--glass-border)] text-neutral-400 hover:text-neutral-200",
             )}
           >
             <input type="radio" value="buy" {...register("side")} className="sr-only" />
@@ -214,7 +209,7 @@ export function OrderEntryForm({
               "flex items-center justify-center py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border",
               watchSide === "sell"
                 ? "bg-red-800 border-red-700 text-red-100"
-                : "bg-white/[0.05] border-white/[0.08] text-neutral-400 hover:text-neutral-200",
+                : "bg-[var(--glass-input-bg)] border-[var(--glass-border)] text-neutral-400 hover:text-neutral-200",
             )}
           >
             <input type="radio" value="sell" {...register("side")} className="sr-only" />
@@ -229,7 +224,7 @@ export function OrderEntryForm({
             type="number"
             step="any"
             {...register("quantity")}
-            className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+            className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
           />
           {errors.quantity && (
             <span className="text-xs text-red-400">{errors.quantity.message}</span>
@@ -246,7 +241,7 @@ export function OrderEntryForm({
           <label className="text-xs text-neutral-500 block mb-1">Order Type</label>
           <select
             {...register("orderType")}
-            className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+            className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200 cursor-pointer"
           >
             <option value="market">Market</option>
             <option value="limit">Limit</option>
@@ -264,7 +259,7 @@ export function OrderEntryForm({
               type="number"
               step="any"
               {...register("limitPrice")}
-              className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+              className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
             />
           </div>
         )}
@@ -275,7 +270,7 @@ export function OrderEntryForm({
               type="number"
               step="any"
               {...register("stopPrice")}
-              className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+              className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
             />
           </div>
         )}
@@ -287,7 +282,7 @@ export function OrderEntryForm({
               step="0.1"
               {...register("trailingPercent")}
               placeholder="e.g. 2.5"
-              className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+              className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
             />
           </div>
         )}
@@ -302,7 +297,7 @@ export function OrderEntryForm({
         </button>
 
         {showAdvanced && (
-          <div className="space-y-3 border-t border-white/[0.08] pt-3">
+          <div className="space-y-3 border-t border-[var(--glass-border)] pt-3">
             <div>
               <label className="text-xs text-neutral-500 block mb-1">Stop Loss</label>
               <input
@@ -310,7 +305,7 @@ export function OrderEntryForm({
                 step="any"
                 {...register("stopLoss")}
                 placeholder="Optional"
-                className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+                className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
               />
             </div>
             <div>
@@ -320,7 +315,7 @@ export function OrderEntryForm({
                 step="any"
                 {...register("takeProfit")}
                 placeholder="Optional"
-                className="w-full px-3 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-white/[0.14] transition-all duration-200"
+                className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
               />
             </div>
           </div>

@@ -6,7 +6,7 @@ export function PositionsPanel() {
   const { positions, limits } = useTradingStore();
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+    <div className="rounded-2xl glass-panel p-4">
       <h3 className="text-sm font-semibold text-neutral-300 mb-3">
         Positions
         <span className="ml-2 text-xs text-neutral-500 font-normal">
@@ -20,12 +20,12 @@ export function PositionsPanel() {
           {positions.map((pos) => (
             <div
               key={`${pos.extensionId}-${pos.symbol}`}
-              className="py-2 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.04] transition-colors duration-200 rounded-md px-2 -mx-2"
+              className="py-2 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 rounded-md px-2 -mx-2"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-neutral-200">{pos.symbol}</span>
-                  <span className="text-xs px-1 py-0.5 rounded bg-white/[0.06] text-neutral-500">
+                  <span className="text-xs px-1 py-0.5 rounded bg-[var(--glass-subtle-hover)] text-neutral-500">
                     {pos.extensionId}
                   </span>
                 </div>
@@ -57,9 +57,9 @@ export function PositionsPanel() {
 
       {/* Concentration bar */}
       {positions.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-white/[0.08]">
+        <div className="mt-3 pt-3 border-t border-[var(--glass-border)]">
           <div className="text-xs text-neutral-500 mb-1">Concentration</div>
-          <div className="flex gap-0.5 h-3 rounded overflow-hidden bg-white/[0.06]">
+          <div className="flex gap-0.5 h-3 rounded overflow-hidden bg-[var(--glass-subtle-hover)]">
             {positions.map((pos) => (
               <div
                 key={`${pos.extensionId}-${pos.symbol}`}

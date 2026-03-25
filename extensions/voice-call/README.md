@@ -1,6 +1,6 @@
 # @openclaw/voice-call
 
-Official Voice Call plugin for **OpenClaw**.
+Official Voice Call plugin for **Tigerpaw**.
 
 Providers:
 
@@ -9,15 +9,15 @@ Providers:
 - **Plivo** (Voice API + XML transfer + GetInput speech)
 - **Mock** (dev/no network)
 
-Docs: `https://docs.openclaw.ai/plugins/voice-call`
-Plugin system: `https://docs.openclaw.ai/plugin`
+Docs: `https://docs.tigerpaw.dev/plugins/voice-call`
+Plugin system: `https://docs.tigerpaw.dev/plugin`
 
 ## Install (local dev)
 
-### Option A: install via OpenClaw (recommended)
+### Option A: install via Tigerpaw (recommended)
 
 ```bash
-openclaw plugins install @openclaw/voice-call
+tigerpaw plugins install @openclaw/voice-call
 ```
 
 Restart the Gateway afterwards.
@@ -25,9 +25,9 @@ Restart the Gateway afterwards.
 ### Option B: copy into your global extensions folder (dev)
 
 ```bash
-mkdir -p ~/.openclaw/extensions
-cp -R extensions/voice-call ~/.openclaw/extensions/voice-call
-cd ~/.openclaw/extensions/voice-call && pnpm install
+mkdir -p ~/.tigerpaw/extensions
+cp -R extensions/voice-call ~/.tigerpaw/extensions/voice-call
+cd ~/.tigerpaw/extensions/voice-call && pnpm install
 ```
 
 ## Config
@@ -143,13 +143,13 @@ Notes:
 ## CLI
 
 ```bash
-openclaw voicecall call --to "+15555550123" --message "Hello from OpenClaw"
-openclaw voicecall continue --call-id <id> --message "Any questions?"
-openclaw voicecall speak --call-id <id> --message "One moment"
-openclaw voicecall end --call-id <id>
-openclaw voicecall status --call-id <id>
-openclaw voicecall tail
-openclaw voicecall expose --mode funnel
+tigerpaw voicecall call --to "+15555550123" --message "Hello from Tigerpaw"
+tigerpaw voicecall continue --call-id <id> --message "Any questions?"
+tigerpaw voicecall speak --call-id <id> --message "One moment"
+tigerpaw voicecall end --call-id <id>
+tigerpaw voicecall status --call-id <id>
+tigerpaw voicecall tail
+tigerpaw voicecall expose --mode funnel
 ```
 
 ## Tool

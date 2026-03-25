@@ -38,12 +38,12 @@ function ApprovalCard({
   const timeoutFraction = totalSec > 0 ? remainingSec / totalSec : 0;
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.06] backdrop-blur-lg p-3 hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300">
+    <div className="rounded-xl glass-panel-interactive p-3 transition-all duration-300">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-neutral-200">
           {approval.side.toUpperCase()} {approval.quantity}x {approval.symbol}
         </span>
-        <span className="text-xs px-1.5 py-0.5 rounded bg-white/[0.08] text-neutral-400">
+        <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--glass-subtle-hover)] text-neutral-400">
           {approval.extensionId}
         </span>
       </div>
@@ -69,7 +69,7 @@ function ApprovalCard({
         </button>
       </div>
       <div className="flex items-center gap-2 text-xs text-neutral-500">
-        <div className="flex-1 h-1 bg-white/[0.08] rounded-full overflow-hidden">
+        <div className="flex-1 h-1 bg-[var(--glass-subtle-hover)] rounded-full overflow-hidden">
           <div
             className={cn(
               "h-full rounded-full transition-all",
@@ -127,7 +127,7 @@ export function ApprovalQueuePanel() {
   }, [pendingApprovals, handleAction]);
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+    <div className="rounded-2xl glass-panel p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-neutral-300">
           Pending Approvals

@@ -1,11 +1,11 @@
 #!/bin/bash
 # Claude Code Authentication Status Checker
-# Checks both Claude Code and OpenClaw auth status
+# Checks both Claude Code and Tigerpaw auth status
 
 set -euo pipefail
 
 CLAUDE_CREDS="$HOME/.claude/.credentials.json"
-OPENCLAW_AUTH="$HOME/.openclaw/agents/main/agent/auth-profiles.json"
+OPENCLAW_AUTH="$HOME/.tigerpaw/agents/main/agent/auth-profiles.json"
 
 # Colors for terminal output
 RED='\033[0;31m'
@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 OUTPUT_MODE="${1:-full}"
 
 fetch_models_status_json() {
-    openclaw models status --json 2>/dev/null || true
+    tigerpaw models status --json 2>/dev/null || true
 }
 
 STATUS_JSON="$(fetch_models_status_json)"
@@ -228,7 +228,7 @@ else
 fi
 
 echo ""
-echo "OpenClaw Auth (~/.openclaw/agents/main/agent/auth-profiles.json):"
+echo "Tigerpaw Auth (~/.tigerpaw/agents/main/agent/auth-profiles.json):"
 if [ "$USE_JSON" -eq 1 ]; then
     best_profile=$(json_best_anthropic_profile)
     expires=$(json_expires_for_anthropic_any)
@@ -253,7 +253,7 @@ if [ "$expires" -le 0 ] && [ "$api_keys" -gt 0 ]; then
     echo -e "  Status: ${GREEN}OK${NC} (API key)"
 elif [ "$expires" -le 0 ]; then
     echo -e "  Status: ${RED}NOT FOUND${NC}"
-    echo "  Note: Run 'openclaw doctor --yes' to sync from Claude Code"
+    echo "  Note: Run 'tigerpaw doctor --yes' to sync from Claude Code"
 else
     now_ms=$(( $(date +%s) * 1000 ))
     diff_ms=$((expires - now_ms))
@@ -262,7 +262,7 @@ else
 
     if [ "$diff_ms" -lt 0 ]; then
         echo -e "  Status: ${RED}EXPIRED${NC}"
-        echo "  Note: Run 'openclaw doctor --yes' to sync from Claude Code"
+        echo "  Note: Run 'tigerpaw doctor --yes' to sync from Claude Code"
     elif [ "$diff_ms" -lt 3600000 ]; then
         echo -e "  Status: ${YELLOW}EXPIRING SOON (${mins}m remaining)${NC}"
     else
@@ -273,8 +273,8 @@ fi
 
 echo ""
 echo "=== Service Status ==="
-if systemctl --user is-active openclaw >/dev/null 2>&1; then
-    echo -e "OpenClaw service: ${GREEN}running${NC}"
+if systemctl --user is-active tigerpaw >/dev/null 2>&1; then
+    echo -e "Tigerpaw service: ${GREEN}running${NC}"
 else
-    echo -e "OpenClaw service: ${RED}NOT running${NC}"
+    echo -e "Tigerpaw service: ${RED}NOT running${NC}"
 fi

@@ -30,7 +30,7 @@ describe("docker build cache layout", () => {
     ]) {
       const dockerfile = await readRepoFile(path);
       expect(dockerfile, `${path} should use a shared pnpm store cache`).toContain(
-        "--mount=type=cache,id=openclaw-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked",
+        "--mount=type=cache,id=tigerpaw-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked",
       );
     }
   });

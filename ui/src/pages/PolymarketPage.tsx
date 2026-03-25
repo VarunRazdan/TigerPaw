@@ -37,10 +37,10 @@ function MarketCard({ market }: { market: (typeof DEMO_MARKETS)[0] }) {
   const yesPct = Math.round(market.yesPrice * 100);
   const noPct = 100 - yesPct;
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 transition-all duration-300">
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
       <div className="text-sm font-medium text-neutral-200 mb-2">{market.question}</div>
       <div className="flex items-center gap-2 mb-3">
-        <div className="flex-1 h-2 rounded-full overflow-hidden bg-white/[0.06] flex">
+        <div className="flex-1 h-2 rounded-full overflow-hidden bg-[var(--glass-subtle-hover)] flex">
           <div className="bg-green-500 h-full" style={{ width: `${yesPct}%` }} />
           <div className="bg-red-500 h-full" style={{ width: `${noPct}%` }} />
         </div>
@@ -82,7 +82,7 @@ export function PolymarketPage() {
           className={cn(
             platform?.connected
               ? "bg-green-900 text-green-300 border-green-800"
-              : "bg-white/[0.06] text-neutral-400 border-white/[0.08] cursor-pointer hover:bg-white/[0.10] hover:text-orange-400",
+              : "bg-[var(--glass-subtle-hover)] text-neutral-400 border-[var(--glass-subtle-hover)] cursor-pointer hover:bg-[var(--glass-border)] hover:text-orange-400",
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
@@ -101,7 +101,7 @@ export function PolymarketPage() {
           <TabsTrigger value="positions">
             My Positions
             {positions.length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-white/[0.06] text-neutral-300">
+              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-[var(--glass-subtle-hover)] text-neutral-300">
                 {positions.length}
               </span>
             )}
@@ -118,7 +118,7 @@ export function PolymarketPage() {
         </TabsContent>
 
         <TabsContent value="positions">
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+          <div className="rounded-2xl glass-panel p-4">
             {positions.length === 0 ? (
               <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
             ) : (
@@ -126,7 +126,7 @@ export function PolymarketPage() {
                 {positions.map((pos) => (
                   <div
                     key={pos.symbol}
-                    className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.04] transition-colors duration-200 cursor-pointer"
+                    className="flex items-center justify-between py-2 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 cursor-pointer"
                   >
                     <div>
                       <div className="text-sm font-medium text-neutral-200">{pos.symbol}</div>
@@ -153,7 +153,7 @@ export function PolymarketPage() {
         </TabsContent>
 
         <TabsContent value="history">
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+          <div className="rounded-2xl glass-panel p-4">
             <p className="text-xs text-neutral-600 py-4 text-center">
               Order history loads from audit log
             </p>

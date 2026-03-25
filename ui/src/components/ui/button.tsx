@@ -11,10 +11,11 @@ const buttonVariants = cva(
         default: "bg-orange-600 text-white shadow hover:bg-orange-500 hover:shadow-md",
         destructive: "bg-red-700 text-white shadow-sm hover:bg-red-600 hover:shadow-md",
         outline:
-          "border border-white/[0.08] bg-transparent text-neutral-300 shadow-sm hover:bg-white/[0.06] hover:text-neutral-100 hover:shadow-md hover:border-white/[0.14]",
+          "border border-[var(--glass-border)] bg-transparent text-neutral-300 shadow-sm hover:bg-[var(--glass-subtle-hover)] hover:text-neutral-100 hover:shadow-md hover:border-[var(--glass-hover-strong)]",
         secondary:
-          "bg-white/[0.06] text-neutral-300 shadow-sm hover:bg-white/[0.10] hover:shadow-md",
-        ghost: "text-neutral-400 hover:bg-white/[0.06] hover:text-neutral-200 hover:shadow-sm",
+          "bg-[var(--glass-subtle-hover)] text-neutral-300 shadow-sm hover:bg-[var(--glass-border)] hover:shadow-md",
+        ghost:
+          "text-neutral-400 hover:bg-[var(--glass-subtle-hover)] hover:text-neutral-200 hover:shadow-sm",
         link: "text-orange-400 underline-offset-4 hover:underline",
       },
       size: {

@@ -34,7 +34,7 @@ export function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg hover:bg-white/[0.07] transition-all duration-200 cursor-pointer"
+        className="relative p-2 rounded-lg hover:bg-[var(--glass-input-bg)] transition-all duration-200 cursor-pointer"
         title="Trading notifications"
       >
         <Bell className="w-4 h-4 text-neutral-400" />
@@ -50,8 +50,8 @@ export function NotificationBell() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           {/* Dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-white/[0.08] bg-neutral-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 z-50">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.06]">
+          <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-[var(--glass-border)] bg-[var(--glass-dropdown)] backdrop-blur-xl shadow-2xl shadow-black/50 z-50">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--glass-subtle-hover)]">
               <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                 Notifications
               </span>
@@ -72,8 +72,8 @@ export function NotificationBell() {
                 <div
                   key={n.id}
                   className={cn(
-                    "flex items-start gap-2 px-3 py-2.5 border-b border-white/[0.04] transition-all duration-200",
-                    n.dismissed ? "opacity-40" : "hover:bg-white/[0.04]",
+                    "flex items-start gap-2 px-3 py-2.5 border-b border-[var(--glass-divider)] transition-all duration-200",
+                    n.dismissed ? "opacity-40" : "hover:bg-[var(--glass-divider)]",
                     SEVERITY_BG[n.severity],
                   )}
                 >
@@ -90,7 +90,7 @@ export function NotificationBell() {
                   {!n.dismissed && (
                     <button
                       onClick={() => dismissNotification(n.id)}
-                      className="p-0.5 rounded hover:bg-white/[0.1] transition-colors cursor-pointer shrink-0"
+                      className="p-0.5 rounded hover:bg-[var(--glass-border)] transition-colors cursor-pointer shrink-0"
                     >
                       <X className="w-3 h-3 text-neutral-500" />
                     </button>

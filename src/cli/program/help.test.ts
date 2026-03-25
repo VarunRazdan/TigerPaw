@@ -110,7 +110,7 @@ describe("configureProgramHelp", () => {
     const help = captureHelpOutput(program);
     expect(help).toContain("BANNER-LINE");
     expect(help).toContain("Examples:");
-    expect(help).toContain("https://docs.openclaw.ai/cli");
+    expect(help).toContain("https://docs.tigerpaw.dev/cli");
   });
 
   it("prints version and exits immediately when version flags are present", () => {
@@ -122,7 +122,7 @@ describe("configureProgramHelp", () => {
 
     const program = makeProgramWithCommands();
     expect(() => configureProgramHelp(program, testProgramContext)).toThrow("exit:0");
-    expect(logSpy).toHaveBeenCalledWith("OpenClaw 9.9.9-test (abc1234)");
+    expect(logSpy).toHaveBeenCalledWith("Tigerpaw 9.9.9-test (abc1234)");
     expect(exitSpy).toHaveBeenCalledWith(0);
 
     logSpy.mockRestore();
@@ -140,7 +140,7 @@ describe("configureProgramHelp", () => {
 
     const program = makeProgramWithCommands();
     expect(() => configureProgramHelp(program, testProgramContext)).toThrow("exit:0");
-    expect(logSpy).toHaveBeenCalledWith("OpenClaw 9.9.9-test");
+    expect(logSpy).toHaveBeenCalledWith("Tigerpaw 9.9.9-test");
     expect(exitSpy).toHaveBeenCalledWith(0);
 
     logSpy.mockRestore();

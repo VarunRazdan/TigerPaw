@@ -51,12 +51,9 @@ export function configureProgramHelp(program: Command, ctx: ProgramContext) {
     .version(ctx.programVersion)
     .option(
       "--dev",
-      "Dev profile: isolate state under ~/.openclaw-dev, default gateway port 19001, and shift derived ports (browser/canvas)",
+      "Dev profile: isolate state under ~/.tigerpaw-dev, default gateway port 19001, and shift derived ports (browser/canvas)",
     )
-    .option(
-      "--profile <name>",
-      "Use a named profile (isolates OPENCLAW_STATE_DIR/OPENCLAW_CONFIG_PATH under ~/.openclaw-<name>)",
-    )
+    .option("--profile <name>", "Use a named profile (isolates state under ~/.tigerpaw-<name>)")
     .option(
       "--log-level <level>",
       `Global log level override for file + console (${CLI_LOG_LEVEL_VALUES})`,
@@ -112,7 +109,7 @@ export function configureProgramHelp(program: Command, ctx: ProgramContext) {
   ) {
     const commit = resolveCommitHash({ moduleUrl: import.meta.url });
     console.log(
-      commit ? `OpenClaw ${ctx.programVersion} (${commit})` : `OpenClaw ${ctx.programVersion}`,
+      commit ? `Tigerpaw ${ctx.programVersion} (${commit})` : `Tigerpaw ${ctx.programVersion}`,
     );
     process.exit(0);
   }
@@ -134,7 +131,7 @@ export function configureProgramHelp(program: Command, ctx: ProgramContext) {
     if (command !== program) {
       return "";
     }
-    const docs = formatDocsLink("/cli", "docs.openclaw.ai/cli");
+    const docs = formatDocsLink("/cli", "docs.tigerpaw.dev/cli");
     return `\n${theme.heading("Examples:")}\n${fmtExamples}\n\n${theme.muted("Docs:")} ${docs}\n`;
   });
 }

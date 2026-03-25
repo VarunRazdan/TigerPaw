@@ -42,7 +42,7 @@ Verify installation:
 
 ```bash
 tigerpaw --version
-# Tigerpaw 2026.3.11
+# Tigerpaw 2026.3.26
 ```
 
 > **Upgrading from OpenClaw?** Tigerpaw automatically detects and uses your
@@ -51,33 +51,39 @@ tigerpaw --version
 
 ---
 
-## First-Time Setup
-
-For guided interactive setup:
+## Quick Start
 
 ```bash
-tigerpaw setup                      # Create minimal config
-tigerpaw channels add --interactive # Add messaging channel with wizard
+tigerpaw start
+```
+
+That's it. `tigerpaw start` does three things:
+
+1. **Creates config** — Writes `~/.tigerpaw/tigerpaw.json` with safe defaults (paper mode, localhost, conservative risk tier) if it doesn't exist
+2. **Starts the gateway** — Binds to `http://localhost:18789` (localhost only)
+3. **Opens the dashboard** — Auto-opens the Control UI in your default browser
+
+Paper mode is active by default — no real money at risk. Connect a trading platform by clicking any "Not Connected" badge in the dashboard.
+
+### Manual Setup (Advanced)
+
+If you prefer step-by-step control:
+
+```bash
+tigerpaw setup                      # Create config + workspace
+tigerpaw gateway run --open         # Start gateway + open browser
 tigerpaw doctor                     # Verify everything works
 ```
 
-Or follow the manual steps below.
+### What `tigerpaw start` Does
 
----
-
-## Quick Start
-
-### 1. Start the Gateway
-
-The gateway is the core server that routes messages and manages trading.
-
-```bash
-# Start with dev mode (auto-creates config)
-tigerpaw gateway run --dev --allow-unconfigured
-
-# Or start with explicit settings
-tigerpaw gateway run --port 18789 --bind loopback --auth token --token "your-secret-token"
-```
+| Step    | What Happens                                                         |
+| ------- | -------------------------------------------------------------------- |
+| Config  | Creates `~/.tigerpaw/tigerpaw.json` with `gateway.mode: "local"`     |
+| Auth    | Auto-generates a gateway auth token (persisted to config)            |
+| Gateway | Starts on `http://localhost:18789` (not reachable from your network) |
+| Browser | Opens the Control UI in your default browser                         |
+| SSH     | Detects SSH sessions and prints the URL instead of opening a browser |
 
 The **Control UI** (React dashboard) is served at `http://localhost:18789/`.
 
@@ -280,6 +286,8 @@ Configure the trading platform you want to use:
 
 #### <img src="icons/trading-platforms/alpaca.svg" height="24" alt="Alpaca"> Alpaca (Stocks)
 
+Get API keys: [Alpaca Dashboard → API Keys](https://app.alpaca.markets/brokerage/account/api-keys)
+
 ```json
 {
   "plugins": {
@@ -293,6 +301,8 @@ Configure the trading platform you want to use:
 ```
 
 #### <img src="icons/trading-platforms/polymarket.svg" height="24" alt="Polymarket"> Polymarket (Prediction Markets)
+
+Get API keys: [Polymarket](https://polymarket.com/) → Account Settings → API Access
 
 ```json
 {
@@ -309,6 +319,8 @@ Configure the trading platform you want to use:
 
 #### <img src="icons/trading-platforms/kalshi.svg" height="24" alt="Kalshi"> Kalshi (Event Contracts)
 
+Get API keys: [Kalshi API Docs](https://docs.kalshi.com/)
+
 ```json
 {
   "plugins": {
@@ -324,6 +336,8 @@ Configure the trading platform you want to use:
 
 #### <img src="icons/trading-platforms/manifold.svg" height="24" alt="Manifold"> Manifold (Play Money)
 
+Get API key: [Manifold API Docs](https://docs.manifold.markets/api) → Profile Settings
+
 ```json
 {
   "plugins": {
@@ -335,6 +349,8 @@ Configure the trading platform you want to use:
 ```
 
 #### <img src="icons/trading-platforms/coinbase.svg" height="24" alt="Coinbase"> Coinbase (Crypto Spot)
+
+Get API keys: [Coinbase Developer Platform](https://coinbase.com/developer-platform)
 
 ```json
 {
@@ -350,6 +366,8 @@ Configure the trading platform you want to use:
 
 #### <img src="icons/trading-platforms/interactive-brokers.svg" height="24" alt="Interactive Brokers"> Interactive Brokers (Stocks, Options, Futures)
 
+Get started: [Interactive Brokers](https://www.interactivebrokers.com/) → Download Client Portal Gateway
+
 ```json
 {
   "plugins": {
@@ -363,6 +381,8 @@ Configure the trading platform you want to use:
 ```
 
 #### <img src="icons/trading-platforms/binance.svg" height="24" alt="Binance"> Binance (Crypto Spot)
+
+Get API keys: [Binance API Management](https://www.binance.com/en/account/api-management)
 
 ```json
 {
@@ -378,6 +398,8 @@ Configure the trading platform you want to use:
 
 #### <img src="icons/trading-platforms/kraken.svg" height="24" alt="Kraken"> Kraken (Crypto Spot + Margin)
 
+Get API keys: [Kraken API Docs](https://docs.kraken.com/api/docs/guides/global-intro)
+
 ```json
 {
   "plugins": {
@@ -390,6 +412,8 @@ Configure the trading platform you want to use:
 ```
 
 #### <img src="icons/trading-platforms/dydx.svg" height="24" alt="dYdX"> dYdX (Decentralized Perpetuals)
+
+Get started: [dYdX](https://dydx.trade/) → Export your Cosmos wallet mnemonic
 
 ```json
 {

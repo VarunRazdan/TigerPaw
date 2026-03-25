@@ -33,7 +33,7 @@ export function registerNodeCli(program: Command) {
           ["openclaw node status", "Check node host service status."],
           ["openclaw node install", "Install the node host service."],
           ["openclaw node restart", "Restart the installed node host service."],
-        ])}\n\n${theme.muted("Docs:")} ${formatDocsLink("/cli/node", "docs.openclaw.ai/cli/node")}\n`,
+        ])}\n\n${theme.muted("Docs:")} ${formatDocsLink("/cli/node", "docs.tigerpaw.dev/cli/node")}\n`,
     );
 
   node

@@ -580,7 +580,7 @@ function collectShadowingFindings(collector: AuditCollector): void {
       addFinding(collector, {
         code: "REF_SHADOWED",
         severity: "warn",
-        file: "openclaw.json",
+        file: "tigerpaw.json",
         jsonPath: configPath,
         message: `Auth profile credentials (${modeText}) take precedence for provider "${provider}", so this config ref may never be used.`,
         provider,

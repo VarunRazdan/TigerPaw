@@ -29,6 +29,8 @@ export async function runGatewayLoop(params: {
   start: () => Promise<Awaited<ReturnType<typeof startGatewayServer>>>;
   runtime: typeof defaultRuntime;
   lockPort?: number;
+  /** Called once after the first successful server start. */
+  onReady?: () => void | Promise<void>;
 }) {
   let lock = await acquireGatewayLock({ port: params.lockPort });
   let server: Awaited<ReturnType<typeof startGatewayServer>> | null = null;
@@ -219,6 +221,13 @@ export async function runGatewayLoop(params: {
       onIteration();
       try {
         server = await params.start();
+        if (isFirstStart && params.onReady) {
+          try {
+            await params.onReady();
+          } catch (err) {
+            gatewayLog.warn(`onReady callback failed: ${String(err)}`);
+          }
+        }
         isFirstStart = false;
       } catch (err) {
         // On initial startup, let the error propagate so the outer handler

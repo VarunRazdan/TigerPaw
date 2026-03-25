@@ -51,9 +51,10 @@ const SEVERITY_STYLES: Record<
     badgeText: "text-amber-300",
   },
   info: {
-    bg: "bg-white/[0.03]",
-    border: "border-white/[0.06]",
-    badge: "bg-white/[0.06] hover:bg-white/[0.10] transition-colors duration-200",
+    bg: "bg-[var(--glass-subtle)]",
+    border: "border-[var(--glass-subtle-hover)]",
+    badge:
+      "bg-[var(--glass-subtle-hover)] hover:bg-[var(--glass-border)] transition-colors duration-200",
     badgeText: "text-neutral-400 hover:text-neutral-300",
   },
 };
@@ -83,7 +84,7 @@ function FindingCard({ finding }: { finding: AuditFinding }) {
       </div>
       <p className="text-xs text-neutral-400 mt-1">{finding.detail}</p>
       {finding.remediation && (
-        <p className="text-xs text-neutral-500 mt-2 pl-3 border-l-2 border-white/[0.08]">
+        <p className="text-xs text-neutral-500 mt-2 pl-3 border-l-2 border-[var(--glass-subtle-hover)]">
           {finding.remediation}
         </p>
       )}
@@ -115,7 +116,7 @@ export function SecurityPage() {
           <div className="text-2xl font-bold text-amber-400 font-mono">{warnCount}</div>
           <div className="text-xs text-amber-400/60">Warnings</div>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4 text-center">
+        <div className="rounded-2xl glass-panel p-4 text-center">
           <div className="text-2xl font-bold text-neutral-400 font-mono">{infoCount}</div>
           <div className="text-xs text-neutral-500">Info</div>
         </div>
@@ -132,7 +133,7 @@ export function SecurityPage() {
       </div>
 
       {/* Credential Status */}
-      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+      <div className="rounded-2xl glass-panel p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Credential Status</h3>
         <div className="space-y-2">
           {[
@@ -143,7 +144,7 @@ export function SecurityPage() {
           ].map((cred) => (
             <div
               key={cred.ext}
-              className="flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.04] transition-colors duration-200 rounded-md px-2 -mx-2"
+              className="flex items-center justify-between py-1.5 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 rounded-md px-2 -mx-2"
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm text-neutral-300">{cred.ext}</span>
@@ -159,7 +160,7 @@ export function SecurityPage() {
       </div>
 
       {/* Extension Permissions */}
-      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl shadow-lg shadow-black/30 p-4">
+      <div className="rounded-2xl glass-panel p-4">
         <h3 className="text-sm font-semibold text-neutral-300 mb-3">Extension Permissions</h3>
         <div className="space-y-3">
           {[
@@ -192,7 +193,7 @@ export function SecurityPage() {
                     "text-[10px] px-1.5 py-0.5 rounded",
                     ext.verified
                       ? "bg-green-900/50 text-green-400"
-                      : "bg-white/[0.06] text-neutral-500 hover:bg-white/[0.10] hover:text-neutral-400 transition-colors duration-200",
+                      : "bg-[var(--glass-subtle-hover)] text-neutral-500 hover:bg-[var(--glass-border)] hover:text-neutral-400 transition-colors duration-200",
                   )}
                 >
                   {ext.verified ? "verified" : "unverified"}
@@ -202,7 +203,7 @@ export function SecurityPage() {
                 {ext.perms.map((perm) => (
                   <span
                     key={perm}
-                    className="text-[11px] px-1.5 py-0.5 rounded bg-white/[0.06] text-neutral-500 hover:bg-white/[0.10] hover:text-neutral-400 transition-colors duration-200"
+                    className="text-[11px] px-1.5 py-0.5 rounded bg-[var(--glass-subtle-hover)] text-neutral-500 hover:bg-[var(--glass-border)] hover:text-neutral-400 transition-colors duration-200"
                   >
                     {perm}
                   </span>

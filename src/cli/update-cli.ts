@@ -34,7 +34,7 @@ function inheritedUpdateTimeout(
 export function registerUpdateCli(program: Command) {
   const update = program
     .command("update")
-    .description("Update OpenClaw and inspect update channel status")
+    .description("Update Tigerpaw and inspect update channel status")
     .option("--json", "Output result as JSON", false)
     .option("--no-restart", "Skip restarting the gateway service after a successful update")
     .option("--dry-run", "Preview update actions without making changes", false)
@@ -82,7 +82,7 @@ ${theme.heading("Notes:")}
   - Downgrades require confirmation (can break configuration)
   - Skips update if the working directory has uncommitted changes
 
-${theme.muted("Docs:")} ${formatDocsLink("/cli/update", "docs.openclaw.ai/cli/update")}`;
+${theme.muted("Docs:")} ${formatDocsLink("/cli/update", "docs.tigerpaw.dev/cli/update")}`;
     })
     .action(async (opts) => {
       try {
@@ -107,7 +107,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/update", "docs.openclaw.ai/cli/up
     .option("--timeout <seconds>", "Timeout for each update step in seconds (default: 1200)")
     .addHelpText(
       "after",
-      `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/update", "docs.openclaw.ai/cli/update")}\n`,
+      `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/update", "docs.tigerpaw.dev/cli/update")}\n`,
     )
     .action(async (opts, command) => {
       try {
@@ -136,7 +136,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/update", "docs.openclaw.ai/cli/up
           "- Shows current update channel (stable/beta/dev) and source",
         )}\n${theme.muted("- Includes git tag/branch/SHA for source checkouts")}\n\n${theme.muted(
           "Docs:",
-        )} ${formatDocsLink("/cli/update", "docs.openclaw.ai/cli/update")}`,
+        )} ${formatDocsLink("/cli/update", "docs.tigerpaw.dev/cli/update")}`,
     )
     .action(async (opts, command) => {
       try {

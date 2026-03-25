@@ -13,7 +13,7 @@ COPY ui/package.json ./ui/package.json
 COPY extensions/memory-core/package.json ./extensions/memory-core/package.json
 COPY patches ./patches
 
-RUN --mount=type=cache,id=openclaw-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked \
+RUN --mount=type=cache,id=tigerpaw-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked \
     pnpm install --frozen-lockfile
 
 COPY tsconfig.json tsconfig.plugin-sdk.dts.json tsdown.config.ts vitest.config.ts vitest.e2e.config.ts openclaw.mjs ./
