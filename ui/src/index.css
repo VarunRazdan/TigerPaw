@@ -36,8 +36,8 @@
   --glass-active-border: rgba(212, 165, 80, 0.15);
   --glass-hover-strong: rgba(212, 165, 80, 0.18);
   --glass-border-hover-strong: rgba(212, 165, 80, 0.22);
-  --glass-sidebar: rgba(10, 9, 8, 0.6);
-  --glass-header: rgba(10, 9, 8, 0.7);
+  --glass-sidebar: rgba(10, 9, 8, 0.4);
+  --glass-header: rgba(10, 9, 8, 0.5);
 
   /* ── Overlays ── */
   --glass-tooltip: rgba(15, 12, 8, 0.9);
@@ -78,8 +78,8 @@
   --glass-active-border: rgba(255, 255, 255, 0.1);
   --glass-hover-strong: rgba(255, 255, 255, 0.12);
   --glass-border-hover-strong: rgba(255, 255, 255, 0.16);
-  --glass-sidebar: rgba(0, 0, 0, 0.3);
-  --glass-header: rgba(0, 0, 0, 0.4);
+  --glass-sidebar: rgba(0, 0, 0, 0.25);
+  --glass-header: rgba(0, 0, 0, 0.35);
 
   /* ── Overlays ── */
   --glass-tooltip: rgba(20, 20, 24, 0.92);
@@ -270,6 +270,53 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+}
+
+/* ── Sidebar Scrollbar — always visible so zoomed-in users can navigate ── */
+.sidebar-scroll {
+  overflow-y: scroll !important; /* force scrollbar track always visible */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+  margin: 4px 0;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+  min-height: 40px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+/* When NOT overflowing, hide the scrollbar to avoid empty track */
+.sidebar-scroll.no-overflow {
+  overflow-y: hidden !important;
+}
+/* Bottom fade when content overflows — signals more items below */
+.sidebar-scroll-wrapper {
+  position: relative;
+}
+.sidebar-scroll-wrapper::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: linear-gradient(to top, var(--glass-sidebar), transparent);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 200ms;
+}
+.sidebar-scroll-wrapper.has-overflow::after {
+  opacity: 1;
 }
 
 /* ── Selection ── */

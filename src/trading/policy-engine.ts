@@ -199,6 +199,11 @@ const VALIDATION_STEPS: ValidationStep[] = [
     name: "balance_check",
     check: (order, limits, state) => {
       if (state.currentPortfolioValueUsd <= 0) {
+        // Portfolio data not yet synced — block buy orders since percentage-based
+        // risk checks cannot be evaluated. Sells and cancels are still allowed.
+        if (order.side === "buy") {
+          return "portfolio value not yet available — wait for sync to complete before placing buy orders";
+        }
         return undefined;
       }
       const riskPercent = (order.notionalUsd / state.currentPortfolioValueUsd) * 100;
@@ -219,8 +224,13 @@ const VALIDATION_STEPS: ValidationStep[] = [
   },
   {
     name: "daily_loss",
-    check: (_order, limits, state) => {
+    check: (order, limits, state) => {
       if (state.currentPortfolioValueUsd <= 0) {
+        // Cannot evaluate percentage-based daily loss without portfolio value.
+        // Buy orders already blocked by balance_check; sells/cancels pass through.
+        if (order.side === "buy") {
+          return "portfolio value not yet available — cannot evaluate daily loss limit";
+        }
         return undefined;
       }
       const dailyLossPercent =
@@ -235,6 +245,9 @@ const VALIDATION_STEPS: ValidationStep[] = [
     name: "position_concentration",
     check: (order, limits, state) => {
       if (state.currentPortfolioValueUsd <= 0) {
+        if (order.side === "buy") {
+          return "portfolio value not yet available — cannot evaluate position concentration";
+        }
         return undefined;
       }
       const existing = state.positionsByAsset[order.symbol];
@@ -298,13 +311,44 @@ export class TradingPolicyEngine {
 
   /**
    * Resolve the effective limits for an order, merging per-extension overrides.
+   *
+   * Per-extension overrides can only TIGHTEN limits, never weaken them.
+   * Ceiling limits (max spend, max trade size, etc.) are clamped to the
+   * lesser of global vs override.  Floor limits (cooldown, consecutive-loss
+   * pause) are clamped to the greater.
    */
   private resolveLimits(extensionId: string): TradingPolicyConfig["limits"] {
     const overrides = this.config.perExtension?.[extensionId];
     if (!overrides) {
       return this.config.limits;
     }
-    return { ...this.config.limits, ...overrides };
+
+    const g = this.config.limits;
+
+    // Ceiling limits — override must be <= global (lower = stricter)
+    const clampCeiling = (key: keyof TradingPolicyConfig["limits"]): number => {
+      const ov = overrides[key];
+      return ov !== undefined ? Math.min(ov, g[key]) : g[key];
+    };
+
+    // Floor limits — override must be >= global (higher = stricter)
+    const clampFloor = (key: keyof TradingPolicyConfig["limits"]): number => {
+      const ov = overrides[key];
+      return ov !== undefined ? Math.max(ov, g[key]) : g[key];
+    };
+
+    return {
+      maxDailySpendUsd: clampCeiling("maxDailySpendUsd"),
+      maxSingleTradeUsd: clampCeiling("maxSingleTradeUsd"),
+      maxRiskPerTradePercent: clampCeiling("maxRiskPerTradePercent"),
+      dailyLossLimitPercent: clampCeiling("dailyLossLimitPercent"),
+      maxPortfolioDrawdownPercent: clampCeiling("maxPortfolioDrawdownPercent"),
+      maxSinglePositionPercent: clampCeiling("maxSinglePositionPercent"),
+      maxTradesPerDay: clampCeiling("maxTradesPerDay"),
+      maxOpenPositions: clampCeiling("maxOpenPositions"),
+      cooldownBetweenTradesMs: clampFloor("cooldownBetweenTradesMs"),
+      consecutiveLossPause: clampFloor("consecutiveLossPause"),
+    };
   }
 
   /**

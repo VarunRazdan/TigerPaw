@@ -156,7 +156,8 @@ export function validateTradingConfig(config: TradingConfig): TradingConfigValid
 
   // Validate per-extension overrides in live mode — they must not weaken limits.
   if (config.mode === "live" && config.policy.perExtension) {
-    const numericLimitKeys: Array<keyof TradingPolicyConfig["limits"]> = [
+    // Ceiling limits: per-extension value must be <= global (lower = stricter)
+    const ceilingKeys: Array<keyof TradingPolicyConfig["limits"]> = [
       "maxDailySpendUsd",
       "maxSingleTradeUsd",
       "maxRiskPerTradePercent",
@@ -165,19 +166,43 @@ export function validateTradingConfig(config: TradingConfig): TradingConfigValid
       "maxSinglePositionPercent",
       "maxTradesPerDay",
       "maxOpenPositions",
+    ];
+    // Floor limits: per-extension value must be >= global (higher = stricter)
+    const floorKeys: Array<keyof TradingPolicyConfig["limits"]> = [
       "cooldownBetweenTradesMs",
       "consecutiveLossPause",
     ];
+    const allKeys = [...ceilingKeys, ...floorKeys];
+
     for (const [extId, overrides] of Object.entries(config.policy.perExtension)) {
       if (!overrides) {
         continue;
       }
-      for (const key of numericLimitKeys) {
+      for (const key of allKeys) {
         const val = overrides[key];
-        if (val !== undefined && (!Number.isFinite(val) || val < 0)) {
+        if (val === undefined) {
+          continue;
+        }
+
+        if (!Number.isFinite(val) || val < 0) {
           errors.push({
             field: `policy.perExtension.${extId}.${key}`,
             message: `Live mode requires finite non-negative ${key} in perExtension override for "${extId}" (got ${val})`,
+          });
+          continue;
+        }
+
+        const globalVal = config.policy.limits[key];
+        if (ceilingKeys.includes(key) && val > globalVal) {
+          errors.push({
+            field: `policy.perExtension.${extId}.${key}`,
+            message: `perExtension "${extId}" ${key} (${val}) weakens global limit (${globalVal}) — override must be <= global in live mode`,
+          });
+        }
+        if (floorKeys.includes(key) && val < globalVal) {
+          errors.push({
+            field: `policy.perExtension.${extId}.${key}`,
+            message: `perExtension "${extId}" ${key} (${val}) weakens global limit (${globalVal}) — override must be >= global in live mode`,
           });
         }
       }

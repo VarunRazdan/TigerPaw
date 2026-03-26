@@ -14,7 +14,7 @@ import {
   Plug,
   Cpu,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router-dom";
 import { useGatewayConfig } from "@/hooks/use-gateway-config";
@@ -210,6 +210,23 @@ function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean
 function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const { t } = useTranslation("common");
   const navGroups = useNavGroups();
+  const scrollRef = useRef<HTMLElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  const checkOverflow = useCallback(() => {
+    const el = scrollRef.current;
+    if (el) {
+      setHasOverflow(el.scrollHeight > el.clientHeight + 4);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, [checkOverflow, navGroups]);
+
   return (
     <aside
       className={cn(
@@ -246,34 +263,45 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
         </NavLink>
       </div>
 
-      {/* Nav groups */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-        {navGroups.map((group) => (
-          <div key={group.title}>
-            <div
-              className={cn(
-                "px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap",
-                collapsed ? "h-0 opacity-0 mb-0" : "h-4 opacity-100",
-              )}
-            >
-              {group.title}
+      {/* Nav groups — scrollable with visible scrollbar */}
+      <div
+        ref={wrapperRef}
+        className={cn("sidebar-scroll-wrapper flex-1 min-h-0", hasOverflow && "has-overflow")}
+      >
+        <nav
+          ref={scrollRef}
+          onScroll={checkOverflow}
+          className={cn("sidebar-scroll h-full py-3 px-2 space-y-4", !hasOverflow && "no-overflow")}
+        >
+          {navGroups.map((group) => (
+            <div key={group.title}>
+              <div
+                className={cn(
+                  "px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap",
+                  collapsed ? "h-0 opacity-0 mb-0" : "h-4 opacity-100",
+                )}
+              >
+                {group.title}
+              </div>
+              <div
+                className={cn(
+                  "transition-all duration-300 ease-in-out overflow-hidden",
+                  collapsed ? "h-px opacity-100 mb-2" : "h-0 opacity-0 mb-0",
+                )}
+              >
+                <Separator />
+              </div>
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
+                ))}
+              </div>
             </div>
-            <div
-              className={cn(
-                "transition-all duration-300 ease-in-out overflow-hidden",
-                collapsed ? "h-px opacity-100 mb-2" : "h-0 opacity-0 mb-0",
-              )}
-            >
-              <Separator />
-            </div>
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
+          ))}
+          {/* Bottom padding to keep last items above the fade gradient */}
+          {hasOverflow && <div className="h-6" />}
+        </nav>
+      </div>
 
       {/* Collapse toggle */}
       <div className="p-2 border-t border-[var(--glass-chrome-border)] shrink-0">
@@ -323,7 +351,7 @@ function MobileNav() {
             </SheetTitle>
             <SheetDescription className="sr-only">{t("nav.menuLabel")}</SheetDescription>
           </SheetHeader>
-          <nav className="py-3 px-2 space-y-4">
+          <nav className="sidebar-scroll flex-1 overflow-y-auto py-3 px-2 space-y-4">
             {navGroups.map((group) => (
               <div key={group.title}>
                 <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
