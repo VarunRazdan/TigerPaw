@@ -13,8 +13,8 @@ import { useTradingStore } from "@/stores/trading-store";
 function useDemoData() {
   const store = useTradingStore();
   useEffect(() => {
-    // Only seed once if no data
-    if (store.positions.length > 0) {
+    // Only seed when demo mode is active and no data exists yet
+    if (!store.demoMode || store.positions.length > 0) {
       return;
     }
 
@@ -107,7 +107,7 @@ function useDemoData() {
       createdAt: Date.now(),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [store.demoMode]);
 }
 
 export function TradingPage() {
