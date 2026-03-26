@@ -1,8 +1,14 @@
-name: Publish to npm
+name: Publish to npm (manual fallback)
 
+# DISABLED: This workflow is superseded by tigerpaw-npm-release.yml which
+# triggers on tag push (v*) and includes CalVer validation + npm provenance.
+# Keeping as manual fallback only.
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'publish' to confirm manual npm publish"
+        required: true
 
 concurrency:
   group: publish-npm-${{ github.ref }}

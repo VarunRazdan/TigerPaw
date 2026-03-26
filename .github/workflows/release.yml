@@ -19,12 +19,39 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get package version
+      - name: Validate CalVer version
         id: version
+        shell: bash
         run: |
+          set -euo pipefail
           VERSION=$(node -p "require('./package.json').version")
+
+          # Must match YYYY.M.D or YYYY.M.D-beta.N
+          if ! echo "$VERSION" | grep -qE '^[0-9]{4}\.[1-9][0-9]?\.[1-9][0-9]?(-beta\.[1-9][0-9]*)?$'; then
+            echo "::error::Invalid CalVer version: $VERSION"
+            exit 1
+          fi
+
+          # Extract date components (strip beta suffix)
+          YEAR=$(echo "$VERSION" | cut -d. -f1)
+          MONTH=$(echo "$VERSION" | cut -d. -f2)
+          DAY=$(echo "$VERSION" | cut -d. -f3 | cut -d- -f1)
+
+          # Must be within 2 days of current UTC date
+          VER_EPOCH=$(date -u -d "${YEAR}-$(printf '%02d' "$MONTH")-$(printf '%02d' "$DAY")" +%s 2>/dev/null || \
+                      date -u -j -f "%Y-%m-%d" "${YEAR}-$(printf '%02d' "$MONTH")-$(printf '%02d' "$DAY")" +%s)
+          TODAY_EPOCH=$(date -u +%s)
+          DIFF=$(( (VER_EPOCH - TODAY_EPOCH) / 86400 ))
+          ABS_DIFF=${DIFF#-}
+
+          if [ "$ABS_DIFF" -gt 2 ]; then
+            echo "::error::CalVer version $VERSION is $ABS_DIFF days from today. Max allowed: 2."
+            exit 1
+          fi
+
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "CalVer validation passed: $VERSION"
 
       - name: Check if release already exists
         id: check
@@ -40,10 +67,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create release
+      - name: Create tag and release
         if: steps.check.outputs.exists == 'false'
         run: |
+          set -euo pipefail
           TAG="v${{ steps.version.outputs.version }}"
+
+          # Create and push tag so tigerpaw-npm-release.yml triggers
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag "$TAG" "${{ github.sha }}"
+            git push origin "$TAG"
+          fi
+
           gh release create "$TAG" \
             --target "${{ github.sha }}" \
             --title "Tigerpaw $TAG" \

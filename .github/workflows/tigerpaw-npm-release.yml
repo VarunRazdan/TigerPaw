@@ -46,31 +46,37 @@ jobs:
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           pnpm release:tigerclaw:npm:check
 
-      - name: Ensure version is not already published
+      - name: Check if version already published
+        id: check-published
         run: |
           set -euo pipefail
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-
           PACKAGE_NAME=$(node -p "require('./package.json').name")
+
           if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
-            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} is already published on npm."
-            exit 1
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${PACKAGE_NAME}@${PACKAGE_VERSION} already published — skipping"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+            echo "Will publish ${PACKAGE_NAME}@${PACKAGE_VERSION}"
           fi
 
-          echo "Publishing tigerpaw@${PACKAGE_VERSION}"
-
       - name: Build
+        if: steps.check-published.outputs.already_published != 'true'
         run: pnpm build
 
       - name: Build UI
-        run: cd ui && npm install && npx vite build
+        if: steps.check-published.outputs.already_published != 'true'
+        run: pnpm ui:build
 
       - name: Setup npm auth
+        if: steps.check-published.outputs.already_published != 'true'
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
+        if: steps.check-published.outputs.already_published != 'true'
         run: |
           set -euo pipefail
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
