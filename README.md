@@ -5,7 +5,7 @@
 <h1 align="center">Tigerpaw</h1>
 
 <p align="center">
-  Everything OpenClaw does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Local-first by default.
+  Everything OpenClaw does -- 20+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Local-first by default.
 </p>
 
 <p align="center">
@@ -88,7 +88,7 @@
   · <img src="icons/trading-platforms/binance.svg" height="14" alt="Binance"> Binance
   · <img src="icons/trading-platforms/kraken.svg" height="14" alt="Kraken"> Kraken
   · <img src="icons/trading-platforms/dydx.svg" height="14" alt="dYdX"> dYdX
-- **Policy-Gated Trading** -- Every order goes through a 12-step validation pipeline before execution
+- **Policy-Gated Trading** -- Every order goes through a 12-step validation pipeline (10 policy checks + 2 kill switch gates) before execution
 - **Risk Management** -- Daily spend limits, position limits, drawdown protection, cooldowns, kill switch
 - **Tamper-Evident Audit Log** -- HMAC-SHA256 chain-linked JSONL logging for every trade decision
 - **3 Approval Modes** -- Auto, confirm (configurable timeout + deny/approve on timeout), or manual (configurable timeout)
@@ -127,7 +127,7 @@ But local-first alone isn't enough. Tigerpaw adds **institutional-grade risk con
 | **Kill switch**                  | Instant halt -- manual or auto-triggered, blocks all new orders              |
 | **Approval modes**               | Require manual confirmation before every trade (or auto-approve with limits) |
 
-These aren't optional add-ons -- they're built into the core. **Every order goes through a 12-step validation pipeline before it can execute.** There is no way to bypass it.
+These aren't optional add-ons -- they're built into the core. **Every order goes through a 12-step validation pipeline (10 policy checks + 2 kill switch gates) before it can execute.** There is no way to bypass it.
 
 ### Why Tigerpaw instead of OpenClaw?
 
@@ -447,7 +447,7 @@ Every trade decision is logged to `~/.tigerpaw/trading/audit.jsonl` with HMAC-SH
 The Control UI includes order entry forms on each platform page. Orders are submitted via the gateway's `/tools/invoke` HTTP endpoint, which:
 
 1. Resolves the correct extension tool (e.g., `alpaca_place_order`)
-2. Runs the order through the 12-step policy validation pipeline
+2. Runs the order through the 12-step policy validation pipeline (10 policy checks + 2 kill switch gates)
 3. Applies the configured approval mode (auto/confirm/manual)
 4. Logs the decision to the tamper-evident audit log
 5. Returns the result to the UI
