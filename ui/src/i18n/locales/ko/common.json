@@ -61,6 +61,11 @@
   "nav.menuLabel": "탐색 메뉴",
   "nav.tagline": "멀티 플랫폼 트레이딩 파트너",
   "nav.gatewayConnected": "게이트웨이 연결됨",
+  "nav.assistant": "어시스턴트",
+  "nav.inbox": "받은편지함",
+  "nav.workflows": "워크플로",
   "nav.gatewayDisconnected": "게이트웨이 연결 해제됨",
+  "nav.mcp": "MCP",
+  "nav.models": "모델",
   "to": "~"
 }

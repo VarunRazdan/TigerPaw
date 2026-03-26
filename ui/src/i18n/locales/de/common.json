@@ -61,6 +61,11 @@
   "nav.menuLabel": "Navigationsmenü",
   "nav.tagline": "Multi-Plattform Handelspartner",
   "nav.gatewayConnected": "Gateway verbunden",
+  "nav.assistant": "Assistent",
+  "nav.inbox": "Posteingang",
   "nav.gatewayDisconnected": "Gateway getrennt",
+  "nav.workflows": "Workflows",
+  "nav.mcp": "MCP",
+  "nav.models": "Modelle",
   "to": "bis"
 }

@@ -61,6 +61,11 @@
   "nav.menuLabel": "Menu de navegação",
   "nav.tagline": "Parceiro de negociação multiplataforma",
   "nav.gatewayConnected": "Gateway conectado",
+  "nav.assistant": "Assistente",
+  "nav.inbox": "Caixa de entrada",
+  "nav.workflows": "Fluxos de trabalho",
   "nav.gatewayDisconnected": "Gateway desconectado",
+  "nav.mcp": "MCP",
+  "nav.models": "Modelos",
   "to": "até"
 }

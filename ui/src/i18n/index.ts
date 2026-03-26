@@ -1,16 +1,21 @@
 import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
+import en_assistant from "./locales/en/assistant.json";
 import en_channels from "./locales/en/channels.json";
 import en_common from "./locales/en/common.json";
 import en_config from "./locales/en/config.json";
 import en_connect from "./locales/en/connect.json";
 import en_dashboard from "./locales/en/dashboard.json";
+import en_inbox from "./locales/en/inbox.json";
+import en_mcp from "./locales/en/mcp.json";
+import en_models from "./locales/en/models.json";
 import en_notifications from "./locales/en/notifications.json";
 import en_platforms from "./locales/en/platforms.json";
 import en_security from "./locales/en/security.json";
 import en_settings from "./locales/en/settings.json";
 import en_trading from "./locales/en/trading.json";
+import en_workflows from "./locales/en/workflows.json";
 
 export const SUPPORTED_LANGUAGES = [
   { code: "en", name: "English", nativeName: "English" },
@@ -38,6 +43,11 @@ const NAMESPACES = [
   "connect",
   "settings",
   "platforms",
+  "assistant",
+  "inbox",
+  "workflows",
+  "mcp",
+  "models",
 ] as const;
 
 // Lazy-load non-English locale bundles
@@ -90,6 +100,11 @@ void i18n
         connect: en_connect,
         settings: en_settings,
         platforms: en_platforms,
+        assistant: en_assistant,
+        inbox: en_inbox,
+        workflows: en_workflows,
+        mcp: en_mcp,
+        models: en_models,
       },
     },
     fallbackLng: "en",

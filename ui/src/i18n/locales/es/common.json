@@ -61,6 +61,11 @@
   "nav.menuLabel": "Menú de navegación",
   "nav.tagline": "Socio de trading multiplataforma",
   "nav.gatewayConnected": "Gateway conectado",
+  "nav.assistant": "Asistente",
+  "nav.inbox": "Bandeja de entrada",
+  "nav.workflows": "Flujos de trabajo",
   "nav.gatewayDisconnected": "Gateway desconectado",
+  "nav.mcp": "MCP",
+  "nav.models": "Modelos",
   "to": "hasta"
 }

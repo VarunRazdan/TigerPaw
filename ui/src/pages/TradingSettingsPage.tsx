@@ -313,17 +313,6 @@ function ThemeSelector() {
   );
 }
 
-function LanguageSelector() {
-  const { t } = useTranslation("settings");
-
-  return (
-    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-1">{t("language")}</h3>
-      <p className="text-[11px] text-neutral-500">{t("languageDesc")}</p>
-    </div>
-  );
-}
-
 type RemoteAccessMode = "local" | "tailscale" | "cloudflare";
 
 function RemoteAccessSection() {
@@ -723,9 +712,6 @@ export function TradingSettingsPage() {
 
       {/* Appearance */}
       <ThemeSelector />
-
-      {/* Language */}
-      <LanguageSelector />
 
       {/* Data Source */}
       <DataModeSelector />

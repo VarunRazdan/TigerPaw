@@ -61,6 +61,11 @@
   "nav.menuLabel": "ナビゲーションメニュー",
   "nav.tagline": "マルチプラットフォーム取引パートナー",
   "nav.gatewayConnected": "ゲートウェイ接続済み",
+  "nav.assistant": "アシスタント",
+  "nav.inbox": "受信トレイ",
+  "nav.workflows": "ワークフロー",
   "nav.gatewayDisconnected": "ゲートウェイ未接続",
+  "nav.mcp": "MCP",
+  "nav.models": "モデル",
   "to": "〜"
 }

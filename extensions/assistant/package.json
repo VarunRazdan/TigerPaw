@@ -1,0 +1,12 @@
+{
+  "name": "@tigerpaw/assistant",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Personal AI assistant with task management, reminders, daily briefings, and memory",
+  "type": "module",
+  "tigerpaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

@@ -122,6 +122,23 @@ export type OpenClawConfig = {
   gateway?: GatewayConfig;
   memory?: MemoryConfig;
   trading?: TradingConfig;
+  assistant?: {
+    persona?: "kiera" | "jarvis";
+    dailyBriefing?: {
+      enabled?: boolean;
+      cronExpression?: string;
+      timezone?: string;
+      channels?: string[];
+    };
+    taskManagement?: {
+      enabled?: boolean;
+      maxTasks?: number;
+    };
+    memoryIntegration?: {
+      enabled?: boolean;
+      autoSummarize?: boolean;
+    };
+  };
 };
 
 export type ConfigValidationIssue = {

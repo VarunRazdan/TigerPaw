@@ -61,6 +61,11 @@
   "nav.menuLabel": "導航選單",
   "nav.tagline": "多平台交易夥伴",
   "nav.gatewayConnected": "閘道已連線",
+  "nav.assistant": "助手",
+  "nav.inbox": "收件匣",
+  "nav.workflows": "工作流程",
   "nav.gatewayDisconnected": "閘道已斷線",
+  "nav.mcp": "MCP",
+  "nav.models": "模型",
   "to": "至"
 }

@@ -8,6 +8,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  Bot,
+  Inbox,
+  Workflow,
+  Plug,
+  Cpu,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,6 +58,16 @@ function useNavGroups(): NavGroup[] {
           label: t("nav.dashboard", "Dashboard"),
           icon: <LayoutDashboard className="w-4 h-4" />,
           end: true,
+        },
+        {
+          to: "/inbox",
+          label: t("nav.inbox", "Inbox"),
+          icon: <Inbox className="w-4 h-4" />,
+        },
+        {
+          to: "/assistant",
+          label: t("nav.assistant", "Assistant"),
+          icon: <Bot className="w-4 h-4" />,
         },
       ],
     },
@@ -136,6 +151,21 @@ function useNavGroups(): NavGroup[] {
         icon: <Shield className="w-4 h-4" />,
       },
       { to: "/config", label: t("nav.config", "Config"), icon: <FileJson className="w-4 h-4" /> },
+      {
+        to: "/workflows",
+        label: t("nav.workflows", "Workflows"),
+        icon: <Workflow className="w-4 h-4" />,
+      },
+      {
+        to: "/mcp",
+        label: t("nav.mcp", "MCP"),
+        icon: <Plug className="w-4 h-4" />,
+      },
+      {
+        to: "/models",
+        label: t("nav.models", "Models"),
+        icon: <Cpu className="w-4 h-4" />,
+      },
     ],
   });
 
