@@ -21,6 +21,10 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+# NOTE: Docker requires lowercase image names. github.repository may contain
+# uppercase (e.g. VarunRazdan/TigerPaw). All tag-resolution steps use
+# ${IMAGE,,} (bash lowercase) to ensure valid tags.
+
 jobs:
   # Build amd64 images (default + slim share the build stage cache)
   build-amd64:
@@ -52,6 +56,7 @@ jobs:
           IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
           set -euo pipefail
+          IMAGE="${IMAGE,,}"
           tags=()
           slim_tags=()
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
@@ -156,6 +161,7 @@ jobs:
           IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
           set -euo pipefail
+          IMAGE="${IMAGE,,}"
           tags=()
           slim_tags=()
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
@@ -252,6 +258,7 @@ jobs:
           IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
           set -euo pipefail
+          IMAGE="${IMAGE,,}"
           tags=()
           slim_tags=()
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
