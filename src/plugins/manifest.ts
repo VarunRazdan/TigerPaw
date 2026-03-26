@@ -3,6 +3,8 @@ import path from "node:path";
 import { LEGACY_MANIFEST_KEYS, MANIFEST_KEY } from "../compat/legacy-names.js";
 import { openBoundaryFileSync } from "../infra/boundary-file-read.js";
 import { isRecord } from "../utils.js";
+import type { SignatureVerifyResult } from "./signature-verify.js";
+import { verifyExtensionSignature } from "./signature-verify.js";
 import type { PluginConfigUiHint, PluginKind } from "./types.js";
 
 export const PLUGIN_MANIFEST_FILENAME = "tigerpaw.plugin.json";
@@ -23,6 +25,7 @@ export type PluginManifest = {
   description?: string;
   version?: string;
   uiHints?: Record<string, PluginConfigUiHint>;
+  _signatureStatus?: SignatureVerifyResult;
 };
 
 export type PluginManifestLoadResult =
@@ -104,6 +107,11 @@ export function loadPluginManifest(
     uiHints = raw.uiHints as Record<string, PluginConfigUiHint>;
   }
 
+  // Verify Ed25519 signature if present in the manifest.
+  // Unsigned extensions get { signed: false, verified: false } — they still load
+  // but show an "unverified" badge in the Security Dashboard.
+  const _signatureStatus = verifyExtensionSignature(raw);
+
   return {
     ok: true,
     manifest: {
@@ -117,6 +125,7 @@ export function loadPluginManifest(
       description,
       version,
       uiHints,
+      _signatureStatus,
     },
     manifestPath,
   };

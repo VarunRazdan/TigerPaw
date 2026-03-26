@@ -226,6 +226,7 @@ function createPluginRecord(params: {
   workspaceDir?: string;
   enabled: boolean;
   configSchema: boolean;
+  _signatureStatus?: PluginRecord["_signatureStatus"];
 }): PluginRecord {
   return {
     id: params.id,
@@ -250,6 +251,7 @@ function createPluginRecord(params: {
     configSchema: params.configSchema,
     configUiHints: undefined,
     configJsonSchema: undefined,
+    _signatureStatus: params._signatureStatus,
   };
 }
 
@@ -596,6 +598,7 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
         workspaceDir: candidate.workspaceDir,
         enabled: false,
         configSchema: Boolean(manifestRecord.configSchema),
+        _signatureStatus: manifestRecord._signatureStatus,
       });
       record.status = "disabled";
       record.error = `overridden by ${existingOrigin} plugin`;
@@ -620,6 +623,7 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
       workspaceDir: candidate.workspaceDir,
       enabled: enableState.enabled,
       configSchema: Boolean(manifestRecord.configSchema),
+      _signatureStatus: manifestRecord._signatureStatus,
     });
     record.kind = manifestRecord.kind;
     record.configUiHints = manifestRecord.configUiHints;

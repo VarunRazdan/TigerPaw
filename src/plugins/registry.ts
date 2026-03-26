@@ -14,6 +14,7 @@ import { registerPluginCommand } from "./commands.js";
 import { normalizePluginHttpPath } from "./http-path.js";
 import { findOverlappingPluginHttpRoute } from "./http-route-overlap.js";
 import type { PluginRuntime } from "./runtime/types.js";
+import type { SignatureVerifyResult } from "./signature-verify.js";
 import {
   isPluginHookName,
   isPromptInjectionHookName,
@@ -124,6 +125,7 @@ export type PluginRecord = {
   configSchema: boolean;
   configUiHints?: Record<string, PluginConfigUiHint>;
   configJsonSchema?: Record<string, unknown>;
+  _signatureStatus?: SignatureVerifyResult;
 };
 
 export type PluginRegistry = {

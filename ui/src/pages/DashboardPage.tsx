@@ -19,6 +19,7 @@ import {
 import { fetchCryptoPrices, type CryptoPrice } from "@/lib/coingecko";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app-store";
 import { useTradingStore } from "@/stores/trading-store";
 
 function StatCard({
@@ -206,6 +207,7 @@ function MarketPrices() {
 export function DashboardPage() {
   const { t } = useTranslation("dashboard");
   const { t: tc } = useTranslation("common");
+  const tradingEnabled = useAppStore((s) => s.tradingEnabled);
   const {
     dailyPnlUsd,
     dailyTradeCount,
@@ -226,7 +228,7 @@ export function DashboardPage() {
           <h1 className="text-2xl font-bold text-neutral-100">{t("title")}</h1>
           <p className="text-sm text-neutral-500 mt-1">{t("subtitle")}</p>
         </div>
-        {demoMode && (
+        {tradingEnabled && demoMode && (
           <NavLink
             to="/trading/settings"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-700/50 bg-amber-950/30 text-amber-400 text-xs font-medium hover:bg-amber-950/50 transition-all duration-200 cursor-pointer"
@@ -237,7 +239,7 @@ export function DashboardPage() {
         )}
       </div>
 
-      {killSwitchActive && (
+      {tradingEnabled && killSwitchActive && (
         <div className="rounded-lg border border-red-800 bg-red-950/30 p-4 flex items-center gap-3 hover:bg-red-950/40 transition-all duration-300">
           <span className="text-red-400 text-lg">⛔</span>
           <div>
@@ -247,47 +249,58 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label={t("portfolioValue")}
-          value={`$${currentPortfolioValueUsd.toLocaleString()}`}
-        />
-        <StatCard
-          label={t("dailyPnl")}
-          value={`${pnlSign}$${Math.abs(dailyPnlUsd).toFixed(2)}`}
-          color={pnlColor}
-        />
-        <StatCard label={t("tradesToday")} value={String(dailyTradeCount)} />
-        <StatCard label={t("openPositions")} value={String(positions.length)} />
-      </div>
+      {/* Quick stats — trading stats only when enabled */}
+      {tradingEnabled && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label={t("portfolioValue")}
+            value={`$${currentPortfolioValueUsd.toLocaleString()}`}
+          />
+          <StatCard
+            label={t("dailyPnl")}
+            value={`${pnlSign}$${Math.abs(dailyPnlUsd).toFixed(2)}`}
+            color={pnlColor}
+          />
+          <StatCard label={t("tradesToday")} value={String(dailyTradeCount)} />
+          <StatCard label={t("openPositions")} value={String(positions.length)} />
+        </div>
+      )}
 
       {/* Market Prices */}
       <MarketPrices />
 
-      {/* P&L Chart */}
-      <PnlChart />
+      {/* P&L Chart — trading only */}
+      {tradingEnabled && <PnlChart />}
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <NavLink
-          to="/trading"
-          className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
-        >
-          <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
-            {t("tradingHub")}
-          </h3>
-          <p className="text-xs text-neutral-500 mt-1">{t("tradingHubDesc")}</p>
-        </NavLink>
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-4",
+          tradingEnabled ? "lg:grid-cols-3" : "lg:grid-cols-2",
+        )}
+      >
+        {tradingEnabled && (
+          <NavLink
+            to="/trading"
+            className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
+          >
+            <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
+              {t("tradingHub")}
+            </h3>
+            <p className="text-xs text-neutral-500 mt-1">{t("tradingHubDesc")}</p>
+          </NavLink>
+        )}
 
         <NavLink
-          to="/trading/settings"
+          to="/channels"
           className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
         >
           <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
-            {t("riskSettings")}
+            {t("channels", "Channels")}
           </h3>
-          <p className="text-xs text-neutral-500 mt-1">{t("riskSettingsDesc")}</p>
+          <p className="text-xs text-neutral-500 mt-1">
+            {t("channelsDesc", "Manage your 40+ messaging integrations")}
+          </p>
         </NavLink>
 
         <NavLink
@@ -301,11 +314,11 @@ export function DashboardPage() {
         </NavLink>
       </div>
 
-      {/* Extensions status */}
-      <ExtensionsGrid platforms={platforms} />
+      {/* Extensions status — trading only */}
+      {tradingEnabled && <ExtensionsGrid platforms={platforms} />}
 
-      {/* Platform API details (toggleable) */}
-      <PlatformApiInfo platforms={platforms} />
+      {/* Platform API details — trading only */}
+      {tradingEnabled && <PlatformApiInfo platforms={platforms} />}
     </div>
   );
 }

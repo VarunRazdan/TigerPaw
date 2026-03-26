@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app-store";
+import { useTradingStore } from "@/stores/trading-store";
 
 type AuditFinding = {
   checkId: string;
@@ -8,32 +11,6 @@ type AuditFinding = {
   detail: string;
   remediation?: string;
 };
-
-// Demo findings for visual review
-const DEMO_FINDINGS: AuditFinding[] = [
-  {
-    checkId: "trading-live-manual-recommended",
-    severity: "warn",
-    title: "Live trading with auto-approval mode",
-    detail:
-      'Live trading is using approvalMode "auto" — trades execute without any human confirmation.',
-    remediation: 'Consider switching to approvalMode "confirm" or "manual" for live trading.',
-  },
-  {
-    checkId: "trading-no-kill-switch-tested",
-    severity: "info",
-    title: "Kill switch test reminder",
-    detail:
-      "Verify the kill switch works by running: tigerpaw trading kill && tigerpaw trading resume",
-    remediation: "Test the kill switch periodically to ensure it halts all trading activity.",
-  },
-  {
-    checkId: "config-file-permissions",
-    severity: "info",
-    title: "Config file permissions",
-    detail: "~/.tigerpaw/tigerpaw.json is readable by owner only (0600)",
-  },
-];
 
 const SEVERITY_STYLES: Record<
   string,
@@ -59,6 +36,136 @@ const SEVERITY_STYLES: Record<
     badgeText: "text-neutral-400 hover:text-neutral-300",
   },
 };
+
+/** Known permissions per trading platform (declarative, from extension manifests). */
+const PLATFORM_PERMISSIONS: Record<string, { network: string[]; secrets: number }> = {
+  alpaca: { network: ["api.alpaca.markets"], secrets: 2 },
+  polymarket: { network: ["clob.polymarket.com"], secrets: 4 },
+  kalshi: { network: ["trading-api.kalshi.com"], secrets: 2 },
+  manifold: { network: ["api.manifold.markets"], secrets: 1 },
+  coinbase: { network: ["api.coinbase.com"], secrets: 2 },
+  ibkr: { network: ["localhost:5000"], secrets: 1 },
+  binance: { network: ["api.binance.com"], secrets: 2 },
+  kraken: { network: ["api.kraken.com"], secrets: 2 },
+  dydx: { network: ["indexer.dydx.trade"], secrets: 1 },
+};
+
+/**
+ * Generate audit findings dynamically from current configuration state.
+ */
+function generateFindings(params: {
+  tradingEnabled: boolean;
+  approvalMode: string;
+  tier: string;
+  killSwitchActive: boolean;
+  platforms: Record<string, { connected: boolean; mode: string }>;
+  demoMode: boolean;
+  limits: { maxDailySpendUsd: number; maxSingleTradeUsd: number };
+}): AuditFinding[] {
+  const findings: AuditFinding[] = [];
+
+  if (!params.tradingEnabled) {
+    findings.push({
+      checkId: "trading-disabled",
+      severity: "info",
+      title: "Trading module disabled",
+      detail: "The trading subsystem is not enabled. Only messaging and agent features are active.",
+    });
+    findings.push({
+      checkId: "config-file-permissions",
+      severity: "info",
+      title: "Config file permissions",
+      detail: "~/.tigerpaw/tigerpaw.json should be readable by owner only (0600)",
+      remediation: "Run: chmod 600 ~/.tigerpaw/tigerpaw.json",
+    });
+    return findings;
+  }
+
+  // Live mode + auto approval
+  const hasLivePlatform = Object.values(params.platforms).some(
+    (p) => p.connected && (p.mode === "live" || p.mode === "mainnet"),
+  );
+
+  if (hasLivePlatform && params.approvalMode === "auto") {
+    findings.push({
+      checkId: "trading-live-auto-approval",
+      severity: "warn",
+      title: "Live trading with auto-approval mode",
+      detail:
+        'Live trading is using approvalMode "auto" — trades execute without any human confirmation.',
+      remediation: 'Consider switching to approvalMode "confirm" or "manual" for live trading.',
+    });
+  }
+
+  // Aggressive tier on live
+  if (hasLivePlatform && params.tier === "aggressive") {
+    findings.push({
+      checkId: "trading-live-aggressive-tier",
+      severity: "warn",
+      title: "Aggressive risk tier on live trading",
+      detail:
+        "The aggressive tier allows large trades and high daily spend. Limits are relaxed compared to conservative/moderate.",
+      remediation:
+        'Consider starting with "moderate" or "conservative" tier and adjusting individual limits via per-extension overrides.',
+    });
+  }
+
+  // High limits check
+  if (params.limits.maxSingleTradeUsd >= 500 && hasLivePlatform) {
+    findings.push({
+      checkId: "trading-high-single-trade-limit",
+      severity: "warn",
+      title: "High per-trade limit on live mode",
+      detail: `maxSingleTradeUsd is set to $${params.limits.maxSingleTradeUsd}. A single erroneous trade could lose this amount.`,
+      remediation: "Lower the per-trade limit or use per-extension overrides for risky platforms.",
+    });
+  }
+
+  // Kill switch never activated (info)
+  if (!params.killSwitchActive) {
+    findings.push({
+      checkId: "trading-killswitch-reminder",
+      severity: "info",
+      title: "Kill switch test reminder",
+      detail:
+        "Verify the kill switch works by activating it from the dashboard header or via messaging channel commands.",
+      remediation: "Test the kill switch periodically to ensure it halts all trading activity.",
+    });
+  }
+
+  // Demo mode active
+  if (params.demoMode) {
+    findings.push({
+      checkId: "trading-demo-mode",
+      severity: "info",
+      title: "Demo mode active",
+      detail:
+        "The dashboard is showing sample data. Switch to Live in Trading Settings to view real positions.",
+    });
+  }
+
+  // Connected platforms count
+  const connectedCount = Object.values(params.platforms).filter((p) => p.connected).length;
+  if (connectedCount === 0) {
+    findings.push({
+      checkId: "no-platforms-connected",
+      severity: "info",
+      title: "No trading platforms connected",
+      detail: "Connect a platform from the Dashboard to start trading.",
+    });
+  }
+
+  // Config file permissions (always show)
+  findings.push({
+    checkId: "config-file-permissions",
+    severity: "info",
+    title: "Config file permissions",
+    detail: "~/.tigerpaw/tigerpaw.json should be readable by owner only (0600)",
+    remediation: "Run: chmod 600 ~/.tigerpaw/tigerpaw.json",
+  });
+
+  return findings;
+}
 
 function FindingCard({ finding }: { finding: AuditFinding }) {
   const style = SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.info;
@@ -95,9 +202,34 @@ function FindingCard({ finding }: { finding: AuditFinding }) {
 
 export function SecurityPage() {
   const { t } = useTranslation("security");
-  const criticalCount = DEMO_FINDINGS.filter((f) => f.severity === "critical").length;
-  const warnCount = DEMO_FINDINGS.filter((f) => f.severity === "warn").length;
-  const infoCount = DEMO_FINDINGS.filter((f) => f.severity === "info").length;
+  const tradingEnabled = useAppStore((s) => s.tradingEnabled);
+  const approvalMode = useTradingStore((s) => s.approvalMode);
+  const tier = useTradingStore((s) => s.tier);
+  const killSwitchActive = useTradingStore((s) => s.killSwitchActive);
+  const platforms = useTradingStore((s) => s.platforms);
+  const demoMode = useTradingStore((s) => s.demoMode);
+  const limits = useTradingStore((s) => s.limits);
+
+  const findings = useMemo(
+    () =>
+      generateFindings({
+        tradingEnabled,
+        approvalMode,
+        tier,
+        killSwitchActive,
+        platforms,
+        demoMode,
+        limits,
+      }),
+    [tradingEnabled, approvalMode, tier, killSwitchActive, platforms, demoMode, limits],
+  );
+
+  const criticalCount = findings.filter((f) => f.severity === "critical").length;
+  const warnCount = findings.filter((f) => f.severity === "warn").length;
+  const infoCount = findings.filter((f) => f.severity === "info").length;
+
+  // Build extension permissions from connected platforms
+  const connectedPlatforms = Object.entries(platforms).filter(([, p]) => p.connected);
 
   return (
     <div className="space-y-6">
@@ -126,93 +258,70 @@ export function SecurityPage() {
       <div>
         <h2 className="text-sm font-semibold text-neutral-300 mb-3">{t("auditFindings")}</h2>
         <div className="space-y-2">
-          {DEMO_FINDINGS.map((finding) => (
+          {findings.map((finding) => (
             <FindingCard key={finding.checkId} finding={finding} />
           ))}
         </div>
       </div>
 
-      {/* Credential Status */}
-      <div className="rounded-2xl glass-panel p-4">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("credentialStatus")}</h3>
-        <div className="space-y-2">
-          {[
-            { ext: "Alpaca", keys: 2, method: "OS Keychain", age: "12 days" },
-            { ext: "Polymarket", keys: 4, method: "OS Keychain", age: "5 days" },
-            { ext: "Kalshi", keys: 2, method: "Encrypted file", age: "30 days" },
-            { ext: "Manifold", keys: 1, method: "Env var", age: "45 days" },
-          ].map((cred) => (
-            <div
-              key={cred.ext}
-              className="flex items-center justify-between py-1.5 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 rounded-md px-2 -mx-2"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-neutral-300">{cred.ext}</span>
-                <span className="text-xs text-neutral-600">{cred.keys} key(s)</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <span className="text-neutral-500">{cred.method}</span>
-                <span className="text-neutral-600">{cred.age}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Extension Permissions — only when trading is enabled */}
+      {tradingEnabled && connectedPlatforms.length > 0 && (
+        <div className="rounded-2xl glass-panel p-4">
+          <h3 className="text-sm font-semibold text-neutral-300 mb-3">
+            {t("extensionPermissions")}
+          </h3>
+          <div className="space-y-3">
+            {connectedPlatforms.map(([id, platform]) => {
+              const perms = PLATFORM_PERMISSIONS[id];
+              const permLabels: string[] = [];
+              if (perms) {
+                permLabels.push("trading");
+                if (perms.network.length > 0) {
+                  permLabels.push(`network: ${perms.network.join(", ")}`);
+                }
+                permLabels.push(`${perms.secrets} secret(s)`);
+              }
 
-      {/* Extension Permissions */}
-      <div className="rounded-2xl glass-panel p-4">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("extensionPermissions")}</h3>
-        <div className="space-y-3">
-          {[
-            {
-              name: "Alpaca",
-              perms: ["trading", "network: api.alpaca.markets", "2 secrets"],
-              verified: true,
-            },
-            {
-              name: "Polymarket",
-              perms: ["trading", "network: clob.polymarket.com", "4 secrets"],
-              verified: true,
-            },
-            {
-              name: "Kalshi",
-              perms: ["trading", "network: trading-api.kalshi.com", "2 secrets"],
-              verified: false,
-            },
-            {
-              name: "Manifold",
-              perms: ["trading", "network: api.manifold.markets", "1 secret"],
-              verified: false,
-            },
-          ].map((ext) => (
-            <div key={ext.name} className="py-2">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-neutral-200">{ext.name}</span>
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded",
-                    ext.verified
-                      ? "bg-green-900/50 text-green-400"
-                      : "bg-[var(--glass-subtle-hover)] text-neutral-500 hover:bg-[var(--glass-border)] hover:text-neutral-400 transition-colors duration-200",
-                  )}
-                >
-                  {ext.verified ? t("verified") : t("unverified")}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {ext.perms.map((perm) => (
-                  <span
-                    key={perm}
-                    className="text-[11px] px-1.5 py-0.5 rounded bg-[var(--glass-subtle-hover)] text-neutral-500 hover:bg-[var(--glass-border)] hover:text-neutral-400 transition-colors duration-200"
-                  >
-                    {perm}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+              return (
+                <div key={id} className="py-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-neutral-200">{platform.label}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--glass-subtle-hover)] text-neutral-500 hover:bg-[var(--glass-border)] hover:text-neutral-400 transition-colors duration-200">
+                      {t("unverified")}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded",
+                        platform.mode === "live" || platform.mode === "mainnet"
+                          ? "bg-green-900/50 text-green-400"
+                          : "bg-blue-900/50 text-blue-400",
+                      )}
+                    >
+                      {platform.mode}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {permLabels.map((perm) => (
+                      <span
+                        key={perm}
+                        className="text-[11px] px-1.5 py-0.5 rounded bg-[var(--glass-subtle-hover)] text-neutral-500 hover:bg-[var(--glass-border)] hover:text-neutral-400 transition-colors duration-200"
+                      >
+                        {perm}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-neutral-600 mt-3">
+            {t(
+              "signatureNote",
+              "Extensions are unsigned — Ed25519 signature verification is available but no trusted publisher keys are registered yet.",
+            )}
+          </p>
         </div>
-      </div>
+      )}
     </div>
   );
 }

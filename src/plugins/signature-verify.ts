@@ -1,15 +1,17 @@
 /**
  * Ed25519 signature verification for Tigerpaw extensions.
  *
- * STATUS: Implemented but NOT yet wired into the plugin loader.
- * These functions are tested in isolation but never called during plugin loading.
- * Do not advertise this as an active security control until it is integrated
- * into src/plugins/loader.ts and TRUSTED_KEYS is populated with real publisher keys.
+ * Wired into the plugin loader at manifest parse time (src/plugins/manifest.ts).
+ * Every extension gets a SignatureVerifyResult attached to its manifest, which
+ * flows through to the PluginRecord and is displayed in the Security Dashboard.
  *
  * Extensions can include a signature in their manifest. Unsigned extensions
  * load normally but get an "unverified" badge in the UI.
  *
  * Signature is Ed25519 over SHA-256 of the manifest JSON (minus the signature field).
+ *
+ * To enable verification, populate TRUSTED_KEYS with real publisher public keys
+ * (Ed25519, PEM format) via addTrustedKey() or by editing the map below.
  */
 
 import crypto, { createHash } from "node:crypto";

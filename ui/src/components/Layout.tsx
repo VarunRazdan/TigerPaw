@@ -12,8 +12,10 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router-dom";
+import { useGatewayConfig } from "@/hooks/use-gateway-config";
 import { useTradingEvents } from "@/hooks/use-trading-events";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { DailyPnlBar } from "./DailyPnlBar";
 import { KillSwitchButton } from "./KillSwitchButton";
@@ -40,7 +42,9 @@ type NavGroup = {
 
 function useNavGroups(): NavGroup[] {
   const { t } = useTranslation("common");
-  return [
+  const tradingEnabled = useAppStore((s) => s.tradingEnabled);
+
+  const groups: NavGroup[] = [
     {
       title: t("nav.overview", "Overview"),
       items: [
@@ -52,7 +56,10 @@ function useNavGroups(): NavGroup[] {
         },
       ],
     },
-    {
+  ];
+
+  if (tradingEnabled) {
+    groups.push({
       title: t("nav.trading", "Trading"),
       items: [
         {
@@ -112,24 +119,27 @@ function useNavGroups(): NavGroup[] {
           icon: <Settings className="w-4 h-4" />,
         },
       ],
-    },
-    {
-      title: t("nav.system", "System"),
-      items: [
-        {
-          to: "/channels",
-          label: t("nav.channels", "Channels"),
-          icon: <MessageSquare className="w-4 h-4" />,
-        },
-        {
-          to: "/security",
-          label: t("nav.security", "Security"),
-          icon: <Shield className="w-4 h-4" />,
-        },
-        { to: "/config", label: t("nav.config", "Config"), icon: <FileJson className="w-4 h-4" /> },
-      ],
-    },
-  ];
+    });
+  }
+
+  groups.push({
+    title: t("nav.system", "System"),
+    items: [
+      {
+        to: "/channels",
+        label: t("nav.channels", "Channels"),
+        icon: <MessageSquare className="w-4 h-4" />,
+      },
+      {
+        to: "/security",
+        label: t("nav.security", "Security"),
+        icon: <Shield className="w-4 h-4" />,
+      },
+      { to: "/config", label: t("nav.config", "Config"), icon: <FileJson className="w-4 h-4" /> },
+    ],
+  });
+
+  return groups;
 }
 
 function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
@@ -323,6 +333,8 @@ export function Layout() {
   const { t } = useTranslation("common");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const theme = useThemeStore((s) => s.theme);
+  const tradingEnabled = useAppStore((s) => s.tradingEnabled);
+  useGatewayConfig();
   useTradingEvents();
 
   // Apply theme to document root so CSS [data-theme] selectors activate
@@ -363,12 +375,12 @@ export function Layout() {
 
             {/* Right side: Notifications + Kill Switch + PnL */}
             <div className="ml-auto rtl:ml-0 rtl:mr-auto flex items-center gap-4">
-              <DailyPnlBar />
+              {tradingEnabled && <DailyPnlBar />}
               <div className="flex items-center gap-1.5">
                 <LanguageSwitcher />
                 <NotificationBell />
               </div>
-              <KillSwitchButton />
+              {tradingEnabled && <KillSwitchButton />}
             </div>
           </div>
         </header>
