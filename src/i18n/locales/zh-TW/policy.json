@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "緊急停止開關已啟動（{{mode}} 模式）：{{reason}}",
+  "killSwitchAutoActivated": "因風險閾值遭突破，緊急停止開關已自動啟動",
+  "invalidNotional": "名目價值無效：{{value}}",
+  "invalidQuantity": "數量無效：{{value}}",
+  "invalidPrice": "價格無效：{{value}}",
+  "cooldownActive": "冷卻期生效中：剩餘 {{remaining}} 秒",
+  "riskPerTradeExceeded": "單筆交易風險 {{actual}}% 超出限額 {{limit}}%",
+  "tradeSizeExceeded": "交易金額 ${{actual}} 超出上限 ${{limit}}",
+  "dailyLossExceeded": "當日虧損 {{actual}}% 已達到或超出限額 {{limit}}%",
+  "positionConcentrationExceeded": "部位集中度 {{actual}}% 超出限額 {{limit}}%",
+  "maxPositionsReached": "未平倉部位數（{{current}}）已達上限（{{limit}}）",
+  "maxTradesReached": "當日交易次數（{{current}}）已達上限（{{limit}}）",
+  "dailySpendExceeded": "預計當日支出 ${{projected}} 將超出限額 ${{limit}}",
+  "consecutiveLossesReached": "連續虧損次數（{{current}}）已達暫停閾值（{{limit}}）",
+  "autoApproved": "所有交易前檢查均已通過，已自動核准",
+  "awaitingConfirmation": "所有交易前檢查均已通過，等待操作員確認（逾時後執行 {{action}}）",
+  "awaitingManualApproval": "所有交易前檢查均已通過，等待操作員手動核准（逾時後執行 {{action}}）"
+}

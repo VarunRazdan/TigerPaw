@@ -1,0 +1,104 @@
+{
+  "_comment": "後端交易擴充功能國際化字串",
+
+  "noTradingData": "目前無交易資料。請先連接交易平台並啟用交易功能。",
+  "failedToLoad": "載入 {{resource}} 失敗：{{error}}",
+
+  "common.quantityMustBePositive": "數量必須大於 0。",
+  "common.limitPriceRequired": "{{type}} 訂單需要指定限價。",
+  "common.stopPriceRequired": "{{type}} 訂單需要指定停損價。",
+  "common.orderDenied": "訂單遭拒：{{reason}}",
+  "common.orderFailed": "訂單失敗：{{error}}",
+  "common.cancelDenied": "撤單遭拒：{{reason}}",
+  "common.cancelFailed": "撤單失敗：{{error}}",
+  "common.cancelSuccess": "訂單 {{orderId}} 已成功撤銷。",
+  "common.noOpenPositions": "目前無未平倉部位。",
+  "common.noOpenPositionsOn": "{{platform}} 上目前無未平倉部位。",
+  "common.noOrderHistory": "歷史訂單為空。",
+  "common.noRecentTrades": "稽核日誌中無近期交易紀錄。",
+  "common.noRecentTradesOn": "{{platform}} 上無近期交易紀錄。",
+  "common.noSearchResults": "未找到符合「{{query}}」的可交易資產。",
+
+  "tc.portfolioSummary": "投資組合概覽",
+  "tc.total": "總計",
+  "tc.highWater": "歷史最高淨值",
+  "tc.drawdown": "最大回撤",
+
+  "tc.dailyMetrics": "今日交易活動（{{date}}）",
+  "tc.dailyPnl": "當日損益",
+  "tc.dailySpend": "當日支出",
+  "tc.trades": "交易次數",
+  "tc.consecLosses": "連續虧損",
+  "tc.portfolioValue": "投資組合價值",
+
+  "tc.openPositions": "未平倉部位（{{count}}）",
+  "tc.value": "價值",
+  "tc.ofPortfolio": "佔投資組合",
+  "tc.totalOpen": "未平倉總計",
+
+  "tc.killSwitchStatus": "緊急停止開關狀態",
+  "tc.globalActive": "全域：已啟動（{{mode}} 模式）",
+  "tc.globalOff": "全域：已關閉 — 交易正常運作",
+  "tc.reason": "原因",
+  "tc.activatedBy": "觸發者",
+  "tc.since": "自",
+  "tc.platformKillSwitches": "各平台緊急停止開關：",
+  "tc.platformActive": "{{platform}}：已啟動 — {{reason}}",
+
+  "tc.killSwitchActivated": "緊急停止開關已啟動（{{mode}} 模式）。\n原因：{{reason}}\n\n所有交易已暫停。",
+  "tc.killSwitchAlreadyOff": "緊急停止開關已處於關閉狀態，交易正常運作。",
+  "tc.killSwitchDeactivated": "緊急停止開關已停用，交易已恢復。\n\n所有已設定的風險限額仍然有效。",
+
+  "tc.failedActivate": "啟動緊急停止開關失敗：{{error}}",
+  "tc.failedDeactivate": "停用緊急停止開關失敗：{{error}}",
+  "tc.failedKillSwitchCheck": "檢查緊急停止開關失敗：{{error}}",
+
+  "tc.riskLimitUtilization": "風險限額使用狀況",
+  "tc.noRiskLimits": "尚未設定風險限額。",
+  "tc.dailySpendGauge": "當日支出",
+  "tc.tradesPerDayGauge": "每日交易次數",
+  "tc.positionsGauge": "部位數量",
+  "tc.dailyLossGauge": "當日虧損",
+  "tc.drawdownGauge": "最大回撤",
+  "tc.consecLossesGauge": "連續虧損",
+  "tc.approachingLimits": "接近限額：{{limits}}",
+
+  "tc.recentTrades": "近期交易（{{count}}）",
+  "tc.denied": "原因",
+  "tc.failedLoadPortfolio": "載入投資組合失敗：{{error}}",
+  "tc.failedLoadMetrics": "載入指標失敗：{{error}}",
+  "tc.failedLoadPositions": "載入部位失敗：{{error}}",
+  "tc.failedLoadRisk": "載入風險狀態失敗：{{error}}",
+  "tc.failedReadHistory": "讀取交易歷史失敗：{{error}}",
+
+  "alpaca.searchNoResults": "未找到符合「{{query}}」的可交易資產。",
+  "alpaca.quoteFailed": "取得 {{symbol}} 報價失敗：{{error}}",
+  "alpaca.orderPlaced": "訂單已送出：{{side}} {{qty}} {{symbol}}（{{type}}）— {{status}}",
+  "alpaca.bracketOrderPlaced": "括號訂單已送出：{{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "polymarket.orderPlaced": "限價單已下達：{{side}} {{size}} 份合約，價格 {{price}}",
+  "polymarket.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "kalshi.orderPlaced": "訂單已下達：{{side}} {{count}} 份合約，價格 {{price}}¢",
+  "kalshi.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "manifold.betPlaced": "投注成功：{{outcome}} {{amount}}，問題「{{question}}」",
+  "manifold.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "coinbase.orderPlaced": "訂單已送出：{{side}} {{qty}} {{symbol}}（{{type}}）",
+  "coinbase.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "ibkr.orderPlaced": "訂單已送出：{{side}} {{qty}} {{symbol}}（{{type}}）",
+  "ibkr.bracketOrderPlaced": "括號訂單已送出：{{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "binance.orderPlaced": "訂單已送出：{{side}} {{qty}} {{symbol}}（{{type}}）",
+  "binance.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "kraken.orderPlaced": "訂單已送出：{{side}} {{volume}} {{pair}}（{{type}}）",
+  "kraken.fetchFailed": "取得 {{resource}} 失敗：{{error}}",
+
+  "dydx.notImplemented": "dYdX 下單需要透過 Cosmos SDK 進行交易簽署，此功能尚未實作。請暫時使用 dYdX 網頁介面。",
+  "dydx.fetchFailed": "取得 {{resource}} 失敗：{{error}}"
+}

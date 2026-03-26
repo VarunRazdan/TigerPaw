@@ -1,0 +1,14 @@
+{
+  "connectPlatform": "الاتصال بـ {{platform}}",
+  "setupSteps": "خطوات الإعداد",
+  "credentials": "بيانات الاعتماد",
+  "configPreview": "معاينة الإعدادات",
+  "saveToConfig": "حفظ في الإعدادات",
+  "saving": "جارٍ الحفظ...",
+  "savedSuccess": "تم الحفظ في tigerpaw.json!",
+  "gatewayDown": "لا يمكن الوصول إلى البوابة — ابدأ Tigerpaw أولاً",
+  "gatewayDownHint": "ابدأ Tigerpaw أولاً، ثم حاول مرة أخرى",
+  "copyFallback": "نسخ مقتطف الإعدادات إلى الحافظة بدلاً من ذلك",
+  "sandboxAvailable": "بيئة تجريبية متاحة — ابدأ في وضع {{mode}} للاختبار بأمان",
+  "openSetupPage": "فتح صفحة إعداد {{platform}} →"
+}

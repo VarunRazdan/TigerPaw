@@ -19,6 +19,8 @@ import {
   withPlatformPortfolio,
   withPlatformPositionCount,
   autoActivateIfBreached,
+  checkKillSwitch,
+  isOrderAllowedUnderKillSwitch,
   type TradeOrder,
 } from "tigerpaw/trading";
 import { ibkrConfigSchema, getBaseUrl, type IbkrConfig } from "./config.js";
@@ -658,6 +660,21 @@ const ibkrPlugin = {
         async execute(_id: string, params: unknown) {
           const { orderId } = params as { orderId: string };
           api.logger.info(`ibkr: cancelling order ${orderId}`);
+
+          // Kill switch gate: hard mode blocks cancels, soft mode allows them.
+          const killStatus = await checkKillSwitch();
+          if (killStatus.active && !isOrderAllowedUnderKillSwitch(killStatus, "cancel")) {
+            const reason = `kill switch active (${killStatus.mode ?? "hard"} mode): ${killStatus.reason ?? "no reason provided"}`;
+            api.logger.warn(`ibkr: cancel denied — ${reason}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "denied",
+              actor: "system",
+              error: reason,
+            });
+            return txtD(`Cancel denied: ${reason}`, { error: "kill_switch", reason });
+          }
+
           try {
             await cpReq(
               cfg,

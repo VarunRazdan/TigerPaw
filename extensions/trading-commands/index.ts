@@ -22,19 +22,15 @@ import {
   activateKillSwitch,
   deactivateKillSwitch,
   readAuditEntries,
+  createLocalizedHelpers,
   type TradingPolicyConfig,
 } from "tigerpaw/trading";
 import { tradingCommandsConfigSchema } from "./config.js";
 
+// -- i18n helpers ------------------------------------------------------------
+const { t, rawTxt: txt, rawTxtD: txtD } = createLocalizedHelpers("extensions");
+
 // -- Helpers -----------------------------------------------------------------
-
-function txt(text: string) {
-  return { content: [{ type: "text" as const, text }], details: undefined };
-}
-
-function txtD(text: string, details: unknown) {
-  return { ...txt(text), details };
-}
 
 function $(n: number): string {
   return `$${Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -60,8 +56,7 @@ function hasData(state: {
   );
 }
 
-const NO_DATA_MSG =
-  "No trading data available. Connect a trading platform and enable trading first.";
+const NO_DATA_MSG = () => t("noTradingData");
 
 // -- Plugin ------------------------------------------------------------------
 
@@ -87,10 +82,10 @@ const tradingCommandsPlugin = {
         async execute(_id: string, _params: unknown) {
           try {
             const state = await loadPolicyState();
-            if (!hasData(state)) return txt(NO_DATA_MSG);
+            if (!hasData(state)) return txt(NO_DATA_MSG());
 
             const platforms = Object.entries(state.portfolioByPlatform);
-            const lines: string[] = ["Portfolio Summary", "─".repeat(40)];
+            const lines: string[] = [t("tc.portfolioSummary"), "─".repeat(40)];
 
             if (platforms.length > 0) {
               const maxLen = Math.max(...platforms.map(([k]) => k.length));
@@ -100,8 +95,8 @@ const tradingCommandsPlugin = {
               lines.push("─".repeat(40));
             }
 
-            lines.push(`  Total           ${$(state.currentPortfolioValueUsd)}`);
-            lines.push(`  High Water      ${$(state.highWaterMarkUsd)}`);
+            lines.push(`  ${t("tc.total").padEnd(16)}${$(state.currentPortfolioValueUsd)}`);
+            lines.push(`  ${t("tc.highWater").padEnd(16)}${$(state.highWaterMarkUsd)}`);
 
             const drawdown =
               state.highWaterMarkUsd > 0
@@ -109,7 +104,7 @@ const tradingCommandsPlugin = {
                     state.highWaterMarkUsd) *
                   100
                 : 0;
-            lines.push(`  Drawdown        ${pct(drawdown)}`);
+            lines.push(`  ${t("tc.drawdown").padEnd(16)}${pct(drawdown)}`);
 
             return txtD(lines.join("\n"), {
               portfolioByPlatform: state.portfolioByPlatform,
@@ -119,7 +114,9 @@ const tradingCommandsPlugin = {
             });
           } catch (err) {
             return txt(
-              `Failed to load portfolio: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedLoadPortfolio", {
+                error: err instanceof Error ? err.message : String(err),
+              }),
             );
           }
         },
@@ -139,44 +136,44 @@ const tradingCommandsPlugin = {
         async execute(_id: string, _params: unknown) {
           try {
             const state = await loadPolicyState();
-            if (!hasData(state)) return txt(NO_DATA_MSG);
+            if (!hasData(state)) return txt(NO_DATA_MSG());
 
             const limits = policyConfig?.limits;
             const pnlSign = state.dailyPnlUsd >= 0 ? "+" : "-";
 
             const lines = [
-              `Today's Trading Activity (${state.date})`,
+              t("tc.dailyMetrics", { date: state.date }),
               "─".repeat(40),
-              `  Daily P&L:       ${pnlSign}${$(state.dailyPnlUsd)}`,
+              `  ${t("tc.dailyPnl")}:       ${pnlSign}${$(state.dailyPnlUsd)}`,
             ];
 
             if (limits?.maxDailySpendUsd) {
               const spendPct = (state.dailySpendUsd / limits.maxDailySpendUsd) * 100;
               lines.push(
-                `  Daily Spend:     ${$(state.dailySpendUsd)} / ${$(limits.maxDailySpendUsd)} (${pct(spendPct)})`,
+                `  ${t("tc.dailySpend")}:     ${$(state.dailySpendUsd)} / ${$(limits.maxDailySpendUsd)} (${pct(spendPct)})`,
               );
             } else {
-              lines.push(`  Daily Spend:     ${$(state.dailySpendUsd)}`);
+              lines.push(`  ${t("tc.dailySpend")}:     ${$(state.dailySpendUsd)}`);
             }
 
             if (limits?.maxTradesPerDay) {
               const tradePct = (state.dailyTradeCount / limits.maxTradesPerDay) * 100;
               lines.push(
-                `  Trades:          ${state.dailyTradeCount} / ${limits.maxTradesPerDay} (${pct(tradePct)})`,
+                `  ${t("tc.trades")}:          ${state.dailyTradeCount} / ${limits.maxTradesPerDay} (${pct(tradePct)})`,
               );
             } else {
-              lines.push(`  Trades:          ${state.dailyTradeCount}`);
+              lines.push(`  ${t("tc.trades")}:          ${state.dailyTradeCount}`);
             }
 
             if (limits?.consecutiveLossPause) {
               lines.push(
-                `  Consec. Losses:  ${state.consecutiveLosses} / ${limits.consecutiveLossPause}`,
+                `  ${t("tc.consecLosses")}:  ${state.consecutiveLosses} / ${limits.consecutiveLossPause}`,
               );
             } else {
-              lines.push(`  Consec. Losses:  ${state.consecutiveLosses}`);
+              lines.push(`  ${t("tc.consecLosses")}:  ${state.consecutiveLosses}`);
             }
 
-            lines.push(`  Portfolio Value:  ${$(state.currentPortfolioValueUsd)}`);
+            lines.push(`  ${t("tc.portfolioValue")}:  ${$(state.currentPortfolioValueUsd)}`);
 
             return txtD(lines.join("\n"), {
               date: state.date,
@@ -188,7 +185,9 @@ const tradingCommandsPlugin = {
             });
           } catch (err) {
             return txt(
-              `Failed to load metrics: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedLoadMetrics", {
+                error: err instanceof Error ? err.message : String(err),
+              }),
             );
           }
         },
@@ -225,10 +224,14 @@ const tradingCommandsPlugin = {
             }
 
             if (entries.length === 0) {
-              return txt(filter ? `No open positions on ${filter}.` : "No open positions.");
+              return txt(
+                filter
+                  ? t("common.noOpenPositionsOn", { platform: filter })
+                  : t("common.noOpenPositions"),
+              );
             }
 
-            const lines = [`Open Positions (${entries.length})`, "─".repeat(50)];
+            const lines = [t("tc.openPositions", { count: entries.length }), "─".repeat(50)];
 
             for (const [asset, pos] of entries) {
               lines.push(`  ${asset}  (${pos.extensionId})`);
@@ -238,7 +241,7 @@ const tradingCommandsPlugin = {
             }
 
             lines.push("─".repeat(50));
-            lines.push(`  Total open: ${state.openPositionCount}`);
+            lines.push(`  ${t("tc.totalOpen")}: ${state.openPositionCount}`);
 
             return txtD(lines.join("\n"), {
               positions: state.positionsByAsset,
@@ -247,7 +250,9 @@ const tradingCommandsPlugin = {
             });
           } catch (err) {
             return txt(
-              `Failed to load positions: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedLoadPositions", {
+                error: err instanceof Error ? err.message : String(err),
+              }),
             );
           }
         },
@@ -269,25 +274,27 @@ const tradingCommandsPlugin = {
             const ks = await checkKillSwitch();
             const state = await loadPolicyState();
 
-            const lines = ["Kill Switch Status", "─".repeat(40)];
+            const lines = [t("tc.killSwitchStatus"), "─".repeat(40)];
 
             if (ks.active) {
-              lines.push(`  Global:  ACTIVE (${ks.mode ?? "hard"} mode)`);
-              lines.push(`  Reason:  ${ks.reason ?? "unknown"}`);
-              lines.push(`  By:      ${ks.activatedBy ?? "unknown"}`);
+              lines.push(`  ${t("tc.globalActive", { mode: ks.mode ?? "hard" })}`);
+              lines.push(`  ${t("tc.reason")}:  ${ks.reason ?? "unknown"}`);
+              lines.push(`  ${t("tc.activatedBy")}:      ${ks.activatedBy ?? "unknown"}`);
               if (ks.activatedAt) {
-                lines.push(`  Since:   ${new Date(ks.activatedAt).toISOString()}`);
+                lines.push(`  ${t("tc.since")}:   ${new Date(ks.activatedAt).toISOString()}`);
               }
             } else {
-              lines.push("  Global:  OFF — trading is active");
+              lines.push(`  ${t("tc.globalOff")}`);
             }
 
             const platformSwitches = Object.entries(state.platformKillSwitches);
             const activePlatforms = platformSwitches.filter(([, v]) => v.active);
             if (activePlatforms.length > 0) {
-              lines.push("", "  Platform Kill Switches:");
+              lines.push("", `  ${t("tc.platformKillSwitches")}`);
               for (const [platform, ps] of activePlatforms) {
-                lines.push(`    ${platform}: ACTIVE — ${ps.reason ?? "no reason"}`);
+                lines.push(
+                  `    ${t("tc.platformActive", { platform, reason: ps.reason ?? "no reason" })}`,
+                );
               }
             }
 
@@ -299,7 +306,9 @@ const tradingCommandsPlugin = {
             });
           } catch (err) {
             return txt(
-              `Failed to check kill switch: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedKillSwitchCheck", {
+                error: err instanceof Error ? err.message : String(err),
+              }),
             );
           }
         },
@@ -336,13 +345,14 @@ const tradingCommandsPlugin = {
             const { reason, mode } = params as { reason: string; mode?: "hard" | "soft" };
             const ksMode = mode === "soft" ? "soft" : "hard";
             await activateKillSwitch(reason, "operator", ksMode);
-            return txtD(
-              `Kill switch ACTIVATED (${ksMode} mode).\nReason: ${reason}\n\nAll trading is now halted.`,
-              { active: true, mode: ksMode, reason },
-            );
+            return txtD(t("tc.killSwitchActivated", { mode: ksMode, reason }), {
+              active: true,
+              mode: ksMode,
+              reason,
+            });
           } catch (err) {
             return txt(
-              `Failed to activate kill switch: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedActivate", { error: err instanceof Error ? err.message : String(err) }),
             );
           }
         },
@@ -364,17 +374,13 @@ const tradingCommandsPlugin = {
           try {
             const before = await checkKillSwitch();
             if (!before.active) {
-              return txt("Kill switch is already OFF. Trading is active.");
+              return txt(t("tc.killSwitchAlreadyOff"));
             }
             await deactivateKillSwitch("operator");
-            return txtD(
-              "Kill switch DEACTIVATED. Trading has resumed.\n\n" +
-                "All configured risk limits remain in effect.",
-              { active: false },
-            );
+            return txtD(t("tc.killSwitchDeactivated"), { active: false });
           } catch (err) {
             return txt(
-              `Failed to deactivate kill switch: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedDeactivate", { error: err instanceof Error ? err.message : String(err) }),
             );
           }
         },
@@ -394,12 +400,12 @@ const tradingCommandsPlugin = {
         async execute(_id: string, _params: unknown) {
           try {
             const state = await loadPolicyState();
-            if (!hasData(state)) return txt(NO_DATA_MSG);
+            if (!hasData(state)) return txt(NO_DATA_MSG());
 
             const limits = policyConfig?.limits;
-            if (!limits) return txt("No risk limits configured.");
+            if (!limits) return txt(t("tc.noRiskLimits"));
 
-            const lines = ["Risk Limit Utilization", "─".repeat(50)];
+            const lines = [t("tc.riskLimitUtilization"), "─".repeat(50)];
             const gauges: Record<string, number> = {};
 
             // Daily spend
@@ -465,13 +471,16 @@ const tradingCommandsPlugin = {
             // Warnings
             const atRisk = Object.entries(gauges).filter(([, r]) => r >= 0.8);
             if (atRisk.length > 0) {
-              lines.push("", "  ⚠ Approaching limits: " + atRisk.map(([k]) => k).join(", "));
+              lines.push(
+                "",
+                `  ⚠ ${t("tc.approachingLimits", { limits: atRisk.map(([k]) => k).join(", ") })}`,
+              );
             }
 
             return txtD(lines.join("\n"), { gauges });
           } catch (err) {
             return txt(
-              `Failed to load risk status: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedLoadRisk", { error: err instanceof Error ? err.message : String(err) }),
             );
           }
         },
@@ -529,13 +538,11 @@ const tradingCommandsPlugin = {
 
             if (recent.length === 0) {
               return txt(
-                platform
-                  ? `No recent trades on ${platform}.`
-                  : "No recent trades in the audit log.",
+                platform ? t("common.noRecentTradesOn", { platform }) : t("common.noRecentTrades"),
               );
             }
 
-            const lines = [`Recent Trades (${recent.length})`, "─".repeat(55)];
+            const lines = [t("tc.recentTrades", { count: recent.length }), "─".repeat(55)];
 
             for (const entry of recent) {
               const time = entry.timestamp.slice(0, 19).replace("T", " ");
@@ -566,7 +573,9 @@ const tradingCommandsPlugin = {
             });
           } catch (err) {
             return txt(
-              `Failed to read trade history: ${err instanceof Error ? err.message : String(err)}`,
+              t("tc.failedReadHistory", {
+                error: err instanceof Error ? err.message : String(err),
+              }),
             );
           }
         },

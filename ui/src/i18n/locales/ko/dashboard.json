@@ -1,0 +1,21 @@
+{
+  "title": "Tigerpaw 대시보드",
+  "subtitle": "AI가 거래합니다. 결정은 당신이.",
+  "portfolioValue": "포트폴리오 평가액",
+  "dailyPnl": "일일 손익",
+  "tradesToday": "오늘의 거래 수",
+  "openPositions": "보유 포지션",
+  "marketPrices": "시장 가격",
+  "tradingExtensions": "거래 확장 기능",
+  "tradingHub": "거래 허브 →",
+  "tradingHubDesc": "리스크 대시보드, 승인 큐, 포지션, 거래 내역",
+  "riskSettings": "리스크 설정 →",
+  "riskSettingsDesc": "리스크 티어, 승인 모드, 포지션 한도 구성",
+  "security": "보안 →",
+  "securityDesc": "보안 감사, 자격증명 상태, 확장 기능 권한",
+  "killSwitchActive": "킬 스위치 활성화",
+  "killSwitchActiveDesc": "모든 거래가 중단되었습니다. 거래 허브에서 재개할 수 있습니다.",
+  "disconnectTitle": "{{platform}} 연결을 해제하시겠습니까?",
+  "disconnectDesc": "이 플랫폼의 모든 거래가 중단됩니다. 보유 포지션은 자동으로 청산되지 않습니다. 언제든지 다시 연결할 수 있습니다.",
+  "disconnectLabel": "{{platform}} 연결 해제"
+}

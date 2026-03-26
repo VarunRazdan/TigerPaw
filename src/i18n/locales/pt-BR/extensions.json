@@ -1,0 +1,104 @@
+{
+  "_comment": "Strings de i18n para extensões de negociação no backend",
+
+  "noTradingData": "Nenhum dado de negociação disponível. Conecte uma plataforma de negociação e habilite as negociações primeiro.",
+  "failedToLoad": "Falha ao carregar {{resource}}: {{error}}",
+
+  "common.quantityMustBePositive": "A quantidade deve ser maior que 0.",
+  "common.limitPriceRequired": "O preço limite é obrigatório para ordens do tipo {{type}}.",
+  "common.stopPriceRequired": "O preço de stop é obrigatório para ordens do tipo {{type}}.",
+  "common.orderDenied": "Ordem negada: {{reason}}",
+  "common.orderFailed": "Falha na ordem: {{error}}",
+  "common.cancelDenied": "Cancelamento negado: {{reason}}",
+  "common.cancelFailed": "Falha no cancelamento: {{error}}",
+  "common.cancelSuccess": "Ordem {{orderId}} cancelada com sucesso.",
+  "common.noOpenPositions": "Nenhuma posição aberta.",
+  "common.noOpenPositionsOn": "Nenhuma posição aberta em {{platform}}.",
+  "common.noOrderHistory": "Nenhuma ordem no histórico.",
+  "common.noRecentTrades": "Nenhuma negociação recente no registro de auditoria.",
+  "common.noRecentTradesOn": "Nenhuma negociação recente em {{platform}}.",
+  "common.noSearchResults": "Nenhum ativo negociável encontrado correspondendo a \"{{query}}\".",
+
+  "tc.portfolioSummary": "Resumo da Carteira",
+  "tc.total": "Total",
+  "tc.highWater": "Máxima Histórica",
+  "tc.drawdown": "Drawdown",
+
+  "tc.dailyMetrics": "Atividade de Negociação de Hoje ({{date}})",
+  "tc.dailyPnl": "Lucro/Perda Diário",
+  "tc.dailySpend": "Gasto Diário",
+  "tc.trades": "Negociações",
+  "tc.consecLosses": "Perdas Consec.",
+  "tc.portfolioValue": "Valor da Carteira",
+
+  "tc.openPositions": "Posições Abertas ({{count}})",
+  "tc.value": "Valor",
+  "tc.ofPortfolio": "da carteira",
+  "tc.totalOpen": "Total em aberto",
+
+  "tc.killSwitchStatus": "Status do Interruptor de Emergência",
+  "tc.globalActive": "Global:  ATIVO (modo {{mode}})",
+  "tc.globalOff": "Global:  DESLIGADO — negociações ativas",
+  "tc.reason": "Motivo",
+  "tc.activatedBy": "Por",
+  "tc.since": "Desde",
+  "tc.platformKillSwitches": "Interruptores de Emergência por Plataforma:",
+  "tc.platformActive": "{{platform}}: ATIVO — {{reason}}",
+
+  "tc.killSwitchActivated": "Interruptor de emergência ATIVADO (modo {{mode}}).\nMotivo: {{reason}}\n\nTodas as negociações foram interrompidas.",
+  "tc.killSwitchAlreadyOff": "O interruptor de emergência já está DESLIGADO. As negociações estão ativas.",
+  "tc.killSwitchDeactivated": "Interruptor de emergência DESATIVADO. As negociações foram retomadas.\n\nTodos os limites de risco configurados permanecem em vigor.",
+
+  "tc.failedActivate": "Falha ao ativar o interruptor de emergência: {{error}}",
+  "tc.failedDeactivate": "Falha ao desativar o interruptor de emergência: {{error}}",
+  "tc.failedKillSwitchCheck": "Falha ao verificar o interruptor de emergência: {{error}}",
+
+  "tc.riskLimitUtilization": "Utilização dos Limites de Risco",
+  "tc.noRiskLimits": "Nenhum limite de risco configurado.",
+  "tc.dailySpendGauge": "Gasto Diário",
+  "tc.tradesPerDayGauge": "Negociações/Dia",
+  "tc.positionsGauge": "Posições",
+  "tc.dailyLossGauge": "Perda Diária",
+  "tc.drawdownGauge": "Drawdown",
+  "tc.consecLossesGauge": "Perdas Consec.",
+  "tc.approachingLimits": "Aproximando-se dos limites: {{limits}}",
+
+  "tc.recentTrades": "Negociações Recentes ({{count}})",
+  "tc.denied": "Motivo",
+  "tc.failedLoadPortfolio": "Falha ao carregar carteira: {{error}}",
+  "tc.failedLoadMetrics": "Falha ao carregar métricas: {{error}}",
+  "tc.failedLoadPositions": "Falha ao carregar posições: {{error}}",
+  "tc.failedLoadRisk": "Falha ao carregar status de risco: {{error}}",
+  "tc.failedReadHistory": "Falha ao ler histórico de negociações: {{error}}",
+
+  "alpaca.searchNoResults": "Nenhum ativo negociável encontrado correspondendo a \"{{query}}\".",
+  "alpaca.quoteFailed": "Falha ao obter cotação para {{symbol}}: {{error}}",
+  "alpaca.orderPlaced": "Ordem enviada: {{side}} {{qty}} {{symbol}} ({{type}}) — {{status}}",
+  "alpaca.bracketOrderPlaced": "Ordem bracket enviada: {{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "polymarket.orderPlaced": "Ordem limitada enviada: {{side}} {{size}} contratos a {{price}}",
+  "polymarket.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "kalshi.orderPlaced": "Ordem enviada: {{side}} {{count}} contratos a {{price}}¢",
+  "kalshi.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "manifold.betPlaced": "Aposta realizada: {{outcome}} {{amount}} em \"{{question}}\"",
+  "manifold.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "coinbase.orderPlaced": "Ordem enviada: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "coinbase.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "ibkr.orderPlaced": "Ordem enviada: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "ibkr.bracketOrderPlaced": "Ordem bracket enviada: {{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "binance.orderPlaced": "Ordem enviada: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "binance.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "kraken.orderPlaced": "Ordem enviada: {{side}} {{volume}} {{pair}} ({{type}})",
+  "kraken.fetchFailed": "Falha ao buscar {{resource}}: {{error}}",
+
+  "dydx.notImplemented": "A execução de ordens no dYdX requer assinatura de transações via Cosmos SDK, que ainda não está implementada. Use a interface web do dYdX por enquanto.",
+  "dydx.fetchFailed": "Falha ao buscar {{resource}}: {{error}}"
+}

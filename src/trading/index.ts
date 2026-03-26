@@ -60,3 +60,6 @@ export {
 
 // Notification dispatch
 export { startTradingNotificationDispatch } from "./notification-dispatch.js";
+
+// i18n helpers
+export { createLocalizedHelpers } from "./i18n-helpers.js";

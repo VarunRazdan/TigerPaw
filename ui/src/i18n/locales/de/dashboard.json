@@ -1,0 +1,21 @@
+{
+  "title": "Tigerpaw Übersicht",
+  "subtitle": "Ihre KI handelt. Sie entscheiden.",
+  "portfolioValue": "Portfoliowert",
+  "dailyPnl": "Tages-P&L",
+  "tradesToday": "Heutige Trades",
+  "openPositions": "Offene Positionen",
+  "marketPrices": "Marktpreise",
+  "tradingExtensions": "Handelserweiterungen",
+  "tradingHub": "Handelszentrale →",
+  "tradingHubDesc": "Risiko-Dashboard, Genehmigungswarteschlange, Positionen und Handelshistorie",
+  "riskSettings": "Risikoeinstellungen →",
+  "riskSettingsDesc": "Risikostufen, Genehmigungsmodi und Positionslimits konfigurieren",
+  "security": "Sicherheit →",
+  "securityDesc": "Sicherheitsaudit, Anmeldedatenstatus und Erweiterungsberechtigungen",
+  "killSwitchActive": "Notschalter aktiv",
+  "killSwitchActiveDesc": "Alle Handelsaktivitäten sind gestoppt. Gehen Sie zur Handelszentrale, um fortzufahren.",
+  "disconnectTitle": "{{platform}} trennen?",
+  "disconnectDesc": "Dadurch wird der gesamte Handel auf dieser Plattform gestoppt. Offene Positionen werden nicht automatisch geschlossen. Sie können jederzeit wieder verbinden.",
+  "disconnectLabel": "{{platform}} trennen"
+}

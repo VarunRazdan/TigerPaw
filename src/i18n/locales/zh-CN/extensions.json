@@ -1,0 +1,104 @@
+{
+  "_comment": "后端交易扩展国际化字符串",
+
+  "noTradingData": "暂无交易数据。请先连接交易平台并启用交易功能。",
+  "failedToLoad": "加载 {{resource}} 失败：{{error}}",
+
+  "common.quantityMustBePositive": "数量必须大于 0。",
+  "common.limitPriceRequired": "{{type}} 订单需要指定限价。",
+  "common.stopPriceRequired": "{{type}} 订单需要指定止损价。",
+  "common.orderDenied": "订单被拒绝：{{reason}}",
+  "common.orderFailed": "订单失败：{{error}}",
+  "common.cancelDenied": "撤单被拒绝：{{reason}}",
+  "common.cancelFailed": "撤单失败：{{error}}",
+  "common.cancelSuccess": "订单 {{orderId}} 已成功撤销。",
+  "common.noOpenPositions": "暂无持仓。",
+  "common.noOpenPositionsOn": "{{platform}} 上暂无持仓。",
+  "common.noOrderHistory": "历史订单为空。",
+  "common.noRecentTrades": "审计日志中暂无近期交易记录。",
+  "common.noRecentTradesOn": "{{platform}} 上暂无近期交易记录。",
+  "common.noSearchResults": "未找到与\u201c{{query}}\u201d匹配的可交易资产。",
+
+  "tc.portfolioSummary": "投资组合概览",
+  "tc.total": "总计",
+  "tc.highWater": "历史最高净值",
+  "tc.drawdown": "最大回撤",
+
+  "tc.dailyMetrics": "今日交易活动（{{date}}）",
+  "tc.dailyPnl": "当日盈亏",
+  "tc.dailySpend": "当日支出",
+  "tc.trades": "交易次数",
+  "tc.consecLosses": "连续亏损",
+  "tc.portfolioValue": "投资组合价值",
+
+  "tc.openPositions": "持仓明细（{{count}}）",
+  "tc.value": "价值",
+  "tc.ofPortfolio": "占投资组合",
+  "tc.totalOpen": "持仓总计",
+
+  "tc.killSwitchStatus": "紧急停止开关状态",
+  "tc.globalActive": "全局：已激活（{{mode}} 模式）",
+  "tc.globalOff": "全局：已关闭 — 交易正常运行",
+  "tc.reason": "原因",
+  "tc.activatedBy": "触发者",
+  "tc.since": "自",
+  "tc.platformKillSwitches": "各平台紧急停止开关：",
+  "tc.platformActive": "{{platform}}：已激活 — {{reason}}",
+
+  "tc.killSwitchActivated": "紧急停止开关已激活（{{mode}} 模式）。\n原因：{{reason}}\n\n所有交易已暂停。",
+  "tc.killSwitchAlreadyOff": "紧急停止开关已处于关闭状态，交易正常运行。",
+  "tc.killSwitchDeactivated": "紧急停止开关已停用，交易已恢复。\n\n所有已配置的风险限额仍然有效。",
+
+  "tc.failedActivate": "激活紧急停止开关失败：{{error}}",
+  "tc.failedDeactivate": "停用紧急停止开关失败：{{error}}",
+  "tc.failedKillSwitchCheck": "检查紧急停止开关失败：{{error}}",
+
+  "tc.riskLimitUtilization": "风险限额使用情况",
+  "tc.noRiskLimits": "未配置风险限额。",
+  "tc.dailySpendGauge": "当日支出",
+  "tc.tradesPerDayGauge": "日交易次数",
+  "tc.positionsGauge": "持仓数量",
+  "tc.dailyLossGauge": "当日亏损",
+  "tc.drawdownGauge": "最大回撤",
+  "tc.consecLossesGauge": "连续亏损",
+  "tc.approachingLimits": "接近限额：{{limits}}",
+
+  "tc.recentTrades": "近期交易（{{count}}）",
+  "tc.denied": "原因",
+  "tc.failedLoadPortfolio": "加载投资组合失败：{{error}}",
+  "tc.failedLoadMetrics": "加载指标失败：{{error}}",
+  "tc.failedLoadPositions": "加载持仓失败：{{error}}",
+  "tc.failedLoadRisk": "加载风险状态失败：{{error}}",
+  "tc.failedReadHistory": "读取交易历史失败：{{error}}",
+
+  "alpaca.searchNoResults": "未找到与\u201c{{query}}\u201d匹配的可交易资产。",
+  "alpaca.quoteFailed": "获取 {{symbol}} 报价失败：{{error}}",
+  "alpaca.orderPlaced": "订单已提交：{{side}} {{qty}} {{symbol}}（{{type}}）— {{status}}",
+  "alpaca.bracketOrderPlaced": "括号订单已提交：{{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "polymarket.orderPlaced": "限价单已下达：{{side}} {{size}} 份合约，价格 {{price}}",
+  "polymarket.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "kalshi.orderPlaced": "订单已下达：{{side}} {{count}} 份合约，价格 {{price}}¢",
+  "kalshi.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "manifold.betPlaced": "投注成功：{{outcome}} {{amount}}，问题\u201c{{question}}\u201d",
+  "manifold.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "coinbase.orderPlaced": "订单已提交：{{side}} {{qty}} {{symbol}}（{{type}}）",
+  "coinbase.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "ibkr.orderPlaced": "订单已提交：{{side}} {{qty}} {{symbol}}（{{type}}）",
+  "ibkr.bracketOrderPlaced": "括号订单已提交：{{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "binance.orderPlaced": "订单已提交：{{side}} {{qty}} {{symbol}}（{{type}}）",
+  "binance.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "kraken.orderPlaced": "订单已提交：{{side}} {{volume}} {{pair}}（{{type}}）",
+  "kraken.fetchFailed": "获取 {{resource}} 失败：{{error}}",
+
+  "dydx.notImplemented": "dYdX 下单需要通过 Cosmos SDK 进行交易签名，该功能尚未实现。请暂时使用 dYdX 网页界面。",
+  "dydx.fetchFailed": "获取 {{resource}} 失败：{{error}}"
+}

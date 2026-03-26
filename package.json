@@ -50,7 +50,8 @@
     "extensions/",
     "!extensions/**/node_modules",
     "skills/",
-    "scripts/postinstall.mjs"
+    "scripts/postinstall.mjs",
+    "src/i18n/locales/"
   ],
   "type": "module",
   "main": "dist/index.js",
@@ -256,6 +257,7 @@
     "check": "pnpm check:host-env-policy:swift && pnpm format:check && pnpm tsgo && pnpm lint && pnpm lint:tmp:no-random-messaging && pnpm lint:tmp:channel-agnostic-boundaries && pnpm lint:tmp:no-raw-channel-fetch && pnpm lint:agent:ingress-owner && pnpm lint:plugins:no-register-http-handler && pnpm lint:plugins:no-monolithic-plugin-sdk-entry-imports && pnpm lint:webhook:no-low-level-body-read && pnpm lint:auth:no-pairing-store-group && pnpm lint:auth:pairing-account-scope",
     "check:docs": "pnpm format:docs:check && pnpm lint:docs && pnpm docs:check-links",
     "check:host-env-policy:swift": "node scripts/generate-host-env-security-policy-swift.mjs --check",
+    "check:i18n": "npx tsx scripts/check-i18n-keys.ts",
     "check:loc": "node --import tsx scripts/check-ts-max-loc.ts --max 500",
     "deadcode:ci": "pnpm deadcode:report:ci:knip",
     "deadcode:knip": "pnpm dlx knip --config knip.config.ts --isolate-workspaces --production --no-progress --reporter compact --files --dependencies",

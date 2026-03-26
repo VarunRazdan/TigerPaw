@@ -8,6 +8,7 @@ import {
   type Time,
 } from "lightweight-charts";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 type PriceChartProps = {
@@ -42,6 +43,7 @@ export function PriceChart({
   className,
   height = 260,
 }: PriceChartProps) {
+  const { t } = useTranslation("trading");
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -100,7 +102,7 @@ export function PriceChart({
         lineWidth: 1,
         lineStyle: 2,
         axisLabelVisible: true,
-        title: "SL",
+        title: t("sl"),
       });
     }
     if (takeProfit) {
@@ -110,7 +112,7 @@ export function PriceChart({
         lineWidth: 1,
         lineStyle: 2,
         axisLabelVisible: true,
-        title: "TP",
+        title: t("tp"),
       });
     }
 
@@ -131,7 +133,7 @@ export function PriceChart({
 
   return (
     <div className={cn("rounded-2xl glass-panel p-4", className)}>
-      <h3 className="text-sm font-semibold text-neutral-300 mb-2">Price Chart</h3>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-2">{t("priceChart")}</h3>
       <div ref={containerRef} />
     </div>
   );

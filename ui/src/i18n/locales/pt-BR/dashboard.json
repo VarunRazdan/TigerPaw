@@ -1,0 +1,21 @@
+{
+  "title": "Painel Tigerpaw",
+  "subtitle": "Sua IA negocia. Você decide.",
+  "portfolioValue": "Valor do Portfólio",
+  "dailyPnl": "P&L Diário",
+  "tradesToday": "Negociações Hoje",
+  "openPositions": "Posições Abertas",
+  "marketPrices": "Preços de Mercado",
+  "tradingExtensions": "Extensões de Negociação",
+  "tradingHub": "Hub de Negociação →",
+  "tradingHubDesc": "Painel de risco, fila de aprovação, posições e histórico de negociações",
+  "riskSettings": "Configurações de Risco →",
+  "riskSettingsDesc": "Configure níveis de risco, modos de aprovação e limites de posição",
+  "security": "Segurança →",
+  "securityDesc": "Auditoria de segurança, status de credenciais e permissões de extensão",
+  "killSwitchActive": "Kill Switch Ativo",
+  "killSwitchActiveDesc": "Todas as negociações estão interrompidas. Vá ao Hub de Negociação para retomar.",
+  "disconnectTitle": "Desconectar {{platform}}?",
+  "disconnectDesc": "Isso interromperá todas as negociações nesta plataforma. As posições abertas não serão fechadas automaticamente. Você pode reconectar a qualquer momento.",
+  "disconnectLabel": "Desconectar {{platform}}"
+}

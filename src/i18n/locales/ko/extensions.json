@@ -1,0 +1,104 @@
+{
+  "_comment": "백엔드 거래 확장 기능 i18n 문자열",
+
+  "noTradingData": "거래 데이터가 없습니다. 거래 플랫폼을 연결하고 거래를 먼저 활성화하세요.",
+  "failedToLoad": "{{resource}} 로드 실패: {{error}}",
+
+  "common.quantityMustBePositive": "수량은 0보다 커야 합니다.",
+  "common.limitPriceRequired": "{{type}} 주문에는 지정가가 필요합니다.",
+  "common.stopPriceRequired": "{{type}} 주문에는 스톱 가격이 필요합니다.",
+  "common.orderDenied": "주문이 거부되었습니다: {{reason}}",
+  "common.orderFailed": "주문에 실패했습니다: {{error}}",
+  "common.cancelDenied": "취소가 거부되었습니다: {{reason}}",
+  "common.cancelFailed": "취소에 실패했습니다: {{error}}",
+  "common.cancelSuccess": "주문 {{orderId}}이(가) 성공적으로 취소되었습니다.",
+  "common.noOpenPositions": "미결 포지션이 없습니다.",
+  "common.noOpenPositionsOn": "{{platform}}에 미결 포지션이 없습니다.",
+  "common.noOrderHistory": "주문 내역이 없습니다.",
+  "common.noRecentTrades": "감사 로그에 최근 거래가 없습니다.",
+  "common.noRecentTradesOn": "{{platform}}에 최근 거래가 없습니다.",
+  "common.noSearchResults": "\"{{query}}\"와 일치하는 거래 가능한 자산을 찾을 수 없습니다.",
+
+  "tc.portfolioSummary": "포트폴리오 요약",
+  "tc.total": "합계",
+  "tc.highWater": "최고 수위선",
+  "tc.drawdown": "낙폭",
+
+  "tc.dailyMetrics": "오늘의 거래 현황 ({{date}})",
+  "tc.dailyPnl": "일간 P&L",
+  "tc.dailySpend": "일간 지출",
+  "tc.trades": "거래 횟수",
+  "tc.consecLosses": "연속 손실",
+  "tc.portfolioValue": "포트폴리오 가치",
+
+  "tc.openPositions": "미결 포지션 ({{count}}개)",
+  "tc.value": "평가액",
+  "tc.ofPortfolio": "포트폴리오 비중",
+  "tc.totalOpen": "총 미결",
+
+  "tc.killSwitchStatus": "긴급 정지 스위치 상태",
+  "tc.globalActive": "전체: 활성화됨 ({{mode}} 모드)",
+  "tc.globalOff": "전체: 비활성화됨 — 거래 진행 중",
+  "tc.reason": "사유",
+  "tc.activatedBy": "실행자",
+  "tc.since": "시작 시각",
+  "tc.platformKillSwitches": "플랫폼별 긴급 정지 스위치:",
+  "tc.platformActive": "{{platform}}: 활성화됨 — {{reason}}",
+
+  "tc.killSwitchActivated": "긴급 정지 스위치가 활성화되었습니다 ({{mode}} 모드).\n사유: {{reason}}\n\n모든 거래가 중단되었습니다.",
+  "tc.killSwitchAlreadyOff": "긴급 정지 스위치가 이미 비활성화되어 있습니다. 거래가 진행 중입니다.",
+  "tc.killSwitchDeactivated": "긴급 정지 스위치가 비활성화되었습니다. 거래가 재개되었습니다.\n\n설정된 모든 위험 한도가 계속 적용됩니다.",
+
+  "tc.failedActivate": "긴급 정지 스위치 활성화에 실패했습니다: {{error}}",
+  "tc.failedDeactivate": "긴급 정지 스위치 비활성화에 실패했습니다: {{error}}",
+  "tc.failedKillSwitchCheck": "긴급 정지 스위치 확인에 실패했습니다: {{error}}",
+
+  "tc.riskLimitUtilization": "위험 한도 사용률",
+  "tc.noRiskLimits": "설정된 위험 한도가 없습니다.",
+  "tc.dailySpendGauge": "일간 지출",
+  "tc.tradesPerDayGauge": "일일 거래 횟수",
+  "tc.positionsGauge": "포지션 수",
+  "tc.dailyLossGauge": "일간 손실",
+  "tc.drawdownGauge": "낙폭",
+  "tc.consecLossesGauge": "연속 손실",
+  "tc.approachingLimits": "한도에 근접 중: {{limits}}",
+
+  "tc.recentTrades": "최근 거래 ({{count}}건)",
+  "tc.denied": "사유",
+  "tc.failedLoadPortfolio": "포트폴리오 로드 실패: {{error}}",
+  "tc.failedLoadMetrics": "지표 로드 실패: {{error}}",
+  "tc.failedLoadPositions": "포지션 로드 실패: {{error}}",
+  "tc.failedLoadRisk": "위험 상태 로드 실패: {{error}}",
+  "tc.failedReadHistory": "거래 내역 읽기 실패: {{error}}",
+
+  "alpaca.searchNoResults": "\"{{query}}\"와 일치하는 거래 가능한 자산을 찾을 수 없습니다.",
+  "alpaca.quoteFailed": "{{symbol}} 시세 조회 실패: {{error}}",
+  "alpaca.orderPlaced": "주문이 제출되었습니다: {{side}} {{qty}} {{symbol}} ({{type}}) — {{status}}",
+  "alpaca.bracketOrderPlaced": "브라켓 주문이 제출되었습니다: {{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "polymarket.orderPlaced": "지정가 주문이 접수되었습니다: {{side}} {{size}}계약 @ {{price}}",
+  "polymarket.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "kalshi.orderPlaced": "주문이 접수되었습니다: {{side}} {{count}}계약 @ {{price}}¢",
+  "kalshi.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "manifold.betPlaced": "베팅이 완료되었습니다: \"{{question}}\"에 {{outcome}} {{amount}}",
+  "manifold.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "coinbase.orderPlaced": "주문이 제출되었습니다: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "coinbase.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "ibkr.orderPlaced": "주문이 제출되었습니다: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "ibkr.bracketOrderPlaced": "브라켓 주문이 제출되었습니다: {{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "binance.orderPlaced": "주문이 제출되었습니다: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "binance.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "kraken.orderPlaced": "주문이 제출되었습니다: {{side}} {{volume}} {{pair}} ({{type}})",
+  "kraken.fetchFailed": "{{resource}} 조회 실패: {{error}}",
+
+  "dydx.notImplemented": "dYdX 주문 실행에는 Cosmos SDK 트랜잭션 서명이 필요하지만 아직 구현되지 않았습니다. 현재는 dYdX 웹 인터페이스를 이용하세요.",
+  "dydx.fetchFailed": "{{resource}} 조회 실패: {{error}}"
+}

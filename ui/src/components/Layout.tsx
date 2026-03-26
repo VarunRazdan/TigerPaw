@@ -10,12 +10,14 @@ import {
   Menu,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router-dom";
 import { useTradingEvents } from "@/hooks/use-trading-events";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/stores/theme-store";
 import { DailyPnlBar } from "./DailyPnlBar";
 import { KillSwitchButton } from "./KillSwitchButton";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { NotificationBell } from "./TradingNotificationToast";
 import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
@@ -36,74 +38,99 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const NAV_GROUPS: NavGroup[] = [
-  {
-    title: "Overview",
-    items: [
-      { to: "/", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" />, end: true },
-    ],
-  },
-  {
-    title: "Trading",
-    items: [
-      { to: "/trading", label: "Trading Hub", icon: <TrendingUp className="w-4 h-4" />, end: true },
-      {
-        to: "/trading/alpaca",
-        label: "Alpaca",
-        icon: <PlatformIcon name="alpaca" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/polymarket",
-        label: "Polymarket",
-        icon: <PlatformIcon name="polymarket" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/kalshi",
-        label: "Kalshi",
-        icon: <PlatformIcon name="kalshi" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/manifold",
-        label: "Manifold",
-        icon: <PlatformIcon name="manifold" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/coinbase",
-        label: "Coinbase",
-        icon: <PlatformIcon name="coinbase" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/ibkr",
-        label: "IBKR",
-        icon: <PlatformIcon name="interactive-brokers" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/binance",
-        label: "Binance",
-        icon: <PlatformIcon name="binance" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/kraken",
-        label: "Kraken",
-        icon: <PlatformIcon name="kraken" className="w-4 h-4" />,
-      },
-      {
-        to: "/trading/dydx",
-        label: "dYdX",
-        icon: <PlatformIcon name="dydx" className="w-4 h-4" />,
-      },
-      { to: "/trading/settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
-    ],
-  },
-  {
-    title: "System",
-    items: [
-      { to: "/channels", label: "Channels", icon: <MessageSquare className="w-4 h-4" /> },
-      { to: "/security", label: "Security", icon: <Shield className="w-4 h-4" /> },
-      { to: "/config", label: "Config", icon: <FileJson className="w-4 h-4" /> },
-    ],
-  },
-];
+function useNavGroups(): NavGroup[] {
+  const { t } = useTranslation("common");
+  return [
+    {
+      title: t("nav.overview", "Overview"),
+      items: [
+        {
+          to: "/",
+          label: t("nav.dashboard", "Dashboard"),
+          icon: <LayoutDashboard className="w-4 h-4" />,
+          end: true,
+        },
+      ],
+    },
+    {
+      title: t("nav.trading", "Trading"),
+      items: [
+        {
+          to: "/trading",
+          label: t("nav.tradingHub", "Trading Hub"),
+          icon: <TrendingUp className="w-4 h-4" />,
+          end: true,
+        },
+        {
+          to: "/trading/alpaca",
+          label: "Alpaca",
+          icon: <PlatformIcon name="alpaca" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/polymarket",
+          label: "Polymarket",
+          icon: <PlatformIcon name="polymarket" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/kalshi",
+          label: "Kalshi",
+          icon: <PlatformIcon name="kalshi" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/manifold",
+          label: "Manifold",
+          icon: <PlatformIcon name="manifold" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/coinbase",
+          label: "Coinbase",
+          icon: <PlatformIcon name="coinbase" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/ibkr",
+          label: "IBKR",
+          icon: <PlatformIcon name="interactive-brokers" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/binance",
+          label: "Binance",
+          icon: <PlatformIcon name="binance" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/kraken",
+          label: "Kraken",
+          icon: <PlatformIcon name="kraken" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/dydx",
+          label: "dYdX",
+          icon: <PlatformIcon name="dydx" className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/settings",
+          label: t("nav.settings", "Settings"),
+          icon: <Settings className="w-4 h-4" />,
+        },
+      ],
+    },
+    {
+      title: t("nav.system", "System"),
+      items: [
+        {
+          to: "/channels",
+          label: t("nav.channels", "Channels"),
+          icon: <MessageSquare className="w-4 h-4" />,
+        },
+        {
+          to: "/security",
+          label: t("nav.security", "Security"),
+          icon: <Shield className="w-4 h-4" />,
+        },
+        { to: "/config", label: t("nav.config", "Config"), icon: <FileJson className="w-4 h-4" /> },
+      ],
+    },
+  ];
+}
 
 function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   return (
@@ -141,10 +168,12 @@ function SidebarNavItem({ item, collapsed }: { item: NavItem; collapsed: boolean
 }
 
 function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t } = useTranslation("common");
+  const navGroups = useNavGroups();
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col h-screen sticky top-0 border-r border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] backdrop-blur-2xl transition-all duration-300",
+        "hidden md:flex flex-col h-screen sticky top-0 border-r rtl:border-r-0 rtl:border-l border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] backdrop-blur-2xl transition-all duration-300",
         collapsed ? "w-14" : "w-56",
       )}
     >
@@ -179,7 +208,7 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
 
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-        {NAV_GROUPS.map((group) => (
+        {navGroups.map((group) => (
           <div key={group.title}>
             <div
               className={cn(
@@ -215,7 +244,7 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
             collapsed ? "justify-center" : "px-3 gap-2",
           )}
         >
-          <span className="shrink-0 transition-transform duration-300 ease-in-out">
+          <span className="shrink-0 transition-transform duration-300 ease-in-out rtl:rotate-180">
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </span>
           <span
@@ -224,7 +253,7 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
               collapsed ? "w-0 opacity-0 overflow-hidden" : "w-auto opacity-100",
             )}
           >
-            Compact
+            {t("nav.compact")}
           </span>
         </button>
       </div>
@@ -233,13 +262,15 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
 }
 
 function MobileNav() {
+  const { t } = useTranslation("common");
+  const navGroups = useNavGroups();
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden p-2 text-neutral-400 hover:text-neutral-200"
+        className="md:hidden p-2 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] cursor-pointer transition-all duration-200"
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -250,10 +281,10 @@ function MobileNav() {
               <span className="text-orange-500">Tiger</span>
               <span className="text-neutral-100">Paw</span>
             </SheetTitle>
-            <SheetDescription className="sr-only">Navigation menu</SheetDescription>
+            <SheetDescription className="sr-only">{t("nav.menuLabel")}</SheetDescription>
           </SheetHeader>
           <nav className="py-3 px-2 space-y-4">
-            {NAV_GROUPS.map((group) => (
+            {navGroups.map((group) => (
               <div key={group.title}>
                 <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
                   {group.title}
@@ -289,9 +320,10 @@ function MobileNav() {
 }
 
 export function Layout() {
+  const { t } = useTranslation("common");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const theme = useThemeStore((s) => s.theme);
-  const { connected: gatewayConnected } = useTradingEvents();
+  useTradingEvents();
 
   // Apply theme to document root so CSS [data-theme] selectors activate
   useEffect(() => {
@@ -324,22 +356,16 @@ export function Layout() {
               <span className="text-lg font-bold text-neutral-100">Paw</span>
             </NavLink>
 
-            {/* Tagline — desktop only */}
-            <span className="hidden md:block text-sm text-neutral-500 font-medium tracking-wide">
-              Multi-Platform Trading Partner
+            {/* Tagline — desktop only, hidden until lg to avoid overflow with sidebar */}
+            <span className="hidden lg:block text-sm text-neutral-500 font-medium tracking-wide truncate">
+              {t("nav.tagline")}
             </span>
 
             {/* Right side: Notifications + Kill Switch + PnL */}
-            <div className="ml-auto flex items-center gap-4">
+            <div className="ml-auto rtl:ml-0 rtl:mr-auto flex items-center gap-4">
               <DailyPnlBar />
               <div className="flex items-center gap-1.5">
-                <span
-                  className={cn(
-                    "w-1.5 h-1.5 rounded-full transition-colors duration-500",
-                    gatewayConnected ? "bg-green-400" : "bg-neutral-600",
-                  )}
-                  title={gatewayConnected ? "Gateway connected" : "Gateway disconnected"}
-                />
+                <LanguageSwitcher />
                 <NotificationBell />
               </div>
               <KillSwitchButton />

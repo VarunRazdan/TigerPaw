@@ -1,0 +1,18 @@
+{
+  "title": "Benachrichtigungen",
+  "tradingNotifications": "Handelsbenachrichtigungen",
+  "noNotifications": "Noch keine Benachrichtigungen",
+  "orderApproved": "Order genehmigt: {{symbol}} {{side}}",
+  "orderDenied": "Order abgelehnt: {{symbol}} {{side}}",
+  "orderPending": "Order ausstehend: {{symbol}} {{side}}",
+  "orderSubmitted": "Order übermittelt: {{symbol}}",
+  "orderFilled": "Order ausgeführt: {{symbol}}",
+  "orderFailed": "Order fehlgeschlagen: {{symbol}}",
+  "killSwitchExt": "Notschalter: {{extension}}",
+  "killSwitchActivated": "Notschalter aktiviert",
+  "killSwitchDeactivated": "Notschalter deaktiviert",
+  "limitWarning": "Limitwarnung: {{limitName}}",
+  "approachingThreshold": "nähert sich dem Schwellenwert",
+  "tradingEvent": "Handelsereignis",
+  "globalKillSwitchOff": "Globaler Notschalter deaktiviert — Handel fortgesetzt"
+}

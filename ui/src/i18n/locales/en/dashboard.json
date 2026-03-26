@@ -1,0 +1,21 @@
+{
+  "title": "Tigerpaw Dashboard",
+  "subtitle": "Your AI trades. You decide.",
+  "portfolioValue": "Portfolio Value",
+  "dailyPnl": "Daily P&L",
+  "tradesToday": "Trades Today",
+  "openPositions": "Open Positions",
+  "marketPrices": "Market Prices",
+  "tradingExtensions": "Trading Extensions",
+  "tradingHub": "Trading Hub →",
+  "tradingHubDesc": "Risk dashboard, approval queue, positions, and trade history",
+  "riskSettings": "Risk Settings →",
+  "riskSettingsDesc": "Configure risk tiers, approval modes, and position limits",
+  "security": "Security →",
+  "securityDesc": "Security audit, credential status, and extension permissions",
+  "killSwitchActive": "Kill Switch Active",
+  "killSwitchActiveDesc": "All trading is halted. Go to Trading Hub to resume.",
+  "disconnectTitle": "Disconnect {{platform}}?",
+  "disconnectDesc": "This will stop all trading on this platform. Open positions will not be automatically closed. You can reconnect at any time.",
+  "disconnectLabel": "Disconnect {{platform}}"
+}

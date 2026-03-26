@@ -1,0 +1,18 @@
+{
+  "title": "通知",
+  "tradingNotifications": "取引通知",
+  "noNotifications": "通知はまだありません",
+  "orderApproved": "注文承認：{{symbol}} {{side}}",
+  "orderDenied": "注文拒否：{{symbol}} {{side}}",
+  "orderPending": "注文保留中：{{symbol}} {{side}}",
+  "orderSubmitted": "注文送信済み：{{symbol}}",
+  "orderFilled": "注文約定：{{symbol}}",
+  "orderFailed": "注文失敗：{{symbol}}",
+  "killSwitchExt": "キルスイッチ：{{extension}}",
+  "killSwitchActivated": "キルスイッチが有効化されました",
+  "killSwitchDeactivated": "キルスイッチが無効化されました",
+  "limitWarning": "上限警告：{{limitName}}",
+  "approachingThreshold": "しきい値に近づいています",
+  "tradingEvent": "取引イベント",
+  "globalKillSwitchOff": "グローバルキルスイッチ OFF — 取引が再開されました"
+}

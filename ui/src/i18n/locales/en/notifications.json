@@ -1,0 +1,18 @@
+{
+  "title": "Notifications",
+  "tradingNotifications": "Trading notifications",
+  "noNotifications": "No notifications yet",
+  "orderApproved": "Order Approved: {{symbol}} {{side}}",
+  "orderDenied": "Order Denied: {{symbol}} {{side}}",
+  "orderPending": "Order Pending: {{symbol}} {{side}}",
+  "orderSubmitted": "Order Submitted: {{symbol}}",
+  "orderFilled": "Order Filled: {{symbol}}",
+  "orderFailed": "Order Failed: {{symbol}}",
+  "killSwitchExt": "Kill Switch: {{extension}}",
+  "killSwitchActivated": "Kill Switch Activated",
+  "killSwitchDeactivated": "Kill Switch Deactivated",
+  "limitWarning": "Limit Warning: {{limitName}}",
+  "approachingThreshold": "approaching threshold",
+  "tradingEvent": "Trading Event",
+  "globalKillSwitchOff": "Global kill switch off — trading resumed"
+}

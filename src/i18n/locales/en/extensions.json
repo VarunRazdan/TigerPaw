@@ -1,0 +1,104 @@
+{
+  "_comment": "Backend trading extension i18n strings",
+
+  "noTradingData": "No trading data available. Connect a trading platform and enable trading first.",
+  "failedToLoad": "Failed to load {{resource}}: {{error}}",
+
+  "common.quantityMustBePositive": "Quantity must be greater than 0.",
+  "common.limitPriceRequired": "Limit price is required for {{type}} orders.",
+  "common.stopPriceRequired": "Stop price is required for {{type}} orders.",
+  "common.orderDenied": "Order denied: {{reason}}",
+  "common.orderFailed": "Order failed: {{error}}",
+  "common.cancelDenied": "Cancel denied: {{reason}}",
+  "common.cancelFailed": "Cancel failed: {{error}}",
+  "common.cancelSuccess": "Order {{orderId}} cancelled successfully.",
+  "common.noOpenPositions": "No open positions.",
+  "common.noOpenPositionsOn": "No open positions on {{platform}}.",
+  "common.noOrderHistory": "No orders in history.",
+  "common.noRecentTrades": "No recent trades in the audit log.",
+  "common.noRecentTradesOn": "No recent trades on {{platform}}.",
+  "common.noSearchResults": "No tradeable assets found matching \"{{query}}\".",
+
+  "tc.portfolioSummary": "Portfolio Summary",
+  "tc.total": "Total",
+  "tc.highWater": "High Water",
+  "tc.drawdown": "Drawdown",
+
+  "tc.dailyMetrics": "Today's Trading Activity ({{date}})",
+  "tc.dailyPnl": "Daily P&L",
+  "tc.dailySpend": "Daily Spend",
+  "tc.trades": "Trades",
+  "tc.consecLosses": "Consec. Losses",
+  "tc.portfolioValue": "Portfolio Value",
+
+  "tc.openPositions": "Open Positions ({{count}})",
+  "tc.value": "Value",
+  "tc.ofPortfolio": "of portfolio",
+  "tc.totalOpen": "Total open",
+
+  "tc.killSwitchStatus": "Kill Switch Status",
+  "tc.globalActive": "Global:  ACTIVE ({{mode}} mode)",
+  "tc.globalOff": "Global:  OFF — trading is active",
+  "tc.reason": "Reason",
+  "tc.activatedBy": "By",
+  "tc.since": "Since",
+  "tc.platformKillSwitches": "Platform Kill Switches:",
+  "tc.platformActive": "{{platform}}: ACTIVE — {{reason}}",
+
+  "tc.killSwitchActivated": "Kill switch ACTIVATED ({{mode}} mode).\nReason: {{reason}}\n\nAll trading is now halted.",
+  "tc.killSwitchAlreadyOff": "Kill switch is already OFF. Trading is active.",
+  "tc.killSwitchDeactivated": "Kill switch DEACTIVATED. Trading has resumed.\n\nAll configured risk limits remain in effect.",
+
+  "tc.failedActivate": "Failed to activate kill switch: {{error}}",
+  "tc.failedDeactivate": "Failed to deactivate kill switch: {{error}}",
+  "tc.failedKillSwitchCheck": "Failed to check kill switch: {{error}}",
+
+  "tc.riskLimitUtilization": "Risk Limit Utilization",
+  "tc.noRiskLimits": "No risk limits configured.",
+  "tc.dailySpendGauge": "Daily Spend",
+  "tc.tradesPerDayGauge": "Trades/Day",
+  "tc.positionsGauge": "Positions",
+  "tc.dailyLossGauge": "Daily Loss",
+  "tc.drawdownGauge": "Drawdown",
+  "tc.consecLossesGauge": "Consec. Losses",
+  "tc.approachingLimits": "Approaching limits: {{limits}}",
+
+  "tc.recentTrades": "Recent Trades ({{count}})",
+  "tc.denied": "Reason",
+  "tc.failedLoadPortfolio": "Failed to load portfolio: {{error}}",
+  "tc.failedLoadMetrics": "Failed to load metrics: {{error}}",
+  "tc.failedLoadPositions": "Failed to load positions: {{error}}",
+  "tc.failedLoadRisk": "Failed to load risk status: {{error}}",
+  "tc.failedReadHistory": "Failed to read trade history: {{error}}",
+
+  "alpaca.searchNoResults": "No tradeable assets found matching \"{{query}}\".",
+  "alpaca.quoteFailed": "Failed to get quote for {{symbol}}: {{error}}",
+  "alpaca.orderPlaced": "Order submitted: {{side}} {{qty}} {{symbol}} ({{type}}) — {{status}}",
+  "alpaca.bracketOrderPlaced": "Bracket order submitted: {{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "polymarket.orderPlaced": "Limit order placed: {{side}} {{size}} contracts at {{price}}",
+  "polymarket.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "kalshi.orderPlaced": "Order placed: {{side}} {{count}} contracts at {{price}}¢",
+  "kalshi.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "manifold.betPlaced": "Bet placed: {{outcome}} {{amount}} on \"{{question}}\"",
+  "manifold.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "coinbase.orderPlaced": "Order submitted: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "coinbase.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "ibkr.orderPlaced": "Order submitted: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "ibkr.bracketOrderPlaced": "Bracket order submitted: {{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "binance.orderPlaced": "Order submitted: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "binance.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "kraken.orderPlaced": "Order submitted: {{side}} {{volume}} {{pair}} ({{type}})",
+  "kraken.fetchFailed": "Failed to fetch {{resource}}: {{error}}",
+
+  "dydx.notImplemented": "dYdX order placement requires Cosmos SDK transaction signing, which is not yet implemented. Use the dYdX web interface for now.",
+  "dydx.fetchFailed": "Failed to fetch {{resource}}: {{error}}"
+}

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import {
   AlertDialog,
@@ -22,16 +23,16 @@ import {
   type PolicyLimits,
 } from "@/stores/trading-store";
 
-const TIER_PRESETS: Record<Exclude<RiskTier, "custom">, { label: string; desc: string }> = {
-  conservative: { label: "Conservative", desc: "Safest — manual approval, tight limits" },
-  moderate: { label: "Moderate", desc: "Balanced — confirm with deny-on-timeout" },
-  aggressive: { label: "Aggressive", desc: "Fast — auto-approval, wide limits" },
+const TIER_PRESETS: Record<Exclude<RiskTier, "custom">, { labelKey: string; descKey: string }> = {
+  conservative: { labelKey: "conservative", descKey: "conservativeDesc" },
+  moderate: { labelKey: "moderate", descKey: "moderateDesc" },
+  aggressive: { labelKey: "aggressive", descKey: "aggressiveDesc" },
 };
 
-const APPROVAL_MODES: { value: ApprovalMode; label: string; desc: string }[] = [
-  { value: "auto", label: "Auto", desc: "Trades within limits execute instantly" },
-  { value: "confirm", label: "Confirm", desc: "Popup with configurable timeout and action" },
-  { value: "manual", label: "Manual", desc: "Every trade needs explicit approval" },
+const APPROVAL_MODES: { value: ApprovalMode; labelKey: string; descKey: string }[] = [
+  { value: "auto", labelKey: "auto", descKey: "autoDesc" },
+  { value: "confirm", labelKey: "confirmMode", descKey: "confirmDesc" },
+  { value: "manual", labelKey: "manual", descKey: "manualDesc" },
 ];
 
 const TIMEOUT_OPTIONS = [
@@ -74,6 +75,8 @@ function LimitInput({
 function PlatformOverrideSection({
   platformId,
   label,
+  platformType,
+  currencyLabel,
   override,
   globalLimits,
   onUpdate,
@@ -81,25 +84,55 @@ function PlatformOverrideSection({
 }: {
   platformId: string;
   label: string;
+  platformType: string;
+  currencyLabel: string;
   override?: PerPlatformOverride;
   globalLimits: PolicyLimits;
   onUpdate: (id: string, o: PerPlatformOverride) => void;
   onClear: (id: string) => void;
 }) {
+  const { t } = useTranslation("settings");
   const [expanded, setExpanded] = useState(false);
   const hasOverrides = override && Object.keys(override).length > 0;
+
+  const typeLabel =
+    platformType === "prediction"
+      ? t("prediction")
+      : platformType === "play_money"
+        ? t("playMoney")
+        : platformType === "perpetuals"
+          ? t("perpetuals")
+          : platformType === "multi_asset"
+            ? t("multiAsset")
+            : platformType === "crypto"
+              ? t("crypto")
+              : t("stocks");
+
+  const typeBadgeColor =
+    platformType === "prediction"
+      ? "bg-amber-900/50 text-amber-400 border-amber-800/50"
+      : platformType === "play_money"
+        ? "bg-blue-900/50 text-blue-400 border-blue-800/50"
+        : platformType === "perpetuals"
+          ? "bg-red-900/50 text-red-400 border-red-800/50"
+          : "bg-neutral-800/50 text-neutral-400 border-neutral-700/50";
+
+  const unitLabel = currencyLabel === "Mana" ? t("mana") : t("usd");
 
   return (
     <div className="border border-[var(--glass-border)] rounded-xl hover:border-[var(--glass-hover-strong)] transition-all duration-300">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--glass-divider)] transition-all duration-300"
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--glass-divider)] transition-all duration-300 cursor-pointer"
       >
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-neutral-300">{label}</span>
+          <span className={cn("text-[10px] px-1.5 py-0.5 rounded border", typeBadgeColor)}>
+            {typeLabel}
+          </span>
           {hasOverrides && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-900/50 text-orange-400 border border-orange-800/50">
-              custom
+              {t("custom")}
             </span>
           )}
         </div>
@@ -107,39 +140,48 @@ function PlatformOverrideSection({
       </button>
       {expanded && (
         <div className="px-3 pb-3 border-t border-[var(--glass-divider)]">
+          {platformType === "prediction" && (
+            <p className="text-[10px] text-amber-400/70 mt-2 mb-1">{t("predictionNote")}</p>
+          )}
+          {platformType === "play_money" && (
+            <p className="text-[10px] text-blue-400/70 mt-2 mb-1">{t("playMoneyNote")}</p>
+          )}
+          {platformType === "perpetuals" && (
+            <p className="text-[10px] text-red-400/70 mt-2 mb-1">{t("perpetualsNote")}</p>
+          )}
           <p className="text-[10px] text-neutral-500 mt-2 mb-2">
-            Override global limits for {label}. Leave blank to use global defaults.
+            {t("overrideGlobalLimits")} {label}. {t("leaveBlankDefault")}
           </p>
           <LimitInput
-            label="Max single trade"
+            label={t("maxSingleTrade")}
             value={override?.maxSingleTradeUsd ?? globalLimits.maxSingleTradeUsd}
-            unit="USD"
+            unit={unitLabel}
             onChange={(v) => onUpdate(platformId, { ...override, maxSingleTradeUsd: v })}
           />
           <LimitInput
-            label="Max daily spend"
+            label={t("maxDailySpend")}
             value={override?.maxDailySpendUsd ?? globalLimits.maxDailySpendUsd}
-            unit="USD"
+            unit={unitLabel}
             onChange={(v) => onUpdate(platformId, { ...override, maxDailySpendUsd: v })}
           />
           <LimitInput
-            label="Max trades/day"
+            label={t("maxTradesDay")}
             value={override?.maxTradesPerDay ?? globalLimits.maxTradesPerDay}
-            unit="trades"
+            unit={t("trades")}
             onChange={(v) => onUpdate(platformId, { ...override, maxTradesPerDay: v })}
           />
           <LimitInput
-            label="Max open positions"
+            label={t("maxOpenPositions")}
             value={override?.maxOpenPositions ?? globalLimits.maxOpenPositions}
-            unit="positions"
+            unit={t("positionsUnit")}
             onChange={(v) => onUpdate(platformId, { ...override, maxOpenPositions: v })}
           />
           {hasOverrides && (
             <button
               onClick={() => onClear(platformId)}
-              className="mt-2 text-[10px] text-red-400 hover:text-red-300 transition-colors"
+              className="mt-2 text-[10px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
             >
-              Clear overrides (use global)
+              {t("clearOverrides")}
             </button>
           )}
         </div>
@@ -149,6 +191,7 @@ function PlatformOverrideSection({
 }
 
 function DataModeSelector() {
+  const { t: ts } = useTranslation("settings");
   const { demoMode, setDemoMode } = useTradingStore();
   const [confirmLive, setConfirmLive] = useState(false);
 
@@ -163,11 +206,9 @@ function DataModeSelector() {
   return (
     <>
       <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-1">Data Source</h3>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-1">{ts("dataSource")}</h3>
         <p className="text-[11px] text-neutral-500 mb-3">
-          {demoMode
-            ? "Viewing sample data. Switch to Live to connect to the gateway."
-            : "Connected to the gateway for real-time data."}
+          {demoMode ? ts("demoModeDesc") : ts("liveModeDesc")}
         </p>
 
         {/* Segmented control */}
@@ -181,7 +222,7 @@ function DataModeSelector() {
                 : "bg-[var(--glass-subtle)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)]",
             )}
           >
-            Demo
+            {ts("demoLabel")}
           </button>
           <button
             onClick={() => handleSelect("live")}
@@ -192,7 +233,7 @@ function DataModeSelector() {
                 : "bg-[var(--glass-subtle)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)]",
             )}
           >
-            Live
+            {ts("liveLabel")}
           </button>
         </div>
       </div>
@@ -200,26 +241,20 @@ function DataModeSelector() {
       <AlertDialog open={confirmLive} onOpenChange={setConfirmLive}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Switch to Live Data?</AlertDialogTitle>
+            <AlertDialogTitle>{ts("switchToLiveTitle")}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3 text-sm text-neutral-400">
-                <p>
-                  Live mode shows real positions, trades, and portfolio data from your connected
-                  trading platforms. The demo sample data will be hidden.
-                </p>
-                <p>If you haven't started Tigerpaw yet, open a terminal and run:</p>
+                <p>{ts("switchToLiveDesc")}</p>
+                <p>{ts("startInstructions")}</p>
                 <code className="block rounded-lg bg-[var(--glass-input-bg)] border border-[var(--glass-border)] px-3 py-2 text-xs font-mono text-neutral-300">
                   tigerpaw start
                 </code>
-                <p className="text-xs text-neutral-500">
-                  If the server isn't running, the dashboard will show empty data — nothing will
-                  break. You can always switch back to Demo.
-                </p>
+                <p className="text-xs text-neutral-500">{ts("serverNotRunningNote")}</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Stay on Demo</AlertDialogCancel>
+            <AlertDialogCancel>{ts("stayOnDemo")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-green-700 hover:bg-green-600 text-white"
               onClick={() => {
@@ -227,7 +262,7 @@ function DataModeSelector() {
                 setConfirmLive(false);
               }}
             >
-              Switch to Live
+              {ts("switchToLive")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -237,13 +272,14 @@ function DataModeSelector() {
 }
 
 function ThemeSelector() {
+  const { t: ts } = useTranslation("settings");
   const { theme, setTheme } = useThemeStore();
 
   return (
     <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-3">Appearance</h3>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{ts("appearance")}</h3>
       <div className="grid grid-cols-2 gap-3">
-        {(Object.entries(THEMES) as [ThemeId, (typeof THEMES)[ThemeId]][]).map(([id, info]) => (
+        {(Object.entries(THEMES) as [ThemeId, (typeof THEMES)[ThemeId]][]).map(([id, _info]) => (
           <button
             key={id}
             onClick={() => setTheme(id)}
@@ -264,8 +300,12 @@ function ThemeSelector() {
                     : "linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6, #475569)",
               }}
             />
-            <div className="text-sm font-semibold text-neutral-200">{info.label}</div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">{info.description}</div>
+            <div className="text-sm font-semibold text-neutral-200">
+              {ts(id === "tiger-gold" ? "tigerGold" : "midnightSteel")}
+            </div>
+            <div className="text-[11px] text-neutral-500 mt-0.5">
+              {ts(id === "tiger-gold" ? "tigerGoldDesc" : "midnightSteelDesc")}
+            </div>
           </button>
         ))}
       </div>
@@ -273,9 +313,21 @@ function ThemeSelector() {
   );
 }
 
+function LanguageSelector() {
+  const { t } = useTranslation("settings");
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-1">{t("language")}</h3>
+      <p className="text-[11px] text-neutral-500">{t("languageDesc")}</p>
+    </div>
+  );
+}
+
 type RemoteAccessMode = "local" | "tailscale" | "cloudflare";
 
 function RemoteAccessSection() {
+  const { t: ts } = useTranslation("settings");
   const [mode, setMode] = useState<RemoteAccessMode>("local");
   const [tunnelUrl, setTunnelUrl] = useState("");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -325,11 +377,8 @@ function RemoteAccessSection() {
 
   return (
     <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-1">Dashboard Access</h3>
-      <p className="text-[11px] text-neutral-500 mb-3">
-        How you access the Tigerpaw dashboard. API keys and trade execution always stay on this
-        machine.
-      </p>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-1">{ts("remoteAccess")}</h3>
+      <p className="text-[11px] text-neutral-500 mb-3">{ts("remoteAccessDesc")}</p>
 
       <div className="space-y-2">
         {/* Local Only */}
@@ -350,12 +399,12 @@ function RemoteAccessSection() {
           />
           <div>
             <div className="text-sm font-medium text-neutral-200">
-              Local only{" "}
-              <span className="text-[10px] text-green-400 font-normal ml-1">most secure</span>
+              {ts("localOnly")}{" "}
+              <span className="text-[10px] text-green-400 font-normal ml-1">
+                {ts("mostSecure")}
+              </span>
             </div>
-            <div className="text-xs text-neutral-500">
-              Dashboard only accessible on this machine (localhost:18789)
-            </div>
+            <div className="text-xs text-neutral-500">{ts("localOnlyDesc")}</div>
           </div>
         </label>
 
@@ -377,15 +426,12 @@ function RemoteAccessSection() {
           />
           <div>
             <div className="text-sm font-medium text-neutral-200">
-              Tailscale{" "}
+              {ts("tailscale")}{" "}
               <span className="text-[10px] text-blue-400 font-normal ml-1">
-                end-to-end encrypted
+                {ts("e2eEncrypted")}
               </span>
             </div>
-            <div className="text-xs text-neutral-500">
-              Access from your devices via WireGuard mesh VPN. Requires Tailscale on both server and
-              client devices.
-            </div>
+            <div className="text-xs text-neutral-500">{ts("tailscaleAccessDesc")}</div>
           </div>
         </label>
 
@@ -407,16 +453,12 @@ function RemoteAccessSection() {
           />
           <div>
             <div className="text-sm font-medium text-neutral-200">
-              Cloudflare Tunnel{" "}
-              <span className="text-[10px] text-amber-400 font-normal ml-1">easiest setup</span>
+              {ts("cloudflare")}{" "}
+              <span className="text-[10px] text-amber-400 font-normal ml-1">
+                {ts("easiestSetup")}
+              </span>
             </div>
-            <div className="text-xs text-neutral-500">
-              Access from anywhere via HTTPS. Only requires{" "}
-              <code className="text-[10px] bg-[var(--glass-input-bg)] px-1 rounded">
-                cloudflared
-              </code>{" "}
-              on the server.
-            </div>
+            <div className="text-xs text-neutral-500">{ts("cloudflareAccessDesc")}</div>
           </div>
         </label>
       </div>
@@ -424,29 +466,28 @@ function RemoteAccessSection() {
       {/* Security warning for non-local modes */}
       {mode !== "local" && (
         <div className="mt-3 rounded-xl border border-amber-800/50 bg-amber-950/20 p-3 text-xs">
-          <div className="font-semibold text-amber-400 mb-2">What stays on your machine:</div>
+          <div className="font-semibold text-amber-400 mb-2">{ts("staysOnMachine")}</div>
           <ul className="space-y-1 text-neutral-400 mb-3">
             <li className="flex items-center gap-1.5">
-              <span className="text-green-400">✓</span> API keys and exchange credentials
+              <span className="text-green-400">✓</span> {ts("apiKeysLocal")}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-green-400">✓</span> Audit logs and trade records
+              <span className="text-green-400">✓</span> {ts("auditLogsLocal")}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-green-400">✓</span> Order execution (trades placed from this
-              machine)
+              <span className="text-green-400">✓</span> {ts("orderExecLocal")}
             </li>
           </ul>
-          <div className="font-semibold text-amber-400 mb-2">What becomes remotely viewable:</div>
+          <div className="font-semibold text-amber-400 mb-2">{ts("remotelyViewable")}</div>
           <ul className="space-y-1 text-neutral-400">
             <li className="flex items-center gap-1.5">
-              <span className="text-amber-400">→</span> Dashboard UI (positions, P&L, charts)
+              <span className="text-amber-400">→</span> {ts("dashboardRemote")}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-amber-400">→</span> Kill switch toggle
+              <span className="text-amber-400">→</span> {ts("killSwitchRemote")}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-amber-400">→</span> Trade approval queue
+              <span className="text-amber-400">→</span> {ts("approvalQueueRemote")}
             </li>
           </ul>
         </div>
@@ -455,68 +496,28 @@ function RemoteAccessSection() {
       {/* Tailscale-specific instructions */}
       {mode === "tailscale" && (
         <div className="mt-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-input-bg)] p-3 text-xs space-y-2">
-          <div className="font-medium text-neutral-300">Setup</div>
+          <div className="font-medium text-neutral-300">{ts("setup")}</div>
           <ol className="space-y-1.5 text-neutral-400 list-decimal list-inside">
-            <li>
-              Install{" "}
-              <a
-                href="https://tailscale.com/download"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                Tailscale
-              </a>{" "}
-              on this server <strong className="text-neutral-300">and</strong> every device you want
-              to access the dashboard from
-            </li>
-            <li>Sign in to the same Tailscale network on both</li>
-            <li>
-              Click &quot;Save &amp; Restart&quot; below — the dashboard will bind to your Tailscale
-              IP
-            </li>
-            <li>
-              Open{" "}
-              <code className="bg-[var(--glass-input-bg)] px-1 rounded text-[10px]">
-                http://&lt;tailscale-ip&gt;:18789
-              </code>{" "}
-              from any connected device
-            </li>
+            <li>{ts("tailscaleStep1")}</li>
+            <li>{ts("tailscaleStep2")}</li>
+            <li>{ts("tailscaleStep3")}</li>
+            <li>{ts("tailscaleStep4")}</li>
           </ol>
-          <p className="text-[10px] text-neutral-500 mt-2">
-            Tailscale uses WireGuard — traffic is encrypted end-to-end. Not even Tailscale&apos;s
-            relay servers can decrypt your data.
-          </p>
+          <p className="text-[10px] text-neutral-500 mt-2">{ts("tailscaleNote")}</p>
         </div>
       )}
 
       {/* Cloudflare-specific instructions */}
       {mode === "cloudflare" && (
         <div className="mt-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-input-bg)] p-3 text-xs space-y-2">
-          <div className="font-medium text-neutral-300">Setup</div>
+          <div className="font-medium text-neutral-300">{ts("setup")}</div>
           <ol className="space-y-1.5 text-neutral-400 list-decimal list-inside">
-            <li>
-              Install{" "}
-              <a
-                href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                cloudflared
-              </a>{" "}
-              on this server (no install needed on your phone/laptop)
-            </li>
-            <li>
-              Run:{" "}
-              <code className="bg-[var(--glass-input-bg)] px-1 rounded text-[10px]">
-                cloudflared tunnel --url http://localhost:18789
-              </code>
-            </li>
-            <li>Copy the tunnel URL below and click &quot;Save &amp; Restart&quot;</li>
+            <li>{ts("cloudflareSetupStep1")}</li>
+            <li>{ts("cloudflareSetupStep2")}</li>
+            <li>{ts("cloudflareSetupStep3")}</li>
           </ol>
           <div className="mt-2">
-            <label className="text-[10px] text-neutral-500 block mb-1">Tunnel URL</label>
+            <label className="text-[10px] text-neutral-500 block mb-1">{ts("tunnelUrl")}</label>
             <input
               type="text"
               value={tunnelUrl}
@@ -525,10 +526,7 @@ function RemoteAccessSection() {
               className="w-full bg-[var(--glass-input-bg)] border border-[var(--glass-border)] rounded px-2 py-1.5 text-xs text-neutral-200 placeholder:text-neutral-600 focus:border-orange-500 focus:outline-none"
             />
           </div>
-          <p className="text-[10px] text-amber-500 mt-1">
-            Cloudflare decrypts traffic at their edge — they can technically see dashboard data in
-            transit. Your API keys are never sent to the dashboard, so they remain safe.
-          </p>
+          <p className="text-[10px] text-amber-500 mt-1">{ts("cloudflareWarning")}</p>
         </div>
       )}
 
@@ -548,18 +546,16 @@ function RemoteAccessSection() {
             )}
           >
             {saveStatus === "saving"
-              ? "Saving..."
+              ? ts("saving")
               : saveStatus === "saved"
-                ? "Saved — Restart Gateway to Apply"
-                : "Save & Restart Gateway"}
+                ? ts("savedRestart")
+                : ts("saveRestart")}
           </button>
           {saveStatus === "error" && saveError && (
             <p className="text-xs text-red-400 mt-1.5">{saveError}</p>
           )}
           {saveStatus === "error" && !saveError && (
-            <p className="text-xs text-red-400 mt-1.5">
-              Gateway not reachable — start Tigerpaw first
-            </p>
+            <p className="text-xs text-red-400 mt-1.5">{ts("gatewayNotReachable")}</p>
           )}
         </div>
       )}
@@ -587,13 +583,14 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
 }
 
 function NotificationSettings() {
+  const { t } = useTranslation("settings");
   const toastsEnabled = useNotificationStore((s) => s.toastsEnabled);
   const setToastsEnabled = useNotificationStore((s) => s.setToastsEnabled);
   const browserNotificationsEnabled = useNotificationStore((s) => s.browserNotificationsEnabled);
   const setBrowserNotifications = useNotificationStore((s) => s.setBrowserNotifications);
   const platformFilters = useNotificationStore((s) => s.platformFilters);
   const setPlatformFilter = useNotificationStore((s) => s.setPlatformFilter);
-  const { platforms } = useTradingStore();
+  const platforms = useTradingStore((s) => s.platforms);
 
   const handleBrowserToggle = (enabled: boolean) => {
     if (
@@ -613,15 +610,13 @@ function NotificationSettings() {
 
   return (
     <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-3">Notifications</h3>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("notifications")}</h3>
       <div className="space-y-3">
         {/* Toast popups */}
         <label className="flex items-center justify-between cursor-pointer">
           <div>
-            <div className="text-sm text-neutral-200">Toast Popups</div>
-            <div className="text-[11px] text-neutral-500">
-              Show temporary notifications in the bottom-right corner
-            </div>
+            <div className="text-sm text-neutral-200">{t("toastPopups")}</div>
+            <div className="text-[11px] text-neutral-500">{t("toastPopupsDesc")}</div>
           </div>
           <ToggleSwitch enabled={toastsEnabled} onToggle={() => setToastsEnabled(!toastsEnabled)} />
         </label>
@@ -629,10 +624,8 @@ function NotificationSettings() {
         {/* Browser notifications */}
         <label className="flex items-center justify-between cursor-pointer">
           <div>
-            <div className="text-sm text-neutral-200">Browser Notifications</div>
-            <div className="text-[11px] text-neutral-500">
-              Desktop alerts for errors and warnings (even when tab is in background)
-            </div>
+            <div className="text-sm text-neutral-200">{t("browserNotifications")}</div>
+            <div className="text-[11px] text-neutral-500">{t("browserNotificationsDesc")}</div>
           </div>
           <ToggleSwitch
             enabled={browserNotificationsEnabled}
@@ -643,7 +636,7 @@ function NotificationSettings() {
         {/* Per-platform filters */}
         <div className="pt-2 border-t border-[var(--glass-divider)]">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xs font-medium text-neutral-400">Notify by Platform</div>
+            <div className="text-xs font-medium text-neutral-400">{t("notifyByPlatform")}</div>
             <button
               onClick={() => {
                 const newVal = !allEnabled;
@@ -653,7 +646,7 @@ function NotificationSettings() {
               }}
               className="text-[10px] text-orange-500/70 hover:text-orange-400 transition-colors cursor-pointer"
             >
-              {allEnabled ? "Disable All" : "Enable All"}
+              {allEnabled ? t("disableAll") : t("enableAll")}
             </button>
           </div>
           <div className="grid grid-cols-3 gap-1.5">
@@ -681,16 +674,12 @@ function NotificationSettings() {
               );
             })}
           </div>
-          <div className="text-[10px] text-neutral-600 mt-2">
-            Global events (kill switch, limit warnings) are always shown regardless of platform
-            filter.
-          </div>
+          <div className="text-[10px] text-neutral-600 mt-2">{t("globalEventsNote")}</div>
         </div>
 
         {/* Info */}
         <div className="text-[10px] text-neutral-600 pt-1 border-t border-[var(--glass-divider)]">
-          Up to 50 notifications are kept in memory. The bell badge shows up to 9+. Notifications
-          persist until dismissed or cleared.
+          {t("notificationLimitNote")}
         </div>
       </div>
     </div>
@@ -698,6 +687,8 @@ function NotificationSettings() {
 }
 
 export function TradingSettingsPage() {
+  const { t } = useTranslation("settings");
+  const { t: tc } = useTranslation("common");
   const {
     tier,
     approvalMode,
@@ -714,10 +705,10 @@ export function TradingSettingsPage() {
   } = useTradingStore();
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-neutral-100">Trading Policy</h1>
+          <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
           <p className="text-xs text-neutral-500 mt-0.5">
             Configure risk limits and approval behavior
           </p>
@@ -733,6 +724,9 @@ export function TradingSettingsPage() {
       {/* Appearance */}
       <ThemeSelector />
 
+      {/* Language */}
+      <LanguageSelector />
+
       {/* Data Source */}
       <DataModeSelector />
 
@@ -744,7 +738,7 @@ export function TradingSettingsPage() {
 
       {/* Risk Tier */}
       <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Risk Tier</h3>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("riskTier")}</h3>
         <div className="grid grid-cols-3 gap-2">
           {(
             Object.entries(TIER_PRESETS) as [
@@ -762,8 +756,8 @@ export function TradingSettingsPage() {
                   : "border-[var(--glass-border)] bg-[var(--glass-divider)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-subtle-hover)]",
               )}
             >
-              <div className="text-sm font-medium text-neutral-200">{preset.label}</div>
-              <div className="text-[11px] text-neutral-500 mt-0.5">{preset.desc}</div>
+              <div className="text-sm font-medium text-neutral-200">{t(preset.labelKey)}</div>
+              <div className="text-[11px] text-neutral-500 mt-0.5">{t(preset.descKey)}</div>
             </button>
           ))}
         </div>
@@ -771,7 +765,7 @@ export function TradingSettingsPage() {
 
       {/* Approval Mode */}
       <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Approval Mode</h3>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("approvalMode")}</h3>
         <div className="space-y-2">
           {APPROVAL_MODES.map((mode) => (
             <label
@@ -792,8 +786,8 @@ export function TradingSettingsPage() {
                 className="mt-0.5 accent-orange-500"
               />
               <div>
-                <div className="text-sm font-medium text-neutral-200">{mode.label}</div>
-                <div className="text-xs text-neutral-500">{mode.desc}</div>
+                <div className="text-sm font-medium text-neutral-200">{t(mode.labelKey)}</div>
+                <div className="text-xs text-neutral-500">{t(mode.descKey)}</div>
               </div>
             </label>
           ))}
@@ -939,7 +933,8 @@ export function TradingSettingsPage() {
 
       {/* Per-Trade Limits */}
       <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Per-Trade Limits</h3>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-1">{t("tradingLimits")}</h3>
+        <p className="text-[10px] text-neutral-500 mb-3">{t("globalLimitsInfo")}</p>
         <LimitInput
           label="Max risk per trade"
           value={limits.maxRiskPerTradePercent}
@@ -947,9 +942,9 @@ export function TradingSettingsPage() {
           onChange={(v) => setPolicy({ limits: { ...limits, maxRiskPerTradePercent: v } })}
         />
         <LimitInput
-          label="Max single trade"
+          label={t("maxSingleTrade")}
           value={limits.maxSingleTradeUsd}
-          unit="USD"
+          unit={t("usd")}
           onChange={(v) => setPolicy({ limits: { ...limits, maxSingleTradeUsd: v } })}
         />
       </div>
@@ -964,15 +959,15 @@ export function TradingSettingsPage() {
           onChange={(v) => setPolicy({ limits: { ...limits, dailyLossLimitPercent: v } })}
         />
         <LimitInput
-          label="Max daily spend"
+          label={t("maxDailySpend")}
           value={limits.maxDailySpendUsd}
-          unit="USD"
+          unit={t("usd")}
           onChange={(v) => setPolicy({ limits: { ...limits, maxDailySpendUsd: v } })}
         />
         <LimitInput
-          label="Max trades per day"
+          label={t("maxTradesDay")}
           value={limits.maxTradesPerDay}
-          unit="trades"
+          unit={t("trades")}
           onChange={(v) => setPolicy({ limits: { ...limits, maxTradesPerDay: v } })}
         />
       </div>
@@ -993,9 +988,9 @@ export function TradingSettingsPage() {
           onChange={(v) => setPolicy({ limits: { ...limits, maxSinglePositionPercent: v } })}
         />
         <LimitInput
-          label="Max open positions"
+          label={t("maxOpenPositions")}
           value={limits.maxOpenPositions}
-          unit="positions"
+          unit={t("positionsUnit")}
           onChange={(v) => setPolicy({ limits: { ...limits, maxOpenPositions: v } })}
         />
       </div>
@@ -1019,16 +1014,18 @@ export function TradingSettingsPage() {
 
       {/* Per-Platform Overrides */}
       <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-1">Per-Platform Overrides</h3>
-        <p className="text-[10px] text-neutral-500 mb-3">
-          Customize risk limits for individual platforms. These override the global limits above.
-        </p>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-1">
+          {t("perExtensionOverrides")}
+        </h3>
+        <p className="text-[10px] text-neutral-500 mb-3">{t("perExtensionDesc")}</p>
         <div className="space-y-1.5">
           {Object.entries(platforms).map(([id, p]) => (
             <PlatformOverrideSection
               key={id}
               platformId={id}
               label={p.label}
+              platformType={p.type}
+              currencyLabel={p.currencyLabel}
               override={perPlatformOverrides[id]}
               globalLimits={limits}
               onUpdate={setPlatformOverride}
@@ -1041,10 +1038,10 @@ export function TradingSettingsPage() {
       {/* Actions */}
       <div className="flex gap-3">
         <button className="px-4 py-2 rounded-md bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-orange-900/30">
-          Save Policy
+          {tc("save")}
         </button>
         <button className="px-4 py-2 rounded-md border border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] text-neutral-400 hover:text-neutral-200 text-sm cursor-pointer transition-all duration-300 hover:bg-[var(--glass-divider)]">
-          Reset to Tier Default
+          {tc("cancel")}
         </button>
       </div>
     </div>

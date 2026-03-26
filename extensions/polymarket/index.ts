@@ -19,6 +19,8 @@ import {
   withPlatformPortfolio,
   withPlatformPositionCount,
   autoActivateIfBreached,
+  checkKillSwitch,
+  isOrderAllowedUnderKillSwitch,
   type TradeOrder,
 } from "tigerpaw/trading";
 import { polymarketConfigSchema, type PolymarketConfig } from "./config.js";
@@ -415,6 +417,24 @@ const polymarketPlugin = {
         async execute(_toolCallId: string, params: unknown) {
           const { orderId } = params as { orderId: string };
           api.logger.info(`polymarket: cancelling order ${orderId}`);
+
+          // Kill switch gate: hard mode blocks cancels, soft mode allows them.
+          const killStatus = await checkKillSwitch();
+          if (killStatus.active && !isOrderAllowedUnderKillSwitch(killStatus, "cancel")) {
+            const reason = `kill switch active (${killStatus.mode ?? "hard"} mode): ${killStatus.reason ?? "no reason provided"}`;
+            api.logger.warn(`polymarket: cancel denied — ${reason}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "denied",
+              actor: "system",
+              error: reason,
+            });
+            return {
+              content: [{ type: "text" as const, text: `Cancel denied: ${reason}` }],
+              details: { error: "kill_switch", reason },
+            };
+          }
+
           try {
             await clobRequest(cfg, "DELETE", `/order/${encodeURIComponent(orderId)}`);
             await writeAuditEntry({

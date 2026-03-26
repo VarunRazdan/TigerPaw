@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 type AuditFinding = {
@@ -93,6 +94,7 @@ function FindingCard({ finding }: { finding: AuditFinding }) {
 }
 
 export function SecurityPage() {
+  const { t } = useTranslation("security");
   const criticalCount = DEMO_FINDINGS.filter((f) => f.severity === "critical").length;
   const warnCount = DEMO_FINDINGS.filter((f) => f.severity === "warn").length;
   const infoCount = DEMO_FINDINGS.filter((f) => f.severity === "info").length;
@@ -100,31 +102,29 @@ export function SecurityPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-neutral-100">Security Dashboard</h1>
-        <p className="text-xs text-neutral-500 mt-0.5">
-          Security audit results, credential status, and extension permissions
-        </p>
+        <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
+        <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-lg border border-red-800/50 bg-red-950/20 hover:bg-red-950/30 hover:border-red-700/60 transition-all duration-300 p-4 text-center">
           <div className="text-2xl font-bold text-red-400 font-mono">{criticalCount}</div>
-          <div className="text-xs text-red-400/60">Critical</div>
+          <div className="text-xs text-red-400/60">{t("critical")}</div>
         </div>
         <div className="rounded-lg border border-amber-800/50 bg-amber-950/20 hover:bg-amber-950/30 hover:border-amber-700/60 transition-all duration-300 p-4 text-center">
           <div className="text-2xl font-bold text-amber-400 font-mono">{warnCount}</div>
-          <div className="text-xs text-amber-400/60">Warnings</div>
+          <div className="text-xs text-amber-400/60">{t("warnings")}</div>
         </div>
         <div className="rounded-2xl glass-panel p-4 text-center">
           <div className="text-2xl font-bold text-neutral-400 font-mono">{infoCount}</div>
-          <div className="text-xs text-neutral-500">Info</div>
+          <div className="text-xs text-neutral-500">{t("info")}</div>
         </div>
       </div>
 
       {/* Audit Findings */}
       <div>
-        <h2 className="text-sm font-semibold text-neutral-300 mb-3">Audit Findings</h2>
+        <h2 className="text-sm font-semibold text-neutral-300 mb-3">{t("auditFindings")}</h2>
         <div className="space-y-2">
           {DEMO_FINDINGS.map((finding) => (
             <FindingCard key={finding.checkId} finding={finding} />
@@ -134,7 +134,7 @@ export function SecurityPage() {
 
       {/* Credential Status */}
       <div className="rounded-2xl glass-panel p-4">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Credential Status</h3>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("credentialStatus")}</h3>
         <div className="space-y-2">
           {[
             { ext: "Alpaca", keys: 2, method: "OS Keychain", age: "12 days" },
@@ -161,7 +161,7 @@ export function SecurityPage() {
 
       {/* Extension Permissions */}
       <div className="rounded-2xl glass-panel p-4">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Extension Permissions</h3>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("extensionPermissions")}</h3>
         <div className="space-y-3">
           {[
             {
@@ -196,7 +196,7 @@ export function SecurityPage() {
                       : "bg-[var(--glass-subtle-hover)] text-neutral-500 hover:bg-[var(--glass-border)] hover:text-neutral-400 transition-colors duration-200",
                   )}
                 >
-                  {ext.verified ? "verified" : "unverified"}
+                  {ext.verified ? t("verified") : t("unverified")}
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5">

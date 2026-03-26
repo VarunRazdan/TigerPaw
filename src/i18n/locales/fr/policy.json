@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "coupe-circuit actif (mode {{mode}}) : {{reason}}",
+  "killSwitchAutoActivated": "coupe-circuit activé automatiquement suite au dépassement du seuil de risque",
+  "invalidNotional": "valeur notionnelle invalide : {{value}}",
+  "invalidQuantity": "quantité invalide : {{value}}",
+  "invalidPrice": "prix invalide : {{value}}",
+  "cooldownActive": "période de refroidissement active : {{remaining}}s restantes",
+  "riskPerTradeExceeded": "risque par transaction {{actual}}% dépasse la limite {{limit}}%",
+  "tradeSizeExceeded": "taille de transaction ${{actual}} dépasse le maximum ${{limit}}",
+  "dailyLossExceeded": "perte journalière {{actual}}% atteint ou dépasse la limite {{limit}}%",
+  "positionConcentrationExceeded": "concentration de position {{actual}}% dépasse la limite {{limit}}%",
+  "maxPositionsReached": "positions ouvertes ({{current}}) à la limite ({{limit}})",
+  "maxTradesReached": "nombre de transactions journalières ({{current}}) à la limite ({{limit}})",
+  "dailySpendExceeded": "dépenses journalières ${{projected}} dépasseraient la limite ${{limit}}",
+  "consecutiveLossesReached": "pertes consécutives ({{current}}) au seuil de pause ({{limit}})",
+  "autoApproved": "toutes les vérifications pré-transaction réussies ; approuvé automatiquement",
+  "awaitingConfirmation": "toutes les vérifications pré-transaction réussies ; en attente de confirmation de l'opérateur ({{action}} à expiration)",
+  "awaitingManualApproval": "toutes les vérifications pré-transaction réussies ; en attente d'approbation manuelle de l'opérateur ({{action}} à expiration)"
+}

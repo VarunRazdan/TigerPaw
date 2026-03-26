@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { PlatformStatus } from "@/stores/trading-store";
 import { useTradingStore } from "@/stores/trading-store";
@@ -24,6 +25,8 @@ const AUTH_SCHEME_COLORS: Record<string, string> = {
 };
 
 export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
+  const { t } = useTranslation("trading");
+  const { t: tc } = useTranslation("common");
   const [expanded, setExpanded] = useState(false);
   const { platformKillSwitches, togglePlatformKillSwitch } = useTradingStore();
 
@@ -33,8 +36,10 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[var(--glass-divider)] transition-colors cursor-pointer"
       >
-        <h3 className="text-sm font-semibold text-neutral-300">Platform API Details</h3>
-        <span className="text-xs text-neutral-500">{expanded ? "Hide ▲" : "Show ▼"}</span>
+        <h3 className="text-sm font-semibold text-neutral-300">{t("platformApiDetails")}</h3>
+        <span className="text-xs text-neutral-500">
+          {expanded ? t("hideDetails") : t("showDetails")}
+        </span>
       </button>
 
       {expanded && (
@@ -43,13 +48,13 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-neutral-500 border-b border-[var(--glass-border)]">
-                  <th className="text-left py-2 pr-3 font-medium">Platform</th>
-                  <th className="text-left py-2 pr-3 font-medium">API</th>
-                  <th className="text-left py-2 pr-3 font-medium">Auth Scheme</th>
-                  <th className="text-left py-2 pr-3 font-medium">Method</th>
-                  <th className="text-left py-2 pr-3 font-medium">Endpoint</th>
-                  <th className="text-left py-2 pr-3 font-medium">Sandbox</th>
-                  <th className="text-left py-2 font-medium">Status</th>
+                  <th className="text-left py-2 pr-3 font-medium">{tc("platform")}</th>
+                  <th className="text-left py-2 pr-3 font-medium">{t("api")}</th>
+                  <th className="text-left py-2 pr-3 font-medium">{t("authScheme")}</th>
+                  <th className="text-left py-2 pr-3 font-medium">{t("method")}</th>
+                  <th className="text-left py-2 pr-3 font-medium">{t("endpoint")}</th>
+                  <th className="text-left py-2 pr-3 font-medium">{tc("sandbox")}</th>
+                  <th className="text-left py-2 font-medium">{tc("status")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -124,9 +129,9 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
                       </td>
                       <td className="py-2 pr-3">
                         {platform.api.hasSandbox ? (
-                          <span className="text-green-400">Yes</span>
+                          <span className="text-green-400">{tc("yes")}</span>
                         ) : (
-                          <span className="text-neutral-600">No</span>
+                          <span className="text-neutral-600">{tc("no")}</span>
                         )}
                       </td>
                       <td className="py-2">
@@ -140,7 +145,7 @@ export function PlatformApiInfo({ platforms }: PlatformApiInfoProps) {
                                 : "bg-green-900/30 text-green-400 hover:bg-green-900/50",
                             )}
                           >
-                            {platformKillSwitches[id]?.active ? "Halted" : "Active"}
+                            {platformKillSwitches[id]?.active ? tc("halted") : tc("active")}
                           </button>
                         ) : (
                           <span className="text-neutral-600 text-[10px]">—</span>

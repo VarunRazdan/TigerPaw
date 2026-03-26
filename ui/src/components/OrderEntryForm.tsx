@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useSubmitOrder, type OrderStatus } from "@/hooks/use-submit-order";
 import { cn } from "@/lib/utils";
@@ -16,9 +17,9 @@ import {
 } from "./ui/alert-dialog";
 
 const orderSchema = z.object({
-  symbol: z.string().min(1, "Symbol required"),
+  symbol: z.string().min(1),
   side: z.enum(["buy", "sell"]),
-  quantity: z.coerce.number().positive("Must be > 0"),
+  quantity: z.coerce.number().positive(),
   orderType: z.enum(["market", "limit", "stop", "stop_limit", "trailing_stop"]),
   limitPrice: z.coerce.number().positive().optional(),
   stopPrice: z.coerce.number().positive().optional(),
@@ -37,31 +38,36 @@ type OrderEntryFormProps = {
 };
 
 function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
-  const { limits, dailySpendUsd, dailyTradeCount, positions, killSwitchActive } = useTradingStore();
+  const { t } = useTranslation("trading");
+  const limits = useTradingStore((s) => s.limits);
+  const dailySpendUsd = useTradingStore((s) => s.dailySpendUsd);
+  const dailyTradeCount = useTradingStore((s) => s.dailyTradeCount);
+  const positions = useTradingStore((s) => s.positions);
+  const killSwitchActive = useTradingStore((s) => s.killSwitchActive);
 
   const checks = [
     {
-      label: "Kill switch",
+      label: t("killSwitch"),
       pass: !killSwitchActive,
-      detail: killSwitchActive ? "Trading halted" : "OK",
+      detail: killSwitchActive ? t("tradingHalted") : "OK",
     },
     {
-      label: "Single trade",
+      label: t("singleTrade"),
       pass: notionalUsd <= limits.maxSingleTradeUsd,
       detail: `$${notionalUsd.toFixed(0)} / $${limits.maxSingleTradeUsd}`,
     },
     {
-      label: "Daily spend",
+      label: t("dailySpend"),
       pass: dailySpendUsd + notionalUsd <= limits.maxDailySpendUsd,
       detail: `$${(dailySpendUsd + notionalUsd).toFixed(0)} / $${limits.maxDailySpendUsd}`,
     },
     {
-      label: "Trades today",
+      label: t("tradesToday"),
       pass: dailyTradeCount < limits.maxTradesPerDay,
       detail: `${dailyTradeCount + 1} / ${limits.maxTradesPerDay}`,
     },
     {
-      label: "Open positions",
+      label: t("openPositions"),
       pass: positions.length < limits.maxOpenPositions,
       detail: `${positions.length + 1} / ${limits.maxOpenPositions}`,
     },
@@ -70,13 +76,13 @@ function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
   return (
     <div className="rounded-xl glass-panel p-3 space-y-1">
       <div className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
-        Policy Pre-Check
+        {t("policyPreCheck")}
       </div>
       {checks.map((c) => (
         <div key={c.label} className="flex items-center justify-between text-xs">
           <span className="text-neutral-400">{c.label}</span>
           <span className={cn("font-mono", c.pass ? "text-green-400" : "text-red-400")}>
-            {c.pass ? "PASS" : "FAIL"} — {c.detail}
+            {c.pass ? t("pass") : t("fail")} — {c.detail}
           </span>
         </div>
       ))}
@@ -84,7 +90,13 @@ function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
   );
 }
 
-function OrderResultBanner({ state }: { state: OrderStatus }) {
+function OrderResultBanner({
+  state,
+  t,
+}: {
+  state: OrderStatus;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
   if (state.status === "idle" || state.status === "submitting") {
     return null;
   }
@@ -99,8 +111,8 @@ function OrderResultBanner({ state }: { state: OrderStatus }) {
       })}
     >
       {state.status === "success" && state.message}
-      {state.status === "denied" && `Order denied: ${state.reason}`}
-      {state.status === "pending" && `Awaiting ${state.approvalMode} approval`}
+      {state.status === "denied" && t("orderDeniedReason", { reason: state.reason })}
+      {state.status === "pending" && t("awaitingApproval", { mode: state.approvalMode })}
       {state.status === "error" && state.message}
     </div>
   );
@@ -112,6 +124,8 @@ export function OrderEntryForm({
   priceEstimate = 0,
   className,
 }: OrderEntryFormProps) {
+  const { t } = useTranslation("trading");
+  const { t: tc } = useTranslation("common");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<OrderFormValues | null>(null);
@@ -177,18 +191,20 @@ export function OrderEntryForm({
 
   return (
     <div className={cn("rounded-2xl glass-panel p-4", className)}>
-      <h3 className="text-sm font-semibold text-neutral-300 mb-3">Place Order</h3>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("placeOrder")}</h3>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         {/* Symbol */}
         <div>
-          <label className="text-xs text-neutral-500 block mb-1">Symbol</label>
+          <label className="text-xs text-neutral-500 block mb-1">{tc("symbol")}</label>
           <input
             {...register("symbol")}
-            placeholder="e.g. AAPL"
+            placeholder={t("form.symbolPlaceholder")}
             className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
           />
-          {errors.symbol && <span className="text-xs text-red-400">{errors.symbol.message}</span>}
+          {errors.symbol && (
+            <span className="text-xs text-red-400">{t("form.symbolRequired")}</span>
+          )}
         </div>
 
         {/* Side toggle */}
@@ -202,7 +218,7 @@ export function OrderEntryForm({
             )}
           >
             <input type="radio" value="buy" {...register("side")} className="sr-only" />
-            BUY
+            {t("buy")}
           </label>
           <label
             className={cn(
@@ -213,13 +229,13 @@ export function OrderEntryForm({
             )}
           >
             <input type="radio" value="sell" {...register("side")} className="sr-only" />
-            SELL
+            {t("sell")}
           </label>
         </div>
 
         {/* Quantity */}
         <div>
-          <label className="text-xs text-neutral-500 block mb-1">Quantity</label>
+          <label className="text-xs text-neutral-500 block mb-1">{t("quantity")}</label>
           <input
             type="number"
             step="any"
@@ -227,7 +243,7 @@ export function OrderEntryForm({
             className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
           />
           {errors.quantity && (
-            <span className="text-xs text-red-400">{errors.quantity.message}</span>
+            <span className="text-xs text-red-400">{t("form.quantityPositive")}</span>
           )}
           {notionalUsd > 0 && (
             <div className="text-xs text-neutral-500 mt-0.5 font-mono">
@@ -238,23 +254,23 @@ export function OrderEntryForm({
 
         {/* Order type */}
         <div>
-          <label className="text-xs text-neutral-500 block mb-1">Order Type</label>
+          <label className="text-xs text-neutral-500 block mb-1">{t("orderType")}</label>
           <select
             {...register("orderType")}
             className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200 cursor-pointer"
           >
-            <option value="market">Market</option>
-            <option value="limit">Limit</option>
-            <option value="stop">Stop</option>
-            <option value="stop_limit">Stop Limit</option>
-            <option value="trailing_stop">Trailing Stop</option>
+            <option value="market">{t("form.market")}</option>
+            <option value="limit">{t("form.limit")}</option>
+            <option value="stop">{t("form.stop")}</option>
+            <option value="stop_limit">{t("form.stopLimit")}</option>
+            <option value="trailing_stop">{t("form.trailingStop")}</option>
           </select>
         </div>
 
         {/* Conditional price fields */}
         {needsLimitPrice && (
           <div>
-            <label className="text-xs text-neutral-500 block mb-1">Limit Price</label>
+            <label className="text-xs text-neutral-500 block mb-1">{t("limitPrice")}</label>
             <input
               type="number"
               step="any"
@@ -265,7 +281,7 @@ export function OrderEntryForm({
         )}
         {needsStopPrice && (
           <div>
-            <label className="text-xs text-neutral-500 block mb-1">Stop Price</label>
+            <label className="text-xs text-neutral-500 block mb-1">{t("stopPrice")}</label>
             <input
               type="number"
               step="any"
@@ -276,12 +292,12 @@ export function OrderEntryForm({
         )}
         {needsTrailing && (
           <div>
-            <label className="text-xs text-neutral-500 block mb-1">Trailing %</label>
+            <label className="text-xs text-neutral-500 block mb-1">{t("trailingPercent")}</label>
             <input
               type="number"
               step="0.1"
               {...register("trailingPercent")}
-              placeholder="e.g. 2.5"
+              placeholder={t("form.trailingPlaceholder")}
               className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
             />
           </div>
@@ -293,28 +309,28 @@ export function OrderEntryForm({
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="text-xs text-neutral-500 hover:text-neutral-300 cursor-pointer transition-colors"
         >
-          {showAdvanced ? "Hide" : "Show"} advanced options
+          {showAdvanced ? t("hideAdvanced") : t("showAdvanced")}
         </button>
 
         {showAdvanced && (
           <div className="space-y-3 border-t border-[var(--glass-border)] pt-3">
             <div>
-              <label className="text-xs text-neutral-500 block mb-1">Stop Loss</label>
+              <label className="text-xs text-neutral-500 block mb-1">{t("stopLoss")}</label>
               <input
                 type="number"
                 step="any"
                 {...register("stopLoss")}
-                placeholder="Optional"
+                placeholder={t("optional")}
                 className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
               />
             </div>
             <div>
-              <label className="text-xs text-neutral-500 block mb-1">Take Profit</label>
+              <label className="text-xs text-neutral-500 block mb-1">{t("takeProfit")}</label>
               <input
                 type="number"
                 step="any"
                 {...register("takeProfit")}
-                placeholder="Optional"
+                placeholder={t("optional")}
                 className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
               />
             </div>
@@ -338,21 +354,21 @@ export function OrderEntryForm({
           )}
         >
           {killSwitchActive
-            ? "Trading Halted"
+            ? t("tradingHalted")
             : orderState.status === "submitting"
-              ? "Submitting..."
-              : `${watchSide === "buy" ? "Buy" : "Sell"} — Policy Gated`}
+              ? t("submitting")
+              : `${watchSide === "buy" ? t("buy") : t("sell")} — ${t("policyGated")}`}
         </button>
 
         {/* Order result feedback */}
-        <OrderResultBanner state={orderState} />
+        <OrderResultBanner state={orderState} t={t} />
       </form>
 
       {/* Confirmation dialog */}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Order</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmOrder")}</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingOrder && (
                 <>
@@ -364,7 +380,7 @@ export function OrderEntryForm({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               className={cn(
@@ -373,7 +389,7 @@ export function OrderEntryForm({
                   : "bg-red-700 hover:bg-red-600 text-white",
               )}
             >
-              Confirm {pendingOrder?.side.toUpperCase()}
+              {tc("confirm")} {pendingOrder?.side.toUpperCase()}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

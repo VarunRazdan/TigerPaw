@@ -1,0 +1,18 @@
+{
+  "title": "الإشعارات",
+  "tradingNotifications": "إشعارات التداول",
+  "noNotifications": "لا توجد إشعارات بعد",
+  "orderApproved": "تمت الموافقة على الأمر: {{symbol}} {{side}}",
+  "orderDenied": "تم رفض الأمر: {{symbol}} {{side}}",
+  "orderPending": "أمر معلق: {{symbol}} {{side}}",
+  "orderSubmitted": "تم إرسال الأمر: {{symbol}}",
+  "orderFilled": "تم تنفيذ الأمر: {{symbol}}",
+  "orderFailed": "فشل الأمر: {{symbol}}",
+  "killSwitchExt": "مفتاح الإيقاف: {{extension}}",
+  "killSwitchActivated": "تم تفعيل مفتاح الإيقاف",
+  "killSwitchDeactivated": "تم إلغاء تفعيل مفتاح الإيقاف",
+  "limitWarning": "تحذير الحد: {{limitName}}",
+  "approachingThreshold": "اقتراب من الحد الأقصى",
+  "tradingEvent": "حدث تداول",
+  "globalKillSwitchOff": "مفتاح الإيقاف العام معطّل — استُؤنف التداول"
+}

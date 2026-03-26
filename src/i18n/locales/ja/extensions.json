@@ -1,0 +1,104 @@
+{
+  "_comment": "バックエンド取引拡張機能のi18n文字列",
+
+  "noTradingData": "取引データがありません。取引プラットフォームを接続し、取引を有効にしてください。",
+  "failedToLoad": "{{resource}}の読み込みに失敗しました: {{error}}",
+
+  "common.quantityMustBePositive": "数量は0より大きい値を指定してください。",
+  "common.limitPriceRequired": "{{type}}注文には指値が必要です。",
+  "common.stopPriceRequired": "{{type}}注文にはストップ価格が必要です。",
+  "common.orderDenied": "注文が拒否されました: {{reason}}",
+  "common.orderFailed": "注文に失敗しました: {{error}}",
+  "common.cancelDenied": "キャンセルが拒否されました: {{reason}}",
+  "common.cancelFailed": "キャンセルに失敗しました: {{error}}",
+  "common.cancelSuccess": "注文{{orderId}}のキャンセルが完了しました。",
+  "common.noOpenPositions": "オープンポジションはありません。",
+  "common.noOpenPositionsOn": "{{platform}}にオープンポジションはありません。",
+  "common.noOrderHistory": "注文履歴がありません。",
+  "common.noRecentTrades": "監査ログに最近の取引はありません。",
+  "common.noRecentTradesOn": "{{platform}}に最近の取引はありません。",
+  "common.noSearchResults": "「{{query}}」に一致する取引可能な資産が見つかりませんでした。",
+
+  "tc.portfolioSummary": "ポートフォリオの概要",
+  "tc.total": "合計",
+  "tc.highWater": "ハイウォーターマーク",
+  "tc.drawdown": "ドローダウン",
+
+  "tc.dailyMetrics": "本日の取引実績（{{date}}）",
+  "tc.dailyPnl": "日次P&L",
+  "tc.dailySpend": "日次支出",
+  "tc.trades": "取引数",
+  "tc.consecLosses": "連続損失",
+  "tc.portfolioValue": "ポートフォリオ価値",
+
+  "tc.openPositions": "オープンポジション（{{count}}件）",
+  "tc.value": "評価額",
+  "tc.ofPortfolio": "ポートフォリオ比率",
+  "tc.totalOpen": "合計オープン",
+
+  "tc.killSwitchStatus": "緊急停止スイッチの状態",
+  "tc.globalActive": "グローバル: 有効（{{mode}}モード）",
+  "tc.globalOff": "グローバル: 無効 — 取引は稼働中",
+  "tc.reason": "理由",
+  "tc.activatedBy": "実行者",
+  "tc.since": "開始日時",
+  "tc.platformKillSwitches": "プラットフォーム別緊急停止スイッチ:",
+  "tc.platformActive": "{{platform}}: 有効 — {{reason}}",
+
+  "tc.killSwitchActivated": "緊急停止スイッチが有効化されました（{{mode}}モード）。\n理由: {{reason}}\n\nすべての取引が停止されました。",
+  "tc.killSwitchAlreadyOff": "緊急停止スイッチはすでに無効です。取引は稼働中です。",
+  "tc.killSwitchDeactivated": "緊急停止スイッチが無効化されました。取引が再開されました。\n\n設定済みのリスク制限はすべて引き続き有効です。",
+
+  "tc.failedActivate": "緊急停止スイッチの有効化に失敗しました: {{error}}",
+  "tc.failedDeactivate": "緊急停止スイッチの無効化に失敗しました: {{error}}",
+  "tc.failedKillSwitchCheck": "緊急停止スイッチの確認に失敗しました: {{error}}",
+
+  "tc.riskLimitUtilization": "リスク限度の使用率",
+  "tc.noRiskLimits": "リスク限度が設定されていません。",
+  "tc.dailySpendGauge": "日次支出",
+  "tc.tradesPerDayGauge": "1日あたりの取引数",
+  "tc.positionsGauge": "ポジション数",
+  "tc.dailyLossGauge": "日次損失",
+  "tc.drawdownGauge": "ドローダウン",
+  "tc.consecLossesGauge": "連続損失",
+  "tc.approachingLimits": "制限に近づいています: {{limits}}",
+
+  "tc.recentTrades": "最近の取引（{{count}}件）",
+  "tc.denied": "理由",
+  "tc.failedLoadPortfolio": "ポートフォリオの読み込みに失敗しました: {{error}}",
+  "tc.failedLoadMetrics": "指標の読み込みに失敗しました: {{error}}",
+  "tc.failedLoadPositions": "ポジションの読み込みに失敗しました: {{error}}",
+  "tc.failedLoadRisk": "リスク状態の読み込みに失敗しました: {{error}}",
+  "tc.failedReadHistory": "取引履歴の読み込みに失敗しました: {{error}}",
+
+  "alpaca.searchNoResults": "「{{query}}」に一致する取引可能な資産が見つかりませんでした。",
+  "alpaca.quoteFailed": "{{symbol}}の見積取得に失敗しました: {{error}}",
+  "alpaca.orderPlaced": "注文が送信されました: {{side}} {{qty}} {{symbol}}（{{type}}）— {{status}}",
+  "alpaca.bracketOrderPlaced": "ブラケット注文が送信されました: {{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "polymarket.orderPlaced": "指値注文が発注されました: {{side}} {{size}}契約 @ {{price}}",
+  "polymarket.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "kalshi.orderPlaced": "注文が発注されました: {{side}} {{count}}契約 @ {{price}}¢",
+  "kalshi.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "manifold.betPlaced": "ベットが確定しました: \"{{question}}\"に{{outcome}} {{amount}}",
+  "manifold.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "coinbase.orderPlaced": "注文が送信されました: {{side}} {{qty}} {{symbol}}（{{type}}）",
+  "coinbase.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "ibkr.orderPlaced": "注文が送信されました: {{side}} {{qty}} {{symbol}}（{{type}}）",
+  "ibkr.bracketOrderPlaced": "ブラケット注文が送信されました: {{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "binance.orderPlaced": "注文が送信されました: {{side}} {{qty}} {{symbol}}（{{type}}）",
+  "binance.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "kraken.orderPlaced": "注文が送信されました: {{side}} {{volume}} {{pair}}（{{type}}）",
+  "kraken.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}",
+
+  "dydx.notImplemented": "dYdXの注文送信にはCosmos SDKによるトランザクション署名が必要ですが、まだ実装されていません。現時点ではdYdXのウェブインターフェースをご利用ください。",
+  "dydx.fetchFailed": "{{resource}}の取得に失敗しました: {{error}}"
+}

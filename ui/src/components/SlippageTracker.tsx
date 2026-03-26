@@ -1,8 +1,10 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
 export function SlippageTracker() {
+  const { t } = useTranslation("trading");
   const tradeHistory = useTradingStore((s) => s.tradeHistory);
 
   const stats = useMemo(() => {
@@ -45,21 +47,19 @@ export function SlippageTracker() {
   if (!stats) {
     return (
       <div className="rounded-2xl glass-panel p-4">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Slippage Tracker</h3>
-        <p className="text-xs text-neutral-600 py-4 text-center">
-          No filled orders with price data yet
-        </p>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("slippageTracker")}</h3>
+        <p className="text-xs text-neutral-600 py-4 text-center">{t("noSlippageData")}</p>
       </div>
     );
   }
 
   return (
     <div className="rounded-2xl glass-panel p-4">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-3">Slippage Tracker</h3>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("slippageTracker")}</h3>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <div>
-          <div className="text-[10px] text-neutral-500 uppercase">Avg Slippage</div>
+          <div className="text-[10px] text-neutral-500 uppercase">{t("avgSlippage")}</div>
           <div
             className={cn(
               "text-sm font-mono font-bold",
@@ -71,23 +71,23 @@ export function SlippageTracker() {
             )}
           >
             {stats.avgSlippage > 0 ? "+" : ""}
-            {stats.avgSlippage.toFixed(1)} bps
+            {stats.avgSlippage.toFixed(1)} {t("bps")}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-neutral-500 uppercase">Max Adverse</div>
+          <div className="text-[10px] text-neutral-500 uppercase">{t("maxAdverse")}</div>
           <div className="text-sm font-mono font-bold text-red-400">
-            +{stats.maxAdverse.toFixed(1)} bps
+            +{stats.maxAdverse.toFixed(1)} {t("bps")}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-neutral-500 uppercase">Favorable</div>
+          <div className="text-[10px] text-neutral-500 uppercase">{t("favorable")}</div>
           <div className="text-sm font-mono font-bold text-green-400">
             {stats.favorableCount}/{stats.total}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-neutral-500 uppercase">Adverse</div>
+          <div className="text-[10px] text-neutral-500 uppercase">{t("adverse")}</div>
           <div className="text-sm font-mono font-bold text-red-400">
             {stats.adverseCount}/{stats.total}
           </div>
@@ -122,7 +122,7 @@ export function SlippageTracker() {
                   )}
                 >
                   {entry.slipBps > 0 ? "+" : ""}
-                  {entry.slipBps.toFixed(1)} bps
+                  {entry.slipBps.toFixed(1)} {t("bps")}
                 </span>
               </div>
             </div>

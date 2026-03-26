@@ -1,0 +1,21 @@
+{
+  "title": "Panel de Tigerpaw",
+  "subtitle": "Tu IA opera. Tú decides.",
+  "portfolioValue": "Valor de cartera",
+  "dailyPnl": "P&L diario",
+  "tradesToday": "Operaciones hoy",
+  "openPositions": "Posiciones abiertas",
+  "marketPrices": "Precios de mercado",
+  "tradingExtensions": "Extensiones de trading",
+  "tradingHub": "Centro de operaciones →",
+  "tradingHubDesc": "Panel de riesgo, cola de aprobaciones, posiciones e historial de operaciones",
+  "riskSettings": "Configuración de riesgo →",
+  "riskSettingsDesc": "Configurar niveles de riesgo, modos de aprobación y límites de posición",
+  "security": "Seguridad →",
+  "securityDesc": "Auditoría de seguridad, estado de credenciales y permisos de extensiones",
+  "killSwitchActive": "Interruptor de emergencia activo",
+  "killSwitchActiveDesc": "Todas las operaciones están detenidas. Ve al Centro de operaciones para reanudar.",
+  "disconnectTitle": "¿Desconectar {{platform}}?",
+  "disconnectDesc": "Esto detendrá todas las operaciones en esta plataforma. Las posiciones abiertas no se cerrarán automáticamente. Puedes volver a conectarte en cualquier momento.",
+  "disconnectLabel": "Desconectar {{platform}}"
+}

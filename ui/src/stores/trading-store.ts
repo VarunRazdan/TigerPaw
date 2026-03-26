@@ -59,6 +59,14 @@ export type PerPlatformOverride = Partial<PolicyLimits> & {
   approvalMode?: ApprovalMode;
 };
 
+export type PlatformType =
+  | "stocks"
+  | "crypto"
+  | "prediction"
+  | "play_money"
+  | "perpetuals"
+  | "multi_asset";
+
 export type PlatformApiInfo = {
   apiVersion: string;
   authScheme: string;
@@ -71,6 +79,8 @@ export type PlatformStatus = {
   connected: boolean;
   mode: "live" | "paper" | "demo" | "play" | "sandbox" | "testnet" | "mainnet";
   label: string;
+  type: PlatformType;
+  currencyLabel: string;
   accountInfo?: Record<string, unknown>;
   api: PlatformApiInfo;
 };
@@ -404,6 +414,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: true,
       mode: "paper",
       label: "Alpaca",
+      type: "stocks",
+      currencyLabel: "USD",
       api: {
         apiVersion: "v2",
         authScheme: "API Key Headers",
@@ -416,6 +428,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: true,
       mode: "live",
       label: "Polymarket",
+      type: "prediction",
+      currencyLabel: "USD",
       api: {
         apiVersion: "CLOB v1",
         authScheme: "HMAC-SHA256",
@@ -428,6 +442,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: true,
       mode: "demo",
       label: "Kalshi",
+      type: "prediction",
+      currencyLabel: "USD",
       api: {
         apiVersion: "v2",
         authScheme: "RSA-SHA256",
@@ -440,6 +456,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: true,
       mode: "play",
       label: "Manifold",
+      type: "play_money",
+      currencyLabel: "Mana",
       api: {
         apiVersion: "v0",
         authScheme: "API Key Bearer",
@@ -452,6 +470,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: true,
       mode: "sandbox",
       label: "Coinbase",
+      type: "crypto",
+      currencyLabel: "USD",
       api: {
         apiVersion: "v3",
         authScheme: "ES256 JWT (CDP Key)",
@@ -464,6 +484,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: true,
       mode: "paper",
       label: "IBKR",
+      type: "multi_asset",
+      currencyLabel: "USD",
       api: {
         apiVersion: "v1",
         authScheme: "Session-based",
@@ -476,6 +498,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: false,
       mode: "testnet",
       label: "Binance",
+      type: "crypto",
+      currencyLabel: "USD",
       api: {
         apiVersion: "v3",
         authScheme: "HMAC-SHA256",
@@ -488,6 +512,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: true,
       mode: "live",
       label: "Kraken",
+      type: "crypto",
+      currencyLabel: "USD",
       api: {
         apiVersion: "v0",
         authScheme: "HMAC-SHA512",
@@ -500,6 +526,8 @@ export const useTradingStore = create<TradingState>((set) => ({
       connected: false,
       mode: "testnet",
       label: "dYdX",
+      type: "perpetuals",
+      currencyLabel: "USD",
       api: {
         apiVersion: "v4",
         authScheme: "Cosmos SDK",

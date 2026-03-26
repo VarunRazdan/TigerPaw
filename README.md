@@ -5,7 +5,7 @@
 <h1 align="center">Tigerpaw</h1>
 
 <p align="center">
-  Multi-channel AI trading gateway. Connect AI agents to messaging platforms and real-money trading platforms with built-in risk management.
+  Everything OpenClaw does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Local-first by default.
 </p>
 
 <p align="center">
@@ -49,18 +49,9 @@
 
 ## Features
 
-- **9 Trading Platforms** --
-  <img src="icons/trading-platforms/alpaca.svg" height="14" alt="Alpaca"> Alpaca
-  · <img src="icons/trading-platforms/polymarket.svg" height="14" alt="Polymarket"> Polymarket
-  · <img src="icons/trading-platforms/kalshi.svg" height="14" alt="Kalshi"> Kalshi
-  · <img src="icons/trading-platforms/manifold.svg" height="14" alt="Manifold"> Manifold
-  · <img src="icons/trading-platforms/coinbase.svg" height="14" alt="Coinbase"> Coinbase
-  · <img src="icons/trading-platforms/interactive-brokers.svg" height="14" alt="Interactive Brokers"> Interactive Brokers
-  · <img src="icons/trading-platforms/binance.svg" height="14" alt="Binance"> Binance
-  · <img src="icons/trading-platforms/kraken.svg" height="14" alt="Kraken"> Kraken
-  · <img src="icons/trading-platforms/dydx.svg" height="14" alt="dYdX"> dYdX
+### For everyone (even if you don't trade)
 
-- **20+ Messaging Channels** --
+- **20+ Messaging Channels** (inherited from [OpenClaw](https://github.com/nicepkg/openclaw)) --
   <img src="icons/messaging-channels/telegram.svg" height="14" alt="Telegram"> Telegram
   · <img src="icons/messaging-channels/discord.svg" height="14" alt="Discord"> Discord
   · <img src="icons/messaging-channels/slack.svg" height="14" alt="Slack"> Slack
@@ -78,13 +69,30 @@
   · <img src="icons/messaging-channels/feishu.svg" height="14" alt="Feishu"> Feishu
   · <img src="icons/messaging-channels/zalo.svg" height="14" alt="Zalo"> Zalo
   and more
+- **React 19 Control Dashboard** -- Modern UI replacing OpenClaw's Lit/Web Components -- real-time positions, P&L charts, TradingView embeds, order entry, risk management, and approval queue
+- **Gateway Security Hardening** -- CORS allowlisting, per-IP rate limiting, request size enforcement, credential rotation tracking
+- **Zero-Config Start** -- `tigerpaw start` creates config, starts the gateway, and opens the dashboard. One command.
+- **Docker Multi-Arch Images** -- amd64 + arm64 with rootless Podman/systemd support
+- **Plugin Permission Manifests** -- Declarative permission model for extensions (network, trading, filesystem, secrets) with security audit via `tigerpaw doctor`
+- **Local-First by Default** -- Gateway binds to localhost; API keys and data never leave your machine
 
+### For traders
+
+- **9 Trading Platforms** --
+  <img src="icons/trading-platforms/alpaca.svg" height="14" alt="Alpaca"> Alpaca
+  · <img src="icons/trading-platforms/polymarket.svg" height="14" alt="Polymarket"> Polymarket
+  · <img src="icons/trading-platforms/kalshi.svg" height="14" alt="Kalshi"> Kalshi
+  · <img src="icons/trading-platforms/manifold.svg" height="14" alt="Manifold"> Manifold
+  · <img src="icons/trading-platforms/coinbase.svg" height="14" alt="Coinbase"> Coinbase
+  · <img src="icons/trading-platforms/interactive-brokers.svg" height="14" alt="Interactive Brokers"> Interactive Brokers
+  · <img src="icons/trading-platforms/binance.svg" height="14" alt="Binance"> Binance
+  · <img src="icons/trading-platforms/kraken.svg" height="14" alt="Kraken"> Kraken
+  · <img src="icons/trading-platforms/dydx.svg" height="14" alt="dYdX"> dYdX
 - **Policy-Gated Trading** -- Every order goes through a 12-step validation pipeline before execution
 - **Risk Management** -- Daily spend limits, position limits, drawdown protection, cooldowns, kill switch
 - **Tamper-Evident Audit Log** -- HMAC-SHA256 chain-linked JSONL logging for every trade decision
 - **3 Approval Modes** -- Auto, confirm (configurable timeout + deny/approve on timeout), or manual (configurable timeout)
 - **3 Risk Tiers** -- Conservative, moderate, aggressive presets
-- **React Control UI** -- Dashboard with real-time positions, P&L charts, TradingView embeds, order entry, risk management, and approval queue
 - **Real-Time Notifications** -- In-app toast alerts for order approvals, denials, kill switch changes, and limit warnings
 - **Trading Bot Commands** -- 8 unified trading tools accessible from any messaging channel -- portfolio summary, P&L, positions, kill switch, risk status
 - **Remote Dashboard Access** -- Access your dashboard from any device via Tailscale (end-to-end encrypted) or Cloudflare Tunnel (free HTTPS)
@@ -121,12 +129,25 @@ But local-first alone isn't enough. Tigerpaw adds **institutional-grade risk con
 
 These aren't optional add-ons -- they're built into the core. **Every order goes through a 12-step validation pipeline before it can execute.** There is no way to bypass it.
 
+### Why Tigerpaw instead of OpenClaw?
+
+Tigerpaw is a strict superset of [OpenClaw](https://github.com/nicepkg/openclaw). Every feature OpenClaw has -- 40+ messaging channels, agent runtime, plugin system -- is included in Tigerpaw. On top of that, Tigerpaw adds:
+
+- A modern React 19 dashboard (OpenClaw uses older Lit/Web Components)
+- Gateway security hardening (CORS, rate limiting, request size enforcement, credential rotation)
+- Zero-config `tigerpaw start` experience
+- Docker multi-arch images (amd64 + arm64)
+- Declarative plugin permission manifests with security audit
+- And for traders: a full policy-gated trading engine across 9 exchanges
+
+If you're choosing between them, Tigerpaw gives you everything OpenClaw has, plus more.
+
 ### Who Is This For?
 
-- **Developers** building AI trading agents who need safety rails between their code and real money
+- **Anyone using OpenClaw** -- Tigerpaw is a drop-in upgrade with a better UI, stronger security, and zero-config start
+- **Developers** building AI messaging bots or trading agents who need a multi-channel gateway
 - **Quantitative traders** who want local execution with institutional-style risk management
-- **Privacy-conscious traders** who don't want their API keys or strategies on third-party servers
-- **Anyone** who wants to connect AI agents to trading platforms without worrying about runaway algorithms
+- **Privacy-conscious users** who don't want their API keys or data on third-party servers
 
 > _"The best risk management is the kind you can't turn off."_
 > -- Tigerpaw's kill switch auto-activates when limits are breached. You can't accidentally trade through a drawdown.
@@ -583,7 +604,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Acknowledgments
 
-Tigerpaw began as a fork of [OpenClaw](https://github.com/nicepkg/openclaw) by Peter Steinberger, originally a multi-channel AI messaging gateway. It has since been extensively rebuilt with a policy-gated trading engine, 9 exchange integrations, HMAC-signed request authentication, tamper-evident audit logging, and a React trading dashboard — transforming it into a full trading gateway with hardened security.
+Built on [OpenClaw](https://github.com/nicepkg/openclaw) by Peter Steinberger. Tigerpaw includes all of OpenClaw's 40+ messaging channel integrations and agent runtime, and extends them with a trading engine, gateway security hardening, a React 19 dashboard, real-time notifications, and Docker multi-arch images. Grateful to Peter and the OpenClaw community for the foundation.
 
 ## License
 

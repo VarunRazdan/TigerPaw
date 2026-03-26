@@ -20,6 +20,8 @@ import {
   withPlatformPortfolio,
   withPlatformPositionCount,
   autoActivateIfBreached,
+  checkKillSwitch,
+  isOrderAllowedUnderKillSwitch,
   type TradeOrder,
 } from "tigerpaw/trading";
 import { kalshiConfigSchema, getBaseUrl, type KalshiConfig } from "./config.js";
@@ -453,6 +455,21 @@ const kalshiPlugin = {
         async execute(_id: string, params: unknown) {
           const { orderId } = params as { orderId: string };
           api.logger.info(`kalshi: cancelling order ${orderId}`);
+
+          // Kill switch gate: hard mode blocks cancels, soft mode allows them.
+          const killStatus = await checkKillSwitch();
+          if (killStatus.active && !isOrderAllowedUnderKillSwitch(killStatus, "cancel")) {
+            const reason = `kill switch active (${killStatus.mode ?? "hard"} mode): ${killStatus.reason ?? "no reason provided"}`;
+            api.logger.warn(`kalshi: cancel denied — ${reason}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "denied",
+              actor: "system",
+              error: reason,
+            });
+            return txtD(`Cancel denied: ${reason}`, { error: "kill_switch", reason });
+          }
+
           try {
             await kalshiReq(cfg, "DELETE", `/portfolio/orders/${encodeURIComponent(orderId)}`, pem);
             await writeAuditEntry({

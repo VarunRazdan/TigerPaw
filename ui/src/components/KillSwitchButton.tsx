@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 import {
@@ -13,6 +14,8 @@ import {
 } from "./ui/alert-dialog";
 
 export function KillSwitchButton() {
+  const { t } = useTranslation("trading");
+  const { t: tc } = useTranslation("common");
   const { killSwitchActive, killSwitchReason, toggleKillSwitch } = useTradingStore();
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -27,8 +30,8 @@ export function KillSwitchButton() {
         onClick={() => setDialogOpen(true)}
         title={
           killSwitchActive
-            ? `Kill switch ON: ${killSwitchReason ?? "activated"}`
-            : "Kill switch OFF — click to halt all trading"
+            ? `${t("killSwitchOn")}: ${killSwitchReason ?? "activated"}`
+            : t("killSwitchOff")
         }
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-300 cursor-pointer",
@@ -41,29 +44,27 @@ export function KillSwitchButton() {
         <span
           className={cn("w-2 h-2 rounded-full", killSwitchActive ? "bg-red-400" : "bg-green-400")}
         />
-        {killSwitchActive ? "KILL SWITCH: ACTIVE" : "TRADING: OK"}
+        {killSwitchActive ? t("killSwitchLabel") : t("tradingOk")}
       </button>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {killSwitchActive ? "Resume Trading?" : "Activate Kill Switch?"}
+              {killSwitchActive ? t("resumeTrading") : t("activateKillSwitch")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {killSwitchActive
-                ? "This will deactivate the kill switch and allow trading to resume. Make sure all risk conditions have been resolved before continuing."
-                : "This will immediately halt ALL trading activity across every extension. No new orders will be accepted until the kill switch is deactivated."}
+              {killSwitchActive ? t("resumeDesc") : t("activateDesc")}
             </AlertDialogDescription>
             {killSwitchActive && killSwitchReason && (
               <div className="mt-2 rounded-md bg-red-950/50 border border-red-900 p-3 text-xs text-red-300">
-                <span className="font-semibold">Reason: </span>
+                <span className="font-semibold">{t("reason")}: </span>
                 {killSwitchReason}
               </div>
             )}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
               className={cn(
@@ -72,7 +73,7 @@ export function KillSwitchButton() {
                   : "bg-red-700 hover:bg-red-600 text-white",
               )}
             >
-              {killSwitchActive ? "Resume Trading" : "Halt All Trading"}
+              {killSwitchActive ? t("resumeButton") : t("haltButton")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

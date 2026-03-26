@@ -1,0 +1,21 @@
+{
+  "title": "Tigerpaw 儀表板",
+  "subtitle": "AI 自動交易，由您決定。",
+  "portfolioValue": "投資組合價值",
+  "dailyPnl": "當日 P&L",
+  "tradesToday": "今日交易",
+  "openPositions": "未平倉部位",
+  "marketPrices": "市場行情",
+  "tradingExtensions": "交易擴充功能",
+  "tradingHub": "交易中心 →",
+  "tradingHubDesc": "風險儀表板、審批佇列、持倉及交易記錄",
+  "riskSettings": "風險設定 →",
+  "riskSettingsDesc": "設定風險等級、審批模式及持倉限額",
+  "security": "安全 →",
+  "securityDesc": "安全稽核、憑證狀態及擴充功能權限",
+  "killSwitchActive": "Kill Switch 已啟動",
+  "killSwitchActiveDesc": "所有交易已暫停。請前往交易中心以恢復交易。",
+  "disconnectTitle": "中斷 {{platform}} 連線？",
+  "disconnectDesc": "這將停止此平台上的所有交易。未平倉部位不會自動關閉。您可隨時重新連線。",
+  "disconnectLabel": "中斷 {{platform}}"
+}

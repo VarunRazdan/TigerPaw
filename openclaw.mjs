@@ -85,5 +85,5 @@ if (await tryImport("./dist/entry.js")) {
 } else if (await tryImport("./dist/entry.mjs")) {
   // OK
 } else {
-  throw new Error("tigerclaw: missing dist/entry.(m)js (build output).");
+  throw new Error("tigerpaw: missing dist/entry.(m)js (build output).");
 }

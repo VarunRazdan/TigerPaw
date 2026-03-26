@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import i18n from "@/i18n";
 
 export type NotificationSeverity = "info" | "warning" | "error" | "success";
 
@@ -192,30 +193,37 @@ export function eventSeverity(type: string): NotificationSeverity {
 
 /** Map a trading event type to a human-readable title prefix. */
 export function eventTitle(type: string, payload: Record<string, unknown>): string {
+  const t = i18n.t.bind(i18n);
   const symbol = (payload.symbol as string) ?? "";
   const side = (payload.side as string) ?? "";
   const ext = (payload.extensionId as string) ?? "";
 
   switch (type) {
     case "trading.order.approved":
-      return `Order Approved: ${symbol} ${side}`.trim();
+      return t("notifications:orderApproved", { symbol, side }).trim();
     case "trading.order.denied":
-      return `Order Denied: ${symbol} ${side}`.trim();
+      return t("notifications:orderDenied", { symbol, side }).trim();
     case "trading.order.pending":
-      return `Order Pending: ${symbol} ${side}`.trim();
+      return t("notifications:orderPending", { symbol, side }).trim();
     case "trading.order.submitted":
-      return `Order Submitted: ${symbol}`.trim();
+      return t("notifications:orderSubmitted", { symbol }).trim();
     case "trading.order.filled":
-      return `Order Filled: ${symbol}`.trim();
+      return t("notifications:orderFilled", { symbol }).trim();
     case "trading.order.failed":
-      return `Order Failed: ${symbol}`.trim();
+      return t("notifications:orderFailed", { symbol }).trim();
     case "trading.killswitch.activated":
-      return ext ? `Kill Switch: ${ext}` : "Kill Switch Activated";
+      return ext
+        ? t("notifications:killSwitchExt", { extension: ext })
+        : t("notifications:killSwitchActivated");
     case "trading.killswitch.deactivated":
-      return ext ? `Kill Switch Off: ${ext}` : "Kill Switch Deactivated";
+      return ext
+        ? `${t("notifications:killSwitchDeactivated")}: ${ext}`
+        : t("notifications:killSwitchDeactivated");
     case "trading.limit.warning":
-      return `Limit Warning: ${(payload.limitName as string) ?? "approaching threshold"}`;
+      return t("notifications:limitWarning", {
+        limitName: (payload.limitName as string) ?? t("notifications:approachingThreshold"),
+      });
     default:
-      return "Trading Event";
+      return t("notifications:tradingEvent");
   }
 }

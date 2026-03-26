@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore, type PendingApproval } from "@/stores/trading-store";
 
@@ -18,6 +19,7 @@ function ApprovalCard({
   onApprove: (a: PendingApproval) => void;
   onDeny: (a: PendingApproval) => void;
 }) {
+  const { t: tc } = useTranslation("common");
   const [remainingMs, setRemainingMs] = useState(() =>
     Math.max(0, approval.timeoutMs - (Date.now() - approval.createdAt)),
   );
@@ -48,10 +50,14 @@ function ApprovalCard({
         </span>
       </div>
       <div className="text-xs text-neutral-400 space-y-0.5 mb-3">
-        <div>Est: ${approval.notionalUsd.toFixed(2)}</div>
-        <div>Risk: {approval.riskPercent.toFixed(1)}% of portfolio</div>
+        <div>
+          {tc("amount")}: ${approval.notionalUsd.toFixed(2)}
+        </div>
+        <div>
+          {tc("result")}: {approval.riskPercent.toFixed(1)}%
+        </div>
         <div className="text-neutral-500">
-          Mode: <span className="capitalize">{approval.mode}</span>
+          {tc("type")}: <span className="capitalize">{approval.mode}</span>
         </div>
       </div>
       <div className="flex items-center gap-2 mb-2">
@@ -59,13 +65,13 @@ function ApprovalCard({
           onClick={() => onApprove(approval)}
           className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-green-700 hover:bg-green-600 text-green-100 cursor-pointer transition-all duration-300 hover:shadow-md hover:shadow-green-900/30"
         >
-          Approve
+          {tc("approve")}
         </button>
         <button
           onClick={() => onDeny(approval)}
           className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-red-800 hover:bg-red-700 text-red-100 cursor-pointer transition-all duration-300 hover:shadow-md hover:shadow-red-900/30"
         >
-          Deny
+          {tc("deny")}
         </button>
       </div>
       <div className="flex items-center gap-2 text-xs text-neutral-500">
@@ -85,6 +91,7 @@ function ApprovalCard({
 }
 
 export function ApprovalQueuePanel() {
+  const { t } = useTranslation("trading");
   const pendingApprovals = useTradingStore((s) => s.pendingApprovals);
   const removePendingApproval = useTradingStore((s) => s.removePendingApproval);
   const addPendingApproval = useTradingStore((s) => s.addPendingApproval);
@@ -130,7 +137,7 @@ export function ApprovalQueuePanel() {
     <div className="rounded-2xl glass-panel p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-neutral-300">
-          Pending Approvals
+          {t("pendingApprovals")}
           {pendingApprovals.length > 0 && (
             <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-amber-900 text-amber-300">
               {pendingApprovals.length}
@@ -140,9 +147,9 @@ export function ApprovalQueuePanel() {
         {pendingApprovals.length > 1 && (
           <button
             onClick={handleBulkApprove}
-            className="text-xs text-green-400 hover:text-green-300 font-semibold transition-colors"
+            className="text-xs text-green-400 hover:text-green-300 font-semibold transition-colors cursor-pointer"
           >
-            Approve All
+            {t("approveAll")}
           </button>
         )}
       </div>
@@ -163,14 +170,14 @@ export function ApprovalQueuePanel() {
                 )}
               >
                 <span>
-                  {entry.action === "approved" ? "Approved" : "Denied"}{" "}
+                  {entry.action === "approved" ? t("approved") : t("denied")}{" "}
                   {entry.approval.side.toUpperCase()} {entry.approval.symbol}
                 </span>
                 <button
                   onClick={() => handleUndo(entry)}
                   className="font-semibold hover:underline ml-2 cursor-pointer"
                 >
-                  Undo ({remainSec}s)
+                  {t("undoSeconds", { seconds: remainSec })}
                 </button>
               </div>
             );
@@ -179,7 +186,7 @@ export function ApprovalQueuePanel() {
       )}
 
       {pendingApprovals.length === 0 && undoEntries.length === 0 ? (
-        <p className="text-xs text-neutral-600 py-4 text-center">No pending approvals</p>
+        <p className="text-xs text-neutral-600 py-4 text-center">{t("noPendingApprovals")}</p>
       ) : (
         <div className="space-y-2">
           {pendingApprovals.map((approval) => (

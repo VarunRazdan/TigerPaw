@@ -18,7 +18,7 @@ export type TradingEventPayload = {
   orderId?: string;
   extensionId?: string;
   symbol?: string;
-  side?: "buy" | "sell";
+  side?: "buy" | "sell" | "cancel";
   notionalUsd?: number;
   reason?: string;
   failedStep?: string;

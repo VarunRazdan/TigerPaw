@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "긴급 정지 스위치 활성화됨 ({{mode}} 모드): {{reason}}",
+  "killSwitchAutoActivated": "위험 임계값 초과로 인해 긴급 정지 스위치가 자동 활성화되었습니다",
+  "invalidNotional": "유효하지 않은 명목 가치: {{value}}",
+  "invalidQuantity": "유효하지 않은 수량: {{value}}",
+  "invalidPrice": "유효하지 않은 가격: {{value}}",
+  "cooldownActive": "쿨다운 진행 중: {{remaining}}초 남음",
+  "riskPerTradeExceeded": "거래당 위험 {{actual}}%가 한도 {{limit}}%를 초과합니다",
+  "tradeSizeExceeded": "거래 규모 ${{actual}}가 최대 한도 ${{limit}}를 초과합니다",
+  "dailyLossExceeded": "일간 손실 {{actual}}%가 한도 {{limit}}%에 도달하거나 초과했습니다",
+  "positionConcentrationExceeded": "포지션 집중도 {{actual}}%가 한도 {{limit}}%를 초과합니다",
+  "maxPositionsReached": "미결 포지션 수 ({{current}})가 한도 ({{limit}})에 도달했습니다",
+  "maxTradesReached": "일간 거래 횟수 ({{current}})가 한도 ({{limit}})에 도달했습니다",
+  "dailySpendExceeded": "일간 지출 예상액 ${{projected}}이 한도 ${{limit}}를 초과합니다",
+  "consecutiveLossesReached": "연속 손실 횟수 ({{current}})가 일시 중지 임계값 ({{limit}})에 도달했습니다",
+  "autoApproved": "모든 사전 거래 검토를 통과했습니다. 자동 승인되었습니다",
+  "awaitingConfirmation": "모든 사전 거래 검토를 통과했습니다. 운영자 확인 대기 중입니다 (타임아웃 시 동작: {{action}})",
+  "awaitingManualApproval": "모든 사전 거래 검토를 통과했습니다. 운영자 수동 승인 대기 중입니다 (타임아웃 시 동작: {{action}})"
+}

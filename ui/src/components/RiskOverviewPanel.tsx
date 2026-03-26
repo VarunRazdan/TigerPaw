@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
@@ -112,65 +113,77 @@ function RiskBar({ label, current, limit, unit = "", format }: RiskBarProps) {
 }
 
 export function RiskOverviewPanel() {
-  const s = useTradingStore();
+  const { t } = useTranslation("trading");
+  const dailyPnlUsd = useTradingStore((s) => s.dailyPnlUsd);
+  const currentPortfolioValueUsd = useTradingStore((s) => s.currentPortfolioValueUsd);
+  const highWaterMarkUsd = useTradingStore((s) => s.highWaterMarkUsd);
+  const dailySpendUsd = useTradingStore((s) => s.dailySpendUsd);
+  const dailyTradeCount = useTradingStore((s) => s.dailyTradeCount);
+  const consecutiveLosses = useTradingStore((s) => s.consecutiveLosses);
+  const positions = useTradingStore((s) => s.positions);
+  const limits = useTradingStore((s) => s.limits);
 
   const dailyLossPercent =
-    s.currentPortfolioValueUsd > 0
-      ? (Math.abs(Math.min(0, s.dailyPnlUsd)) / s.currentPortfolioValueUsd) * 100
+    currentPortfolioValueUsd > 0
+      ? (Math.abs(Math.min(0, dailyPnlUsd)) / currentPortfolioValueUsd) * 100
       : 0;
 
   const drawdownPercent =
-    s.highWaterMarkUsd > 0
-      ? ((s.highWaterMarkUsd - s.currentPortfolioValueUsd) / s.highWaterMarkUsd) * 100
+    highWaterMarkUsd > 0
+      ? ((highWaterMarkUsd - currentPortfolioValueUsd) / highWaterMarkUsd) * 100
       : 0;
 
   const maxPositionConcentration =
-    s.positions.length > 0 ? Math.max(...s.positions.map((p) => p.percentOfPortfolio)) : 0;
+    positions.length > 0 ? Math.max(...positions.map((p) => p.percentOfPortfolio)) : 0;
 
   return (
     <div className="rounded-2xl glass-panel p-4">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-4">Risk Overview</h3>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-4">{t("riskOverview")}</h3>
 
       {/* Circular gauges for top metrics */}
       <div className="flex justify-around mb-4 pb-4 border-b border-[var(--glass-border)]">
         <CircularGauge
-          label="Daily Loss"
+          label={t("dailyLoss")}
           current={Number(dailyLossPercent.toFixed(1))}
-          limit={s.limits.dailyLossLimitPercent}
+          limit={limits.dailyLossLimitPercent}
           unit="%"
         />
         <CircularGauge
-          label="Drawdown"
+          label={t("drawdown")}
           current={Number(drawdownPercent.toFixed(1))}
-          limit={s.limits.maxPortfolioDrawdownPercent}
+          limit={limits.maxPortfolioDrawdownPercent}
           unit="%"
         />
         <CircularGauge
-          label="Spend"
-          current={s.dailySpendUsd}
-          limit={s.limits.maxDailySpendUsd}
+          label={t("spend")}
+          current={dailySpendUsd}
+          limit={limits.maxDailySpendUsd}
           format={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0)}`}
         />
       </div>
 
       {/* Bar gauges for secondary metrics */}
       <div className="space-y-0.5">
-        <RiskBar label="Positions" current={s.positions.length} limit={s.limits.maxOpenPositions} />
         <RiskBar
-          label="Trades Today"
-          current={s.dailyTradeCount}
-          limit={s.limits.maxTradesPerDay}
+          label={t("positions")}
+          current={positions.length}
+          limit={limits.maxOpenPositions}
         />
         <RiskBar
-          label="Concentration"
+          label={t("tradesToday")}
+          current={dailyTradeCount}
+          limit={limits.maxTradesPerDay}
+        />
+        <RiskBar
+          label={t("concentration")}
           current={Number(maxPositionConcentration.toFixed(1))}
-          limit={s.limits.maxSinglePositionPercent}
+          limit={limits.maxSinglePositionPercent}
           unit="%"
         />
         <RiskBar
-          label="Consecutive Losses"
-          current={s.consecutiveLosses}
-          limit={s.limits.consecutiveLossPause}
+          label={t("consecutiveLosses")}
+          current={consecutiveLosses}
+          limit={limits.consecutiveLossPause}
         />
       </div>
     </div>

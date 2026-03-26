@@ -1,0 +1,14 @@
+{
+  "connectPlatform": "{{platform}} に接続",
+  "setupSteps": "セットアップ手順",
+  "credentials": "認証情報",
+  "configPreview": "設定プレビュー",
+  "saveToConfig": "設定に保存",
+  "saving": "保存中...",
+  "savedSuccess": "tigerpaw.json に保存されました！",
+  "gatewayDown": "ゲートウェイに到達できません — 先に Tigerpaw を起動してください",
+  "gatewayDownHint": "先に Tigerpaw を起動してから再試行してください",
+  "copyFallback": "設定スニペットをクリップボードにコピー",
+  "sandboxAvailable": "sandbox が利用可能 — {{mode}} モードで起動して安全にテストできます",
+  "openSetupPage": "{{platform}} セットアップページを開く →"
+}

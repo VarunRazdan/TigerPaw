@@ -1,0 +1,18 @@
+{
+  "title": "Notifications",
+  "tradingNotifications": "Notifications de trading",
+  "noNotifications": "Aucune notification pour l'instant",
+  "orderApproved": "Ordre approuvé : {{symbol}} {{side}}",
+  "orderDenied": "Ordre refusé : {{symbol}} {{side}}",
+  "orderPending": "Ordre en attente : {{symbol}} {{side}}",
+  "orderSubmitted": "Ordre envoyé : {{symbol}}",
+  "orderFilled": "Ordre exécuté : {{symbol}}",
+  "orderFailed": "Ordre échoué : {{symbol}}",
+  "killSwitchExt": "Coupe-circuit : {{extension}}",
+  "killSwitchActivated": "Coupe-circuit activé",
+  "killSwitchDeactivated": "Coupe-circuit désactivé",
+  "limitWarning": "Avertissement de limite : {{limitName}}",
+  "approachingThreshold": "approche du seuil",
+  "tradingEvent": "Événement de trading",
+  "globalKillSwitchOff": "Coupe-circuit global désactivé — trading repris"
+}

@@ -8,7 +8,8 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore, type TradeHistoryEntry } from "@/stores/trading-store";
 
@@ -21,98 +22,100 @@ const APPROVAL_LABELS: Record<string, string> = {
   cancelled: "CANCELLED",
 };
 
-const columns = [
-  columnHelper.accessor("timestamp", {
-    header: "Time",
-    cell: (info) =>
-      new Date(info.getValue()).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    sortingFn: "datetime",
-  }),
-  columnHelper.accessor("approvalType", {
-    header: "Type",
-    cell: (info) => {
-      const val = info.getValue();
-      const label = APPROVAL_LABELS[val] ?? val;
-      const colorCls =
-        val === "denied"
-          ? "bg-red-900/50 text-red-400"
-          : val === "auto_approved"
-            ? "bg-green-900/50 text-green-400"
-            : "bg-blue-900/50 text-blue-400";
-      return (
-        <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-semibold", colorCls)}>
-          {label}
+function buildColumns(t: (key: string) => string, tc: (key: string) => string) {
+  return [
+    columnHelper.accessor("timestamp", {
+      header: tc("time"),
+      cell: (info) =>
+        new Date(info.getValue()).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      sortingFn: "datetime",
+    }),
+    columnHelper.accessor("approvalType", {
+      header: "Type",
+      cell: (info) => {
+        const val = info.getValue();
+        const label = APPROVAL_LABELS[val] ?? val;
+        const colorCls =
+          val === "denied"
+            ? "bg-red-900/50 text-red-400"
+            : val === "auto_approved"
+              ? "bg-green-900/50 text-green-400"
+              : "bg-blue-900/50 text-blue-400";
+        return (
+          <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-semibold", colorCls)}>
+            {label}
+          </span>
+        );
+      },
+    }),
+    columnHelper.accessor("extensionId", {
+      header: tc("source"),
+    }),
+    columnHelper.display({
+      id: "instrument",
+      header: tc("instrument"),
+      cell: (info) => (
+        <span className="text-neutral-300">
+          {info.row.original.side.toUpperCase()} {info.row.original.symbol}
         </span>
-      );
-    },
-  }),
-  columnHelper.accessor("extensionId", {
-    header: "Source",
-  }),
-  columnHelper.display({
-    id: "instrument",
-    header: "Instrument",
-    cell: (info) => (
-      <span className="text-neutral-300">
-        {info.row.original.side.toUpperCase()} {info.row.original.symbol}
-      </span>
-    ),
-  }),
-  columnHelper.accessor("amount", {
-    header: "Amount",
-    cell: (info) => <span className="font-mono">${info.getValue().toFixed(2)}</span>,
-    meta: { align: "right" },
-  }),
-  columnHelper.display({
-    id: "slippage",
-    header: "Slippage",
-    cell: (info) => {
-      const { expectedPrice, executedPrice, side } = info.row.original;
-      if (expectedPrice == null || executedPrice == null) {
-        return <span className="text-neutral-600">—</span>;
-      }
-      const slipBps =
-        expectedPrice > 0 ? ((executedPrice - expectedPrice) / expectedPrice) * 10000 : 0;
-      const isBuy = side.toLowerCase() === "buy";
-      const adverseSlip = isBuy ? slipBps : -slipBps;
-      return (
-        <span
-          className={cn(
-            "font-mono text-[10px]",
-            adverseSlip > 1
-              ? "text-red-400"
-              : adverseSlip < -1
-                ? "text-green-400"
-                : "text-neutral-400",
-          )}
-        >
-          {adverseSlip > 0 ? "+" : ""}
-          {adverseSlip.toFixed(1)}bp
-        </span>
-      );
-    },
-  }),
-  columnHelper.accessor("result", {
-    header: "Result",
-    cell: (info) => {
-      const val = info.getValue();
-      const colorCls =
-        val === "filled"
-          ? "text-green-400"
-          : val === "cancelled"
-            ? "text-amber-400"
-            : "text-red-400";
-      return (
-        <span className={cn("font-mono", colorCls)}>
-          {val === "filled" ? "FILL" : val.toUpperCase()}
-        </span>
-      );
-    },
-  }),
-];
+      ),
+    }),
+    columnHelper.accessor("amount", {
+      header: tc("amount"),
+      cell: (info) => <span className="font-mono">${info.getValue().toFixed(2)}</span>,
+      meta: { align: "right" },
+    }),
+    columnHelper.display({
+      id: "slippage",
+      header: t("slippage"),
+      cell: (info) => {
+        const { expectedPrice, executedPrice, side } = info.row.original;
+        if (expectedPrice == null || executedPrice == null) {
+          return <span className="text-neutral-600">—</span>;
+        }
+        const slipBps =
+          expectedPrice > 0 ? ((executedPrice - expectedPrice) / expectedPrice) * 10000 : 0;
+        const isBuy = side.toLowerCase() === "buy";
+        const adverseSlip = isBuy ? slipBps : -slipBps;
+        return (
+          <span
+            className={cn(
+              "font-mono text-[10px]",
+              adverseSlip > 1
+                ? "text-red-400"
+                : adverseSlip < -1
+                  ? "text-green-400"
+                  : "text-neutral-400",
+            )}
+          >
+            {adverseSlip > 0 ? "+" : ""}
+            {adverseSlip.toFixed(1)}bp
+          </span>
+        );
+      },
+    }),
+    columnHelper.accessor("result", {
+      header: tc("result"),
+      cell: (info) => {
+        const val = info.getValue();
+        const colorCls =
+          val === "filled"
+            ? "text-green-400"
+            : val === "cancelled"
+              ? "text-amber-400"
+              : "text-red-400";
+        return (
+          <span className={cn("font-mono", colorCls)}>
+            {val === "filled" ? "FILL" : val.toUpperCase()}
+          </span>
+        );
+      },
+    }),
+  ];
+}
 
 function exportCsv(data: TradeHistoryEntry[]) {
   const headers = [
@@ -150,9 +153,12 @@ function exportCsv(data: TradeHistoryEntry[]) {
 }
 
 export function TradeHistoryTable() {
+  const { t } = useTranslation("trading");
+  const { t: tc } = useTranslation("common");
   const tradeHistory = useTradingStore((s) => s.tradeHistory);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const columns = useMemo(() => buildColumns(t, tc), [t, tc]);
 
   const table = useReactTable({
     data: tradeHistory,
@@ -173,7 +179,7 @@ export function TradeHistoryTable() {
   return (
     <div className="rounded-2xl glass-panel p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-neutral-300">Trade History</h3>
+        <h3 className="text-sm font-semibold text-neutral-300">{t("tradeHistory")}</h3>
         <div className="flex items-center gap-2">
           <input
             value={globalFilter}
@@ -185,13 +191,13 @@ export function TradeHistoryTable() {
             onClick={() => exportCsv(tradeHistory)}
             className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors px-2 py-1 rounded border border-[var(--glass-border)] hover:border-[var(--glass-active-border)] cursor-pointer"
           >
-            Export CSV
+            {t("exportCsv")}
           </button>
         </div>
       </div>
 
       {tradeHistory.length === 0 ? (
-        <p className="text-xs text-neutral-600 py-4 text-center">No trades yet</p>
+        <p className="text-xs text-neutral-600 py-4 text-center">{t("noTrades")}</p>
       ) : (
         <>
           <div className="overflow-x-auto">
@@ -258,7 +264,7 @@ export function TradeHistoryTable() {
           {pageCount > 1 && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--glass-border)]">
               <span className="text-xs text-neutral-500">
-                Page {pageIndex + 1} of {pageCount}
+                {tc("page")} {pageIndex + 1} {tc("of")} {pageCount}
               </span>
               <div className="flex items-center gap-1">
                 <button
@@ -266,14 +272,14 @@ export function TradeHistoryTable() {
                   disabled={!table.getCanPreviousPage()}
                   className="px-2 py-1 text-xs rounded border border-[var(--glass-border)] text-neutral-400 hover:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-200"
                 >
-                  Prev
+                  {tc("prev")}
                 </button>
                 <button
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                   className="px-2 py-1 text-xs rounded border border-[var(--glass-border)] text-neutral-400 hover:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all duration-200"
                 >
-                  Next
+                  {tc("next")}
                 </button>
               </div>
             </div>

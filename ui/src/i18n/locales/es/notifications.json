@@ -1,0 +1,18 @@
+{
+  "title": "Notificaciones",
+  "tradingNotifications": "Notificaciones de trading",
+  "noNotifications": "Aún no hay notificaciones",
+  "orderApproved": "Orden aprobada: {{symbol}} {{side}}",
+  "orderDenied": "Orden denegada: {{symbol}} {{side}}",
+  "orderPending": "Orden pendiente: {{symbol}} {{side}}",
+  "orderSubmitted": "Orden enviada: {{symbol}}",
+  "orderFilled": "Orden ejecutada: {{symbol}}",
+  "orderFailed": "Orden fallida: {{symbol}}",
+  "killSwitchExt": "Interruptor de emergencia: {{extension}}",
+  "killSwitchActivated": "Interruptor de emergencia activado",
+  "killSwitchDeactivated": "Interruptor de emergencia desactivado",
+  "limitWarning": "Advertencia de límite: {{limitName}}",
+  "approachingThreshold": "aproximándose al umbral",
+  "tradingEvent": "Evento de trading",
+  "globalKillSwitchOff": "Interruptor de emergencia global desactivado — operaciones reanudadas"
+}

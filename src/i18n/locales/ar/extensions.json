@@ -1,0 +1,104 @@
+{
+  "_comment": "سلاسل i18n لامتداد التداول في الواجهة الخلفية",
+
+  "noTradingData": "لا تتوفر بيانات تداول. يرجى توصيل منصة تداول وتفعيل التداول أولاً.",
+  "failedToLoad": "فشل تحميل {{resource}}: {{error}}",
+
+  "common.quantityMustBePositive": "يجب أن تكون الكمية أكبر من 0.",
+  "common.limitPriceRequired": "يُشترط تحديد سعر الحد لأوامر {{type}}.",
+  "common.stopPriceRequired": "يُشترط تحديد سعر الإيقاف لأوامر {{type}}.",
+  "common.orderDenied": "تم رفض الأمر: {{reason}}",
+  "common.orderFailed": "فشل تنفيذ الأمر: {{error}}",
+  "common.cancelDenied": "تم رفض الإلغاء: {{reason}}",
+  "common.cancelFailed": "فشل الإلغاء: {{error}}",
+  "common.cancelSuccess": "تم إلغاء الأمر {{orderId}} بنجاح.",
+  "common.noOpenPositions": "لا توجد مراكز مفتوحة.",
+  "common.noOpenPositionsOn": "لا توجد مراكز مفتوحة على {{platform}}.",
+  "common.noOrderHistory": "لا يوجد سجل للأوامر.",
+  "common.noRecentTrades": "لا توجد صفقات حديثة في سجل التدقيق.",
+  "common.noRecentTradesOn": "لا توجد صفقات حديثة على {{platform}}.",
+  "common.noSearchResults": "لم يُعثر على أصول قابلة للتداول تطابق \"{{query}}\".",
+
+  "tc.portfolioSummary": "ملخص المحفظة",
+  "tc.total": "الإجمالي",
+  "tc.highWater": "أعلى مستوى مسجل",
+  "tc.drawdown": "الانخفاض الأقصى",
+
+  "tc.dailyMetrics": "نشاط التداول اليومي ({{date}})",
+  "tc.dailyPnl": "الربح والخسارة اليومي P&L",
+  "tc.dailySpend": "الإنفاق اليومي",
+  "tc.trades": "الصفقات",
+  "tc.consecLosses": "الخسائر المتتالية",
+  "tc.portfolioValue": "قيمة المحفظة",
+
+  "tc.openPositions": "المراكز المفتوحة ({{count}})",
+  "tc.value": "القيمة",
+  "tc.ofPortfolio": "من المحفظة",
+  "tc.totalOpen": "إجمالي المفتوحة",
+
+  "tc.killSwitchStatus": "حالة مفتاح الإيقاف الطارئ",
+  "tc.globalActive": "عام: مُفعَّل (وضع {{mode}})",
+  "tc.globalOff": "عام: مُعطَّل — التداول نشط",
+  "tc.reason": "السبب",
+  "tc.activatedBy": "بواسطة",
+  "tc.since": "منذ",
+  "tc.platformKillSwitches": "مفاتيح الإيقاف الطارئ حسب المنصة:",
+  "tc.platformActive": "{{platform}}: مُفعَّل — {{reason}}",
+
+  "tc.killSwitchActivated": "تم تفعيل مفتاح الإيقاف الطارئ (وضع {{mode}}).\nالسبب: {{reason}}\n\nتم إيقاف جميع عمليات التداول.",
+  "tc.killSwitchAlreadyOff": "مفتاح الإيقاف الطارئ معطَّل بالفعل. التداول نشط.",
+  "tc.killSwitchDeactivated": "تم تعطيل مفتاح الإيقاف الطارئ. استُؤنف التداول.\n\nجميع حدود المخاطر المُهيَّأة لا تزال سارية.",
+
+  "tc.failedActivate": "فشل تفعيل مفتاح الإيقاف الطارئ: {{error}}",
+  "tc.failedDeactivate": "فشل تعطيل مفتاح الإيقاف الطارئ: {{error}}",
+  "tc.failedKillSwitchCheck": "فشل التحقق من مفتاح الإيقاف الطارئ: {{error}}",
+
+  "tc.riskLimitUtilization": "نسبة استخدام حدود المخاطر",
+  "tc.noRiskLimits": "لم يتم تهيئة أي حدود للمخاطر.",
+  "tc.dailySpendGauge": "الإنفاق اليومي",
+  "tc.tradesPerDayGauge": "صفقات/يوم",
+  "tc.positionsGauge": "المراكز",
+  "tc.dailyLossGauge": "الخسارة اليومية",
+  "tc.drawdownGauge": "الانخفاض الأقصى",
+  "tc.consecLossesGauge": "الخسائر المتتالية",
+  "tc.approachingLimits": "اقتراب من الحدود: {{limits}}",
+
+  "tc.recentTrades": "الصفقات الأخيرة ({{count}})",
+  "tc.denied": "السبب",
+  "tc.failedLoadPortfolio": "فشل تحميل المحفظة: {{error}}",
+  "tc.failedLoadMetrics": "فشل تحميل المقاييس: {{error}}",
+  "tc.failedLoadPositions": "فشل تحميل المراكز: {{error}}",
+  "tc.failedLoadRisk": "فشل تحميل حالة المخاطر: {{error}}",
+  "tc.failedReadHistory": "فشل قراءة سجل الصفقات: {{error}}",
+
+  "alpaca.searchNoResults": "لم يُعثر على أصول قابلة للتداول تطابق \"{{query}}\".",
+  "alpaca.quoteFailed": "فشل الحصول على سعر {{symbol}}: {{error}}",
+  "alpaca.orderPlaced": "تم إرسال الأمر: {{side}} {{qty}} {{symbol}} ({{type}}) — {{status}}",
+  "alpaca.bracketOrderPlaced": "تم إرسال أمر المحاصرة: {{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "polymarket.orderPlaced": "تم تقديم أمر بسعر محدد: {{side}} {{size}} عقد بسعر {{price}}",
+  "polymarket.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "kalshi.orderPlaced": "تم تقديم الأمر: {{side}} {{count}} عقد بسعر {{price}}¢",
+  "kalshi.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "manifold.betPlaced": "تم وضع الرهان: {{outcome}} {{amount}} على \"{{question}}\"",
+  "manifold.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "coinbase.orderPlaced": "تم إرسال الأمر: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "coinbase.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "ibkr.orderPlaced": "تم إرسال الأمر: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "ibkr.bracketOrderPlaced": "تم إرسال أمر المحاصرة: {{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "binance.orderPlaced": "تم إرسال الأمر: {{side}} {{qty}} {{symbol}} ({{type}})",
+  "binance.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "kraken.orderPlaced": "تم إرسال الأمر: {{side}} {{volume}} {{pair}} ({{type}})",
+  "kraken.fetchFailed": "فشل جلب {{resource}}: {{error}}",
+
+  "dydx.notImplemented": "يتطلب تقديم أوامر dYdX توقيع معاملات Cosmos SDK، وهو غير مُطبَّق حتى الآن. يُرجى استخدام واجهة dYdX الإلكترونية في الوقت الراهن.",
+  "dydx.fetchFailed": "فشل جلب {{resource}}: {{error}}"
+}

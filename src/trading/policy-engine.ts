@@ -60,7 +60,7 @@ export type TradeOrder = {
   id: string;
   extensionId: string;
   symbol: string;
-  side: "buy" | "sell";
+  side: "buy" | "sell" | "cancel";
   quantity: number;
   priceUsd: number;
   notionalUsd: number;

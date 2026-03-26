@@ -19,6 +19,8 @@ import {
   withPlatformPortfolio,
   withPlatformPositionCount,
   autoActivateIfBreached,
+  checkKillSwitch,
+  isOrderAllowedUnderKillSwitch,
   type TradeOrder,
 } from "tigerpaw/trading";
 import { krakenConfigSchema, BASE_URL, type KrakenConfig } from "./config.js";
@@ -493,6 +495,21 @@ const krakenPlugin = {
         async execute(_id: string, params: unknown) {
           const { txid } = params as { txid: string };
           api.logger.info(`kraken: cancelling order ${txid}`);
+
+          // Kill switch gate: hard mode blocks cancels, soft mode allows them.
+          const killStatus = await checkKillSwitch();
+          if (killStatus.active && !isOrderAllowedUnderKillSwitch(killStatus, "cancel")) {
+            const reason = `kill switch active (${killStatus.mode ?? "hard"} mode): ${killStatus.reason ?? "no reason provided"}`;
+            api.logger.warn(`kraken: cancel denied — ${reason}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "denied",
+              actor: "system",
+              error: reason,
+            });
+            return txtD(`Cancel denied: ${reason}`, { error: "kill_switch", reason });
+          }
+
           try {
             const r = await privateReq<{ count: number }>(cfg, "CancelOrder", { txid });
             await writeAuditEntry({

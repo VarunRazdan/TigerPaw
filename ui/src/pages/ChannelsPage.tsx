@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CHANNEL_CONNECT_INFO } from "@/lib/connect-config";
@@ -28,14 +29,16 @@ const CHANNELS = [
 ];
 
 export function ChannelsPage() {
+  const { t } = useTranslation("channels");
+  const { t: tc } = useTranslation("common");
   const [connectIcon, setConnectIcon] = useState<string | null>(null);
   const connectInfo = connectIcon ? CHANNEL_CONNECT_INFO[connectIcon] : null;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-neutral-100">Channels</h1>
-        <p className="text-xs text-neutral-500 mt-0.5">Manage messaging channel integrations</p>
+        <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
+        <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
       </div>
 
       <TooltipProvider>
@@ -62,7 +65,7 @@ export function ChannelsPage() {
                       {channel.status === "connected" ? (
                         channel.status
                       ) : CHANNEL_CONNECT_INFO[channel.icon] ? (
-                        <span className="text-orange-400/70">Click to connect</span>
+                        <span className="text-orange-400/70">{tc("clickToConnect")}</span>
                       ) : (
                         channel.status
                       )}

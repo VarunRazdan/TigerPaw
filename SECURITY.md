@@ -47,7 +47,7 @@ We aim to acknowledge reports within 48 hours and provide a fix within 7 days fo
 
 ### Extension Security
 
-- Ed25519 signature verification for extension manifests (using Node.js `crypto.verify()` API)
-- Declarative permission model (network, trading, filesystem, secrets)
+- Declarative permission model (network, trading, filesystem, secrets) -- displayed in Security Dashboard and checked by `tigerpaw doctor`
+- Ed25519 signature verification module implemented but not yet wired into the plugin loader (planned for a future release)
 - Permission validation during `tigerpaw doctor` security audit
 - Extensions MUST NOT use unsafe casts to access trading config — use the typed `api.tradingPolicyConfig` field

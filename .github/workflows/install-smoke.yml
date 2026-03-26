@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   docs-scope:
-    runs-on: blacksmith-16vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     outputs:
       docs_only: ${{ steps.check.outputs.docs_only }}
     steps:
@@ -35,18 +35,16 @@ jobs:
   install-smoke:
     needs: [docs-scope]
     if: needs.docs-scope.outputs.docs_only != 'true'
-    runs-on: blacksmith-16vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout CLI
         uses: actions/checkout@v4
 
-      - name: Set up Docker Builder
-        uses: useblacksmith/setup-docker-builder@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # Blacksmith can fall back to the local docker driver, which rejects gha
-      # cache export/import. Keep smoke builds driver-agnostic.
       - name: Build root Dockerfile smoke image
-        uses: useblacksmith/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -63,7 +61,7 @@ jobs:
       # extension deps without breaking image build or basic CLI startup. It
       # does not exercise runtime loading/registration of diagnostics-otel.
       - name: Build extension Dockerfile smoke image
-        uses: useblacksmith/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -79,7 +77,7 @@ jobs:
           docker run --rm --entrypoint sh tigerpaw-ext-smoke:local -lc 'which tigerpaw && tigerpaw --version'
 
       - name: Build installer smoke image
-        uses: useblacksmith/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./scripts/docker
           file: ./scripts/docker/install-sh-smoke/Dockerfile
@@ -90,7 +88,7 @@ jobs:
 
       - name: Build installer non-root image
         if: github.event_name != 'pull_request'
-        uses: useblacksmith/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./scripts/docker
           file: ./scripts/docker/install-sh-nonroot/Dockerfile

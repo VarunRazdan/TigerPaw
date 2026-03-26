@@ -1,6 +1,32 @@
 # Tigerpaw - Getting Started Guide
 
-Tigerpaw is a multi-channel AI gateway with real-money trading capabilities. It connects your AI agent to messaging platforms (Telegram, Discord, Slack, etc.) and trading platforms (Alpaca, Polymarket, Kalshi, Manifold).
+Tigerpaw is everything [OpenClaw](https://github.com/nicepkg/openclaw) does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Whether you're building AI-powered messaging bots, trading bots, or both, Tigerpaw does it all from one install.
+
+---
+
+## What You Get
+
+**For everyone (even if you don't trade):**
+
+- 40+ messaging channel integrations (Telegram, Discord, Slack, Signal, iMessage, WhatsApp, Matrix, MS Teams, IRC, Line, Nostr, Google Chat, and more)
+- Modern React 19 dashboard -- replaces OpenClaw's older Lit/Web Components UI
+- Gateway security hardening -- CORS allowlisting, per-IP rate limiting, request size enforcement, credential rotation tracking
+- Zero-config start -- `tigerpaw start` creates config, starts the gateway, opens the dashboard
+- Docker multi-arch images (amd64 + arm64) with rootless Podman/systemd support
+- Plugin permission manifests with security audit via `tigerpaw doctor`
+- Local-first by default -- gateway binds to localhost, data stays on your machine
+
+**For traders:**
+
+- 9 exchange integrations (Alpaca, Polymarket, Kalshi, Manifold, Coinbase, Interactive Brokers, Binance, Kraken, dYdX)
+- 12-step pre-trade validation pipeline -- every order checked before execution
+- 3 risk tiers (conservative / moderate / aggressive) with daily spend caps, position limits, drawdown protection
+- Kill switch with auto-activation on limit breach
+- HMAC-SHA256 tamper-evident audit log for every trade decision
+- Real-time trading notifications (in-app toasts + optional browser alerts)
+- 8 trading bot commands accessible from any messaging channel
+
+> **Don't trade?** Skip the [Trading Setup](#trading-setup) section entirely. Tigerpaw works as a fully featured messaging gateway without configuring any trading platforms.
 
 ---
 

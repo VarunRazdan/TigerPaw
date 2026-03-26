@@ -1,0 +1,14 @@
+{
+  "connectPlatform": "連線 {{platform}}",
+  "setupSteps": "設定步驟",
+  "credentials": "憑證",
+  "configPreview": "設定預覽",
+  "saveToConfig": "儲存至設定",
+  "saving": "儲存中...",
+  "savedSuccess": "已儲存至 tigerpaw.json！",
+  "gatewayDown": "閘道無法連線 — 請先啟動 Tigerpaw",
+  "gatewayDownHint": "請先啟動 Tigerpaw，然後再試",
+  "copyFallback": "將設定片段複製至剪貼簿",
+  "sandboxAvailable": "Sandbox 可用 — 以 {{mode}} 模式啟動以安全測試",
+  "openSetupPage": "開啟 {{platform}} 設定頁面 →"
+}

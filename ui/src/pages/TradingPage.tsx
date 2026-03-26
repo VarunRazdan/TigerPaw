@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { ApprovalQueuePanel } from "@/components/ApprovalQueuePanel";
 import { PlatformApiInfo } from "@/components/PlatformApiInfo";
@@ -110,6 +111,8 @@ function useDemoData() {
 }
 
 export function TradingPage() {
+  const { t } = useTranslation("trading");
+  const { t: tc } = useTranslation("common");
   useDemoData();
 
   const {
@@ -139,10 +142,10 @@ export function TradingPage() {
       {/* Header bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-neutral-100">Trading Hub</h1>
+          <h1 className="text-xl font-bold text-neutral-100">{t("tradingHub")}</h1>
           <p className="text-xs text-neutral-500 mt-0.5">
-            Mode: <span className="text-neutral-300 capitalize">{approvalMode}</span> · Tier:{" "}
-            <span className="text-neutral-300 capitalize">{tier}</span>
+            {t("mode")}: <span className="text-neutral-300 capitalize">{approvalMode}</span> ·{" "}
+            {t("tier")}: <span className="text-neutral-300 capitalize">{tier}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -152,14 +155,14 @@ export function TradingPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-700/50 bg-amber-950/30 text-amber-400 text-xs font-medium hover:bg-amber-950/50 transition-all duration-200 cursor-pointer"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Demo Data
+              {tc("demoData")}
             </NavLink>
           )}
           <NavLink
             to="/trading/settings"
             className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-input-bg)] transition-all duration-300 cursor-pointer"
           >
-            Risk Settings →
+            {t("riskSettings")}
           </NavLink>
         </div>
       </div>
@@ -173,12 +176,12 @@ export function TradingPage() {
       >
         {killSwitchActive && (
           <span className="text-red-400 text-sm font-semibold animate-pulse">
-            ⛔ KILL SWITCH ACTIVE — All trading halted
+            {t("killSwitchActiveBanner")}
           </span>
         )}
         {!killSwitchActive && (
           <>
-            <span className="text-neutral-400 text-xs">Daily Loss Limit:</span>
+            <span className="text-neutral-400 text-xs">{t("dailyLossLimit")}:</span>
             <div className="flex-1 max-w-md h-3 bg-[var(--glass-subtle-hover)] rounded-full overflow-hidden">
               <div
                 className={cn(
@@ -190,7 +193,11 @@ export function TradingPage() {
               />
             </div>
             <span className="text-xs font-mono text-neutral-400">
-              {usedPct}% used ({lossPercent.toFixed(1)}% / {limits.dailyLossLimitPercent}%)
+              {t("usedPercent", {
+                percent: usedPct,
+                current: lossPercent.toFixed(1),
+                limit: limits.dailyLossLimitPercent,
+              })}
             </span>
           </>
         )}

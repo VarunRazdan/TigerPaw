@@ -1,4 +1,5 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
+import * as fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -14,8 +15,44 @@ const DEFAULT_AUDIT_FILE = path.join(DEFAULT_AUDIT_DIR, "audit.jsonl");
 const DEFAULT_MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const DEFAULT_ROTATE_COUNT = 5;
 
-/** HMAC key derived from a stable machine-local secret seed. */
-const HMAC_KEY = `tigerpaw-audit-${os.hostname()}-${os.userInfo().uid}`;
+/**
+ * Resolve the HMAC key for audit log integrity.
+ *
+ * Priority:
+ *  1. TIGERPAW_AUDIT_HMAC_KEY env var (operator-supplied)
+ *  2. Persisted random key at ~/.tigerpaw/trading/.audit-hmac-key
+ *
+ * The key is cryptographically random (32 bytes hex) and stored with
+ * owner-only permissions (0o600) in a directory restricted to 0o700.
+ */
+function resolveHmacKey(): string {
+  const envKey = process.env.TIGERPAW_AUDIT_HMAC_KEY;
+  if (envKey && envKey.length > 0) {
+    return envKey;
+  }
+
+  const keyPath = path.join(DEFAULT_AUDIT_DIR, ".audit-hmac-key");
+  try {
+    const existing = fsSync.readFileSync(keyPath, "utf8").trim();
+    if (existing.length > 0) {
+      return existing;
+    }
+  } catch {
+    // Key file does not exist yet — generate one.
+  }
+
+  const key = randomBytes(32).toString("hex");
+  try {
+    fsSync.mkdirSync(DEFAULT_AUDIT_DIR, { recursive: true, mode: 0o700 });
+    fsSync.writeFileSync(keyPath, key, { mode: 0o600, encoding: "utf8" });
+  } catch (err) {
+    log.warn(`failed to persist audit HMAC key: ${String(err)}`);
+  }
+  return key;
+}
+
+/** Cryptographically random HMAC key for audit log tamper evidence. */
+const HMAC_KEY = resolveHmacKey();
 
 const LOCK_OPTIONS = {
   retries: { retries: 5, factor: 2, minTimeout: 100, maxTimeout: 2000 },

@@ -1,0 +1,14 @@
+{
+  "connectPlatform": "{{platform}} verbinden",
+  "setupSteps": "Einrichtungsschritte",
+  "credentials": "Anmeldedaten",
+  "configPreview": "Konfigurationsvorschau",
+  "saveToConfig": "In Konfiguration speichern",
+  "saving": "Wird gespeichert...",
+  "savedSuccess": "In tigerpaw.json gespeichert!",
+  "gatewayDown": "Gateway nicht erreichbar — zuerst Tigerpaw starten",
+  "gatewayDownHint": "Zuerst Tigerpaw starten, dann erneut versuchen",
+  "copyFallback": "Konfigurationsausschnitt stattdessen in Zwischenablage kopieren",
+  "sandboxAvailable": "Sandbox verfügbar — im Modus {{mode}} starten, um sicher zu testen",
+  "openSetupPage": "{{platform}}-Einrichtungsseite öffnen →"
+}

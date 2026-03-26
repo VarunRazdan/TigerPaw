@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,7 @@ const DEMO_EVENTS = [
 ];
 
 function EventCard({ event }: { event: (typeof DEMO_EVENTS)[0] }) {
+  const { t } = useTranslation("platforms");
   return (
     <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
       <div className="flex items-center gap-2 mb-2">
@@ -34,7 +36,7 @@ function EventCard({ event }: { event: (typeof DEMO_EVENTS)[0] }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-neutral-500">Contracts</div>
+          <div className="text-xs text-neutral-500">{t("contracts")}</div>
           <div className="text-sm font-mono text-neutral-400">
             {event.contracts.toLocaleString()}
           </div>
@@ -42,10 +44,10 @@ function EventCard({ event }: { event: (typeof DEMO_EVENTS)[0] }) {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <button className="px-3 py-1.5 rounded text-xs font-semibold bg-green-800 hover:bg-green-700 hover:-translate-y-0.5 hover:scale-105 text-green-100 cursor-pointer transition-all duration-300 hover:shadow-md">
-          Buy YES
+          {t("buyYes")}
         </button>
         <button className="px-3 py-1.5 rounded text-xs font-semibold bg-red-800 hover:bg-red-700 hover:-translate-y-0.5 hover:scale-105 text-red-100 cursor-pointer transition-all duration-300 hover:shadow-md">
-          Buy NO
+          {t("buyNo")}
         </button>
       </div>
     </div>
@@ -53,6 +55,8 @@ function EventCard({ event }: { event: (typeof DEMO_EVENTS)[0] }) {
 }
 
 export function KalshiPage() {
+  const { t } = useTranslation("platforms");
+  const { t: tc } = useTranslation("common");
   const positions = useTradingStore((s) => s.positions).filter((p) => p.extensionId === "kalshi");
   const platform = useTradingStore((s) => s.platforms.kalshi);
   const [connectOpen, setConnectOpen] = useState(false);
@@ -70,7 +74,7 @@ export function KalshiPage() {
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
-          {platform?.connected ? "Connected" : "Not Connected — Click to Setup"}
+          {platform?.connected ? tc("connected") : tc("notConnected")}
         </Badge>
       </div>
       <ConnectDialog
@@ -79,30 +83,30 @@ export function KalshiPage() {
         info={TRADING_CONNECT_INFO.kalshi}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-2xl glass-panel p-3">
-          <div className="text-xs text-neutral-500">Balance</div>
+          <div className="text-xs text-neutral-500">{t("balance")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$500.00</div>
         </div>
         <div className="rounded-2xl glass-panel p-3">
-          <div className="text-xs text-neutral-500">Positions</div>
+          <div className="text-xs text-neutral-500">{t("positions")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">{positions.length}</div>
         </div>
         <div className="rounded-2xl glass-panel p-3">
-          <div className="text-xs text-neutral-500">Pending Payouts</div>
+          <div className="text-xs text-neutral-500">{t("pendingPayouts")}</div>
           <div className="text-lg font-bold font-mono text-green-400">$84.00</div>
         </div>
         <div className="rounded-2xl glass-panel p-3">
-          <div className="text-xs text-neutral-500">Total P&L</div>
+          <div className="text-xs text-neutral-500">{t("totalPnl")}</div>
           <div className="text-lg font-bold font-mono text-red-400">-$29.60</div>
         </div>
       </div>
 
       <Tabs defaultValue="events">
         <TabsList>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="positions">My Positions</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="events">{t("events")}</TabsTrigger>
+          <TabsTrigger value="positions">{t("myPositions")}</TabsTrigger>
+          <TabsTrigger value="history">{t("history")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="events">
@@ -116,7 +120,7 @@ export function KalshiPage() {
         <TabsContent value="positions">
           <div className="rounded-2xl glass-panel p-4">
             {positions.length === 0 ? (
-              <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
+              <p className="text-xs text-neutral-600 py-4 text-center">{tc("noPositions")}</p>
             ) : (
               <div className="space-y-2">
                 {positions.map((pos) => (
@@ -126,7 +130,9 @@ export function KalshiPage() {
                   >
                     <div>
                       <div className="text-sm font-medium text-neutral-200">{pos.symbol}</div>
-                      <div className="text-xs text-neutral-500">{pos.quantity} contracts</div>
+                      <div className="text-xs text-neutral-500">
+                        {pos.quantity} {t("contracts")}
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-mono text-neutral-300">
@@ -151,7 +157,7 @@ export function KalshiPage() {
         <TabsContent value="history">
           <div className="rounded-2xl glass-panel p-4">
             <p className="text-xs text-neutral-600 py-4 text-center">
-              Order history loads from audit log
+              {tc("orderHistoryAuditLog")}
             </p>
           </div>
         </TabsContent>

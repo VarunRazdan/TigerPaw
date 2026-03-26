@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "مفتاح الإيقاف الطارئ مُفعَّل (وضع {{mode}}): {{reason}}",
+  "killSwitchAutoActivated": "تم تفعيل مفتاح الإيقاف الطارئ تلقائياً بسبب تجاوز حد المخاطر",
+  "invalidNotional": "قيمة اسمية غير صالحة: {{value}}",
+  "invalidQuantity": "كمية غير صالحة: {{value}}",
+  "invalidPrice": "سعر غير صالح: {{value}}",
+  "cooldownActive": "فترة التهدئة نشطة: {{remaining}} ثانية متبقية",
+  "riskPerTradeExceeded": "مخاطر الصفقة الواحدة {{actual}}% تتجاوز الحد {{limit}}%",
+  "tradeSizeExceeded": "حجم الصفقة ${{actual}} يتجاوز الحد الأقصى ${{limit}}",
+  "dailyLossExceeded": "الخسارة اليومية {{actual}}% بلغت حد {{limit}}% أو تجاوزته",
+  "positionConcentrationExceeded": "تركيز المركز {{actual}}% يتجاوز الحد {{limit}}%",
+  "maxPositionsReached": "عدد المراكز المفتوحة ({{current}}) بلغ الحد ({{limit}})",
+  "maxTradesReached": "عدد الصفقات اليومية ({{current}}) بلغ الحد ({{limit}})",
+  "dailySpendExceeded": "الإنفاق اليومي المتوقع ${{projected}} سيتجاوز الحد ${{limit}}",
+  "consecutiveLossesReached": "عدد الخسائر المتتالية ({{current}}) بلغ حد الإيقاف المؤقت ({{limit}})",
+  "autoApproved": "اجتازت جميع فحوصات ما قبل التداول؛ تمت الموافقة التلقائية",
+  "awaitingConfirmation": "اجتازت جميع فحوصات ما قبل التداول؛ في انتظار تأكيد المشغل (الإجراء عند انتهاء المهلة: {{action}})",
+  "awaitingManualApproval": "اجتازت جميع فحوصات ما قبل التداول؛ في انتظار الموافقة اليدوية من المشغل (الإجراء عند انتهاء المهلة: {{action}})"
+}

@@ -1,0 +1,21 @@
+{
+  "title": "Tigerpaw 仪表盘",
+  "subtitle": "AI 自动交易，由您做主。",
+  "portfolioValue": "组合价值",
+  "dailyPnl": "当日 P&L",
+  "tradesToday": "今日交易",
+  "openPositions": "持仓",
+  "marketPrices": "市场行情",
+  "tradingExtensions": "交易扩展",
+  "tradingHub": "交易中心 →",
+  "tradingHubDesc": "风险仪表盘、审批队列、持仓及交易记录",
+  "riskSettings": "风险设置 →",
+  "riskSettingsDesc": "配置风险档位、审批模式及持仓限制",
+  "security": "安全 →",
+  "securityDesc": "安全审计、凭证状态及扩展权限",
+  "killSwitchActive": "Kill Switch 已激活",
+  "killSwitchActiveDesc": "所有交易已暂停。请前往交易中心以恢复交易。",
+  "disconnectTitle": "断开 {{platform}} 连接？",
+  "disconnectDesc": "这将停止该平台上的所有交易。未平仓位不会被自动关闭。您可随时重新连接。",
+  "disconnectLabel": "断开 {{platform}}"
+}

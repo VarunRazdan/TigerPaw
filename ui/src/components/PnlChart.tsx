@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BarChart,
   Bar,
@@ -19,11 +20,11 @@ type PnlDataPoint = {
 
 type TimeRange = "1W" | "1M" | "6M" | "custom";
 
-const RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
-  { value: "1W", label: "1W" },
-  { value: "1M", label: "1M" },
-  { value: "6M", label: "6M" },
-  { value: "custom", label: "Custom" },
+const RANGE_KEYS: { value: TimeRange; key: string }[] = [
+  { value: "1W", key: "chart.range1W" },
+  { value: "1M", key: "chart.range1M" },
+  { value: "6M", key: "chart.range6M" },
+  { value: "custom", key: "chart.rangeCustom" },
 ];
 
 // ── Seeded random for deterministic demo data ───────────────────────
@@ -119,6 +120,7 @@ function CustomTooltip({
 // ── Main component ──────────────────────────────────────────────────
 
 export function PnlChart({ data: dataProp }: { data?: PnlDataPoint[] }) {
+  const { t } = useTranslation("trading");
   const storeHistory = useTradingStore((s) => s.pnlHistory);
   const [range, setRange] = useState<TimeRange>("1W");
   const [customStart, setCustomStart] = useState("");
@@ -160,11 +162,11 @@ export function PnlChart({ data: dataProp }: { data?: PnlDataPoint[] }) {
       {/* Header with range selector */}
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
         <h3 className="text-sm font-semibold text-neutral-300">
-          P&L ({data.length} {data.length === 1 ? "day" : "days"})
+          {t("dailyPnlDays", { count: data.length })}
         </h3>
 
         <div className="flex items-center gap-1">
-          {RANGE_OPTIONS.map((opt) => (
+          {RANGE_KEYS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setRange(opt.value)}
@@ -175,7 +177,7 @@ export function PnlChart({ data: dataProp }: { data?: PnlDataPoint[] }) {
                   : "text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-input-bg)]",
               )}
             >
-              {opt.label}
+              {t(opt.key)}
             </button>
           ))}
 
@@ -196,7 +198,7 @@ export function PnlChart({ data: dataProp }: { data?: PnlDataPoint[] }) {
             onChange={(e) => setCustomStart(e.target.value)}
             className="h-7 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-input-bg)] px-2 text-xs text-neutral-300 focus:border-orange-500 focus:outline-none"
           />
-          <span className="text-neutral-600 text-xs">to</span>
+          <span className="text-neutral-600 text-xs">{t("common:to")}</span>
           <input
             type="date"
             value={customEnd}

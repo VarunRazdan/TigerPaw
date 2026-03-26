@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,17 +30,18 @@ const DEMO_MARKETS = [
 ];
 
 function MarketCard({ market }: { market: (typeof DEMO_MARKETS)[0] }) {
+  const { t } = useTranslation("platforms");
   return (
     <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
       <div className="text-sm font-medium text-neutral-200 mb-2">{market.question}</div>
       <div className="flex items-center gap-2 mb-3">
         <div className="flex-1 h-2 rounded-full overflow-hidden bg-[var(--glass-subtle-hover)]">
           <div
-            className="bg-purple-500 h-full rounded-full"
+            className="bg-blue-500 h-full rounded-full"
             style={{ width: `${market.probability}%` }}
           />
         </div>
-        <span className="text-sm font-bold font-mono text-purple-400">{market.probability}%</span>
+        <span className="text-sm font-bold font-mono text-blue-400">{market.probability}%</span>
       </div>
       <div className="flex items-center justify-between text-xs mb-3">
         <span className="text-neutral-500">by {market.creator}</span>
@@ -47,10 +49,10 @@ function MarketCard({ market }: { market: (typeof DEMO_MARKETS)[0] }) {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <button className="px-3 py-1.5 rounded text-xs font-semibold bg-green-800 hover:bg-green-700 hover:-translate-y-0.5 hover:scale-105 text-green-100 cursor-pointer transition-all duration-300 hover:shadow-md">
-          Bet YES
+          {t("betYes")}
         </button>
         <button className="px-3 py-1.5 rounded text-xs font-semibold bg-red-800 hover:bg-red-700 hover:-translate-y-0.5 hover:scale-105 text-red-100 cursor-pointer transition-all duration-300 hover:shadow-md">
-          Bet NO
+          {t("betNo")}
         </button>
       </div>
     </div>
@@ -58,6 +60,8 @@ function MarketCard({ market }: { market: (typeof DEMO_MARKETS)[0] }) {
 }
 
 export function ManifoldPage() {
+  const { t } = useTranslation("platforms");
+  const { t: tc } = useTranslation("common");
   const positions = useTradingStore((s) => s.positions).filter((p) => p.extensionId === "manifold");
   const platform = useTradingStore((s) => s.platforms.manifold);
   const [connectOpen, setConnectOpen] = useState(false);
@@ -75,9 +79,9 @@ export function ManifoldPage() {
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
-          {platform?.connected ? "Connected" : "Not Connected — Click to Setup"}
+          {platform?.connected ? tc("connected") : tc("notConnected")}
         </Badge>
-        <Badge className="bg-purple-900 text-purple-300 border-purple-800">Play Money</Badge>
+        <Badge className="bg-blue-900 text-blue-300 border-blue-800">{t("playMoney")}</Badge>
       </div>
       <ConnectDialog
         open={connectOpen}
@@ -87,24 +91,24 @@ export function ManifoldPage() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-2xl glass-panel p-3">
-          <div className="text-xs text-neutral-500">Mana Balance</div>
-          <div className="text-lg font-bold font-mono text-purple-400">M$2,450</div>
+          <div className="text-xs text-neutral-500">{t("manaBalance")}</div>
+          <div className="text-lg font-bold font-mono text-blue-400">M$2,450</div>
         </div>
         <div className="rounded-2xl glass-panel p-3">
-          <div className="text-xs text-neutral-500">Active Bets</div>
+          <div className="text-xs text-neutral-500">{t("activeBets")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">{positions.length}</div>
         </div>
         <div className="rounded-2xl glass-panel p-3">
-          <div className="text-xs text-neutral-500">Lifetime P&L</div>
+          <div className="text-xs text-neutral-500">{t("lifetimePnl")}</div>
           <div className="text-lg font-bold font-mono text-green-400">+M$340</div>
         </div>
       </div>
 
       <Tabs defaultValue="browse">
         <TabsList>
-          <TabsTrigger value="browse">Browse Markets</TabsTrigger>
-          <TabsTrigger value="bets">My Bets</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="browse">{t("browseMarkets")}</TabsTrigger>
+          <TabsTrigger value="bets">{t("myBets")}</TabsTrigger>
+          <TabsTrigger value="history">{t("history")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse">
@@ -118,7 +122,7 @@ export function ManifoldPage() {
         <TabsContent value="bets">
           <div className="rounded-2xl glass-panel p-4">
             {positions.length === 0 ? (
-              <p className="text-xs text-neutral-600 py-4 text-center">No active bets</p>
+              <p className="text-xs text-neutral-600 py-4 text-center">{t("noActiveBets")}</p>
             ) : (
               <div className="space-y-2">
                 {positions.map((pos) => (
@@ -131,7 +135,7 @@ export function ManifoldPage() {
                       <div className="text-xs text-neutral-500">{pos.quantity} shares</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-mono text-purple-400">
+                      <div className="text-sm font-mono text-blue-400">
                         M${pos.valueUsd.toFixed(0)}
                       </div>
                       <div
@@ -153,7 +157,7 @@ export function ManifoldPage() {
         <TabsContent value="history">
           <div className="rounded-2xl glass-panel p-4">
             <p className="text-xs text-neutral-600 py-4 text-center">
-              Bet history loads from audit log
+              {tc("orderHistoryAuditLog")}
             </p>
           </div>
         </TabsContent>

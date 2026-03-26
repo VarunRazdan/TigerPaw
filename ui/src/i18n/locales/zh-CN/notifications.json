@@ -1,0 +1,18 @@
+{
+  "title": "通知",
+  "tradingNotifications": "交易通知",
+  "noNotifications": "暂无通知",
+  "orderApproved": "订单已批准：{{symbol}} {{side}}",
+  "orderDenied": "订单已拒绝：{{symbol}} {{side}}",
+  "orderPending": "订单待审批：{{symbol}} {{side}}",
+  "orderSubmitted": "订单已提交：{{symbol}}",
+  "orderFilled": "订单已成交：{{symbol}}",
+  "orderFailed": "订单失败：{{symbol}}",
+  "killSwitchExt": "Kill Switch：{{extension}}",
+  "killSwitchActivated": "Kill Switch 已激活",
+  "killSwitchDeactivated": "Kill Switch 已停用",
+  "limitWarning": "限额预警：{{limitName}}",
+  "approachingThreshold": "接近阈值",
+  "tradingEvent": "交易事件",
+  "globalKillSwitchOff": "全局 kill switch 已关闭 — 交易已恢复"
+}

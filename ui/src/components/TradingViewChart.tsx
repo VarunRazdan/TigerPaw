@@ -1,5 +1,6 @@
 import { BarChart3, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useThemeStore, THEMES } from "@/stores/theme-store";
 
@@ -23,6 +24,7 @@ export function TradingViewChart({
   className,
   defaultCollapsed = false,
 }: Props) {
+  const { t } = useTranslation("trading");
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = `tv-widget-${symbol.replace(/[^a-zA-Z0-9]/g, "-")}`;
@@ -46,10 +48,10 @@ export function TradingViewChart({
     script.src = "https://s3.tradingview.com/tv.js";
     script.async = true;
     script.addEventListener("load", () => {
-      if (typeof (window as Record<string, unknown>).TradingView === "undefined") {
+      if (typeof (window as unknown as Record<string, unknown>).TradingView === "undefined") {
         return;
       }
-      const TV = (window as Record<string, unknown>).TradingView as {
+      const TV = (window as unknown as Record<string, unknown>).TradingView as {
         widget: new (opts: Record<string, unknown>) => unknown;
       };
       new TV.widget({
@@ -89,7 +91,7 @@ export function TradingViewChart({
       >
         <span className="flex items-center gap-1.5">
           <BarChart3 className="w-3.5 h-3.5" />
-          {symbol} Chart
+          {symbol} {t("priceChart")}
         </span>
         <ChevronDown
           className={cn(

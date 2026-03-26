@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
-import { OrderEntryForm } from "@/components/OrderEntryForm";
+import { OrderEntrySheet } from "@/components/OrderEntrySheet";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +40,8 @@ const DEMO_POSITIONS = [
 ];
 
 export function IbkrPage() {
+  const { t } = useTranslation("platforms");
+  const { t: tc } = useTranslation("common");
   const platform = useTradingStore((s) => s.platforms.ibkr);
   const [connectOpen, setConnectOpen] = useState(false);
 
@@ -55,7 +58,7 @@ export function IbkrPage() {
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
-          {platform?.connected ? "Connected" : "Not Connected — Click to Setup"}
+          {platform?.connected ? tc("connected") : tc("notConnected")}
         </Badge>
         <Badge className="bg-blue-900 text-blue-300 border-blue-800">
           {platform?.mode === "live" ? "Live" : "Paper"}
@@ -72,95 +75,89 @@ export function IbkrPage() {
 
       <div className="grid grid-cols-4 gap-3">
         <div className="rounded-2xl glass-panel px-3 py-3.5">
-          <div className="text-xs text-neutral-500">Net Liq. Value</div>
+          <div className="text-xs text-neutral-500">{t("netLiqValue")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$125,400</div>
         </div>
         <div className="rounded-2xl glass-panel px-3 py-3.5">
-          <div className="text-xs text-neutral-500">Buying Power</div>
+          <div className="text-xs text-neutral-500">{t("buyingPower")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$250,800</div>
         </div>
         <div className="rounded-2xl glass-panel px-3 py-3.5">
-          <div className="text-xs text-neutral-500">Margin Used</div>
+          <div className="text-xs text-neutral-500">{t("marginUsed")}</div>
           <div className="text-lg font-bold font-mono text-amber-400">$18,200</div>
         </div>
         <div className="rounded-2xl glass-panel px-3 py-3.5">
-          <div className="text-xs text-neutral-500">Daily P&L</div>
+          <div className="text-xs text-neutral-500">{t("dailyPnl")}</div>
           <div className="text-lg font-bold font-mono text-green-400">+$1,045</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="positions">
-            <TabsList>
-              <TabsTrigger value="positions">Positions</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="positions">
+        <TabsList>
+          <TabsTrigger value="positions">{t("positions")}</TabsTrigger>
+          <TabsTrigger value="orders">{t("orders")}</TabsTrigger>
+          <TabsTrigger value="history">{t("history")}</TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="positions">
-              <div className="rounded-2xl glass-panel overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
-                      <th className="py-2 px-3 text-left font-medium">Symbol</th>
-                      <th className="py-2 px-3 text-left font-medium">Description</th>
-                      <th className="py-2 px-3 text-right font-medium">Qty</th>
-                      <th className="py-2 px-3 text-right font-medium">Avg Cost</th>
-                      <th className="py-2 px-3 text-right font-medium">Market</th>
-                      <th className="py-2 px-3 text-right font-medium">P&L</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DEMO_POSITIONS.map((pos) => (
-                      <tr
-                        key={pos.symbol}
-                        className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200"
-                      >
-                        <td className="py-2 px-3 font-medium text-neutral-200">{pos.symbol}</td>
-                        <td className="py-2 px-3 text-neutral-400">{pos.description}</td>
-                        <td className="py-2 px-3 text-right font-mono text-neutral-300">
-                          {pos.qty}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-neutral-400">
-                          ${pos.avgCost.toFixed(2)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-neutral-200">
-                          ${pos.marketPrice.toFixed(2)}
-                        </td>
-                        <td
-                          className={cn(
-                            "py-2 px-3 text-right font-mono font-semibold",
-                            pos.pnl >= 0 ? "text-green-400" : "text-red-400",
-                          )}
-                        >
-                          {pos.pnl >= 0 ? "+" : ""}${pos.pnl.toFixed(0)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TabsContent>
+        <TabsContent value="positions">
+          <div className="rounded-2xl glass-panel overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
+                  <th className="py-2 px-3 text-left font-medium">{tc("symbol")}</th>
+                  <th className="py-2 px-3 text-left font-medium">{tc("description")}</th>
+                  <th className="py-2 px-3 text-right font-medium">{tc("qty")}</th>
+                  <th className="py-2 px-3 text-right font-medium">{tc("avgCost")}</th>
+                  <th className="py-2 px-3 text-right font-medium">{tc("market")}</th>
+                  <th className="py-2 px-3 text-right font-medium">{tc("pnl")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DEMO_POSITIONS.map((pos) => (
+                  <tr
+                    key={pos.symbol}
+                    className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200"
+                  >
+                    <td className="py-2 px-3 font-medium text-neutral-200">{pos.symbol}</td>
+                    <td className="py-2 px-3 text-neutral-400">{pos.description}</td>
+                    <td className="py-2 px-3 text-right font-mono text-neutral-300">{pos.qty}</td>
+                    <td className="py-2 px-3 text-right font-mono text-neutral-400">
+                      ${pos.avgCost.toFixed(2)}
+                    </td>
+                    <td className="py-2 px-3 text-right font-mono text-neutral-200">
+                      ${pos.marketPrice.toFixed(2)}
+                    </td>
+                    <td
+                      className={cn(
+                        "py-2 px-3 text-right font-mono font-semibold",
+                        pos.pnl >= 0 ? "text-green-400" : "text-red-400",
+                      )}
+                    >
+                      {pos.pnl >= 0 ? "+" : ""}${pos.pnl.toFixed(0)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
 
-            <TabsContent value="orders">
-              <div className="rounded-2xl glass-panel p-4">
-                <p className="text-xs text-neutral-600 py-4 text-center">No open orders</p>
-              </div>
-            </TabsContent>
+        <TabsContent value="orders">
+          <div className="rounded-2xl glass-panel p-4">
+            <p className="text-xs text-neutral-600 py-4 text-center">{t("noOpenOrders")}</p>
+          </div>
+        </TabsContent>
 
-            <TabsContent value="history">
-              <div className="rounded-2xl glass-panel p-4">
-                <p className="text-xs text-neutral-600 py-4 text-center">
-                  Trade history loads from audit log
-                </p>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+        <TabsContent value="history">
+          <div className="rounded-2xl glass-panel p-4">
+            <p className="text-xs text-neutral-600 py-4 text-center">
+              {tc("tradeHistoryAuditLog")}
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
 
-        <OrderEntryForm extensionId="ibkr" defaultSymbol="AAPL" priceEstimate={178} />
-      </div>
+      <OrderEntrySheet extensionId="ibkr" defaultSymbol="AAPL" priceEstimate={178} />
     </div>
   );
 }

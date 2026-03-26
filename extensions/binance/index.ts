@@ -20,6 +20,8 @@ import {
   withPlatformPortfolio,
   withPlatformPositionCount,
   autoActivateIfBreached,
+  checkKillSwitch,
+  isOrderAllowedUnderKillSwitch,
   type TradeOrder,
 } from "tigerpaw/trading";
 import { binanceConfigSchema, getBaseUrl, type BinanceConfig } from "./config.js";
@@ -618,6 +620,21 @@ const binancePlugin = {
           const { symbol, orderId } = params as { symbol: string; orderId: number };
           const sym = symbol.toUpperCase();
           api.logger.info(`binance: cancelling order ${orderId} on ${sym}`);
+
+          // Kill switch gate: hard mode blocks cancels, soft mode allows them.
+          const killStatus = await checkKillSwitch();
+          if (killStatus.active && !isOrderAllowedUnderKillSwitch(killStatus, "cancel")) {
+            const reason = `kill switch active (${killStatus.mode ?? "hard"} mode): ${killStatus.reason ?? "no reason provided"}`;
+            api.logger.warn(`binance: cancel denied — ${reason}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "denied",
+              actor: "system",
+              error: reason,
+            });
+            return txtD(`Cancel denied: ${reason}`, { error: "kill_switch", reason });
+          }
+
           try {
             const r = await signedReq<Order>(cfg, "DELETE", "/api/v3/order", {
               symbol: sym,

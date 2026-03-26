@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
-import { OrderEntryForm } from "@/components/OrderEntryForm";
+import { OrderEntrySheet } from "@/components/OrderEntrySheet";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +18,8 @@ const DEMO_BALANCES = [
 ];
 
 export function KrakenPage() {
+  const { t } = useTranslation("platforms");
+  const { t: tc } = useTranslation("common");
   const platform = useTradingStore((s) => s.platforms.kraken);
   const [connectOpen, setConnectOpen] = useState(false);
   const [prices, setPrices] = useState<CryptoPrice[]>([]);
@@ -40,7 +43,7 @@ export function KrakenPage() {
           }
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
-          {platform?.connected ? "Connected" : "Not Connected — Click to Setup"}
+          {platform?.connected ? tc("connected") : tc("notConnected")}
         </Badge>
       </div>
       <ConnectDialog
@@ -77,67 +80,63 @@ export function KrakenPage() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-2xl glass-panel px-3 py-3.5">
-          <div className="text-xs text-neutral-500">Total Balance</div>
+          <div className="text-xs text-neutral-500">{t("totalBalance")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$49,417</div>
         </div>
         <div className="rounded-2xl glass-panel px-3 py-3.5">
-          <div className="text-xs text-neutral-500">Trade Volume (30d)</div>
+          <div className="text-xs text-neutral-500">{t("tradeVolume30d")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">$12,340</div>
         </div>
         <div className="rounded-2xl glass-panel px-3 py-3.5">
-          <div className="text-xs text-neutral-500">Open Positions</div>
+          <div className="text-xs text-neutral-500">{t("openPositions")}</div>
           <div className="text-lg font-bold font-mono text-neutral-100">0</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="balances">
-            <TabsList>
-              <TabsTrigger value="balances">Balances</TabsTrigger>
-              <TabsTrigger value="orders">Open Orders</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="balances">
+        <TabsList>
+          <TabsTrigger value="balances">{t("balances")}</TabsTrigger>
+          <TabsTrigger value="orders">{t("openOrders")}</TabsTrigger>
+          <TabsTrigger value="history">{t("history")}</TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="balances">
-              <div className="rounded-2xl glass-panel">
-                {DEMO_BALANCES.map((bal) => (
-                  <div
-                    key={bal.asset}
-                    className="flex items-center justify-between p-3 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 cursor-pointer"
-                  >
-                    <div>
-                      <div className="text-sm font-medium text-neutral-200">{bal.name}</div>
-                      <div className="text-xs text-neutral-500">
-                        {bal.asset} — {bal.balance}
-                      </div>
-                    </div>
-                    <div className="text-sm font-mono text-neutral-200">
-                      ${bal.valueUsd.toLocaleString()}
-                    </div>
+        <TabsContent value="balances">
+          <div className="rounded-2xl glass-panel">
+            {DEMO_BALANCES.map((bal) => (
+              <div
+                key={bal.asset}
+                className="flex items-center justify-between p-3 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 cursor-pointer"
+              >
+                <div>
+                  <div className="text-sm font-medium text-neutral-200">{bal.name}</div>
+                  <div className="text-xs text-neutral-500">
+                    {bal.asset} — {bal.balance}
                   </div>
-                ))}
+                </div>
+                <div className="text-sm font-mono text-neutral-200">
+                  ${bal.valueUsd.toLocaleString()}
+                </div>
               </div>
-            </TabsContent>
+            ))}
+          </div>
+        </TabsContent>
 
-            <TabsContent value="orders">
-              <div className="rounded-2xl glass-panel p-4">
-                <p className="text-xs text-neutral-600 py-4 text-center">No open orders</p>
-              </div>
-            </TabsContent>
+        <TabsContent value="orders">
+          <div className="rounded-2xl glass-panel p-4">
+            <p className="text-xs text-neutral-600 py-4 text-center">{t("noOpenOrders")}</p>
+          </div>
+        </TabsContent>
 
-            <TabsContent value="history">
-              <div className="rounded-2xl glass-panel p-4">
-                <p className="text-xs text-neutral-600 py-4 text-center">
-                  Trade history loads from audit log
-                </p>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+        <TabsContent value="history">
+          <div className="rounded-2xl glass-panel p-4">
+            <p className="text-xs text-neutral-600 py-4 text-center">
+              {tc("tradeHistoryAuditLog")}
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
 
-        <OrderEntryForm extensionId="kraken" defaultSymbol="XBTUSD" priceEstimate={68240} />
-      </div>
+      <OrderEntrySheet extensionId="kraken" defaultSymbol="XBTUSD" priceEstimate={68240} />
     </div>
   );
 }

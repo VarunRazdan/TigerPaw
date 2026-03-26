@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "interruptor de emergencia activo (modo {{mode}}): {{reason}}",
+  "killSwitchAutoActivated": "interruptor de emergencia activado automáticamente por superación del umbral de riesgo",
+  "invalidNotional": "valor nocional inválido: {{value}}",
+  "invalidQuantity": "cantidad inválida: {{value}}",
+  "invalidPrice": "precio inválido: {{value}}",
+  "cooldownActive": "período de espera activo: {{remaining}}s restantes",
+  "riskPerTradeExceeded": "riesgo por operación {{actual}}% supera el límite {{limit}}%",
+  "tradeSizeExceeded": "tamaño de operación ${{actual}} supera el máximo ${{limit}}",
+  "dailyLossExceeded": "pérdida diaria {{actual}}% alcanza o supera el límite {{limit}}%",
+  "positionConcentrationExceeded": "concentración de posición {{actual}}% supera el límite {{limit}}%",
+  "maxPositionsReached": "posiciones abiertas ({{current}}) en el límite ({{limit}})",
+  "maxTradesReached": "número de operaciones diarias ({{current}}) en el límite ({{limit}})",
+  "dailySpendExceeded": "gasto diario ${{projected}} superaría el límite ${{limit}}",
+  "consecutiveLossesReached": "pérdidas consecutivas ({{current}}) en el umbral de pausa ({{limit}})",
+  "autoApproved": "todas las verificaciones previas a la operación aprobadas; aprobado automáticamente",
+  "awaitingConfirmation": "todas las verificaciones previas a la operación aprobadas; esperando confirmación del operador ({{action}} al expirar)",
+  "awaitingManualApproval": "todas las verificaciones previas a la operación aprobadas; esperando aprobación manual del operador ({{action}} al expirar)"
+}

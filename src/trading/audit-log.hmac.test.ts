@@ -31,10 +31,28 @@ function sha256(data: string): string {
   return createHash("sha256").update(data, "utf8").digest("hex");
 }
 
-const HMAC_KEY = `tigerpaw-audit-${os.hostname()}-${os.userInfo().uid}`;
+/**
+ * Read the HMAC key that the module persists to disk.
+ * The module always stores the key at ~/.tigerpaw/trading/.audit-hmac-key
+ * regardless of the configured audit file path.
+ * Falls back to TIGERPAW_AUDIT_HMAC_KEY env var if set.
+ */
+function readHmacKey(): string {
+  const envKey = process.env.TIGERPAW_AUDIT_HMAC_KEY;
+  if (envKey && envKey.length > 0) {
+    return envKey;
+  }
+  const keyPath = path.join(os.homedir(), ".tigerpaw", "trading", ".audit-hmac-key");
+  try {
+    return require("node:fs").readFileSync(keyPath, "utf8").trim();
+  } catch {
+    // Key hasn't been created yet — will be created on first write.
+    return "";
+  }
+}
 
-function hmacSha256(data: string): string {
-  return createHmac("sha256", HMAC_KEY).update(data, "utf8").digest("hex");
+function hmacSha256(data: string, key: string): string {
+  return createHmac("sha256", key).update(data, "utf8").digest("hex");
 }
 
 async function makeTmpDir(): Promise<string> {
@@ -112,7 +130,9 @@ describe("audit-log HMAC chain verification", () => {
 
       // Reconstruct the HMAC input: entry without hmac field
       const { hmac: _hmac, ...entryWithoutHmac } = entry;
-      const expectedHmac = hmacSha256(JSON.stringify(entryWithoutHmac));
+      const key = readHmacKey();
+      expect(key.length).toBeGreaterThan(0);
+      const expectedHmac = hmacSha256(JSON.stringify(entryWithoutHmac), key);
       expect(entry.hmac).toBe(expectedHmac);
     });
   });
@@ -265,7 +285,8 @@ describe("audit-log HMAC chain verification", () => {
       const entries = await readAuditEntries();
       const entry = entries[0];
       const { hmac: _hmac, ...withoutHmac } = entry;
-      expect(entry.hmac).toBe(hmacSha256(JSON.stringify(withoutHmac)));
+      const key = readHmacKey();
+      expect(entry.hmac).toBe(hmacSha256(JSON.stringify(withoutHmac), key));
     });
 
     it("includes error field in HMAC computation", async () => {
@@ -279,7 +300,8 @@ describe("audit-log HMAC chain verification", () => {
       const entries = await readAuditEntries();
       const entry = entries[0];
       const { hmac: _hmac, ...withoutHmac } = entry;
-      expect(entry.hmac).toBe(hmacSha256(JSON.stringify(withoutHmac)));
+      const key = readHmacKey();
+      expect(entry.hmac).toBe(hmacSha256(JSON.stringify(withoutHmac), key));
     });
   });
 });

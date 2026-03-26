@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "緊急停止スイッチが有効です（{{mode}}モード）: {{reason}}",
+  "killSwitchAutoActivated": "リスク閾値超過により緊急停止スイッチが自動的に有効化されました",
+  "invalidNotional": "無効な想定元本: {{value}}",
+  "invalidQuantity": "無効な数量: {{value}}",
+  "invalidPrice": "無効な価格: {{value}}",
+  "cooldownActive": "クールダウン中: 残り{{remaining}}秒",
+  "riskPerTradeExceeded": "取引ごとのリスク{{actual}}%が上限{{limit}}%を超過しています",
+  "tradeSizeExceeded": "取引サイズ${{actual}}が上限${{limit}}を超過しています",
+  "dailyLossExceeded": "日次損失{{actual}}%が上限{{limit}}%に達しているか超過しています",
+  "positionConcentrationExceeded": "ポジション集中度{{actual}}%が上限{{limit}}%を超過しています",
+  "maxPositionsReached": "オープンポジション数（{{current}}）が上限（{{limit}}）に達しています",
+  "maxTradesReached": "日次取引数（{{current}}）が上限（{{limit}}）に達しています",
+  "dailySpendExceeded": "日次支出の見込み額${{projected}}が上限${{limit}}を超過します",
+  "consecutiveLossesReached": "連続損失数（{{current}}）が一時停止閾値（{{limit}}）に達しています",
+  "autoApproved": "すべての事前取引チェックをパスしました。自動承認済みです",
+  "awaitingConfirmation": "すべての事前取引チェックをパスしました。オペレーターの確認待ちです（タイムアウト時の動作: {{action}}）",
+  "awaitingManualApproval": "すべての事前取引チェックをパスしました。オペレーターによる手動承認待ちです（タイムアウト時の動作: {{action}}）"
+}

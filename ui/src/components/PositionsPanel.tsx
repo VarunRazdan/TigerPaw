@@ -1,20 +1,22 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 import { StopLossConfig } from "./StopLossConfig";
 
 export function PositionsPanel() {
+  const { t } = useTranslation("trading");
   const { positions, limits } = useTradingStore();
 
   return (
     <div className="rounded-2xl glass-panel p-4">
       <h3 className="text-sm font-semibold text-neutral-300 mb-3">
-        Positions
+        {t("positions")}
         <span className="ml-2 text-xs text-neutral-500 font-normal">
           {positions.length}/{limits.maxOpenPositions}
         </span>
       </h3>
       {positions.length === 0 ? (
-        <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
+        <p className="text-xs text-neutral-600 py-4 text-center">{t("noPositions")}</p>
       ) : (
         <div className="space-y-2">
           {positions.map((pos) => (
@@ -58,7 +60,7 @@ export function PositionsPanel() {
       {/* Concentration bar */}
       {positions.length > 0 && (
         <div className="mt-3 pt-3 border-t border-[var(--glass-border)]">
-          <div className="text-xs text-neutral-500 mb-1">Concentration</div>
+          <div className="text-xs text-neutral-500 mb-1">{t("concentration")}</div>
           <div className="flex gap-0.5 h-3 rounded overflow-hidden bg-[var(--glass-subtle-hover)]">
             {positions.map((pos) => (
               <div

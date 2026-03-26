@@ -1,5 +1,6 @@
 import { Power } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { PlatformApiInfo } from "@/components/PlatformApiInfo";
@@ -34,43 +35,20 @@ function StatCard({
   return (
     <div className="rounded-2xl glass-panel p-4">
       <div className="text-xs text-neutral-500 mb-1">{label}</div>
-      <div className={cn("text-2xl font-bold font-mono", color ?? "text-neutral-100")}>{value}</div>
+      <div className={cn("text-2xl font-bold font-mono truncate", color ?? "text-neutral-100")}>
+        {value}
+      </div>
       {subtext && <div className="text-xs text-neutral-500 mt-1">{subtext}</div>}
     </div>
   );
 }
 
 function modeColor(mode: string): string {
-  switch (mode) {
-    case "live":
-    case "mainnet":
-      return "text-green-400";
-    case "paper":
-      return "text-blue-400";
-    case "demo":
-    case "sandbox":
-    case "testnet":
-      return "text-amber-400";
-    case "play":
-      return "text-purple-400";
-    default:
-      return "text-neutral-600";
-  }
+  return mode === "live" || mode === "mainnet" ? "text-green-400" : "text-blue-400";
 }
 
 function modeDot(mode: string): string {
-  switch (mode) {
-    case "live":
-      return "bg-green-400";
-    case "paper":
-      return "bg-blue-400";
-    case "demo":
-      return "bg-amber-400";
-    case "play":
-      return "bg-purple-400";
-    default:
-      return "bg-neutral-600";
-  }
+  return mode === "live" || mode === "mainnet" ? "bg-green-400" : "bg-blue-400";
 }
 
 function ExtensionsGrid({
@@ -78,6 +56,8 @@ function ExtensionsGrid({
 }: {
   platforms: Record<string, { label: string; connected: boolean; mode: string }>;
 }) {
+  const { t } = useTranslation("dashboard");
+  const { t: tc } = useTranslation("common");
   const [connectId, setConnectId] = useState<string | null>(null);
   const [disconnectId, setDisconnectId] = useState<string | null>(null);
   const connectInfo = connectId ? TRADING_CONNECT_INFO[connectId] : null;
@@ -86,8 +66,8 @@ function ExtensionsGrid({
   return (
     <>
       <div className="rounded-2xl glass-panel p-4">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Trading Extensions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("tradingExtensions")}</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Object.entries(platforms).map(([id, p]) => (
             <div
               key={id}
@@ -118,15 +98,15 @@ function ExtensionsGrid({
                         setDisconnectId(id);
                       }}
                       className="ml-0.5 p-1 rounded hover:bg-red-900/30 transition-colors cursor-pointer"
-                      title={`Disconnect ${p.label}`}
+                      title={tc("disconnect") + " " + p.label}
                     >
                       <Power className="w-3 h-3 text-neutral-600 hover:text-red-400 transition-colors" />
                     </button>
                   </>
                 ) : TRADING_CONNECT_INFO[id] ? (
-                  <span className="text-[10px] text-orange-400/70">Connect</span>
+                  <span className="text-[10px] text-orange-400/70">{tc("connect")}</span>
                 ) : (
-                  <span className="text-xs text-neutral-600">not connected</span>
+                  <span className="text-xs text-neutral-600">{tc("notConnected")}</span>
                 )}
               </div>
             </div>
@@ -149,15 +129,14 @@ function ExtensionsGrid({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Disconnect {disconnectId ? platforms[disconnectId]?.label : ""}?
+              {t("disconnectTitle", {
+                platform: disconnectId ? platforms[disconnectId]?.label : "",
+              })}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This will stop all trading on this platform. Open positions will not be automatically
-              closed. You can reconnect at any time.
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t("disconnectDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-700 hover:bg-red-600"
               onClick={() => {
@@ -167,7 +146,7 @@ function ExtensionsGrid({
                 setDisconnectId(null);
               }}
             >
-              Disconnect
+              {tc("disconnect")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -177,6 +156,7 @@ function ExtensionsGrid({
 }
 
 function MarketPrices() {
+  const { t } = useTranslation("dashboard");
   const [prices, setPrices] = useState<CryptoPrice[]>([]);
 
   useEffect(() => {
@@ -191,29 +171,30 @@ function MarketPrices() {
 
   return (
     <div className="rounded-2xl glass-panel p-4">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-3">Market Prices</h3>
-      <div className="grid grid-cols-3 gap-4">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("marketPrices")}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {prices.map((p) => (
-          <div key={p.id} className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-neutral-200">
-                <span className="font-bold">{p.symbol}</span>
-                <span className="text-neutral-500 ml-1.5">{p.name}</span>
-              </div>
+          <div
+            key={p.id}
+            className="flex items-center justify-between sm:flex-col sm:items-start sm:gap-1"
+          >
+            <div className="text-sm font-medium text-neutral-200">
+              <span className="font-bold">{p.symbol}</span>
+              <span className="text-neutral-500 ml-1.5">{p.name}</span>
             </div>
-            <div className="text-right">
-              <div className="text-sm font-bold font-mono text-neutral-100">
+            <div className="sm:flex sm:items-baseline sm:gap-2">
+              <span className="text-sm font-bold font-mono text-neutral-100">
                 ${p.priceUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-              </div>
-              <div
+              </span>
+              <span
                 className={cn(
-                  "text-xs font-mono",
+                  "text-xs font-mono ml-2 sm:ml-0",
                   p.change24h >= 0 ? "text-green-400" : "text-red-400",
                 )}
               >
                 {p.change24h >= 0 ? "+" : ""}
                 {p.change24h.toFixed(2)}%
-              </div>
+              </span>
             </div>
           </div>
         ))}
@@ -223,6 +204,8 @@ function MarketPrices() {
 }
 
 export function DashboardPage() {
+  const { t } = useTranslation("dashboard");
+  const { t: tc } = useTranslation("common");
   const {
     dailyPnlUsd,
     dailyTradeCount,
@@ -240,8 +223,8 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-100">Tigerpaw Dashboard</h1>
-          <p className="text-sm text-neutral-500 mt-1">Your AI trades. You decide.</p>
+          <h1 className="text-2xl font-bold text-neutral-100">{t("title")}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t("subtitle")}</p>
         </div>
         {demoMode && (
           <NavLink
@@ -249,7 +232,7 @@ export function DashboardPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-700/50 bg-amber-950/30 text-amber-400 text-xs font-medium hover:bg-amber-950/50 transition-all duration-200 cursor-pointer"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Demo Data
+            {tc("demoData")}
           </NavLink>
         )}
       </div>
@@ -258,24 +241,25 @@ export function DashboardPage() {
         <div className="rounded-lg border border-red-800 bg-red-950/30 p-4 flex items-center gap-3 hover:bg-red-950/40 transition-all duration-300">
           <span className="text-red-400 text-lg">⛔</span>
           <div>
-            <div className="text-sm font-semibold text-red-300">Kill Switch Active</div>
-            <div className="text-xs text-red-400/70">
-              All trading is halted. Go to Trading Hub to resume.
-            </div>
+            <div className="text-sm font-semibold text-red-300">{t("killSwitchActive")}</div>
+            <div className="text-xs text-red-400/70">{t("killSwitchActiveDesc")}</div>
           </div>
         </div>
       )}
 
       {/* Quick stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Portfolio Value" value={`$${currentPortfolioValueUsd.toLocaleString()}`} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Daily P&L"
+          label={t("portfolioValue")}
+          value={`$${currentPortfolioValueUsd.toLocaleString()}`}
+        />
+        <StatCard
+          label={t("dailyPnl")}
           value={`${pnlSign}$${Math.abs(dailyPnlUsd).toFixed(2)}`}
           color={pnlColor}
         />
-        <StatCard label="Trades Today" value={String(dailyTradeCount)} />
-        <StatCard label="Open Positions" value={String(positions.length)} />
+        <StatCard label={t("tradesToday")} value={String(dailyTradeCount)} />
+        <StatCard label={t("openPositions")} value={String(positions.length)} />
       </div>
 
       {/* Market Prices */}
@@ -285,17 +269,15 @@ export function DashboardPage() {
       <PnlChart />
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <NavLink
           to="/trading"
           className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
         >
           <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
-            Trading Hub →
+            {t("tradingHub")}
           </h3>
-          <p className="text-xs text-neutral-500 mt-1">
-            Risk dashboard, approval queue, positions, and trade history
-          </p>
+          <p className="text-xs text-neutral-500 mt-1">{t("tradingHubDesc")}</p>
         </NavLink>
 
         <NavLink
@@ -303,11 +285,9 @@ export function DashboardPage() {
           className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
         >
           <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
-            Risk Settings →
+            {t("riskSettings")}
           </h3>
-          <p className="text-xs text-neutral-500 mt-1">
-            Configure risk tiers, approval modes, and position limits
-          </p>
+          <p className="text-xs text-neutral-500 mt-1">{t("riskSettingsDesc")}</p>
         </NavLink>
 
         <NavLink
@@ -315,11 +295,9 @@ export function DashboardPage() {
           className="rounded-2xl glass-panel p-5 hover:border-orange-600/50 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5"
         >
           <h3 className="text-sm font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
-            Security →
+            {t("security")}
           </h3>
-          <p className="text-xs text-neutral-500 mt-1">
-            Security audit, credential status, and extension permissions
-          </p>
+          <p className="text-xs text-neutral-500 mt-1">{t("securityDesc")}</p>
         </NavLink>
       </div>
 

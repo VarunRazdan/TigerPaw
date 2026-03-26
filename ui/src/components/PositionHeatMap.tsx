@@ -1,14 +1,16 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
 export function PositionHeatMap() {
+  const { t } = useTranslation("trading");
   const { positions, limits } = useTradingStore();
 
   if (positions.length === 0) {
     return (
       <div className="rounded-2xl glass-panel p-4">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-3">Position Heat Map</h3>
-        <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
+        <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("positionHeatMap")}</h3>
+        <p className="text-xs text-neutral-600 py-4 text-center">{t("noPositions")}</p>
       </div>
     );
   }
@@ -17,7 +19,7 @@ export function PositionHeatMap() {
 
   return (
     <div className="rounded-2xl glass-panel p-4">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-3">Position Heat Map</h3>
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("positionHeatMap")}</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {positions.map((pos) => {
           const sizeRatio = maxValue > 0 ? pos.valueUsd / maxValue : 0.5;
@@ -76,8 +78,8 @@ export function PositionHeatMap() {
                     isOverConcentrated ? "text-amber-400" : "text-neutral-500",
                   )}
                 >
-                  {pos.percentOfPortfolio.toFixed(1)}% of portfolio
-                  {isOverConcentrated && " — over limit"}
+                  {pos.percentOfPortfolio.toFixed(1)}% {t("percentOfPortfolio")}
+                  {isOverConcentrated && ` — ${t("overLimit")}`}
                 </div>
               </div>
             </div>

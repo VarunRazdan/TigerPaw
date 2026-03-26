@@ -1,0 +1,21 @@
+{
+  "title": "Tigerpaw ダッシュボード",
+  "subtitle": "AIが取引する。あなたが決める。",
+  "portfolioValue": "ポートフォリオ評価額",
+  "dailyPnl": "日次損益",
+  "tradesToday": "本日の取引数",
+  "openPositions": "保有ポジション",
+  "marketPrices": "市場価格",
+  "tradingExtensions": "取引拡張機能",
+  "tradingHub": "取引ハブ →",
+  "tradingHubDesc": "リスクダッシュボード、承認キュー、ポジション、取引履歴",
+  "riskSettings": "リスク設定 →",
+  "riskSettingsDesc": "リスクティア、承認モード、ポジション上限の設定",
+  "security": "セキュリティ →",
+  "securityDesc": "セキュリティ監査、認証情報の状態、拡張機能のアクセス権",
+  "killSwitchActive": "キルスイッチ有効",
+  "killSwitchActiveDesc": "すべての取引が停止されています。取引ハブで再開できます。",
+  "disconnectTitle": "{{platform}} を切断しますか？",
+  "disconnectDesc": "このプラットフォームのすべての取引が停止されます。保有ポジションは自動的にクローズされません。いつでも再接続できます。",
+  "disconnectLabel": "{{platform}} を切断"
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore, type Position } from "@/stores/trading-store";
 
@@ -8,6 +9,8 @@ type StopLossConfigProps = {
 };
 
 export function StopLossConfig({ position, className }: StopLossConfigProps) {
+  const { t } = useTranslation("trading");
+  const { t: tc } = useTranslation("common");
   const { updatePositionStopLoss, updatePositionTakeProfit } = useTradingStore();
   const [editing, setEditing] = useState(false);
   const [sl, setSl] = useState(position.stopLoss?.toString() ?? "");
@@ -38,14 +41,20 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
       >
         {position.stopLoss || position.takeProfit ? (
           <span className="font-mono">
-            {position.stopLoss && <span className="text-red-400">SL ${position.stopLoss}</span>}
+            {position.stopLoss && (
+              <span className="text-red-400">
+                {t("sl")} ${position.stopLoss}
+              </span>
+            )}
             {position.stopLoss && position.takeProfit && " / "}
             {position.takeProfit && (
-              <span className="text-green-400">TP ${position.takeProfit}</span>
+              <span className="text-green-400">
+                {t("tp")} ${position.takeProfit}
+              </span>
             )}
           </span>
         ) : (
-          "Set SL/TP"
+          t("setSLTP")
         )}
       </button>
     );
@@ -58,7 +67,7 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
         step="any"
         value={sl}
         onChange={(e) => setSl(e.target.value)}
-        placeholder="SL"
+        placeholder={t("sl")}
         className="w-16 px-1.5 py-0.5 rounded bg-[var(--glass-input-bg)] border border-red-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-red-600 cursor-pointer transition-all duration-200"
       />
       <input
@@ -66,14 +75,14 @@ export function StopLossConfig({ position, className }: StopLossConfigProps) {
         step="any"
         value={tp}
         onChange={(e) => setTp(e.target.value)}
-        placeholder="TP"
+        placeholder={t("tp")}
         className="w-16 px-1.5 py-0.5 rounded bg-[var(--glass-input-bg)] border border-green-800/50 text-xs text-neutral-200 font-mono focus:outline-none focus:border-green-600 cursor-pointer transition-all duration-200"
       />
       <button
         onClick={save}
         className="text-xs text-green-400 hover:text-green-300 font-semibold cursor-pointer transition-all duration-200"
       >
-        OK
+        {tc("ok")}
       </button>
       <button
         onClick={() => setEditing(false)}

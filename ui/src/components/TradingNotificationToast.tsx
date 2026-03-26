@@ -1,5 +1,6 @@
 import { Bell, X, CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   useNotificationStore,
@@ -57,6 +58,8 @@ const DEMO_EVENTS = [
 let demoIdx = 0;
 
 export function NotificationBell() {
+  const { t } = useTranslation("notifications");
+  const { t: tc } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const notifications = useNotificationStore((s) => s.notifications);
   const undismissedCount = notifications.filter((n) => !n.dismissed).length;
@@ -81,7 +84,7 @@ export function NotificationBell() {
       <button
         onClick={() => setOpen(!open)}
         className="relative p-2 rounded-lg hover:bg-[var(--glass-input-bg)] transition-all duration-200 cursor-pointer"
-        title="Trading notifications"
+        title={t("tradingNotifications")}
       >
         <Bell className="w-4 h-4 text-neutral-400" />
         {undismissedCount > 0 && (
@@ -99,14 +102,14 @@ export function NotificationBell() {
           <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-[var(--glass-border)] bg-[var(--glass-dropdown)] backdrop-blur-xl shadow-2xl shadow-black/50 z-50">
             <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--glass-subtle-hover)]">
               <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                Notifications
+                {t("title")}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={fireTestNotification}
                   className="text-[10px] text-orange-500/70 hover:text-orange-400 transition-colors cursor-pointer"
                 >
-                  Test
+                  {tc("test")}
                 </button>
                 {undismissedCount > 0 && (
                   <button
@@ -116,14 +119,14 @@ export function NotificationBell() {
                     }}
                     className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors cursor-pointer"
                   >
-                    Clear all
+                    {tc("clearAll")}
                   </button>
                 )}
               </div>
             </div>
 
             {notifications.length === 0 ? (
-              <div className="p-6 text-center text-sm text-neutral-600">No notifications yet</div>
+              <div className="p-6 text-center text-sm text-neutral-600">{t("noNotifications")}</div>
             ) : (
               notifications.slice(0, 20).map((n) => (
                 <div

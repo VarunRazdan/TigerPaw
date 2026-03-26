@@ -1,0 +1,21 @@
+{
+  "title": "Tableau de bord Tigerpaw",
+  "subtitle": "Votre IA trade. Vous décidez.",
+  "portfolioValue": "Valeur du portefeuille",
+  "dailyPnl": "P&L journalier",
+  "tradesToday": "Trades aujourd'hui",
+  "openPositions": "Positions ouvertes",
+  "marketPrices": "Prix du marché",
+  "tradingExtensions": "Extensions de trading",
+  "tradingHub": "Hub de trading →",
+  "tradingHubDesc": "Tableau de bord des risques, file d'approbation, positions et historique des trades",
+  "riskSettings": "Paramètres de risque →",
+  "riskSettingsDesc": "Configurer les niveaux de risque, les modes d'approbation et les limites de position",
+  "security": "Sécurité →",
+  "securityDesc": "Audit de sécurité, statut des identifiants et permissions des extensions",
+  "killSwitchActive": "Coupe-circuit actif",
+  "killSwitchActiveDesc": "Tous les trades sont suspendus. Rendez-vous sur le Hub de trading pour reprendre.",
+  "disconnectTitle": "Déconnecter {{platform}} ?",
+  "disconnectDesc": "Ceci arrêtera tous les trades sur cette plateforme. Les positions ouvertes ne seront pas fermées automatiquement. Vous pouvez vous reconnecter à tout moment.",
+  "disconnectLabel": "Déconnecter {{platform}}"
+}

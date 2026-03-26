@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import type { ConnectInfo } from "@/lib/connect-config";
 import { saveConfigPatch } from "@/lib/save-config";
 import { Badge } from "./ui/badge";
@@ -14,6 +15,8 @@ type Props = {
 type SaveStatus = "idle" | "saving" | "saved" | "error" | "gateway-down";
 
 export function ConnectDialog({ open, onOpenChange, info }: Props) {
+  const { t } = useTranslation("connect");
+  const { t: tc } = useTranslation("common");
   const [values, setValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -69,7 +72,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
       setTimeout(() => setSaveStatus("idle"), 3000);
     } else if (result.error === "Gateway not reachable" || result.error === "Request timed out") {
       setSaveStatus("gateway-down");
-      setSaveError("Start Tigerpaw first, then try again");
+      setSaveError(t("gatewayDownHint"));
     } else {
       setSaveStatus("error");
       setSaveError(result.error);
@@ -83,7 +86,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           <div className="flex items-center gap-3">
             <img src={info.iconPath} alt="" className="w-8 h-8" />
             <div>
-              <DialogTitle>Connect {info.name}</DialogTitle>
+              <DialogTitle>{t("connectPlatform", { platform: info.name })}</DialogTitle>
               <DialogDescription>{info.description}</DialogDescription>
             </div>
           </div>
@@ -92,7 +95,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
         {/* Setup Steps */}
         <div className="space-y-2">
           <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
-            Setup Steps
+            {t("setupSteps")}
           </h4>
           <ol className="space-y-1.5">
             {info.steps.map((step, i) => (
@@ -108,7 +111,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
         {info.credentials.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
-              Credentials
+              {t("credentials")}
             </h4>
             <div className="space-y-3">
               {info.credentials.map((cred) => (
@@ -126,7 +129,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
                         className="text-[10px] cursor-pointer hover:bg-[var(--glass-subtle-hover)] transition-colors"
                         onClick={() => copyToClipboard(cred.envVar, cred.envVar)}
                       >
-                        {copied === cred.envVar ? "Copied!" : `$${cred.envVar}`}
+                        {copied === cred.envVar ? tc("copied") : `$${cred.envVar}`}
                       </Badge>
                     )}
                   </div>
@@ -152,7 +155,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
               className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider hover:text-neutral-400 transition-colors cursor-pointer flex items-center gap-1"
             >
               <span className="text-[8px]">{showPreview ? "\u25BC" : "\u25B6"}</span>
-              Config Preview
+              {t("configPreview")}
             </button>
             {showPreview && (
               <pre className="rounded-xl border border-[var(--glass-border)] bg-[var(--glass-subtle)] p-3 text-xs text-neutral-400 overflow-x-auto font-mono whitespace-pre-wrap">
@@ -180,10 +183,10 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
               }`}
             >
               {saveStatus === "saving"
-                ? "Saving..."
+                ? t("saving")
                 : saveStatus === "saved"
-                  ? "Saved to tigerpaw.json!"
-                  : "Save to Config"}
+                  ? t("savedSuccess")
+                  : t("saveToConfig")}
             </button>
 
             {/* Error / gateway-down feedback */}
@@ -192,15 +195,13 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
             )}
             {saveStatus === "gateway-down" && (
               <div className="text-center space-y-1.5">
-                <p className="text-xs text-amber-400">
-                  Gateway not reachable — start Tigerpaw first
-                </p>
+                <p className="text-xs text-amber-400">{t("gatewayDown")}</p>
                 <button
                   type="button"
                   onClick={() => copyToClipboard(configSnippet, "config")}
                   className="text-xs text-neutral-500 hover:text-neutral-300 underline underline-offset-2 cursor-pointer transition-colors"
                 >
-                  {copied === "config" ? "Copied!" : "Copy config snippet to clipboard instead"}
+                  {copied === "config" ? tc("copied") : t("copyFallback")}
                 </button>
               </div>
             )}
@@ -211,9 +212,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
         {info.hasSandbox && (
           <div className="text-xs text-neutral-500 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-            Sandbox available — start in{" "}
-            <span className="text-neutral-300 font-medium">{info.sandboxLabel}</span> mode to test
-            safely
+            {t("sandboxAvailable", { mode: info.sandboxLabel })}
           </div>
         )}
 
@@ -224,7 +223,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           rel="noopener noreferrer"
           className="block text-center text-sm text-orange-400 hover:text-orange-300 transition-all duration-200 py-2.5 rounded-xl border border-[var(--glass-border)] hover:border-orange-600/40 hover:bg-[var(--glass-divider)] hover:shadow-md cursor-pointer"
         >
-          Open {info.name} Setup Page →
+          {t("openSetupPage", { platform: info.name })}
         </a>
       </DialogContent>
     </Dialog>

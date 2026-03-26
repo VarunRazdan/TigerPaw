@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const DEMO_CONFIG = `{
   "trading": {
@@ -35,20 +36,22 @@ const DEMO_CONFIG = `{
 }`;
 
 export function ConfigPage() {
+  const { t } = useTranslation("config");
+  const { t: tc } = useTranslation("common");
   const [config, setConfig] = useState(DEMO_CONFIG);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-neutral-100">Configuration</h1>
-        <p className="text-xs text-neutral-500 mt-0.5">Edit tigerpaw.json — secrets are masked</p>
+        <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
+        <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
       </div>
 
       <div className="rounded-2xl glass-panel overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--glass-subtle-hover)] bg-[var(--glass-input-bg)]">
-          <span className="text-xs text-neutral-500 font-mono">~/.tigerpaw/tigerpaw.json</span>
+          <span className="text-xs text-neutral-500 font-mono">{t("filePath")}</span>
           <button className="text-xs text-neutral-400 hover:text-neutral-200 px-2 py-1 rounded border border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-input-bg)] cursor-pointer transition-all duration-300">
-            Save
+            {tc("save")}
           </button>
         </div>
         <textarea

@@ -1,0 +1,104 @@
+{
+  "_comment": "Chaînes i18n de l'extension de trading backend",
+
+  "noTradingData": "Aucune donnée de trading disponible. Connectez une plateforme de trading et activez le trading d'abord.",
+  "failedToLoad": "Échec du chargement de {{resource}} : {{error}}",
+
+  "common.quantityMustBePositive": "La quantité doit être supérieure à 0.",
+  "common.limitPriceRequired": "Un prix limite est requis pour les ordres de type {{type}}.",
+  "common.stopPriceRequired": "Un prix stop est requis pour les ordres de type {{type}}.",
+  "common.orderDenied": "Ordre refusé : {{reason}}",
+  "common.orderFailed": "Échec de l'ordre : {{error}}",
+  "common.cancelDenied": "Annulation refusée : {{reason}}",
+  "common.cancelFailed": "Échec de l'annulation : {{error}}",
+  "common.cancelSuccess": "Ordre {{orderId}} annulé avec succès.",
+  "common.noOpenPositions": "Aucune position ouverte.",
+  "common.noOpenPositionsOn": "Aucune position ouverte sur {{platform}}.",
+  "common.noOrderHistory": "Aucun ordre dans l'historique.",
+  "common.noRecentTrades": "Aucune transaction récente dans le journal d'audit.",
+  "common.noRecentTradesOn": "Aucune transaction récente sur {{platform}}.",
+  "common.noSearchResults": "Aucun actif négociable trouvé correspondant à \"{{query}}\".",
+
+  "tc.portfolioSummary": "Récapitulatif du portefeuille",
+  "tc.total": "Total",
+  "tc.highWater": "Plus-haut historique",
+  "tc.drawdown": "Drawdown",
+
+  "tc.dailyMetrics": "Activité de trading du jour ({{date}})",
+  "tc.dailyPnl": "P&L journalier",
+  "tc.dailySpend": "Dépenses journalières",
+  "tc.trades": "Transactions",
+  "tc.consecLosses": "Pertes consécutives",
+  "tc.portfolioValue": "Valeur du portefeuille",
+
+  "tc.openPositions": "Positions ouvertes ({{count}})",
+  "tc.value": "Valeur",
+  "tc.ofPortfolio": "du portefeuille",
+  "tc.totalOpen": "Total ouvert",
+
+  "tc.killSwitchStatus": "État du coupe-circuit",
+  "tc.globalActive": "Global :  ACTIF (mode {{mode}})",
+  "tc.globalOff": "Global :  DÉSACTIVÉ — le trading est actif",
+  "tc.reason": "Motif",
+  "tc.activatedBy": "Par",
+  "tc.since": "Depuis",
+  "tc.platformKillSwitches": "Coupe-circuits par plateforme :",
+  "tc.platformActive": "{{platform}} : ACTIF — {{reason}}",
+
+  "tc.killSwitchActivated": "Coupe-circuit ACTIVÉ (mode {{mode}}).\nMotif : {{reason}}\n\nTout le trading est maintenant suspendu.",
+  "tc.killSwitchAlreadyOff": "Le coupe-circuit est déjà DÉSACTIVÉ. Le trading est actif.",
+  "tc.killSwitchDeactivated": "Coupe-circuit DÉSACTIVÉ. Le trading a repris.\n\nTous les limites de risque configurées restent en vigueur.",
+
+  "tc.failedActivate": "Échec de l'activation du coupe-circuit : {{error}}",
+  "tc.failedDeactivate": "Échec de la désactivation du coupe-circuit : {{error}}",
+  "tc.failedKillSwitchCheck": "Échec de la vérification du coupe-circuit : {{error}}",
+
+  "tc.riskLimitUtilization": "Utilisation des limites de risque",
+  "tc.noRiskLimits": "Aucune limite de risque configurée.",
+  "tc.dailySpendGauge": "Dépenses journalières",
+  "tc.tradesPerDayGauge": "Transactions/jour",
+  "tc.positionsGauge": "Positions",
+  "tc.dailyLossGauge": "Perte journalière",
+  "tc.drawdownGauge": "Drawdown",
+  "tc.consecLossesGauge": "Pertes consécutives",
+  "tc.approachingLimits": "Approche des limites : {{limits}}",
+
+  "tc.recentTrades": "Transactions récentes ({{count}})",
+  "tc.denied": "Motif",
+  "tc.failedLoadPortfolio": "Échec du chargement du portefeuille : {{error}}",
+  "tc.failedLoadMetrics": "Échec du chargement des métriques : {{error}}",
+  "tc.failedLoadPositions": "Échec du chargement des positions : {{error}}",
+  "tc.failedLoadRisk": "Échec du chargement du statut de risque : {{error}}",
+  "tc.failedReadHistory": "Échec de la lecture de l'historique des transactions : {{error}}",
+
+  "alpaca.searchNoResults": "Aucun actif négociable trouvé correspondant à \"{{query}}\".",
+  "alpaca.quoteFailed": "Échec de la récupération du cours pour {{symbol}} : {{error}}",
+  "alpaca.orderPlaced": "Ordre soumis : {{side}} {{qty}} {{symbol}} ({{type}}) — {{status}}",
+  "alpaca.bracketOrderPlaced": "Ordre bracket soumis : {{side}} {{qty}} {{symbol}} — {{status}}",
+  "alpaca.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "polymarket.orderPlaced": "Ordre à cours limité placé : {{side}} {{size}} contrats à {{price}}",
+  "polymarket.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "kalshi.orderPlaced": "Ordre placé : {{side}} {{count}} contrats à {{price}}¢",
+  "kalshi.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "manifold.betPlaced": "Pari placé : {{outcome}} {{amount}} sur \"{{question}}\"",
+  "manifold.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "coinbase.orderPlaced": "Ordre soumis : {{side}} {{qty}} {{symbol}} ({{type}})",
+  "coinbase.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "ibkr.orderPlaced": "Ordre soumis : {{side}} {{qty}} {{symbol}} ({{type}})",
+  "ibkr.bracketOrderPlaced": "Ordre bracket soumis : {{side}} {{qty}} {{symbol}}",
+  "ibkr.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "binance.orderPlaced": "Ordre soumis : {{side}} {{qty}} {{symbol}} ({{type}})",
+  "binance.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "kraken.orderPlaced": "Ordre soumis : {{side}} {{volume}} {{pair}} ({{type}})",
+  "kraken.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}",
+
+  "dydx.notImplemented": "Le passage d'ordres sur dYdX nécessite la signature de transactions avec le SDK Cosmos, ce qui n'est pas encore implémenté. Veuillez utiliser l'interface web de dYdX pour l'instant.",
+  "dydx.fetchFailed": "Échec de la récupération de {{resource}} : {{error}}"
+}

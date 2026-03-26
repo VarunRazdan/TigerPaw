@@ -1,4 +1,5 @@
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
@@ -42,8 +43,12 @@ function Sparkline({
 }
 
 export function DailyPnlBar() {
-  const { dailyPnlUsd, currentPortfolioValueUsd, limits, pnlHistory, platforms } =
-    useTradingStore();
+  const { t } = useTranslation("trading");
+  const dailyPnlUsd = useTradingStore((s) => s.dailyPnlUsd);
+  const currentPortfolioValueUsd = useTradingStore((s) => s.currentPortfolioValueUsd);
+  const limits = useTradingStore((s) => s.limits);
+  const pnlHistory = useTradingStore((s) => s.pnlHistory);
+  const platforms = useTradingStore((s) => s.platforms);
 
   const lossPercent =
     currentPortfolioValueUsd > 0
@@ -72,15 +77,15 @@ export function DailyPnlBar() {
     <TooltipPrimitive.Provider delayDuration={200}>
       <TooltipPrimitive.Root>
         <TooltipPrimitive.Trigger asChild>
-          <div className="hidden sm:flex items-center gap-3 text-xs cursor-pointer">
-            <span className="text-neutral-500">Daily P&L:</span>
+          <div className="hidden lg:flex items-center gap-3 text-xs cursor-pointer">
+            <span className="text-neutral-500">{t("dailyPnl")}:</span>
             <span className={cn("font-mono font-semibold", pnlColor)}>
               {pnlSign}${Math.abs(dailyPnlUsd).toFixed(2)}
             </span>
             <Sparkline data={sparklineData} />
             <div
               className="w-24 h-2 bg-[var(--glass-subtle-hover)] rounded-full overflow-hidden"
-              title={`${usedPct}% of daily loss limit`}
+              title={t("percentDailyLoss", { percent: usedPct })}
             >
               <div
                 className={cn(
@@ -101,13 +106,13 @@ export function DailyPnlBar() {
           >
             <div className="space-y-1">
               <div>
-                Daily P&L:{" "}
+                {t("dailyPnl")}:{" "}
                 <span className={pnlColor}>
                   {pnlSign}${Math.abs(dailyPnlUsd).toFixed(2)}
                 </span>
               </div>
               <div>
-                Loss limit used: {usedPct}% ({lossPercent.toFixed(1)}% / {limitPercent}%)
+                {t("lossLimitUsed")}: {usedPct}% ({lossPercent.toFixed(1)}% / {limitPercent}%)
               </div>
               <div className="border-t border-[var(--glass-subtle-hover)] pt-1 mt-1 whitespace-pre">
                 {platformSummary}

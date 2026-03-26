@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "kill switch active ({{mode}} mode): {{reason}}",
+  "killSwitchAutoActivated": "kill switch auto-activated due to risk threshold breach",
+  "invalidNotional": "invalid notional value: {{value}}",
+  "invalidQuantity": "invalid quantity: {{value}}",
+  "invalidPrice": "invalid price: {{value}}",
+  "cooldownActive": "cooldown active: {{remaining}}s remaining",
+  "riskPerTradeExceeded": "per-trade risk {{actual}}% exceeds limit {{limit}}%",
+  "tradeSizeExceeded": "trade size ${{actual}} exceeds max ${{limit}}",
+  "dailyLossExceeded": "daily loss {{actual}}% at or beyond limit {{limit}}%",
+  "positionConcentrationExceeded": "position concentration {{actual}}% exceeds limit {{limit}}%",
+  "maxPositionsReached": "open positions ({{current}}) at limit ({{limit}})",
+  "maxTradesReached": "daily trade count ({{current}}) at limit ({{limit}})",
+  "dailySpendExceeded": "daily spend ${{projected}} would exceed limit ${{limit}}",
+  "consecutiveLossesReached": "consecutive losses ({{current}}) at pause threshold ({{limit}})",
+  "autoApproved": "all pre-trade checks passed; auto-approved",
+  "awaitingConfirmation": "all pre-trade checks passed; awaiting operator confirmation ({{action}} on timeout)",
+  "awaitingManualApproval": "all pre-trade checks passed; awaiting manual operator approval ({{action}} on timeout)"
+}

@@ -19,6 +19,8 @@ import {
   withPlatformPortfolio,
   withPlatformPositionCount,
   autoActivateIfBreached,
+  checkKillSwitch,
+  isOrderAllowedUnderKillSwitch,
   type TradeOrder,
 } from "tigerpaw/trading";
 import { coinbaseConfigSchema, getBaseUrl, type CoinbaseConfig } from "./config.js";
@@ -589,6 +591,21 @@ const coinbasePlugin = {
         async execute(_id: string, params: unknown) {
           const { order_id } = params as { order_id: string };
           api.logger.info(`coinbase: cancelling order ${order_id}`);
+
+          // Kill switch gate: hard mode blocks cancels, soft mode allows them.
+          const killStatus = await checkKillSwitch();
+          if (killStatus.active && !isOrderAllowedUnderKillSwitch(killStatus, "cancel")) {
+            const reason = `kill switch active (${killStatus.mode ?? "hard"} mode): ${killStatus.reason ?? "no reason provided"}`;
+            api.logger.warn(`coinbase: cancel denied — ${reason}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "denied",
+              actor: "system",
+              error: reason,
+            });
+            return txtD(`Cancel denied: ${reason}`, { error: "kill_switch", reason });
+          }
+
           try {
             const r = await apiReq<{
               results: Array<{ success: boolean; order_id: string; failure_reason?: string }>;

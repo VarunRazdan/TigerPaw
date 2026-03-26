@@ -1,5 +1,10 @@
 /**
- * Optional Ed25519 signature verification for Tigerpaw extensions.
+ * Ed25519 signature verification for Tigerpaw extensions.
+ *
+ * STATUS: Implemented but NOT yet wired into the plugin loader.
+ * These functions are tested in isolation but never called during plugin loading.
+ * Do not advertise this as an active security control until it is integrated
+ * into src/plugins/loader.ts and TRUSTED_KEYS is populated with real publisher keys.
  *
  * Extensions can include a signature in their manifest. Unsigned extensions
  * load normally but get an "unverified" badge in the UI.

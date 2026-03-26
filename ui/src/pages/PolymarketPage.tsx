@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +35,7 @@ const DEMO_MARKETS = [
 ];
 
 function MarketCard({ market }: { market: (typeof DEMO_MARKETS)[0] }) {
+  const { t } = useTranslation("platforms");
   const yesPct = Math.round(market.yesPrice * 100);
   const noPct = 100 - yesPct;
   return (
@@ -56,10 +58,10 @@ function MarketCard({ market }: { market: (typeof DEMO_MARKETS)[0] }) {
       </div>
       <div className="grid grid-cols-2 gap-2 mt-3">
         <button className="px-3 py-1.5 rounded text-xs font-semibold bg-green-800 hover:bg-green-700 hover:-translate-y-0.5 hover:scale-105 text-green-100 cursor-pointer transition-all duration-300 hover:shadow-md">
-          Buy YES
+          {t("buyYes")}
         </button>
         <button className="px-3 py-1.5 rounded text-xs font-semibold bg-red-800 hover:bg-red-700 hover:-translate-y-0.5 hover:scale-105 text-red-100 cursor-pointer transition-all duration-300 hover:shadow-md">
-          Buy NO
+          {t("buyNo")}
         </button>
       </div>
     </div>
@@ -67,6 +69,8 @@ function MarketCard({ market }: { market: (typeof DEMO_MARKETS)[0] }) {
 }
 
 export function PolymarketPage() {
+  const { t } = useTranslation("platforms");
+  const { t: tc } = useTranslation("common");
   const positions = useTradingStore((s) => s.positions).filter(
     (p) => p.extensionId === "polymarket",
   );
@@ -86,7 +90,7 @@ export function PolymarketPage() {
           )}
           onClick={() => !platform?.connected && setConnectOpen(true)}
         >
-          {platform?.connected ? "Connected" : "Not Connected — Click to Setup"}
+          {platform?.connected ? tc("connected") : tc("notConnected")}
         </Badge>
       </div>
       <ConnectDialog
@@ -97,16 +101,16 @@ export function PolymarketPage() {
 
       <Tabs defaultValue="markets">
         <TabsList>
-          <TabsTrigger value="markets">Markets</TabsTrigger>
+          <TabsTrigger value="markets">{t("markets")}</TabsTrigger>
           <TabsTrigger value="positions">
-            My Positions
+            {t("myPositions")}
             {positions.length > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-[var(--glass-subtle-hover)] text-neutral-300">
                 {positions.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="history">{t("history")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="markets">
@@ -120,7 +124,7 @@ export function PolymarketPage() {
         <TabsContent value="positions">
           <div className="rounded-2xl glass-panel p-4">
             {positions.length === 0 ? (
-              <p className="text-xs text-neutral-600 py-4 text-center">No open positions</p>
+              <p className="text-xs text-neutral-600 py-4 text-center">{tc("noPositions")}</p>
             ) : (
               <div className="space-y-2">
                 {positions.map((pos) => (
@@ -155,7 +159,7 @@ export function PolymarketPage() {
         <TabsContent value="history">
           <div className="rounded-2xl glass-panel p-4">
             <p className="text-xs text-neutral-600 py-4 text-center">
-              Order history loads from audit log
+              {tc("orderHistoryAuditLog")}
             </p>
           </div>
         </TabsContent>

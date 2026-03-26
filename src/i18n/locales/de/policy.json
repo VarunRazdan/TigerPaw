@@ -1,0 +1,19 @@
+{
+  "killSwitchActive": "Notschalter aktiv (Modus {{mode}}): {{reason}}",
+  "killSwitchAutoActivated": "Notschalter automatisch aktiviert aufgrund einer Überschreitung der Risikogrenze",
+  "invalidNotional": "ungültiger Nominalwert: {{value}}",
+  "invalidQuantity": "ungültige Menge: {{value}}",
+  "invalidPrice": "ungültiger Preis: {{value}}",
+  "cooldownActive": "Abkühlphase aktiv: noch {{remaining}}s",
+  "riskPerTradeExceeded": "Risiko pro Trade {{actual}}% überschreitet Limit {{limit}}%",
+  "tradeSizeExceeded": "Handelsvolumen ${{actual}} überschreitet Maximum ${{limit}}",
+  "dailyLossExceeded": "Tagesverlust {{actual}}% erreicht oder überschreitet Limit {{limit}}%",
+  "positionConcentrationExceeded": "Positionskonzentration {{actual}}% überschreitet Limit {{limit}}%",
+  "maxPositionsReached": "Offene Positionen ({{current}}) am Limit ({{limit}})",
+  "maxTradesReached": "Tägliche Tradeanzahl ({{current}}) am Limit ({{limit}})",
+  "dailySpendExceeded": "Tagesausgaben ${{projected}} würden Limit ${{limit}} überschreiten",
+  "consecutiveLossesReached": "Aufeinanderfolgende Verluste ({{current}}) erreichen Pausenschwelle ({{limit}})",
+  "autoApproved": "Alle Vorab-Handelsprüfungen bestanden; automatisch genehmigt",
+  "awaitingConfirmation": "Alle Vorab-Handelsprüfungen bestanden; wartet auf Bestätigung des Operators ({{action}} bei Zeitüberschreitung)",
+  "awaitingManualApproval": "Alle Vorab-Handelsprüfungen bestanden; wartet auf manuelle Genehmigung des Operators ({{action}} bei Zeitüberschreitung)"
+}
