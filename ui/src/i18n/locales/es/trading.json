@@ -122,5 +122,13 @@
   "chart.range1W": "1S",
   "chart.range1M": "1M",
   "chart.range6M": "6M",
-  "chart.rangeCustom": "Personalizado"
+  "chart.rangeCustom": "Personalizado",
+  "closePosition": "Cerrar Posición",
+  "closePositionTitle": "¿Cerrar Posición?",
+  "closePositionDesc": "¿Cerrar {{qty}} {{symbol}} en {{platform}} a precio de mercado?",
+  "closingPosition": "Cerrando...",
+  "positionClosed": "Posición cerrada",
+  "closePositionDenied": "Cierre denegado: {{reason}}",
+  "closePositionError": "Error al cerrar: {{message}}",
+  "tradingHaltedCloseDisabled": "Kill switch activo (modo estricto)"
 }

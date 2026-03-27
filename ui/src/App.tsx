@@ -1,29 +1,67 @@
-import { useMemo } from "react";
+import { lazy, useMemo } from "react";
 import { createHashRouter, Navigate, type RouteObject, RouterProvider } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ToastNotifications } from "./components/ToastNotifications";
-import { AlpacaPage } from "./pages/AlpacaPage";
-import { AssistantPage } from "./pages/AssistantPage";
-import { BinancePage } from "./pages/BinancePage";
-import { ChannelsPage } from "./pages/ChannelsPage";
-import { CoinbasePage } from "./pages/CoinbasePage";
-import { ConfigPage } from "./pages/ConfigPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { DydxPage } from "./pages/DydxPage";
-import { IbkrPage } from "./pages/IbkrPage";
-import { InboxPage } from "./pages/InboxPage";
-import { KalshiPage } from "./pages/KalshiPage";
-import { KrakenPage } from "./pages/KrakenPage";
-import { ManifoldPage } from "./pages/ManifoldPage";
-import { McpPage } from "./pages/McpPage";
-import { ModelsPage } from "./pages/ModelsPage";
-import { PolymarketPage } from "./pages/PolymarketPage";
-import { SecurityPage } from "./pages/SecurityPage";
-import { TradingPage } from "./pages/TradingPage";
-import { TradingSettingsPage } from "./pages/TradingSettingsPage";
-import { WorkflowEditorPage } from "./pages/WorkflowEditorPage";
-import { WorkflowsPage } from "./pages/WorkflowsPage";
 import { useAppStore } from "./stores/app-store";
+
+// Lazy-loaded page components — each gets its own chunk
+const DashboardPage = lazy(() =>
+  import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
+);
+const MessageHubPage = lazy(() =>
+  import("./pages/MessageHubPage").then((m) => ({ default: m.MessageHubPage })),
+);
+const AssistantPage = lazy(() =>
+  import("./pages/AssistantPage").then((m) => ({ default: m.AssistantPage })),
+);
+const ChannelsPage = lazy(() =>
+  import("./pages/ChannelsPage").then((m) => ({ default: m.ChannelsPage })),
+);
+const SecurityPage = lazy(() =>
+  import("./pages/SecurityPage").then((m) => ({ default: m.SecurityPage })),
+);
+const ConfigPage = lazy(() =>
+  import("./pages/ConfigPage").then((m) => ({ default: m.ConfigPage })),
+);
+const WorkflowsPage = lazy(() =>
+  import("./pages/WorkflowsPage").then((m) => ({ default: m.WorkflowsPage })),
+);
+const WorkflowEditorPage = lazy(() =>
+  import("./pages/WorkflowEditorPage").then((m) => ({ default: m.WorkflowEditorPage })),
+);
+const McpPage = lazy(() => import("./pages/McpPage").then((m) => ({ default: m.McpPage })));
+const ModelsPage = lazy(() =>
+  import("./pages/ModelsPage").then((m) => ({ default: m.ModelsPage })),
+);
+const TradingPage = lazy(() =>
+  import("./pages/TradingPage").then((m) => ({ default: m.TradingPage })),
+);
+const TradingSettingsPage = lazy(() =>
+  import("./pages/TradingSettingsPage").then((m) => ({ default: m.TradingSettingsPage })),
+);
+const AlpacaPage = lazy(() =>
+  import("./pages/AlpacaPage").then((m) => ({ default: m.AlpacaPage })),
+);
+const PolymarketPage = lazy(() =>
+  import("./pages/PolymarketPage").then((m) => ({ default: m.PolymarketPage })),
+);
+const KalshiPage = lazy(() =>
+  import("./pages/KalshiPage").then((m) => ({ default: m.KalshiPage })),
+);
+const ManifoldPage = lazy(() =>
+  import("./pages/ManifoldPage").then((m) => ({ default: m.ManifoldPage })),
+);
+const CoinbasePage = lazy(() =>
+  import("./pages/CoinbasePage").then((m) => ({ default: m.CoinbasePage })),
+);
+const IbkrPage = lazy(() => import("./pages/IbkrPage").then((m) => ({ default: m.IbkrPage })));
+const BinancePage = lazy(() =>
+  import("./pages/BinancePage").then((m) => ({ default: m.BinancePage })),
+);
+const KrakenPage = lazy(() =>
+  import("./pages/KrakenPage").then((m) => ({ default: m.KrakenPage })),
+);
+const DydxPage = lazy(() => import("./pages/DydxPage").then((m) => ({ default: m.DydxPage })));
 
 const TRADING_ROUTES: RouteObject[] = [
   { path: "trading", element: <TradingPage /> },
@@ -46,7 +84,8 @@ const TRADING_REDIRECT: RouteObject = {
 
 const CORE_ROUTES: RouteObject[] = [
   { index: true, element: <DashboardPage /> },
-  { path: "inbox", element: <InboxPage /> },
+  { path: "message-hub", element: <MessageHubPage /> },
+  { path: "inbox", element: <Navigate to="/message-hub" replace /> },
   { path: "assistant", element: <AssistantPage /> },
   { path: "channels", element: <ChannelsPage /> },
   { path: "security", element: <SecurityPage /> },

@@ -11,13 +11,15 @@ import {
   Cloud,
   CloudOff,
   Check,
+  Key,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -332,6 +334,96 @@ function HealthMonitorPanel({
 // Main page
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Configure Provider dialog (inline)
+// ---------------------------------------------------------------------------
+
+const PROVIDER_PRESETS = [
+  { value: "anthropic", label: "Anthropic (Claude)", type: "anthropic-messages", needsKey: true },
+  { value: "openai", label: "OpenAI (GPT)", type: "openai-completions", needsKey: true },
+  { value: "ollama", label: "Ollama (local)", type: "ollama", needsKey: false },
+] as const;
+
+function ConfigureProviderForm({ onDone }: { onDone: () => void }) {
+  const { t } = useTranslation("models");
+  const [preset, setPreset] = useState("anthropic");
+  const [apiKey, setApiKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState("http://localhost:11434");
+  const [saving, setSaving] = useState(false);
+
+  const selected = PROVIDER_PRESETS.find((p) => p.value === preset) ?? PROVIDER_PRESETS[0];
+
+  async function handleSave() {
+    setSaving(true);
+    const providerConfig: Record<string, unknown> = { type: selected.type };
+    if (selected.needsKey && apiKey.trim()) {
+      providerConfig.apiKey = apiKey.trim();
+    }
+    if (!selected.needsKey) {
+      providerConfig.baseUrl = baseUrl.trim() || "http://localhost:11434";
+    }
+
+    await gatewayRpc("config.patch", {
+      patch: { models: { providers: { [preset]: providerConfig } } },
+    });
+    setSaving(false);
+    onDone();
+  }
+
+  return (
+    <div className="rounded-xl glass-panel p-4 mb-4 space-y-3">
+      <h3 className="text-xs font-semibold text-neutral-300 flex items-center gap-1.5">
+        <Key className="w-3.5 h-3.5 text-orange-400" />
+        {t("configureProvider", "Configure AI Provider")}
+      </h3>
+      <select
+        value={preset}
+        onChange={(e) => setPreset(e.target.value)}
+        className="w-full sm:w-64 h-9 rounded-md border border-[var(--glass-border)] bg-[var(--glass-input-bg)] px-3 text-sm text-neutral-200 focus:border-orange-500 focus:outline-none transition-colors cursor-pointer"
+      >
+        {PROVIDER_PRESETS.map((p) => (
+          <option key={p.value} value={p.value}>
+            {p.label}
+          </option>
+        ))}
+      </select>
+
+      {selected.needsKey ? (
+        <Input
+          type="password"
+          placeholder={t("apiKeyPlaceholder", "Paste your API key")}
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+        />
+      ) : (
+        <Input
+          placeholder="http://localhost:11434"
+          value={baseUrl}
+          onChange={(e) => setBaseUrl(e.target.value)}
+        />
+      )}
+
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          className="text-xs"
+          onClick={handleSave}
+          disabled={saving || (selected.needsKey && !apiKey.trim())}
+        >
+          {saving ? t("saving", "Saving...") : t("saveProvider", "Save")}
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs" onClick={onDone}>
+          {t("cancel", "Cancel")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
 export function ModelsPage() {
   const { t } = useTranslation("models");
 
@@ -345,6 +437,46 @@ export function ModelsPage() {
   const [addingProvider, setAddingProvider] = useState(false);
   const [newProviderName, setNewProviderName] = useState("");
   const [newProviderUrl, setNewProviderUrl] = useState("");
+  const [configuringProvider, setConfiguringProvider] = useState(false);
+  const [, setLiveMode] = useState(false);
+
+  // Fetch real config from gateway on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchModelsConfig() {
+      try {
+        const result = await gatewayRpc<{ raw?: string }>("config.get", {});
+        if (cancelled || !result.ok || !result.payload?.raw) {
+          return;
+        }
+        const config = JSON.parse(result.payload.raw);
+        const configProviders = config?.models?.providers;
+        if (configProviders && Object.keys(configProviders).length > 0) {
+          const realProviders: Provider[] = Object.entries(configProviders).map(
+            ([name, cfg]: [string, unknown]) => {
+              const c = cfg as Record<string, unknown>;
+              return {
+                name: name.charAt(0).toUpperCase() + name.slice(1),
+                url:
+                  (c.baseUrl as string) ?? (c.type === "ollama" ? "http://localhost:11434" : "API"),
+                status: "connected" as ProviderStatus,
+                version: null,
+                modelCount: Array.isArray(c.models) ? c.models.length : 0,
+              };
+            },
+          );
+          setProviders(realProviders);
+          setLiveMode(true);
+        }
+      } catch {
+        // Gateway offline — keep demo data
+      }
+    }
+    void fetchModelsConfig();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Derive default model id
   const defaultModelId = models.find((m) => m.isDefault)?.id ?? models[0]?.id ?? "";
@@ -446,16 +578,32 @@ export function ModelsPage() {
             <Cpu className="w-4 h-4 text-orange-400" />
             {t("providerStatus", "Provider Status")}
           </h2>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs"
-            onClick={() => setAddingProvider(true)}
-          >
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            {t("addProvider", "Add Provider")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => setConfiguringProvider(true)}
+            >
+              <Key className="w-3.5 h-3.5 mr-1" />
+              {t("configureProvider", "Configure Provider")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => setAddingProvider(true)}
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              {t("addProvider", "Add Provider")}
+            </Button>
+          </div>
         </div>
+
+        {/* Configure cloud/local provider */}
+        {configuringProvider && (
+          <ConfigureProviderForm onDone={() => setConfiguringProvider(false)} />
+        )}
 
         {/* Add provider form */}
         {addingProvider && (

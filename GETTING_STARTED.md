@@ -1,6 +1,6 @@
 # Tigerpaw - Getting Started Guide
 
-Tigerpaw is everything [OpenClaw](https://github.com/nicepkg/openclaw) does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Whether you're building AI-powered messaging bots, trading bots, or both, Tigerpaw does it all from one install.
+Tigerpaw is everything [OpenClaw](https://github.com/nicepkg/openclaw) does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder, MCP protocol support, local LLM integration, and i18n in 10 languages. Whether you're building AI-powered messaging bots, trading bots, or both, Tigerpaw does it all from one install.
 
 ---
 
@@ -15,6 +15,12 @@ Tigerpaw is everything [OpenClaw](https://github.com/nicepkg/openclaw) does -- 4
 - Docker multi-arch images (amd64 + arm64) with rootless Podman/systemd support
 - Plugin permission manifests with security audit via `tigerpaw doctor`
 - Local-first by default -- gateway binds to localhost, data stays on your machine
+- AI assistant with dual personas (Kiera/Jarvis) -- tasks, reminders, daily briefings, and knowledge retrieval
+- Message Hub -- unified inbox across all messaging channels with search, filtering, and date grouping
+- Visual workflow builder for event-driven automation (trading events, cron schedules, message routing)
+- MCP protocol support -- connect external tool servers and expose Tigerpaw tools to other AI agents
+- Local LLM support (Ollama, LM Studio) with auto-detection and cloud fallback
+- i18n in 10 languages (English, Spanish, French, German, Japanese, Korean, Chinese Simplified + Traditional, Portuguese, Arabic)
 
 **For traders:**
 
@@ -113,7 +119,48 @@ tigerpaw doctor                     # Verify everything works
 
 The **Control UI** (React dashboard) is served at `http://localhost:18789/`.
 
-### 2. Add a Messaging Channel
+### 2. Configure Your AI Provider
+
+Tigerpaw needs an AI model to power messaging bots and the assistant. On first run, `tigerpaw start` prompts you to choose a provider. You can also configure it manually:
+
+**Option A: Anthropic (Claude) — recommended**
+
+```bash
+# Set via environment variable
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Or write to config
+tigerpaw config set models.providers.anthropic.type anthropic-messages
+tigerpaw config set models.providers.anthropic.apiKey "sk-ant-..."
+```
+
+**Option B: OpenAI (GPT)**
+
+```bash
+export OPENAI_API_KEY="sk-..."
+
+# Or write to config
+tigerpaw config set models.providers.openai.type openai-completions
+tigerpaw config set models.providers.openai.apiKey "sk-..."
+```
+
+**Option C: Ollama (local — no API key needed)**
+
+```bash
+# 1. Install and start Ollama
+ollama serve
+
+# 2. Pull a model
+ollama pull llama3.2
+
+# 3. Configure Tigerpaw to use it
+tigerpaw config set models.providers.ollama.type ollama
+tigerpaw config set models.providers.ollama.baseUrl "http://localhost:11434"
+```
+
+You can also configure providers from the dashboard: navigate to **Models** in the sidebar and click **Configure Provider**.
+
+### 3. Add a Messaging Channel
 
 ```bash
 # Add a channel directly
@@ -121,7 +168,7 @@ tigerpaw channels add --channel telegram --token "123456:ABC-your-bot-token"
 tigerpaw channels add --channel discord --bot-token "..." --app-token "..."
 ```
 
-### 3. Check Status
+### 4. Check Status
 
 ```bash
 tigerpaw status
@@ -514,6 +561,75 @@ The auto-open is platform-aware:
 - **Linux**: Uses `xdg-open` (requires X11/Wayland)
 - **WSL**: Uses `wslview`
 - **SSH sessions**: Skipped automatically (prints URL instead)
+
+### Using the Assistant
+
+The **Assistant** page is accessible from the sidebar under Overview. It provides a personal AI assistant powered by your configured LLM provider.
+
+**Personas**: Tigerpaw ships with two assistant personas:
+
+- **Kiera** (default) -- female persona
+- **Jarvis** -- male persona
+
+Switch personas in your config: set `assistant.persona` to `"kiera"` or `"jarvis"`.
+
+**Capabilities**:
+
+- **Tasks** -- Create, list, and complete tasks with priority levels (urgent, high, medium, low)
+- **Reminders** -- Set time-based reminders that trigger notifications
+- **Daily Briefing** -- Generate an AI-powered summary of your portfolio, recent trades, and channel activity
+- **Knowledge Retrieval** -- Search your assistant's memory for past conversations and context
+
+The assistant connects directly to the gateway agent runtime -- all tool calls are real, not demo data.
+
+### Workflows
+
+The **Workflows** page lets you build event-driven automations with a visual drag-and-drop editor.
+
+**Getting started**:
+
+1. Navigate to **Workflows** in the sidebar
+2. Choose a template or create from scratch:
+   - **Trading Alert** -- Send Discord alerts when trades are denied
+   - **Message Router** -- Route urgent messages from any channel to Slack
+   - **Daily Digest** -- Generate an LLM summary and send via Telegram at a scheduled time
+3. Click a workflow to open the visual editor
+
+**Node types**:
+
+- **Triggers** -- Message received, cron schedule, trading event, webhook, manual
+- **Conditions** -- Keyword match, sender filter, time window, channel filter
+- **Actions** -- Send message, invoke tool, call webhook, run LLM task
+- **Transforms** -- Format data, extract fields, aggregate
+
+### MCP Integration
+
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io) lets AI agents discover and use tools from external servers.
+
+**Connecting to external MCP servers**:
+
+1. Navigate to **MCP** in the sidebar
+2. Click "Add Server" and choose a transport:
+   - **stdio** -- Run a local command (e.g., `npx @modelcontextprotocol/server-github`)
+   - **SSE** -- Connect to a remote server via HTTP Server-Sent Events
+3. Once connected, the server's tools appear in the tool list and are available to your AI agent
+
+**Exposing Tigerpaw as an MCP server**: Toggle "Expose as MCP Server" to let external AI agents (Claude Desktop, Cursor, etc.) discover and use Tigerpaw's tools -- including trading commands, channel messaging, and workflow triggers.
+
+### AI Models
+
+The **Models** page manages your LLM providers and local model installations.
+
+**Provider auto-detection**: Tigerpaw automatically detects running Ollama and LM Studio instances on your machine.
+
+**Model management**:
+
+- View installed models with metadata (size, parameters, quantization)
+- Pull new models from Ollama's registry
+- Set a default model for the AI agent
+- Monitor provider health and connection status
+
+**Cloud fallback**: When local models are unavailable, Tigerpaw falls back to configured cloud providers (Anthropic, OpenAI). Configure providers during `tigerpaw start` or in the Models page.
 
 ---
 

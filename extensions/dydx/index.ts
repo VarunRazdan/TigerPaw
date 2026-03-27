@@ -598,6 +598,146 @@ const dydxPlugin = {
       { name: "dydx_get_order_history" },
     );
 
+    // -- Tool 8: dydx_close_position (POLICY-GATED) ----------------------------
+    api.registerTool(
+      {
+        name: "dydx_close_position",
+        label: "Close Position",
+        description:
+          "Close an open perpetual position on dYdX v4 by placing an opposite-side market order. " +
+          "If quantity is omitted, the entire position is closed. Fetches current position to determine side (LONG/SHORT) and places the opposite. " +
+          "POLICY-GATED: TradingPolicyEngine evaluates kill switch, risk limits, and approval mode before execution. " +
+          "NOTE: This is a stub — real order submission requires Cosmos SDK transaction signing.",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: {
+              type: "string",
+              description: "Perpetual market ticker (e.g. BTC-USD, ETH-USD)",
+            },
+            quantity: {
+              type: "number",
+              description: "Size to close in base asset units (omit to close entire position)",
+            },
+          },
+          required: ["symbol"],
+        },
+        async execute(_id: string, params: unknown) {
+          const { symbol, quantity } = params as { symbol: string; quantity?: number };
+          const t = symbol.toUpperCase();
+
+          // Fetch current position to determine side and size.
+          let position: DydxPosition | undefined;
+          try {
+            const addr = getSubaccountAddress(cfg);
+            const data = await indexerReq<{ subaccount: DydxSubaccount }>(
+              cfg,
+              `/v4/addresses/${addr}/subaccountNumber/0`,
+            );
+            position = data.subaccount.openPerpetualPositions?.[t];
+          } catch (err) {
+            return txtD(`Failed to fetch positions: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+
+          if (!position) {
+            return txtD(`No open position found for ${t}.`, {
+              error: "no_position",
+              symbol: t,
+            });
+          }
+
+          const posSize = Math.abs(parseFloat(position.size ?? "0"));
+          const posSide = position.side?.toUpperCase(); // "LONG" or "SHORT"
+          const closeSize = quantity ?? posSize;
+
+          if (quantity !== undefined && quantity > posSize) {
+            return txtD(
+              `Requested quantity (${quantity}) exceeds position size (${posSize}) for ${t}.`,
+              { error: "invalid_quantity", requested: quantity, positionSize: posSize },
+            );
+          }
+
+          // Determine the opposite side for closing.
+          const closeSide: "buy" | "sell" = posSide === "LONG" ? "sell" : "buy";
+
+          // Fetch oracle price for policy evaluation.
+          let currentPrice = parseFloat(position.entryPrice ?? "0");
+          try {
+            const marketData = await indexerReq<{ markets: Record<string, DydxMarket> }>(
+              cfg,
+              "/v4/perpetualMarkets",
+            );
+            const market = marketData.markets[t];
+            if (market) {
+              currentPrice = parseFloat(market.oraclePrice);
+            }
+          } catch {
+            // If fetch fails, use entry price.
+          }
+
+          // Fail-safe: block when policy engine is not configured.
+          if (!policyEngine) {
+            api.logger.error("Trading policy engine not configured — order blocked for safety");
+            return txtD(
+              "Order blocked: trading policy engine not configured. Enable trading in config.",
+              { error: "no_policy_engine" },
+            );
+          }
+
+          // Policy gate: evaluateOrder() before execution.
+          const order = buildTradeOrder({
+            symbol: t,
+            side: closeSide,
+            qty: closeSize,
+            priceUsd: currentPrice,
+            orderType: "market",
+          });
+          const decision = await policyEngine.evaluateOrder(order);
+
+          if (decision.outcome === "denied") {
+            api.logger.warn(`dydx: close position denied by policy engine: ${decision.reason}`);
+            return txtD(`Close position denied: ${decision.reason}`, {
+              error: "policy_denied",
+              reason: decision.reason,
+              failedStep: decision.failedStep,
+            });
+          }
+
+          if (decision.outcome === "pending_confirmation") {
+            api.logger.info(`dydx: close position pending ${decision.approvalMode} approval`);
+            return txtD(
+              `Close position requires ${decision.approvalMode} approval before execution.\n` +
+                `Ticker: ${t} | Position: ${posSide} ${posSize} | Close: ${closeSide.toUpperCase()} ${closeSize}\n` +
+                `Oracle Price: ${$(currentPrice)} | Estimated notional: ${$(closeSize * currentPrice)}`,
+              {
+                status: "pending_confirmation",
+                approvalMode: decision.approvalMode,
+                timeoutMs: decision.timeoutMs,
+              },
+            );
+          }
+
+          // dYdX v4 order placement requires Cosmos SDK transaction signing.
+          api.logger.warn(`dydx: close position not yet implemented (Cosmos SDK signing required)`);
+          return txtD(
+            `dYdX position close is not yet implemented — Cosmos SDK transaction signing is required.\n` +
+              `Read-only tools are available: dydx_get_markets, dydx_get_positions, dydx_get_balances, dydx_get_ticker.\n` +
+              `Ticker: ${t} | Position: ${posSide} ${posSize} | Would close: ${closeSide.toUpperCase()} ${closeSize}`,
+            {
+              error: "not_implemented",
+              stub: true,
+              ticker: t,
+              positionSide: posSide,
+              positionSize: posSize,
+              closeSide,
+              closeSize,
+            },
+          );
+        },
+      },
+      { name: "dydx_close_position" },
+    );
+
     // -- Service: dydx-sync (periodic position sync) ----------------------------
     let syncTimer: ReturnType<typeof setInterval> | null = null;
 

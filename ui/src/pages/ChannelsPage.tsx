@@ -1,8 +1,21 @@
-import { useState } from "react";
+import { Power } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CHANNEL_CONNECT_INFO } from "@/lib/connect-config";
+import { gatewayRpc } from "@/lib/gateway-rpc";
+import { useAppStore } from "@/stores/app-store";
 
 const CHANNELS = [
   { name: "Discord", status: "connected", icon: "discord" },
@@ -31,8 +44,47 @@ const CHANNELS = [
 export function ChannelsPage() {
   const { t } = useTranslation("channels");
   const { t: tc } = useTranslation("common");
+  const liveStatuses = useAppStore((s) => s.channelStatuses);
+  const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({});
   const [connectIcon, setConnectIcon] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const connectInfo = connectIcon ? CHANNEL_CONNECT_INFO[connectIcon] : null;
+
+  // Derive channels from live data + local disconnect overrides + demo fallback
+  const channels = useMemo(() => {
+    const liveMap = liveStatuses ? new Map(liveStatuses.map((s) => [s.id, s])) : null;
+    return CHANNELS.map((ch) => {
+      if (localOverrides[ch.icon]) {
+        return { ...ch, status: localOverrides[ch.icon] };
+      }
+      if (!liveMap) {
+        return ch;
+      }
+      const live = liveMap.get(ch.icon);
+      if (!live) {
+        return ch;
+      }
+      return {
+        ...ch,
+        status: live.connected ? "connected" : live.enabled ? "disconnected" : "not configured",
+      };
+    });
+  }, [liveStatuses, localOverrides]);
+
+  const disconnectingChannel = disconnecting
+    ? channels.find((ch) => ch.name === disconnecting)
+    : null;
+
+  async function handleDisconnectConfirm() {
+    if (!disconnectingChannel) {
+      return;
+    }
+    await gatewayRpc("config.patch", {
+      patch: { channels: { [disconnectingChannel.icon]: { enabled: false } } },
+    });
+    setLocalOverrides((prev) => ({ ...prev, [disconnectingChannel.icon]: "disconnected" }));
+    setDisconnecting(null);
+  }
 
   return (
     <div className="space-y-6">
@@ -43,7 +95,7 @@ export function ChannelsPage() {
 
       <TooltipProvider>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CHANNELS.map((channel) => (
+          {channels.map((channel) => (
             <Tooltip key={channel.name}>
               <TooltipTrigger asChild>
                 <div
@@ -52,7 +104,7 @@ export function ChannelsPage() {
                       setConnectIcon(channel.icon);
                     }
                   }}
-                  className="rounded-2xl glass-panel-interactive p-4 flex items-center gap-3 cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-300"
+                  className="relative rounded-2xl glass-panel-interactive p-4 flex items-center gap-3 cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <img
                     src={`/icons/messaging-channels/${channel.icon}.svg`}
@@ -76,6 +128,18 @@ export function ChannelsPage() {
                       channel.status === "connected" ? "bg-green-500" : "bg-white/[0.1]"
                     }`}
                   />
+                  {channel.status === "connected" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDisconnecting(channel.name);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-white/5 transition-colors duration-200"
+                      aria-label={`Disconnect ${channel.name}`}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -96,6 +160,34 @@ export function ChannelsPage() {
           info={connectInfo}
         />
       )}
+
+      <AlertDialog
+        open={disconnecting !== null}
+        onOpenChange={(open) => !open && setDisconnecting(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("disconnectTitle", {
+                channel: disconnecting,
+                defaultValue: `Disconnect ${disconnecting}?`,
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("disconnectDescription", {
+                defaultValue:
+                  "This will stop all message routing for this channel. You can reconnect later.",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel", { defaultValue: "Cancel" })}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDisconnectConfirm}>
+              {t("confirmDisconnect", { defaultValue: "Confirm" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

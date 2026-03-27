@@ -199,7 +199,7 @@ describe("gatewayRpc", () => {
     expect(req.method).toBe("connect");
     expect(req.params.minProtocol).toBe(3);
     expect(req.params.maxProtocol).toBe(3);
-    expect(req.params.client.id).toBe("openclaw-control-ui");
+    expect(req.params.client.id).toBe("tigerpaw-control-ui");
     expect(req.params.auth).toEqual({ token: "my-token" });
 
     // Complete handshake to settle the promise

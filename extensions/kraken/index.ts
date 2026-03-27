@@ -655,6 +655,192 @@ const krakenPlugin = {
       { name: "kraken_get_order_history" },
     );
 
+    // -- Tool 8: kraken_close_position (POLICY-GATED) ------------------------
+    api.registerTool(
+      {
+        name: "kraken_close_position",
+        label: "Close Position",
+        description:
+          "Close an open position on Kraken by placing a market sell order via the AddOrder endpoint. " +
+          "If quantity is omitted, the entire balance is sold. " +
+          "POLICY-GATED: TradingPolicyEngine evaluates kill switch, risk limits, and approval mode before execution.",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: {
+              type: "string",
+              description: "Trading pair (e.g. XBTUSD, ETHUSD)",
+            },
+            quantity: {
+              type: "number",
+              description: "Volume of base asset to sell (omit to sell entire balance)",
+            },
+          },
+          required: ["symbol"],
+        },
+        async execute(_id: string, params: unknown) {
+          const { symbol, quantity } = params as { symbol: string; quantity?: number };
+          const pair = symbol.toUpperCase();
+
+          // Fetch account balances and open positions to determine position size.
+          let posQty: number;
+          let foundInPositions = false;
+          try {
+            // First check open margin positions.
+            const positions = await privateReq<Record<string, KrakenOpenPosition>>(
+              cfg,
+              "OpenPositions",
+            );
+            const posEntries = Object.values(positions);
+            const matched = posEntries.find((p) => p.pair === pair);
+            if (matched) {
+              posQty = parseFloat(matched.vol ?? "0");
+              foundInPositions = true;
+            } else {
+              // Fall back to spot balances — resolve base asset from pair.
+              const balances = await privateReq<KrakenBalance>(cfg, "Balance");
+              // Try common Kraken base asset prefixes (XXBT, XETH, etc.)
+              const base = pair.replace(/USD$|USDT$|EUR$/, "");
+              const prefixed = `X${base}`;
+              const bal = parseFloat(balances[base] ?? balances[prefixed] ?? "0");
+              if (bal <= 0) {
+                return txtD(`No open position found for ${pair}.`, {
+                  error: "no_position",
+                  symbol: pair,
+                });
+              }
+              posQty = bal;
+            }
+          } catch (err) {
+            return txtD(`Failed to fetch positions: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+
+          const closeQty = quantity ?? posQty;
+
+          if (quantity !== undefined && quantity > posQty) {
+            return txtD(
+              `Requested quantity (${quantity}) exceeds position size (${posQty}) for ${pair}.`,
+              { error: "invalid_quantity", requested: quantity, positionSize: posQty },
+            );
+          }
+
+          // Fetch current price.
+          let currentPrice = 0;
+          try {
+            const tickerResult = await publicReq<Record<string, KrakenTicker>>(
+              `Ticker?pair=${encodeURIComponent(pair)}`,
+            );
+            const key = Object.keys(tickerResult)[0];
+            if (key) {
+              currentPrice = parseFloat(tickerResult[key].b[0]);
+            }
+          } catch {
+            // If ticker fetch fails, proceed with 0.
+          }
+
+          // Fail-safe: block when policy engine is not configured.
+          if (!policyEngine) {
+            api.logger.error("Trading policy engine not configured — order blocked for safety");
+            return txtD(
+              "Order blocked: trading policy engine not configured. Enable trading in config.",
+              { error: "no_policy_engine" },
+            );
+          }
+
+          // Policy gate: evaluateOrder() before execution.
+          const order = buildTradeOrder({
+            symbol: pair,
+            side: "sell",
+            qty: closeQty,
+            priceUsd: currentPrice,
+            orderType: "market",
+          });
+          const decision = await policyEngine.evaluateOrder(order);
+
+          if (decision.outcome === "denied") {
+            api.logger.warn(`kraken: close position denied by policy engine: ${decision.reason}`);
+            return txtD(`Close position denied: ${decision.reason}`, {
+              error: "policy_denied",
+              reason: decision.reason,
+              failedStep: decision.failedStep,
+            });
+          }
+
+          if (decision.outcome === "pending_confirmation") {
+            api.logger.info(`kraken: close position pending ${decision.approvalMode} approval`);
+            return txtD(
+              `Close position requires ${decision.approvalMode} approval before execution.\n` +
+                `Pair: ${pair} | Qty: ${closeQty} of ${posQty} | Price: ${$(currentPrice)}\n` +
+                `Estimated notional: ${$(closeQty * currentPrice)}`,
+              {
+                status: "pending_confirmation",
+                approvalMode: decision.approvalMode,
+                timeoutMs: decision.timeoutMs,
+              },
+            );
+          }
+
+          // Execute close via Kraken AddOrder (market sell).
+          const orderParams: Record<string, string> = {
+            pair,
+            type: "sell",
+            ordertype: "market",
+            volume: String(closeQty),
+          };
+
+          api.logger.info(
+            `kraken: closing ${closeQty} of ${posQty} on ${pair} @ ~${$(currentPrice)}`,
+          );
+          try {
+            const r = await privateReq<KrakenOrderResult>(cfg, "AddOrder", orderParams);
+
+            // Post-trade: update policy state (no dailySpendUsd for sells).
+            await updatePolicyState((state) => ({
+              ...state,
+              dailyTradeCount: state.dailyTradeCount + 1,
+              lastTradeAtMs: Date.now(),
+            }));
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "submitted",
+              actor: "agent",
+              orderSnapshot: buildTradeOrder({
+                symbol: pair,
+                side: "sell",
+                qty: closeQty,
+                priceUsd: currentPrice,
+                orderType: "market",
+              }),
+            });
+
+            const txids = r.txid?.join(", ") ?? "none";
+            const text = [
+              `Position close submitted.`,
+              `TX ID(s): ${txids}`,
+              `Closed: ${closeQty} of ${posQty} on ${pair}`,
+              `Description: ${r.descr.order}`,
+            ].join("\n");
+            return txtD(text, {
+              txid: r.txid,
+              closedQty: closeQty,
+              positionQty: posQty,
+              description: r.descr.order,
+            });
+          } catch (err) {
+            api.logger.warn(`kraken: close position failed: ${errMsg(err)}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "rejected",
+              actor: "system",
+              error: errMsg(err),
+            });
+            return txtD(`Close position failed: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+        },
+      },
+      { name: "kraken_close_position" },
+    );
+
     // -- Service: kraken-sync (periodic balance/position sync) ----------------
     let syncTimer: ReturnType<typeof setInterval> | null = null;
 

@@ -559,6 +559,188 @@ const polymarketPlugin = {
       { name: "polymarket_get_order_history" },
     );
 
+    // -- Tool 7: polymarket_close_position (POLICY-GATED) --------------------
+    api.registerTool(
+      {
+        name: "polymarket_close_position",
+        label: "Close Position",
+        description:
+          "Close an open position on Polymarket by placing a sell order. " +
+          "If quantity is omitted, the entire position is closed. " +
+          "POLICY-GATED: TradingPolicyEngine evaluates kill switch, risk limits, and approval mode before execution.",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: {
+              type: "string",
+              description: "The market ID or asset identifier of the position to close",
+            },
+            quantity: {
+              type: "number",
+              description: "Number of shares to sell (omit to close entire position)",
+            },
+          },
+          required: ["symbol"],
+        },
+        async execute(_toolCallId: string, params: unknown) {
+          const { symbol, quantity } = params as { symbol: string; quantity?: number };
+
+          // Fetch current positions to find the matching one.
+          let positions: ClobPosition[];
+          try {
+            positions = await clobRequest<ClobPosition[]>(cfg, "GET", "/positions");
+          } catch (err) {
+            return {
+              content: [{ type: "text", text: `Failed to fetch positions: ${errMsg(err)}` }],
+              details: { error: errMsg(err) },
+            };
+          }
+
+          const position = (positions ?? []).find((p) => p.market === symbol || p.asset === symbol);
+          if (!position) {
+            return {
+              content: [{ type: "text", text: `No open position found for ${symbol}.` }],
+              details: { error: "no_position", symbol },
+            };
+          }
+
+          const posSize = parseFloat(position.size ?? "0");
+          const currentPrice = parseFloat(position.currentPrice ?? "0");
+          const closeSize = quantity ?? posSize;
+
+          if (quantity !== undefined && quantity > posSize) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Requested quantity (${quantity}) exceeds position size (${posSize}) for ${symbol}.`,
+                },
+              ],
+              details: { error: "invalid_quantity", requested: quantity, positionSize: posSize },
+            };
+          }
+
+          // Fail-safe: block when policy engine is not configured.
+          if (!policyEngine) {
+            api.logger.error("Trading policy engine not configured — order blocked for safety");
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Order blocked: trading policy engine not configured. Enable trading in config.",
+                },
+              ],
+              details: { error: "no_policy_engine" },
+            };
+          }
+
+          // Policy gate: evaluateOrder() before execution.
+          const order = buildTradeOrder({
+            marketId: position.market,
+            side: "sell",
+            size: closeSize,
+            price: currentPrice,
+          });
+          const decision = await policyEngine.evaluateOrder(order);
+
+          if (decision.outcome === "denied") {
+            api.logger.warn(
+              `polymarket: close position denied by policy engine: ${decision.reason}`,
+            );
+            return {
+              content: [{ type: "text", text: `Close position denied: ${decision.reason}` }],
+              details: {
+                error: "policy_denied",
+                reason: decision.reason,
+                failedStep: decision.failedStep,
+              },
+            };
+          }
+
+          if (decision.outcome === "pending_confirmation") {
+            api.logger.info(`polymarket: close position pending ${decision.approvalMode} approval`);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Close position requires ${decision.approvalMode} approval before execution.\nMarket: ${position.market} | Qty: ${closeSize} of ${posSize} | Price: $${currentPrice.toFixed(4)}\nEstimated notional: $${(closeSize * currentPrice).toFixed(2)}`,
+                },
+              ],
+              details: {
+                status: "pending_confirmation",
+                approvalMode: decision.approvalMode,
+                timeoutMs: decision.timeoutMs,
+              },
+            };
+          }
+
+          // Execute close via CLOB sell order.
+          api.logger.info(
+            `polymarket: closing ${closeSize} of ${posSize} shares on ${position.market} @ $${currentPrice.toFixed(4)}`,
+          );
+          try {
+            const result = await clobRequest<ClobOrder>(cfg, "POST", "/order", {
+              market: position.market,
+              side: "SELL",
+              size: String(closeSize),
+              price: String(currentPrice),
+              type: "limit",
+            });
+
+            // Post-trade: update policy state (no dailySpendUsd for sells).
+            await updatePolicyState((state) => ({
+              ...state,
+              dailyTradeCount: state.dailyTradeCount + 1,
+              lastTradeAtMs: Date.now(),
+            }));
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "submitted",
+              actor: "agent",
+              orderSnapshot: buildTradeOrder({
+                marketId: position.market,
+                side: "sell",
+                size: closeSize,
+                price: currentPrice,
+              }),
+            });
+
+            const orderId = result.id ?? randomUUID();
+            const text = [
+              `Position close submitted.`,
+              `Order ID: ${orderId} | Market: ${position.market}`,
+              `Closed: ${closeSize} of ${posSize} shares @ $${currentPrice.toFixed(4)}`,
+              `Status: ${result.status ?? "submitted"}`,
+            ].join("\n");
+            return {
+              content: [{ type: "text", text }],
+              details: {
+                orderId,
+                market: position.market,
+                closedSize: closeSize,
+                positionSize: posSize,
+                price: currentPrice,
+                status: result.status ?? "submitted",
+              },
+            };
+          } catch (err) {
+            api.logger.warn(`polymarket: close position failed: ${errMsg(err)}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "rejected",
+              actor: "system",
+              error: errMsg(err),
+            });
+            return {
+              content: [{ type: "text", text: `Close position failed: ${errMsg(err)}` }],
+              details: { error: errMsg(err) },
+            };
+          }
+        },
+      },
+      { name: "polymarket_close_position" },
+    );
+
     // -- Service: polymarket-sync (periodic position sync) --------------------
     let syncTimer: ReturnType<typeof setInterval> | null = null;
 

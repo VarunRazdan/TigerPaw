@@ -14,7 +14,7 @@ import {
   Plug,
   Cpu,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router-dom";
 import { useGatewayConfig } from "@/hooks/use-gateway-config";
@@ -60,8 +60,8 @@ function useNavGroups(): NavGroup[] {
           end: true,
         },
         {
-          to: "/inbox",
-          label: t("nav.inbox", "Inbox"),
+          to: "/message-hub",
+          label: t("nav.messageHub", "Message Hub"),
           icon: <Inbox className="w-4 h-4" />,
         },
         {
@@ -343,15 +343,15 @@ function MobileNav() {
         <Menu className="w-5 h-5" />
       </button>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-64 p-0">
-          <SheetHeader className="p-4 border-b border-[var(--glass-subtle-hover)]">
+        <SheetContent side="left" className="w-64 p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b border-[var(--glass-subtle-hover)] shrink-0">
             <SheetTitle>
               <span className="text-orange-500">Tiger</span>
               <span className="text-neutral-100">Paw</span>
             </SheetTitle>
             <SheetDescription className="sr-only">{t("nav.menuLabel")}</SheetDescription>
           </SheetHeader>
-          <nav className="sidebar-scroll flex-1 overflow-y-auto py-3 px-2 space-y-4">
+          <nav className="flex-1 min-h-0 overflow-y-auto py-3 px-2 space-y-4">
             {navGroups.map((group) => (
               <div key={group.title}>
                 <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
@@ -446,7 +446,15 @@ export function Layout() {
         {/* Main content */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-[1400px] mx-auto">
-            <Outlet />
+            <Suspense
+              fallback={
+                <div className="flex-1 flex items-center justify-center text-neutral-600">
+                  Loading...
+                </div>
+              }
+            >
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>

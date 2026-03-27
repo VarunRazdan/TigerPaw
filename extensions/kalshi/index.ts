@@ -555,6 +555,174 @@ const kalshiPlugin = {
       { name: "kalshi_get_portfolio" },
     );
 
+    // -- Tool 7: kalshi_close_position (POLICY-GATED) -----------------------
+    api.registerTool(
+      {
+        name: "kalshi_close_position",
+        label: "Close Position",
+        description:
+          "Close an open position on Kalshi by placing a sell order. " +
+          "If quantity is omitted, the entire position is closed. " +
+          "POLICY-GATED: TradingPolicyEngine evaluates kill switch, risk limits, and approval mode before execution.",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: {
+              type: "string",
+              description: "Market ticker to close (e.g. KXBTC-25MAR14-T99999)",
+            },
+            quantity: {
+              type: "number",
+              description: "Number of contracts to sell (omit to close entire position)",
+            },
+          },
+          required: ["symbol"],
+        },
+        async execute(_id: string, params: unknown) {
+          const { symbol, quantity } = params as { symbol: string; quantity?: number };
+          const ticker = symbol.toUpperCase();
+
+          // Fetch current positions to find the matching one.
+          let positions: KalshiPosition[];
+          try {
+            const data = await kalshiReq<{ market_positions: KalshiPosition[] }>(
+              cfg,
+              "GET",
+              "/portfolio/positions",
+              pem,
+            );
+            positions = data.market_positions ?? [];
+          } catch (err) {
+            return txtD(`Failed to fetch positions: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+
+          const position = positions.find((p) => p.ticker === ticker);
+          if (!position) {
+            return txtD(`No open position found for ${ticker}.`, {
+              error: "no_position",
+              symbol: ticker,
+            });
+          }
+
+          const posCount = position.total_traded;
+          const exposureUsd = position.market_exposure / 100;
+          const priceUsd = posCount > 0 ? exposureUsd / posCount : 0.5;
+          const closeCount = quantity ?? posCount;
+
+          if (quantity !== undefined && quantity > posCount) {
+            return txtD(
+              `Requested quantity (${quantity}) exceeds position size (${posCount}) for ${ticker}.`,
+              { error: "invalid_quantity", requested: quantity, positionSize: posCount },
+            );
+          }
+
+          // Fail-safe: block when policy engine is not configured.
+          if (!policyEngine) {
+            api.logger.error("Trading policy engine not configured — order blocked for safety");
+            return txtD(
+              "Order blocked: trading policy engine not configured. Enable trading in config.",
+              { error: "no_policy_engine" },
+            );
+          }
+
+          // Policy gate: evaluateOrder() before execution.
+          const order = buildTradeOrder({
+            ticker,
+            side: "sell",
+            count: closeCount,
+            priceUsd,
+          });
+          const decision = await policyEngine.evaluateOrder(order);
+
+          if (decision.outcome === "denied") {
+            api.logger.warn(`kalshi: close position denied by policy engine: ${decision.reason}`);
+            return txtD(`Close position denied: ${decision.reason}`, {
+              error: "policy_denied",
+              reason: decision.reason,
+              failedStep: decision.failedStep,
+            });
+          }
+
+          if (decision.outcome === "pending_confirmation") {
+            api.logger.info(`kalshi: close position pending ${decision.approvalMode} approval`);
+            return txtD(
+              `Close position requires ${decision.approvalMode} approval before execution.\n` +
+                `Ticker: ${ticker} | Qty: ${closeCount} of ${posCount}\n` +
+                `Estimated exposure: ${fmtDollar(position.market_exposure)}`,
+              {
+                status: "pending_confirmation",
+                approvalMode: decision.approvalMode,
+                timeoutMs: decision.timeoutMs,
+              },
+            );
+          }
+
+          // Execute close via Kalshi sell order.
+          const orderBody: Record<string, unknown> = {
+            ticker,
+            side: "yes",
+            count: closeCount,
+            type: "market",
+            action: "sell",
+          };
+
+          api.logger.info(`kalshi: closing ${closeCount} of ${posCount} contracts on ${ticker}`);
+          try {
+            const result = await kalshiReq<{ order: KalshiOrder }>(
+              cfg,
+              "POST",
+              "/portfolio/orders",
+              pem,
+              orderBody,
+            );
+            const o = result.order;
+
+            // Post-trade: update policy state (no dailySpendUsd for sells).
+            await updatePolicyState((state) => ({
+              ...state,
+              dailyTradeCount: state.dailyTradeCount + 1,
+              lastTradeAtMs: Date.now(),
+            }));
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "submitted",
+              actor: "agent",
+              orderSnapshot: buildTradeOrder({
+                ticker,
+                side: "sell",
+                count: closeCount,
+                priceUsd,
+              }),
+            });
+
+            const text = [
+              "Position close submitted.",
+              `Order ID: ${o.order_id} | Ticker: ${o.ticker}`,
+              `Closed: ${closeCount} of ${posCount} contracts`,
+              `Status: ${o.status} | Created: ${o.created_time}`,
+            ].join("\n");
+            return txtD(text, {
+              orderId: o.order_id,
+              ticker: o.ticker,
+              closedCount: closeCount,
+              positionCount: posCount,
+              status: o.status,
+            });
+          } catch (err) {
+            api.logger.warn(`kalshi: close position failed: ${errMsg(err)}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "rejected",
+              actor: "system",
+              error: errMsg(err),
+            });
+            return txtD(`Close position failed: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+        },
+      },
+      { name: "kalshi_close_position" },
+    );
+
     // -- Service: kalshi-sync (periodic position sync) -----------------------
     let syncTimer: ReturnType<typeof setInterval> | null = null;
 

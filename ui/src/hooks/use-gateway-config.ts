@@ -1,15 +1,16 @@
 import { useEffect } from "react";
 import { gatewayRpc } from "@/lib/gateway-rpc";
-import { useAppStore } from "@/stores/app-store";
+import { useAppStore, type ChannelStatus } from "@/stores/app-store";
 
 /**
- * Fetches gateway config on mount and extracts `trading.enabled`.
+ * Fetches gateway config on mount and extracts `trading.enabled` + channel statuses.
  * If the gateway is unreachable (demo/dev mode), keeps defaults (trading enabled).
  * Call this once in Layout so config loads on app startup.
  */
 export function useGatewayConfig(): void {
   const setTradingEnabled = useAppStore((s) => s.setTradingEnabled);
   const setConfigLoaded = useAppStore((s) => s.setConfigLoaded);
+  const setChannelStatuses = useAppStore((s) => s.setChannelStatuses);
   const configLoaded = useAppStore((s) => s.configLoaded);
 
   useEffect(() => {
@@ -21,7 +22,10 @@ export function useGatewayConfig(): void {
 
     async function fetchConfig() {
       try {
-        const result = await gatewayRpc<{ raw?: string }>("config.get", {});
+        const result = await gatewayRpc<{ raw?: string; channelStatus?: ChannelStatus[] }>(
+          "config.get",
+          {},
+        );
         if (cancelled) {
           return;
         }
@@ -34,6 +38,11 @@ export function useGatewayConfig(): void {
           } catch {
             // Parse failed — keep defaults
           }
+        }
+
+        // Extract channel statuses if the gateway provides them
+        if (result.ok && result.payload?.channelStatus) {
+          setChannelStatuses(result.payload.channelStatus);
         }
       } catch {
         // Gateway unreachable — keep defaults (demo mode)
@@ -49,5 +58,5 @@ export function useGatewayConfig(): void {
     return () => {
       cancelled = true;
     };
-  }, [configLoaded, setTradingEnabled, setConfigLoaded]);
+  }, [configLoaded, setTradingEnabled, setConfigLoaded, setChannelStatuses]);
 }

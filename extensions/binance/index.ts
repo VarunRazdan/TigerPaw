@@ -781,6 +781,192 @@ const binancePlugin = {
       { name: "binance_get_order_history" },
     );
 
+    // -- Tool 9: binance_close_position (POLICY-GATED) -----------------------
+    api.registerTool(
+      {
+        name: "binance_close_position",
+        label: "Close Position",
+        description:
+          "Close an open position on Binance by placing a market sell order. " +
+          "If quantity is omitted, the entire available balance is sold. " +
+          "POLICY-GATED: TradingPolicyEngine evaluates kill switch, risk limits, and approval mode before execution.",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: {
+              type: "string",
+              description:
+                "Trading pair symbol (e.g. BTCUSDT). The base asset balance will be sold.",
+            },
+            quantity: {
+              type: "number",
+              description: "Amount of the base asset to sell (omit to sell entire balance)",
+            },
+          },
+          required: ["symbol"],
+        },
+        async execute(_id: string, params: unknown) {
+          const { symbol, quantity } = params as { symbol: string; quantity?: number };
+          const sym = symbol.toUpperCase();
+
+          // We need to figure out the base asset from the symbol.
+          // Fetch exchange info to determine base asset, then check balance.
+          let baseAsset: string;
+          try {
+            const info = await publicReq<ExchangeInfo>(cfg, "/api/v3/exchangeInfo");
+            const pair = info.symbols.find((s) => s.symbol === sym);
+            if (!pair) return txtD(`Symbol ${sym} not found.`, { error: "not_found" });
+            baseAsset = pair.baseAsset;
+          } catch (err) {
+            return txtD(`Failed to resolve symbol ${sym}: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+
+          // Fetch account balance for the base asset.
+          let posQty: number;
+          try {
+            const account = await signedReq<AccountInfo>(cfg, "GET", "/api/v3/account");
+            const balance = account.balances.find((b) => b.asset === baseAsset);
+            if (!balance) {
+              return txtD(`No open position found for ${baseAsset}.`, {
+                error: "no_position",
+                symbol: sym,
+              });
+            }
+            posQty = parseFloat(balance.free);
+            if (posQty <= 0) {
+              return txtD(`No open position found for ${baseAsset}.`, {
+                error: "no_position",
+                symbol: sym,
+              });
+            }
+          } catch (err) {
+            return txtD(`Failed to fetch balances: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+
+          const closeQty = quantity ?? posQty;
+
+          if (quantity !== undefined && quantity > posQty) {
+            return txtD(
+              `Requested quantity (${quantity}) exceeds available balance (${posQty}) for ${baseAsset}.`,
+              { error: "invalid_quantity", requested: quantity, positionSize: posQty },
+            );
+          }
+
+          // Fetch current price.
+          let currentPrice = 0;
+          try {
+            const ticker = await publicReq<TickerPrice>(cfg, "/api/v3/ticker/price", {
+              symbol: sym,
+            });
+            currentPrice = parseFloat(ticker.price);
+          } catch {
+            // If price fetch fails, proceed with 0.
+          }
+
+          // Fail-safe: block when policy engine is not configured.
+          if (!policyEngine) {
+            api.logger.error("Trading policy engine not configured — order blocked for safety");
+            return txtD(
+              "Order blocked: trading policy engine not configured. Enable trading in config.",
+              { error: "no_policy_engine" },
+            );
+          }
+
+          // Policy gate: evaluateOrder() before execution.
+          const order = buildTradeOrder({
+            symbol: sym,
+            side: "sell",
+            qty: closeQty,
+            priceUsd: currentPrice,
+            orderType: "market",
+          });
+          const decision = await policyEngine.evaluateOrder(order);
+
+          if (decision.outcome === "denied") {
+            api.logger.warn(`binance: close position denied by policy engine: ${decision.reason}`);
+            return txtD(`Close position denied: ${decision.reason}`, {
+              error: "policy_denied",
+              reason: decision.reason,
+              failedStep: decision.failedStep,
+            });
+          }
+
+          if (decision.outcome === "pending_confirmation") {
+            api.logger.info(`binance: close position pending ${decision.approvalMode} approval`);
+            return txtD(
+              `Close position requires ${decision.approvalMode} approval before execution.\n` +
+                `Symbol: ${sym} | Qty: ${closeQty} of ${posQty} | Price: ${$(currentPrice)}\n` +
+                `Estimated notional: ${$(closeQty * currentPrice)}`,
+              {
+                status: "pending_confirmation",
+                approvalMode: decision.approvalMode,
+                timeoutMs: decision.timeoutMs,
+              },
+            );
+          }
+
+          // Execute close via Binance market sell.
+          const orderParams: Record<string, string> = {
+            symbol: sym,
+            side: "SELL",
+            type: "MARKET",
+            quantity: String(closeQty),
+          };
+
+          api.logger.info(
+            `binance: closing ${closeQty} of ${posQty} ${baseAsset} on ${sym} @ ~${$(currentPrice)}`,
+          );
+          try {
+            const r = await signedReq<Order>(cfg, "POST", "/api/v3/order", orderParams);
+
+            // Post-trade: update policy state (no dailySpendUsd for sells).
+            await updatePolicyState((state) => ({
+              ...state,
+              dailyTradeCount: state.dailyTradeCount + 1,
+              lastTradeAtMs: Date.now(),
+            }));
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "submitted",
+              actor: "agent",
+              orderSnapshot: buildTradeOrder({
+                symbol: sym,
+                side: "sell",
+                qty: closeQty,
+                priceUsd: currentPrice,
+                orderType: "market",
+              }),
+            });
+
+            const text = [
+              `Position close submitted.`,
+              `Order ID: ${r.orderId} | Symbol: ${r.symbol}`,
+              `Closed: ${closeQty} of ${posQty} ${baseAsset} | Type: MARKET SELL`,
+              `Status: ${r.status}`,
+            ].join("\n");
+            return txtD(text, {
+              orderId: r.orderId,
+              symbol: r.symbol,
+              closedQty: closeQty,
+              positionQty: posQty,
+              price: currentPrice,
+              status: r.status,
+            });
+          } catch (err) {
+            api.logger.warn(`binance: close position failed: ${errMsg(err)}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "rejected",
+              actor: "system",
+              error: errMsg(err),
+            });
+            return txtD(`Close position failed: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+        },
+      },
+      { name: "binance_close_position" },
+    );
+
     // -- Service: binance-sync (periodic balance sync + risk checks) ----------
     let syncTimer: ReturnType<typeof setInterval> | null = null;
 

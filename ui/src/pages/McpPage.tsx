@@ -178,7 +178,8 @@ function ServerCard({
   expanded: boolean;
   onToggle: () => void;
   onTest: () => void;
-  t: (key: string, fallback?: string) => string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
 }) {
   const colors = statusColor(server.status);
   const tools = DEMO_SERVER_TOOLS[server.id] ?? [];
@@ -294,7 +295,8 @@ function AddServerDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  t: (key: string, fallback?: string) => string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
 }) {
   const [name, setName] = useState("");
   const [transport, setTransport] = useState<TransportType>("stdio");

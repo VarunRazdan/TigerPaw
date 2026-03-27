@@ -16,6 +16,74 @@ const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 
 /**
+ * Prompt the user to choose an AI provider on first run.
+ * Writes the selected provider into config.models.providers.
+ */
+async function promptLlmProvider(): Promise<void> {
+  const { select, text, password, isCancel } = await import("@clack/prompts");
+
+  const provider = await select({
+    message: "Which AI provider will you use?",
+    options: [
+      { value: "anthropic", label: "Anthropic (Claude)", hint: "recommended" },
+      { value: "openai", label: "OpenAI (GPT)" },
+      { value: "ollama", label: "Ollama (local)", hint: "no API key needed" },
+      { value: "skip", label: "I'll configure later" },
+    ],
+  });
+
+  if (isCancel(provider) || provider === "skip") {
+    return;
+  }
+
+  let cfg: OpenClawConfig = {};
+  try {
+    cfg = JSON5.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
+  } catch {
+    // start fresh
+  }
+
+  if (provider === "ollama") {
+    const baseUrl = await text({
+      message: "Ollama base URL:",
+      placeholder: "http://localhost:11434",
+      defaultValue: "http://localhost:11434",
+    });
+    if (isCancel(baseUrl)) {
+      return;
+    }
+    cfg.models = {
+      ...cfg.models,
+      providers: {
+        ...cfg.models?.providers,
+        ollama: { type: "ollama", baseUrl: baseUrl || "http://localhost:11434" },
+      },
+    };
+  } else {
+    const envHint = provider === "anthropic" ? "ANTHROPIC_API_KEY" : "OPENAI_API_KEY";
+    const apiKey = await password({
+      message: `Enter your ${provider === "anthropic" ? "Anthropic" : "OpenAI"} API key:`,
+      mask: "*",
+    });
+    if (isCancel(apiKey) || !apiKey) {
+      console.log(dim(`  Tip: you can also set the ${envHint} environment variable.`));
+      return;
+    }
+    const providerType = provider === "anthropic" ? "anthropic-messages" : "openai-completions";
+    cfg.models = {
+      ...cfg.models,
+      providers: {
+        ...cfg.models?.providers,
+        [provider as string]: { type: providerType, apiKey: apiKey },
+      },
+    };
+  }
+
+  await writeConfigFile(cfg);
+  console.log(`  ${green("✓")} AI provider configured: ${bold(provider as string)}`);
+}
+
+/**
  * Prompt the user to choose how they want to access the dashboard.
  * Only shown on first run with an interactive TTY.
  */
@@ -91,12 +159,29 @@ export async function startCommand(opts: StartOptions = {}) {
     await setupCommand(undefined, defaultRuntime);
     console.log(`  ${green("✓")} Config ready ${dim(`(${CONFIG_PATH})`)}`);
 
-    // First-run only: ask how they want to access the dashboard
+    // First-run only: interactive setup prompts
     if (process.stdin.isTTY) {
       try {
         await promptRemoteAccess();
       } catch {
         // Non-fatal — use defaults if prompt fails
+      }
+
+      // Prompt for AI provider if none configured yet
+      try {
+        let existingCfg: OpenClawConfig = {};
+        try {
+          existingCfg = JSON5.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
+        } catch {
+          // ignore
+        }
+        const hasProviders =
+          existingCfg.models?.providers && Object.keys(existingCfg.models.providers).length > 0;
+        if (!hasProviders) {
+          await promptLlmProvider();
+        }
+      } catch {
+        // Non-fatal — user can configure later via dashboard
       }
     }
   }

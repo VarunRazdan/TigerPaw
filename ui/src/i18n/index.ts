@@ -7,8 +7,8 @@ import en_common from "./locales/en/common.json";
 import en_config from "./locales/en/config.json";
 import en_connect from "./locales/en/connect.json";
 import en_dashboard from "./locales/en/dashboard.json";
-import en_inbox from "./locales/en/inbox.json";
 import en_mcp from "./locales/en/mcp.json";
+import en_messageHub from "./locales/en/messageHub.json";
 import en_models from "./locales/en/models.json";
 import en_notifications from "./locales/en/notifications.json";
 import en_platforms from "./locales/en/platforms.json";
@@ -44,7 +44,7 @@ const NAMESPACES = [
   "settings",
   "platforms",
   "assistant",
-  "inbox",
+  "messageHub",
   "workflows",
   "mcp",
   "models",
@@ -101,7 +101,7 @@ void i18n
         settings: en_settings,
         platforms: en_platforms,
         assistant: en_assistant,
-        inbox: en_inbox,
+        messageHub: en_messageHub,
         workflows: en_workflows,
         mcp: en_mcp,
         models: en_models,

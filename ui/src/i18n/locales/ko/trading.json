@@ -122,5 +122,13 @@
   "chart.range1W": "1주",
   "chart.range1M": "1개월",
   "chart.range6M": "6개월",
-  "chart.rangeCustom": "사용자 지정"
+  "chart.rangeCustom": "사용자 지정",
+  "closePosition": "포지션 청산",
+  "closePositionTitle": "포지션을 청산하시겠습니까?",
+  "closePositionDesc": "{{platform}}에서 {{symbol}} {{qty}}개를 시장가로 청산하시겠습니까?",
+  "closingPosition": "청산 중...",
+  "positionClosed": "포지션 청산 완료",
+  "closePositionDenied": "청산 거부: {{reason}}",
+  "closePositionError": "청산 실패: {{message}}",
+  "tradingHaltedCloseDisabled": "킬 스위치 활성화 (하드 모드)"
 }

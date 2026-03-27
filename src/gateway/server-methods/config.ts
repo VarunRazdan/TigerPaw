@@ -283,7 +283,25 @@ export const configHandlers: GatewayRequestHandlers = {
     }
     const snapshot = await readConfigFileSnapshot();
     const schema = loadSchemaWithPlugins();
-    respond(true, redactConfigSnapshot(snapshot, schema.uiHints), undefined);
+    const redacted = redactConfigSnapshot(snapshot, schema.uiHints);
+
+    // Build channel status from installed plugins + config state
+    const channelPlugins = listChannelPlugins();
+    const channelStatus = channelPlugins.map((entry) => {
+      const channelCfg = snapshot.config?.channels?.[entry.id] as
+        | Record<string, unknown>
+        | undefined;
+      const hasConfig = channelCfg !== undefined && Object.keys(channelCfg).length > 0;
+      const enabled = hasConfig && channelCfg?.enabled !== false;
+      return {
+        id: entry.id,
+        label: entry.meta.label,
+        enabled,
+        connected: enabled,
+      };
+    });
+
+    respond(true, { ...redacted, channelStatus }, undefined);
   },
   "config.schema": ({ params, respond }) => {
     if (!assertValidParams(params, validateConfigSchemaParams, "config.schema", respond)) {

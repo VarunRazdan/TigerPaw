@@ -6,6 +6,7 @@ import { PlatformApiInfo } from "@/components/PlatformApiInfo";
 import { PositionsPanel } from "@/components/PositionsPanel";
 import { RiskOverviewPanel } from "@/components/RiskOverviewPanel";
 import { TradeHistoryTable } from "@/components/TradeHistoryTable";
+import { useTradingData } from "@/hooks/use-trading-data";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
@@ -110,10 +111,39 @@ function useDemoData() {
   }, []);
 }
 
+function DataModeSelector() {
+  const { t } = useTranslation("trading");
+  const demoMode = useTradingStore((s) => s.demoMode);
+  const setDemoMode = useTradingStore((s) => s.setDemoMode);
+
+  return (
+    <div className="flex items-center gap-1 rounded-full border border-[var(--glass-border)] bg-[var(--glass-subtle)] p-0.5">
+      <button
+        onClick={() => setDemoMode(true)}
+        className={cn(
+          "px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer",
+          demoMode ? "bg-amber-600 text-white" : "text-neutral-500 hover:text-neutral-300",
+        )}
+      >
+        {t("demoData", "Demo")}
+      </button>
+      <button
+        onClick={() => setDemoMode(false)}
+        className={cn(
+          "px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer",
+          !demoMode ? "bg-green-600 text-white" : "text-neutral-500 hover:text-neutral-300",
+        )}
+      >
+        {t("liveData", "Live")}
+      </button>
+    </div>
+  );
+}
+
 export function TradingPage() {
   const { t } = useTranslation("trading");
-  const { t: tc } = useTranslation("common");
   useDemoData();
+  useTradingData();
 
   const {
     dailyPnlUsd,
@@ -123,7 +153,6 @@ export function TradingPage() {
     tier,
     approvalMode,
     platforms,
-    demoMode,
   } = useTradingStore();
 
   const lossPercent =
@@ -149,15 +178,7 @@ export function TradingPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {demoMode && (
-            <NavLink
-              to="/trading/settings"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-700/50 bg-amber-950/30 text-amber-400 text-xs font-medium hover:bg-amber-950/50 transition-all duration-200 cursor-pointer"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              {tc("demoData")}
-            </NavLink>
-          )}
+          <DataModeSelector />
           <NavLink
             to="/trading/settings"
             className="text-xs text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-md border border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-input-bg)] transition-all duration-300 cursor-pointer"

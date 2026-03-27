@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useInboxStore, type InboxMessage } from "@/stores/inbox-store";
+import { useMessageHubStore, type MessageHubMessage } from "@/stores/message-hub-store";
 
 const CHANNELS = [
   { id: "discord", label: "Discord" },
@@ -58,7 +58,7 @@ function getDateGroup(timestamp: number): "today" | "yesterday" | "earlier" {
   return "earlier";
 }
 
-function TypeBadge({ type }: { type: InboxMessage["type"] }) {
+function TypeBadge({ type }: { type: MessageHubMessage["type"] }) {
   if (type === "message") {
     return null;
   }
@@ -86,7 +86,7 @@ function TypeBadge({ type }: { type: InboxMessage["type"] }) {
   );
 }
 
-function PriorityBadge({ priority }: { priority: InboxMessage["priority"] }) {
+function PriorityBadge({ priority }: { priority: MessageHubMessage["priority"] }) {
   if (priority !== "high") {
     return null;
   }
@@ -101,7 +101,7 @@ function PriorityBadge({ priority }: { priority: InboxMessage["priority"] }) {
   );
 }
 
-function MessageRow({ message, onClick }: { message: InboxMessage; onClick: () => void }) {
+function MessageRow({ message, onClick }: { message: MessageHubMessage; onClick: () => void }) {
   return (
     <div
       onClick={onClick}
@@ -161,8 +161,8 @@ function MessageRow({ message, onClick }: { message: InboxMessage; onClick: () =
   );
 }
 
-export function InboxPage() {
-  const { t } = useTranslation("inbox");
+export function MessageHubPage() {
+  const { t } = useTranslation("messageHub");
   const {
     messages,
     filter,
@@ -173,7 +173,7 @@ export function InboxPage() {
     setSearchQuery,
     unreadCount,
     unreadByChannel,
-  } = useInboxStore();
+  } = useMessageHubStore();
 
   const channelCounts = unreadByChannel();
   const totalUnread = unreadCount();
@@ -199,7 +199,7 @@ export function InboxPage() {
   }, [messages, filter, searchQuery]);
 
   const grouped = useMemo(() => {
-    const groups: Record<"today" | "yesterday" | "earlier", InboxMessage[]> = {
+    const groups: Record<"today" | "yesterday" | "earlier", MessageHubMessage[]> = {
       today: [],
       yesterday: [],
       earlier: [],
@@ -223,7 +223,7 @@ export function InboxPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-100">{t("title", "Inbox")}</h1>
+          <h1 className="text-2xl font-bold text-neutral-100">{t("title", "Message Hub")}</h1>
           <p className="text-sm text-neutral-500 mt-1">
             {t("subtitle", "All your messages in one place")}
           </p>

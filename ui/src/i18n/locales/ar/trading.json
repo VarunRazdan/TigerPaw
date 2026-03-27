@@ -122,5 +122,13 @@
   "chart.range1W": "أسبوع",
   "chart.range1M": "شهر",
   "chart.range6M": "6 أشهر",
-  "chart.rangeCustom": "مخصص"
+  "chart.rangeCustom": "مخصص",
+  "closePosition": "إغلاق المركز",
+  "closePositionTitle": "إغلاق المركز؟",
+  "closePositionDesc": "إغلاق {{qty}} {{symbol}} على {{platform}} بسعر السوق؟",
+  "closingPosition": "جارٍ الإغلاق...",
+  "positionClosed": "تم إغلاق المركز",
+  "closePositionDenied": "تم رفض الإغلاق: {{reason}}",
+  "closePositionError": "فشل الإغلاق: {{message}}",
+  "tradingHaltedCloseDisabled": "مفتاح الإيقاف نشط (الوضع الصارم)"
 }

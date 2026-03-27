@@ -1,11 +1,44 @@
+import { X } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useClosePosition } from "@/hooks/use-close-position";
 import { cn } from "@/lib/utils";
-import { useTradingStore } from "@/stores/trading-store";
+import { useTradingStore, type Position } from "@/stores/trading-store";
+import { ClosePositionDialog } from "./ClosePositionDialog";
 import { StopLossConfig } from "./StopLossConfig";
 
 export function PositionsPanel() {
   const { t } = useTranslation("trading");
-  const { positions, limits } = useTradingStore();
+  const { positions, limits, killSwitchActive, killSwitchMode, setPositions } = useTradingStore();
+  const [closingPosition, setClosingPosition] = useState<Position | null>(null);
+  const { state: closeState, close, reset: resetClose } = useClosePosition();
+
+  const closeDisabled = killSwitchActive && killSwitchMode === "hard";
+
+  function handleCloseClick(pos: Position) {
+    resetClose();
+    setClosingPosition(pos);
+  }
+
+  async function handleConfirm() {
+    if (!closingPosition) {
+      return;
+    }
+    const result = await close({
+      extensionId: closingPosition.extensionId,
+      symbol: closingPosition.symbol,
+      quantity: closingPosition.quantity,
+    });
+    // Optimistically remove position on success
+    if (result.status === "success") {
+      setPositions(
+        positions.filter(
+          (p) =>
+            !(p.extensionId === closingPosition.extensionId && p.symbol === closingPosition.symbol),
+        ),
+      );
+    }
+  }
 
   return (
     <div className="rounded-2xl glass-panel p-4">
@@ -22,7 +55,7 @@ export function PositionsPanel() {
           {positions.map((pos) => (
             <div
               key={`${pos.extensionId}-${pos.symbol}`}
-              className="py-2 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 rounded-md px-2 -mx-2"
+              className="relative py-2 border-b border-[var(--glass-divider)] last:border-0 hover:bg-[var(--glass-divider)] transition-colors duration-200 rounded-md px-2 -mx-2"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -31,21 +64,42 @@ export function PositionsPanel() {
                     {pos.extensionId}
                   </span>
                 </div>
-                <div className="text-right">
-                  <div
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <div
+                      className={cn(
+                        "text-sm font-mono",
+                        pos.unrealizedPnl >= 0 ? "text-green-400" : "text-red-400",
+                      )}
+                    >
+                      {pos.unrealizedPnl >= 0 ? "+" : ""}${pos.unrealizedPnl.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-neutral-500">
+                      {pos.percentOfPortfolio.toFixed(1)}%
+                      {pos.percentOfPortfolio > limits.maxSinglePositionPercent && (
+                        <span className="text-amber-400 ml-1">!</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleCloseClick(pos)}
+                    disabled={closeDisabled}
+                    title={
+                      closeDisabled
+                        ? t("tradingHaltedCloseDisabled", {
+                            defaultValue: "Kill switch active (hard mode)",
+                          })
+                        : t("closePosition", { defaultValue: "Close Position" })
+                    }
                     className={cn(
-                      "text-sm font-mono",
-                      pos.unrealizedPnl >= 0 ? "text-green-400" : "text-red-400",
+                      "p-1 rounded transition-colors duration-200 cursor-pointer",
+                      closeDisabled
+                        ? "text-neutral-700 cursor-not-allowed"
+                        : "text-neutral-500 hover:text-red-400 hover:bg-white/5",
                     )}
                   >
-                    {pos.unrealizedPnl >= 0 ? "+" : ""}${pos.unrealizedPnl.toFixed(2)}
-                  </div>
-                  <div className="text-xs text-neutral-500">
-                    {pos.percentOfPortfolio.toFixed(1)}%
-                    {pos.percentOfPortfolio > limits.maxSinglePositionPercent && (
-                      <span className="text-amber-400 ml-1">!</span>
-                    )}
-                  </div>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
               {/* Inline SL/TP config */}
@@ -78,6 +132,19 @@ export function PositionsPanel() {
           </div>
         </div>
       )}
+
+      {/* Close position confirmation dialog */}
+      <ClosePositionDialog
+        position={closingPosition}
+        open={closingPosition !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setClosingPosition(null);
+          }
+        }}
+        onConfirm={handleConfirm}
+        status={closeState}
+      />
     </div>
   );
 }

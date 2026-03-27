@@ -122,5 +122,13 @@
   "chart.range1W": "1週",
   "chart.range1M": "1月",
   "chart.range6M": "6月",
-  "chart.rangeCustom": "自訂"
+  "chart.rangeCustom": "自訂",
+  "closePosition": "平倉",
+  "closePositionTitle": "確認平倉？",
+  "closePositionDesc": "以市價平倉 {{platform}} 上的 {{qty}} {{symbol}}？",
+  "closingPosition": "平倉中...",
+  "positionClosed": "已平倉",
+  "closePositionDenied": "平倉被拒絕：{{reason}}",
+  "closePositionError": "平倉失敗：{{message}}",
+  "tradingHaltedCloseDisabled": "緊急停止已啟動（硬模式）"
 }

@@ -30,6 +30,7 @@ import {
   type AssistantConfig,
   type AssistantPersona,
 } from "./config.js";
+import { registerBriefingCron } from "./cron-briefing.js";
 
 // -- Constants ---------------------------------------------------------------
 const EXTENSION_ID = "assistant";
@@ -660,5 +661,11 @@ export default {
       },
       { name: "assistant_search_memory" },
     );
+
+    // Register daily briefing cron job
+    const briefingCron = cfg.dailyBriefing?.cronExpression ?? "0 8 * * *";
+    if (cfg.dailyBriefing?.enabled !== false) {
+      registerBriefingCron(api, persona, briefingCron);
+    }
   },
 };

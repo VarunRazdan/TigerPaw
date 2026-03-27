@@ -122,5 +122,13 @@
   "chart.range1W": "1週",
   "chart.range1M": "1月",
   "chart.range6M": "6月",
-  "chart.rangeCustom": "カスタム"
+  "chart.rangeCustom": "カスタム",
+  "closePosition": "ポジション決済",
+  "closePositionTitle": "ポジションを決済しますか？",
+  "closePositionDesc": "{{platform}}の{{symbol}}を{{qty}}件、成行で決済しますか？",
+  "closingPosition": "決済中...",
+  "positionClosed": "ポジション決済完了",
+  "closePositionDenied": "決済拒否：{{reason}}",
+  "closePositionError": "決済失敗：{{message}}",
+  "tradingHaltedCloseDisabled": "キルスイッチ有効（ハードモード）"
 }

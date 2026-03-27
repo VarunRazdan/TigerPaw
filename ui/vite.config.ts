@@ -37,7 +37,29 @@ export default defineConfig(() => {
       outDir: path.resolve(here, "../dist/control-ui"),
       emptyOutDir: true,
       sourcemap: true,
-      chunkSizeWarningLimit: 1024,
+      chunkSizeWarningLimit: 500,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-radix": [
+              "@radix-ui/react-alert-dialog",
+              "@radix-ui/react-dialog",
+              "@radix-ui/react-dropdown-menu",
+              "@radix-ui/react-progress",
+              "@radix-ui/react-select",
+              "@radix-ui/react-separator",
+              "@radix-ui/react-slot",
+              "@radix-ui/react-tabs",
+              "@radix-ui/react-toast",
+              "@radix-ui/react-tooltip",
+            ],
+            "vendor-i18n": ["i18next", "react-i18next", "i18next-browser-languagedetector"],
+            "vendor-xyflow": ["@xyflow/react"],
+            "vendor-charts": ["recharts", "lightweight-charts"],
+          },
+        },
+      },
     },
     server: {
       host: true,

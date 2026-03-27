@@ -5,7 +5,7 @@
 <h1 align="center">Tigerpaw</h1>
 
 <p align="center">
-  Everything OpenClaw does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Local-first by default.
+  Everything OpenClaw does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder, MCP protocol support, local LLM integration, and i18n in 10 languages. Local-first by default.
 </p>
 
 <p align="center">
@@ -75,6 +75,13 @@
 - **Docker Multi-Arch Images** -- amd64 + arm64 with rootless Podman/systemd support
 - **Plugin Permission Manifests** -- Declarative permission model for extensions (network, trading, filesystem, secrets) with security audit via `tigerpaw doctor`
 - **Local-First by Default** -- Gateway binds to localhost; API keys and data never leave your machine
+- **AI Assistant** -- Dual personas (Kiera + Jarvis), task management, reminders, daily briefings, and knowledge retrieval
+- **Message Hub** -- Unified inbox across all messaging channels with search, filtering, and date grouping
+- **Visual Workflow Builder** -- Drag-and-drop event-driven automation (trading events, cron schedules, message routing)
+- **MCP Protocol Support** -- Connect external tool servers (stdio + SSE) and expose Tigerpaw tools to external AI agents
+- **Local LLM Support** -- Ollama and LM Studio with auto-detection, model management, and cloud fallback
+- **i18n in 10 Languages** -- English, Spanish, French, German, Japanese, Korean, Chinese (Simplified + Traditional), Portuguese, Arabic
+- **Code Splitting** -- 21 lazy-loaded routes with 354KB max chunk size for fast initial load
 
 ### For traders
 
@@ -96,6 +103,10 @@
 - **Real-Time Notifications** -- In-app toast alerts for order approvals, denials, kill switch changes, and limit warnings
 - **Trading Bot Commands** -- 8 unified trading tools accessible from any messaging channel -- portfolio summary, P&L, positions, kill switch, risk status
 - **Remote Dashboard Access** -- Access your dashboard from any device via Tailscale (end-to-end encrypted) or Cloudflare Tunnel (free HTTPS)
+- **Per-Platform Risk Overrides** -- Override any limit or approval mode per exchange
+- **Daily P&L Charts + Position Heatmaps** -- Visual portfolio analysis in the dashboard
+- **Security Audit Dashboard** -- Audit findings, credential rotation status, and extension permission checks
+- **Close Position Dialog** -- One-click exit with policy pre-check
 
 ## Why Tigerpaw?
 
@@ -138,9 +149,16 @@ Tigerpaw is a strict superset of [OpenClaw](https://github.com/nicepkg/openclaw)
 - Zero-config `tigerpaw start` experience
 - Docker multi-arch images (amd64 + arm64)
 - Declarative plugin permission manifests with security audit
+- AI assistant with dual personas (Kiera/Jarvis) and daily briefings
+- Message Hub for unified cross-channel messaging
+- Visual workflow builder for event-driven automation
+- MCP protocol support (client + server)
+- Local LLM support with Ollama/LM Studio auto-detection
+- i18n in 10 languages
+- Code splitting with 354KB max chunk for fast load times
 - And for traders: a full policy-gated trading engine across 9 exchanges
 
-If you're choosing between them, Tigerpaw gives you everything OpenClaw has, plus more.
+If you're choosing between them, Tigerpaw gives you everything OpenClaw has, plus significantly more.
 
 ### Who Is This For?
 
@@ -148,6 +166,7 @@ If you're choosing between them, Tigerpaw gives you everything OpenClaw has, plu
 - **Developers** building AI messaging bots or trading agents who need a multi-channel gateway
 - **Quantitative traders** who want local execution with institutional-style risk management
 - **Privacy-conscious users** who don't want their API keys or data on third-party servers
+- **AI agent builders** -- MCP integration lets you wire Tigerpaw into any AI tool ecosystem
 
 > _"The best risk management is the kind you can't turn off."_
 > -- Tigerpaw's kill switch auto-activates when limits are breached. You can't accidentally trade through a drawdown.
@@ -470,11 +489,16 @@ tigerpaw config get               # Show config
 The gateway serves a React dashboard at `http://localhost:18789` with:
 
 - **Dashboard** -- Portfolio overview, daily P&L chart, extension status, and market prices
+- **Message Hub** -- Unified inbox across all channels with search, filtering, and date grouping
+- **Assistant** -- AI assistant with tasks, reminders, daily briefings, and dual personas (Kiera/Jarvis)
 - **Trading Hub** -- Positions, trade history, approval queue, and risk gauges
 - **Platform Pages** -- Dedicated pages for each of the 9 trading platforms with TradingView charts (collapsible), order entry forms, and platform-specific data
-- **Channels** -- Manage 20+ messaging integrations
-- **Settings** -- Risk tier selection, approval mode, per-extension overrides, remote access configuration
+- **Channels** -- Manage 20+ messaging integrations with live status
 - **Security** -- Audit findings, credential rotation status, extension permissions
+- **Workflows** -- Visual drag-and-drop automation builder for trading events, cron schedules, and message routing
+- **MCP** -- Connect external tool servers and expose Tigerpaw tools to other AI agents
+- **Models** -- Local LLM management, provider configuration, model health monitoring
+- **Settings** -- Risk tier selection, approval mode, per-extension overrides, remote access configuration
 - **Config** -- JSON config editor with live validation
 
 ### Remote Dashboard Access

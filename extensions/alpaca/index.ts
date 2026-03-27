@@ -824,6 +824,158 @@ const alpacaPlugin = {
       { name: "alpaca_place_bracket_order" },
     );
 
+    // -- Tool 9: alpaca_close_position (POLICY-GATED) ----------------------
+    api.registerTool(
+      {
+        name: "alpaca_close_position",
+        label: "Close Position",
+        description:
+          "Close an open position on Alpaca by symbol. Uses Alpaca's native DELETE /v2/positions/{symbol} endpoint. " +
+          "If quantity is omitted, the entire position is closed. " +
+          "POLICY-GATED: TradingPolicyEngine evaluates kill switch, risk limits, and approval mode before execution.",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: { type: "string", description: "Stock ticker symbol (e.g. AAPL)" },
+            quantity: {
+              type: "number",
+              description: "Number of shares to close (omit to close entire position)",
+            },
+          },
+          required: ["symbol"],
+        },
+        async execute(_id: string, params: unknown) {
+          const { symbol, quantity } = params as { symbol: string; quantity?: number };
+          const sym = symbol.toUpperCase();
+
+          // Fetch current position to validate and get price.
+          let position: Position;
+          try {
+            position = await tradingReq<Position>(
+              cfg,
+              "GET",
+              `/v2/positions/${encodeURIComponent(sym)}`,
+            );
+          } catch {
+            return txtD(`No open position found for ${sym}.`, {
+              error: "no_position",
+              symbol: sym,
+            });
+          }
+
+          const posQty = parseFloat(position.qty);
+          const currentPrice = parseFloat(position.current_price || "0");
+          const closeQty = quantity ?? posQty;
+
+          if (quantity !== undefined && quantity > posQty) {
+            return txtD(
+              `Requested quantity (${quantity}) exceeds position size (${posQty}) for ${sym}.`,
+              { error: "invalid_quantity", requested: quantity, positionSize: posQty },
+            );
+          }
+
+          // Fail-safe: block when policy engine is not configured.
+          if (!policyEngine) {
+            api.logger.error("Trading policy engine not configured — order blocked for safety");
+            return txtD(
+              "Order blocked: trading policy engine not configured. Enable trading in config.",
+              { error: "no_policy_engine" },
+            );
+          }
+
+          // Policy gate: evaluateOrder() before execution.
+          const order = buildTradeOrder({
+            symbol: sym,
+            side: "sell",
+            qty: closeQty,
+            priceUsd: currentPrice,
+            orderType: "market",
+          });
+          const decision = await policyEngine.evaluateOrder(order);
+
+          if (decision.outcome === "denied") {
+            api.logger.warn(`alpaca: close position denied by policy engine: ${decision.reason}`);
+            return txtD(`Close position denied: ${decision.reason}`, {
+              error: "policy_denied",
+              reason: decision.reason,
+              failedStep: decision.failedStep,
+            });
+          }
+
+          if (decision.outcome === "pending_confirmation") {
+            api.logger.info(`alpaca: close position pending ${decision.approvalMode} approval`);
+            return txtD(
+              `Close position requires ${decision.approvalMode} approval before execution.\n` +
+                `Symbol: ${sym} | Qty: ${closeQty} of ${posQty} | Price: ${$(currentPrice)}\n` +
+                `Estimated notional: ${$(closeQty * currentPrice)}`,
+              {
+                status: "pending_confirmation",
+                approvalMode: decision.approvalMode,
+                timeoutMs: decision.timeoutMs,
+              },
+            );
+          }
+
+          // Execute close via Alpaca's native position close endpoint.
+          const qsParam = quantity !== undefined ? `?qty=${quantity}` : "";
+          api.logger.info(
+            `alpaca: closing ${closeQty} of ${posQty} shares of ${sym} @ ${$(currentPrice)}`,
+          );
+          try {
+            const r = await tradingReq<Order>(
+              cfg,
+              "DELETE",
+              `/v2/positions/${encodeURIComponent(sym)}${qsParam}`,
+            );
+
+            // Post-trade: update policy state (no dailySpendUsd for sells).
+            await updatePolicyState((state) => ({
+              ...state,
+              dailyTradeCount: state.dailyTradeCount + 1,
+              lastTradeAtMs: Date.now(),
+            }));
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "submitted",
+              actor: "agent",
+              orderSnapshot: buildTradeOrder({
+                symbol: sym,
+                side: "sell",
+                qty: closeQty,
+                priceUsd: currentPrice,
+                orderType: "market",
+              }),
+            });
+
+            const text = [
+              `Position close submitted.`,
+              `Order ID: ${r.id} | Symbol: ${sym}`,
+              `Closed: ${closeQty} of ${posQty} shares @ ~${$(currentPrice)}`,
+              `Status: ${r.status}`,
+            ].join("\n");
+            return txtD(text, {
+              orderId: r.id,
+              symbol: sym,
+              closedQty: closeQty,
+              positionQty: posQty,
+              price: currentPrice,
+              status: r.status,
+            });
+          } catch (err) {
+            api.logger.warn(`alpaca: close position failed: ${errMsg(err)}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "rejected",
+              actor: "system",
+              error: errMsg(err),
+            });
+            return txtD(`Close position failed: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+        },
+      },
+      { name: "alpaca_close_position" },
+    );
+
     // -- Service: alpaca-sync (periodic position sync + PDT warning) ---------
     let syncTimer: ReturnType<typeof setInterval> | null = null;
 

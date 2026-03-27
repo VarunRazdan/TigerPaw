@@ -4,8 +4,8 @@ import common from "./common.json";
 import config from "./config.json";
 import connect from "./connect.json";
 import dashboard from "./dashboard.json";
-import inbox from "./inbox.json";
 import mcp from "./mcp.json";
+import messageHub from "./messageHub.json";
 import models from "./models.json";
 import notifications from "./notifications.json";
 import platforms from "./platforms.json";
@@ -26,7 +26,7 @@ export default {
   settings,
   platforms,
   assistant,
-  inbox,
+  messageHub,
   workflows,
   mcp,
   models,

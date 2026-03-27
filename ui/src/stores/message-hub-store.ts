@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
-export type InboxMessageType = "message" | "approval" | "alert";
-export type InboxPriority = "high" | "normal" | "low";
+export type MessageHubMessageType = "message" | "approval" | "alert";
+export type MessageHubPriority = "high" | "normal" | "low";
 
-export type InboxMessage = {
+export type MessageHubMessage = {
   id: string;
   channel: string;
   channelIcon: string;
@@ -11,15 +11,15 @@ export type InboxMessage = {
   preview: string;
   timestamp: number;
   read: boolean;
-  priority: InboxPriority;
-  type: InboxMessageType;
+  priority: MessageHubPriority;
+  type: MessageHubMessageType;
 };
 
-type InboxState = {
-  messages: InboxMessage[];
+type MessageHubState = {
+  messages: MessageHubMessage[];
   filter: string | null;
   searchQuery: string;
-  addMessage: (msg: Omit<InboxMessage, "id">) => void;
+  addMessage: (msg: Omit<MessageHubMessage, "id">) => void;
   markRead: (id: string) => void;
   markAllRead: (channel?: string) => void;
   setFilter: (channel: string | null) => void;
@@ -31,9 +31,9 @@ type InboxState = {
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
 
-const DEMO_MESSAGES: InboxMessage[] = [
+const DEMO_MESSAGES: MessageHubMessage[] = [
   {
-    id: "inbox-1",
+    id: "msg-1",
     channel: "discord",
     channelIcon: "/icons/messaging-channels/discord.svg",
     sender: "CryptoMike#4821",
@@ -44,7 +44,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-2",
+    id: "msg-2",
     channel: "telegram",
     channelIcon: "/icons/messaging-channels/telegram.svg",
     sender: "Elena V.",
@@ -55,7 +55,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-3",
+    id: "msg-3",
     channel: "slack",
     channelIcon: "/icons/messaging-channels/slack.svg",
     sender: "#deployments",
@@ -66,7 +66,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-4",
+    id: "msg-4",
     channel: "discord",
     channelIcon: "/icons/messaging-channels/discord.svg",
     sender: "TraderJess",
@@ -77,7 +77,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-5",
+    id: "msg-5",
     channel: "signal",
     channelIcon: "/icons/messaging-channels/signal.svg",
     sender: "Dad",
@@ -89,7 +89,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-6",
+    id: "msg-6",
     channel: "slack",
     channelIcon: "/icons/messaging-channels/slack.svg",
     sender: "#infra-alerts",
@@ -100,7 +100,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-7",
+    id: "msg-7",
     channel: "telegram",
     channelIcon: "/icons/messaging-channels/telegram.svg",
     sender: "Marcus Chen",
@@ -111,7 +111,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-8",
+    id: "msg-8",
     channel: "whatsapp",
     channelIcon: "/icons/messaging-channels/whatsapp.svg",
     sender: "Sarah K.",
@@ -123,7 +123,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-9",
+    id: "msg-9",
     channel: "discord",
     channelIcon: "/icons/messaging-channels/discord.svg",
     sender: "BotDev#0092",
@@ -135,7 +135,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-10",
+    id: "msg-10",
     channel: "slack",
     channelIcon: "/icons/messaging-channels/slack.svg",
     sender: "#trading-ops",
@@ -146,7 +146,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "approval",
   },
   {
-    id: "inbox-11",
+    id: "msg-11",
     channel: "telegram",
     channelIcon: "/icons/messaging-channels/telegram.svg",
     sender: "Tigerpaw Alerts",
@@ -157,7 +157,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "alert",
   },
   {
-    id: "inbox-12",
+    id: "msg-12",
     channel: "whatsapp",
     channelIcon: "/icons/messaging-channels/whatsapp.svg",
     sender: "Alex P.",
@@ -169,7 +169,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-13",
+    id: "msg-13",
     channel: "signal",
     channelIcon: "/icons/messaging-channels/signal.svg",
     sender: "Jamie",
@@ -180,7 +180,7 @@ const DEMO_MESSAGES: InboxMessage[] = [
     type: "message",
   },
   {
-    id: "inbox-14",
+    id: "msg-14",
     channel: "slack",
     channelIcon: "/icons/messaging-channels/slack.svg",
     sender: "#trading-ops",
@@ -194,18 +194,17 @@ const DEMO_MESSAGES: InboxMessage[] = [
 
 let nextId = 200;
 
-export const useInboxStore = create<InboxState>((set, get) => ({
+export const useMessageHubStore = create<MessageHubState>((set, get) => ({
   messages: DEMO_MESSAGES,
   filter: null,
   searchQuery: "",
 
   addMessage: (msg) => {
-    const id = `inbox-${nextId++}`;
-    const message: InboxMessage = { ...msg, id };
+    const id = `msg-${nextId++}`;
+    const message: MessageHubMessage = { ...msg, id };
 
     set((s) => {
       const updated = [message, ...s.messages];
-      // Keep max 100 messages in memory
       if (updated.length > 100) {
         updated.length = 100;
       }

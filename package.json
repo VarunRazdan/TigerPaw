@@ -1,7 +1,7 @@
 {
   "name": "@greatlyrecommended/tigerpaw",
   "version": "2026.3.28",
-  "description": "Multi-channel AI trading gateway with extensible messaging and real-money trading integrations",
+  "description": "Local-first AI gateway — everything OpenClaw does, plus trading across 9 exchanges, risk controls, a React 19 dashboard, MCP support, and an AI assistant",
   "keywords": [
     "ai",
     "alpaca",
@@ -9,15 +9,21 @@
     "chatbot",
     "coinbase",
     "discord",
+    "dydx",
     "gateway",
     "kalshi",
+    "local-first",
+    "mcp",
     "multi-channel",
+    "ollama",
+    "openclaw",
     "polymarket",
     "prediction-markets",
     "risk-management",
     "slack",
     "telegram",
-    "trading"
+    "trading",
+    "workflow"
   ],
   "homepage": "https://github.com/varunrazdan/tigerpaw#readme",
   "bugs": {

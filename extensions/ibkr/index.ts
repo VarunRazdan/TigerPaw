@@ -818,6 +818,181 @@ const ibkrPlugin = {
       { name: "ibkr_get_order_history" },
     );
 
+    // -- Tool 9: ibkr_close_position (POLICY-GATED) --------------------------
+    api.registerTool(
+      {
+        name: "ibkr_close_position",
+        label: "Close Position",
+        description:
+          "Close an open position on Interactive Brokers by placing a market sell order. " +
+          "If quantity is omitted, the entire position is closed. " +
+          "POLICY-GATED: TradingPolicyEngine evaluates kill switch, risk limits, and approval mode before execution.",
+        parameters: {
+          type: "object",
+          properties: {
+            symbol: {
+              type: "string",
+              description: "Symbol of the position to close (e.g. AAPL, TSLA)",
+            },
+            quantity: {
+              type: "number",
+              description: "Number of units to sell (omit to close entire position)",
+            },
+          },
+          required: ["symbol"],
+        },
+        async execute(_id: string, params: unknown) {
+          const { symbol, quantity } = params as { symbol: string; quantity?: number };
+          const sym = symbol.toUpperCase();
+
+          // Fetch current positions to find the matching one.
+          let positions: Position[];
+          try {
+            positions = await cpReq<Position[]>(
+              cfg,
+              "GET",
+              `/portfolio/${encodeURIComponent(cfg.accountId)}/positions/0`,
+            );
+          } catch (err) {
+            return txtD(`Failed to fetch positions: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+
+          const position = (positions ?? []).find(
+            (p) => p.contractDesc?.toUpperCase() === sym || String(p.conid) === symbol,
+          );
+          if (!position) {
+            return txtD(`No open position found for ${sym}.`, {
+              error: "no_position",
+              symbol: sym,
+            });
+          }
+
+          const posQty = Math.abs(position.position);
+          const currentPrice = position.marketPrice ?? 0;
+          const closeQty = quantity ?? posQty;
+
+          if (quantity !== undefined && quantity > posQty) {
+            return txtD(
+              `Requested quantity (${quantity}) exceeds position size (${posQty}) for ${sym}.`,
+              { error: "invalid_quantity", requested: quantity, positionSize: posQty },
+            );
+          }
+
+          // Fail-safe: block when policy engine is not configured.
+          if (!policyEngine) {
+            api.logger.error("Trading policy engine not configured — order blocked for safety");
+            return txtD(
+              "Order blocked: trading policy engine not configured. Enable trading in config.",
+              { error: "no_policy_engine" },
+            );
+          }
+
+          // Policy gate: evaluateOrder() before execution.
+          const order = buildTradeOrder({
+            symbol: sym,
+            side: "sell",
+            qty: closeQty,
+            priceUsd: currentPrice,
+            orderType: "market",
+          });
+          const decision = await policyEngine.evaluateOrder(order);
+
+          if (decision.outcome === "denied") {
+            api.logger.warn(`ibkr: close position denied by policy engine: ${decision.reason}`);
+            return txtD(`Close position denied: ${decision.reason}`, {
+              error: "policy_denied",
+              reason: decision.reason,
+              failedStep: decision.failedStep,
+            });
+          }
+
+          if (decision.outcome === "pending_confirmation") {
+            api.logger.info(`ibkr: close position pending ${decision.approvalMode} approval`);
+            return txtD(
+              `Close position requires ${decision.approvalMode} approval before execution.\n` +
+                `Symbol: ${sym} (conid: ${position.conid}) | Qty: ${closeQty} of ${posQty}\n` +
+                `Price: ${$(currentPrice)} | Estimated notional: ${$(closeQty * currentPrice)}`,
+              {
+                status: "pending_confirmation",
+                approvalMode: decision.approvalMode,
+                timeoutMs: decision.timeoutMs,
+              },
+            );
+          }
+
+          // Execute close via IBKR market sell order.
+          const body = {
+            acctId: cfg.accountId,
+            conid: position.conid,
+            secType: `${position.conid}:STK`,
+            orderType: "MKT",
+            side: "SELL",
+            quantity: closeQty,
+            tif: "DAY",
+          };
+
+          api.logger.info(
+            `ibkr: closing ${closeQty} of ${posQty} units of ${sym} (conid: ${position.conid}) @ ~${$(currentPrice)}`,
+          );
+          try {
+            const r = await cpReq<IbkrOrder[]>(
+              cfg,
+              "POST",
+              `/iserver/account/${encodeURIComponent(cfg.accountId)}/orders`,
+              { orders: [body] },
+            );
+            const resultOrder = r?.[0];
+            if (!resultOrder) throw new Error("No order response from IBKR");
+
+            // Post-trade: update policy state (no dailySpendUsd for sells).
+            await updatePolicyState((state) => ({
+              ...state,
+              dailyTradeCount: state.dailyTradeCount + 1,
+              lastTradeAtMs: Date.now(),
+            }));
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "submitted",
+              actor: "agent",
+              orderSnapshot: buildTradeOrder({
+                symbol: sym,
+                side: "sell",
+                qty: closeQty,
+                priceUsd: currentPrice,
+                orderType: "market",
+              }),
+            });
+
+            const text = [
+              `Position close submitted.`,
+              `Order ID: ${resultOrder.orderId} | Symbol: ${sym} (conid: ${position.conid})`,
+              `Closed: ${closeQty} of ${posQty} units @ ~${$(currentPrice)}`,
+              `Status: ${resultOrder.status}`,
+            ].join("\n");
+            return txtD(text, {
+              orderId: resultOrder.orderId,
+              symbol: sym,
+              conid: position.conid,
+              closedQty: closeQty,
+              positionQty: posQty,
+              price: currentPrice,
+              status: resultOrder.status,
+            });
+          } catch (err) {
+            api.logger.warn(`ibkr: close position failed: ${errMsg(err)}`);
+            await writeAuditEntry({
+              extensionId: EXTENSION_ID,
+              action: "rejected",
+              actor: "system",
+              error: errMsg(err),
+            });
+            return txtD(`Close position failed: ${errMsg(err)}`, { error: errMsg(err) });
+          }
+        },
+      },
+      { name: "ibkr_close_position" },
+    );
+
     // -- Service: ibkr-sync (periodic position sync) --------------------------
     let syncTimer: ReturnType<typeof setInterval> | null = null;
 

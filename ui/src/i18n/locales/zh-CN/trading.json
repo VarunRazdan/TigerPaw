@@ -122,5 +122,13 @@
   "chart.range1W": "1周",
   "chart.range1M": "1月",
   "chart.range6M": "6月",
-  "chart.rangeCustom": "自定义"
+  "chart.rangeCustom": "自定义",
+  "closePosition": "平仓",
+  "closePositionTitle": "确认平仓？",
+  "closePositionDesc": "以市价平仓 {{platform}} 上的 {{qty}} {{symbol}}？",
+  "closingPosition": "平仓中...",
+  "positionClosed": "已平仓",
+  "closePositionDenied": "平仓被拒绝：{{reason}}",
+  "closePositionError": "平仓失败：{{message}}",
+  "tradingHaltedCloseDisabled": "紧急停止已激活（硬模式）"
 }
