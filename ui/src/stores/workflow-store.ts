@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 
 export type WorkflowNodeType = "trigger" | "condition" | "action" | "transform";
 
@@ -33,7 +34,9 @@ export type Workflow = {
 
 type WorkflowState = {
   workflows: Workflow[];
+  demoMode: boolean;
 
+  fetchWorkflows: () => Promise<void>;
   addWorkflow: (workflow: Workflow) => void;
   updateWorkflow: (id: string, patch: Partial<Omit<Workflow, "id">>) => void;
   deleteWorkflow: (id: string) => void;
@@ -154,30 +157,59 @@ const DEMO_WORKFLOWS: Workflow[] = [
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   workflows: DEMO_WORKFLOWS,
+  demoMode: true,
 
-  addWorkflow: (workflow) =>
-    set((s) => ({
-      workflows: [...s.workflows, workflow],
-    })),
+  fetchWorkflows: async () => {
+    try {
+      const result = await gatewayRpc<{ workflows?: Workflow[] }>("workflows.list", {});
+      if (
+        result.ok &&
+        Array.isArray(result.payload?.workflows) &&
+        result.payload.workflows.length > 0
+      ) {
+        set({ workflows: result.payload.workflows, demoMode: false });
+      }
+    } catch {
+      // Gateway offline — keep demo data
+    }
+  },
 
-  updateWorkflow: (id, patch) =>
+  addWorkflow: (workflow) => {
+    set((s) => ({ workflows: [...s.workflows, workflow] }));
+    if (!get().demoMode) {
+      void gatewayRpc("workflows.save", { workflow });
+    }
+  },
+
+  updateWorkflow: (id, patch) => {
     set((s) => ({
       workflows: s.workflows.map((w) =>
         w.id === id ? { ...w, ...patch, updatedAt: new Date().toISOString() } : w,
       ),
-    })),
+    }));
+    const updated = get().workflows.find((w) => w.id === id);
+    if (updated && !get().demoMode) {
+      void gatewayRpc("workflows.save", { workflow: updated });
+    }
+  },
 
-  deleteWorkflow: (id) =>
-    set((s) => ({
-      workflows: s.workflows.filter((w) => w.id !== id),
-    })),
+  deleteWorkflow: (id) => {
+    set((s) => ({ workflows: s.workflows.filter((w) => w.id !== id) }));
+    if (!get().demoMode) {
+      void gatewayRpc("workflows.delete", { id });
+    }
+  },
 
-  toggleWorkflow: (id) =>
+  toggleWorkflow: (id) => {
     set((s) => ({
       workflows: s.workflows.map((w) =>
         w.id === id ? { ...w, enabled: !w.enabled, updatedAt: new Date().toISOString() } : w,
       ),
-    })),
+    }));
+    if (!get().demoMode) {
+      void gatewayRpc("workflows.toggle", { id });
+    }
+  },
 
   getWorkflow: (id) => get().workflows.find((w) => w.id === id),
 }));

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 
 export type MessageHubMessageType = "message" | "approval" | "alert";
 export type MessageHubPriority = "high" | "normal" | "low";
@@ -15,10 +16,20 @@ export type MessageHubMessage = {
   type: MessageHubMessageType;
 };
 
+const CHANNEL_ICONS: Record<string, string> = {
+  discord: "discord",
+  telegram: "telegram",
+  slack: "slack",
+  signal: "signal",
+  whatsapp: "whatsapp",
+};
+
 type MessageHubState = {
   messages: MessageHubMessage[];
   filter: string | null;
   searchQuery: string;
+  demoMode: boolean;
+  fetchRecentMessages: () => Promise<void>;
   addMessage: (msg: Omit<MessageHubMessage, "id">) => void;
   markRead: (id: string) => void;
   markAllRead: (channel?: string) => void;
@@ -198,6 +209,43 @@ export const useMessageHubStore = create<MessageHubState>((set, get) => ({
   messages: DEMO_MESSAGES,
   filter: null,
   searchQuery: "",
+  demoMode: true,
+
+  fetchRecentMessages: async () => {
+    try {
+      const result = await gatewayRpc<{
+        messages?: Array<{
+          id: string;
+          channel: string;
+          author: string;
+          text: string;
+          timestamp: string;
+          type: string;
+          read: boolean;
+        }>;
+      }>("messages.recent", { limit: 50 });
+      if (
+        result.ok &&
+        Array.isArray(result.payload?.messages) &&
+        result.payload.messages.length > 0
+      ) {
+        const liveMessages: MessageHubMessage[] = result.payload.messages.map((m) => ({
+          id: m.id,
+          channel: m.channel,
+          channelIcon: CHANNEL_ICONS[m.channel] ?? m.channel,
+          sender: m.author,
+          preview: m.text,
+          timestamp: new Date(m.timestamp).getTime(),
+          read: m.read,
+          priority: m.type === "approval" ? ("high" as const) : ("normal" as const),
+          type: m.type as MessageHubMessageType,
+        }));
+        set({ messages: liveMessages, demoMode: false });
+      }
+    } catch {
+      // Gateway offline — keep demo data
+    }
+  },
 
   addMessage: (msg) => {
     const id = `msg-${nextId++}`;

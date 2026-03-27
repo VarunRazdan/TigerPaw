@@ -12,7 +12,7 @@ import {
   Terminal,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -173,6 +174,7 @@ function ServerCard({
   onToggle,
   onTest,
   t,
+  tools: toolsList,
 }: {
   server: McpServer;
   expanded: boolean;
@@ -180,9 +182,10 @@ function ServerCard({
   onTest: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: any;
+  tools: string[];
 }) {
   const colors = statusColor(server.status);
-  const tools = DEMO_SERVER_TOOLS[server.id] ?? [];
+  const tools = toolsList;
 
   return (
     <div className="rounded-xl glass-panel-interactive overflow-hidden transition-all duration-300">
@@ -464,10 +467,68 @@ function AddServerDialog({
 export function McpPage() {
   const { t } = useTranslation("mcp");
 
+  // Server + tools state (gateway-fetched or demo fallback)
+  const [servers, setServers] = useState<McpServer[]>(DEMO_SERVERS);
+  const [serverTools, setServerTools] = useState<Record<string, string[]>>(DEMO_SERVER_TOOLS);
+
   // Connected-servers state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set());
   const [_testingServers, setTestingServers] = useState<Set<string>>(new Set());
+
+  // Fetch real MCP server data from gateway on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchMcpData() {
+      try {
+        const result = await gatewayRpc<{
+          servers?: Array<{
+            id: string;
+            name: string;
+            transport: TransportType;
+            command?: string;
+            url?: string;
+            status: string;
+            toolCount: number;
+            tools: string[];
+          }>;
+        }>("mcp.servers.list", {});
+        if (cancelled) {
+          return;
+        }
+        if (
+          result.ok &&
+          Array.isArray(result.payload?.servers) &&
+          result.payload.servers.length > 0
+        ) {
+          const liveServers: McpServer[] = result.payload.servers.map((s) => ({
+            id: s.id,
+            name: s.name,
+            transport: s.transport,
+            command: s.command,
+            url: s.url,
+            status: (s.status as ConnectionStatus) ?? "disconnected",
+            toolCount: s.toolCount,
+            lastConnected: s.status === "connected" ? Date.now() : null,
+          }));
+          setServers(liveServers);
+
+          // Build tools map
+          const toolsMap: Record<string, string[]> = {};
+          for (const s of result.payload.servers) {
+            toolsMap[s.id] = s.tools;
+          }
+          setServerTools(toolsMap);
+        }
+      } catch {
+        // Gateway offline — keep demo data
+      }
+    }
+    void fetchMcpData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Expose-as-server state
   const [exposeEnabled, setExposeEnabled] = useState(false);
@@ -549,7 +610,7 @@ export function McpPage() {
 
         {/* Server list */}
         <div className="space-y-2">
-          {DEMO_SERVERS.map((server) => (
+          {servers.map((server) => (
             <ServerCard
               key={server.id}
               server={server}
@@ -557,11 +618,12 @@ export function McpPage() {
               onToggle={() => toggleExpanded(server.id)}
               onTest={() => handleTestConnection(server.id)}
               t={t}
+              tools={serverTools[server.id] ?? []}
             />
           ))}
         </div>
 
-        {DEMO_SERVERS.length === 0 && (
+        {servers.length === 0 && (
           <div className="rounded-2xl glass-panel p-8 text-center">
             <Server className="h-8 w-8 text-neutral-600 mx-auto mb-3" />
             <p className="text-sm text-neutral-400">

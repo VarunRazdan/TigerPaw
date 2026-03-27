@@ -1,4 +1,5 @@
 import { Plus, Workflow, Play, Pause, Trash2, Clock, Zap, MessageSquare, Bot } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -66,7 +67,13 @@ function formatLastRun(iso?: string): string {
 
 export function WorkflowsPage() {
   const { t } = useTranslation("workflows");
-  const { workflows, toggleWorkflow, deleteWorkflow, addWorkflow } = useWorkflowStore();
+  const { workflows, toggleWorkflow, deleteWorkflow, addWorkflow, fetchWorkflows } =
+    useWorkflowStore();
+
+  // Fetch real workflows from gateway on mount
+  useEffect(() => {
+    void fetchWorkflows();
+  }, [fetchWorkflows]);
 
   const handleUseTemplate = (tplId: string) => {
     // Find matching demo workflow to clone

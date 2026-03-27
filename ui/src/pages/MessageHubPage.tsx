@@ -1,5 +1,5 @@
 import { Search, Inbox, CheckCheck, Mail, MailOpen, Filter, Bell, Shield } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -173,7 +173,13 @@ export function MessageHubPage() {
     setSearchQuery,
     unreadCount,
     unreadByChannel,
+    fetchRecentMessages,
   } = useMessageHubStore();
+
+  // Fetch real messages from gateway on mount
+  useEffect(() => {
+    void fetchRecentMessages();
+  }, [fetchRecentMessages]);
 
   const channelCounts = unreadByChannel();
   const totalUnread = unreadCount();

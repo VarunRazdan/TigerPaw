@@ -440,39 +440,74 @@ export function ModelsPage() {
   const [configuringProvider, setConfiguringProvider] = useState(false);
   const [, setLiveMode] = useState(false);
 
-  // Fetch real config from gateway on mount
+  // Fetch real config + model catalog from gateway on mount
   useEffect(() => {
     let cancelled = false;
-    async function fetchModelsConfig() {
+    async function fetchLiveData() {
       try {
-        const result = await gatewayRpc<{ raw?: string }>("config.get", {});
-        if (cancelled || !result.ok || !result.payload?.raw) {
+        // Fetch providers from config
+        const configResult = await gatewayRpc<{ raw?: string }>("config.get", {});
+        if (cancelled) {
           return;
         }
-        const config = JSON.parse(result.payload.raw);
-        const configProviders = config?.models?.providers;
-        if (configProviders && Object.keys(configProviders).length > 0) {
-          const realProviders: Provider[] = Object.entries(configProviders).map(
-            ([name, cfg]: [string, unknown]) => {
-              const c = cfg as Record<string, unknown>;
-              return {
-                name: name.charAt(0).toUpperCase() + name.slice(1),
-                url:
-                  (c.baseUrl as string) ?? (c.type === "ollama" ? "http://localhost:11434" : "API"),
-                status: "connected" as ProviderStatus,
-                version: null,
-                modelCount: Array.isArray(c.models) ? c.models.length : 0,
-              };
-            },
-          );
-          setProviders(realProviders);
-          setLiveMode(true);
+        if (configResult.ok && configResult.payload?.raw) {
+          const config = JSON.parse(configResult.payload.raw);
+          const configProviders = config?.models?.providers;
+          if (configProviders && Object.keys(configProviders).length > 0) {
+            const realProviders: Provider[] = Object.entries(configProviders).map(
+              ([name, cfg]: [string, unknown]) => {
+                const c = cfg as Record<string, unknown>;
+                return {
+                  name: name.charAt(0).toUpperCase() + name.slice(1),
+                  url:
+                    (c.baseUrl as string) ??
+                    (c.type === "ollama" ? "http://localhost:11434" : "API"),
+                  status: "connected" as ProviderStatus,
+                  version: null,
+                  modelCount: Array.isArray(c.models) ? c.models.length : 0,
+                };
+              },
+            );
+            setProviders(realProviders);
+            setLiveMode(true);
+          }
+        }
+
+        // Fetch model catalog
+        const modelsResult = await gatewayRpc<{
+          models?: Array<{
+            id: string;
+            name?: string;
+            provider?: string;
+            size?: string;
+            parameters?: string;
+            quantization?: string;
+          }>;
+        }>("models.list", {});
+        if (cancelled) {
+          return;
+        }
+        if (
+          modelsResult.ok &&
+          Array.isArray(modelsResult.payload?.models) &&
+          modelsResult.payload.models.length > 0
+        ) {
+          const catalogModels: Model[] = modelsResult.payload.models.map((m, i) => ({
+            id: m.id,
+            name: m.name ?? m.id.split(":")[0],
+            provider: m.provider ?? "Unknown",
+            size: m.size ?? "—",
+            parameters: m.parameters ?? "—",
+            quantization: m.quantization ?? "—",
+            isDefault: i === 0,
+          }));
+          setModels(catalogModels);
         }
       } catch {
         // Gateway offline — keep demo data
       }
     }
-    void fetchModelsConfig();
+    void fetchLiveData();
     return () => {
       cancelled = true;
     };
@@ -483,18 +518,30 @@ export function ModelsPage() {
 
   // --- Handlers ---
 
-  function handleRefreshProvider(name: string) {
-    setProviders((prev) =>
-      prev.map((p) =>
-        p.name === name
-          ? { ...p, status: p.status === "connected" ? "connected" : "disconnected" }
-          : p,
-      ),
-    );
+  async function handleRefreshProvider(name: string) {
+    // Try to ping the provider's URL to check if it's reachable
+    const provider = providers.find((p) => p.name === name);
+    if (!provider) {
+      return;
+    }
+    try {
+      const resp = await fetch(provider.url, { method: "GET", signal: AbortSignal.timeout(3000) });
+      setProviders((prev) =>
+        prev.map((p) => (p.name === name ? { ...p, status: resp.ok ? "connected" : "error" } : p)),
+      );
+    } catch {
+      setProviders((prev) =>
+        prev.map((p) => (p.name === name ? { ...p, status: "disconnected" } : p)),
+      );
+    }
   }
 
   function handleSetDefault(id: string) {
     setModels((prev) => prev.map((m) => ({ ...m, isDefault: m.id === id })));
+    // Persist default model to gateway config
+    void gatewayRpc("config.patch", {
+      patch: { models: { defaultModel: id } },
+    });
   }
 
   function handleDeleteModel(id: string) {
@@ -508,30 +555,81 @@ export function ModelsPage() {
     });
   }
 
-  function handlePullModel() {
+  async function handlePullModel() {
     if (!pullInput.trim()) {
       return;
     }
     setIsPulling(true);
-    // Simulate pull delay
-    setTimeout(() => {
-      const newModel: Model = {
-        id: pullInput.trim(),
-        name: pullInput.trim().split(":")[0],
-        provider: "Ollama",
-        size: "?.? GB",
-        parameters: "?B",
-        quantization: "Q4_0",
-        isDefault: false,
-      };
-      setModels((prev) => [...prev, newModel]);
-      setPullInput("");
-      setIsPulling(false);
-      // Update provider model count
-      setProviders((prev) =>
-        prev.map((p) => (p.name === "Ollama" ? { ...p, modelCount: p.modelCount + 1 } : p)),
-      );
-    }, 1500);
+    try {
+      // Try to pull via Ollama's API directly (gateway proxies if available)
+      const ollamaUrl =
+        providers.find((p) => p.name.toLowerCase() === "ollama")?.url ?? "http://localhost:11434";
+      const resp = await fetch(`${ollamaUrl}/api/pull`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: pullInput.trim(), stream: false }),
+      });
+      if (resp.ok) {
+        // Re-fetch model catalog to get updated list
+        const modelsResult = await gatewayRpc<{
+          models?: Array<{
+            id: string;
+            name?: string;
+            provider?: string;
+            size?: string;
+            parameters?: string;
+            quantization?: string;
+          }>;
+        }>("models.list", {});
+        if (modelsResult.ok && Array.isArray(modelsResult.payload?.models)) {
+          const currentDefault = models.find((m) => m.isDefault)?.id;
+          setModels(
+            modelsResult.payload.models.map((m) => ({
+              id: m.id,
+              name: m.name ?? m.id.split(":")[0],
+              provider: m.provider ?? "Ollama",
+              size: m.size ?? "—",
+              parameters: m.parameters ?? "—",
+              quantization: m.quantization ?? "—",
+              isDefault: m.id === currentDefault,
+            })),
+          );
+        }
+      } else {
+        // Fallback: add optimistically
+        setModels((prev) => [
+          ...prev,
+          {
+            id: pullInput.trim(),
+            name: pullInput.trim().split(":")[0],
+            provider: "Ollama",
+            size: "—",
+            parameters: "—",
+            quantization: "—",
+            isDefault: false,
+          },
+        ]);
+      }
+    } catch {
+      // Ollama not reachable — add optimistically
+      setModels((prev) => [
+        ...prev,
+        {
+          id: pullInput.trim(),
+          name: pullInput.trim().split(":")[0],
+          provider: "Ollama",
+          size: "—",
+          parameters: "—",
+          quantization: "—",
+          isDefault: false,
+        },
+      ]);
+    }
+    setPullInput("");
+    setIsPulling(false);
+    setProviders((prev) =>
+      prev.map((p) => (p.name === "Ollama" ? { ...p, modelCount: p.modelCount + 1 } : p)),
+    );
   }
 
   function handleDefaultModelChange(id: string) {
