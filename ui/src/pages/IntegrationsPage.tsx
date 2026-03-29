@@ -1,4 +1,4 @@
-import { ExternalLink, Mail, Calendar, Video, Power, RefreshCw } from "lucide-react";
+import { Mail, Calendar, Video, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,6 +14,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIntegrationStore } from "@/stores/integration-store";
 import type { IntegrationProvider } from "@/stores/integration-store";
+import { useNotificationStore } from "@/stores/notification-store";
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; description: string }> =
   {
@@ -100,6 +101,17 @@ export function IntegrationsPage() {
   }
 
   async function handleConnect(provider: IntegrationProvider) {
+    if (demoMode) {
+      useNotificationStore.getState().addNotification({
+        type: "integration",
+        title: t("providers." + provider.id + ".name", provider.name),
+        description: "Start the gateway to connect integrations.",
+        severity: "warning",
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
     const result = await startOAuth(provider.id);
     if (result) {
       // Open OAuth URL in popup
@@ -117,6 +129,14 @@ export function IntegrationsPage() {
           void fetchConnections();
         }
       }, 500);
+    } else {
+      useNotificationStore.getState().addNotification({
+        type: "integration",
+        title: t("providers." + provider.id + ".name", provider.name),
+        description: t("oauthError", "Authorization failed"),
+        severity: "error",
+        timestamp: Date.now(),
+      });
     }
   }
 
@@ -178,7 +198,9 @@ export function IntegrationsPage() {
                       <TooltipTrigger asChild>
                         <div
                           onClick={() => {
-                            if (!isConnected && !isConnecting) {
+                            if (isConnected && conn) {
+                              setDisconnecting(conn.id);
+                            } else if (!isConnecting) {
                               void handleConnect(provider);
                             }
                           }}
@@ -209,29 +231,16 @@ export function IntegrationsPage() {
                             </div>
                           </div>
 
-                          {/* Status indicator / disconnect button */}
-                          <div className="shrink-0 flex items-center justify-center w-7 h-7">
-                            {isConnected && conn ? (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDisconnecting(conn.id);
-                                }}
-                                className="relative p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-white/5 cursor-pointer transition-colors duration-200"
-                                aria-label={`Disconnect ${provider.name}`}
-                              >
-                                <Power className="w-3.5 h-3.5" />
-                                {/* Green dot aligned to power icon */}
-                                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-500" />
-                              </button>
-                            ) : (
-                              <span
-                                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                                  isExpired ? "bg-amber-500" : "bg-white/[0.1]"
-                                }`}
-                              />
-                            )}
-                          </div>
+                          {/* Status dot */}
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300 ${
+                              isConnected
+                                ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]"
+                                : isExpired
+                                  ? "bg-amber-500"
+                                  : "bg-neutral-600"
+                            }`}
+                          />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -256,19 +265,6 @@ export function IntegrationsPage() {
           );
         })}
       </TooltipProvider>
-
-      {/* OAuth setup hint */}
-      <div className="rounded-xl glass-panel p-4 text-xs text-neutral-500 flex items-start gap-2">
-        <ExternalLink className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-        <div>
-          <span className="text-neutral-400 font-medium">{t("oauthHintTitle", "OAuth Setup")}</span>
-          {" — "}
-          {t(
-            "oauthHintBody",
-            "Integrations use OAuth2 for secure access. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, and ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET in your environment to enable connections.",
-          )}
-        </div>
-      </div>
 
       {/* Disconnect confirmation dialog */}
       <AlertDialog

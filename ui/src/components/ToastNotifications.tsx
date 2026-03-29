@@ -35,10 +35,21 @@ const SEVERITY_ACCENT: Record<NotificationSeverity, string> = {
   info: "bg-blue-500",
 };
 
-function ToastItem({ notification }: { notification: TradingNotification }) {
+function ToastItem({
+  notification,
+  onDone,
+}: {
+  notification: TradingNotification;
+  onDone: (id: string) => void;
+}) {
   return (
     <ToastPrimitive.Root
       duration={5000}
+      onOpenChange={(open) => {
+        if (!open) {
+          onDone(notification.id);
+        }
+      }}
       className={cn(
         "group pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border px-4 py-3 shadow-2xl shadow-black/50 backdrop-blur-xl transition-all",
         "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-4 data-[state=open]:fade-in-0",
@@ -105,10 +116,14 @@ export function ToastNotifications() {
     }
   }, [notifications, toastsEnabled]);
 
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   return (
     <ToastPrimitive.Provider swipeDirection="right" duration={5000}>
-      {toasts.slice(-5).map((t) => (
-        <ToastItem key={t.id} notification={t} />
+      {toasts.slice(-3).map((t) => (
+        <ToastItem key={t.id} notification={t} onDone={removeToast} />
       ))}
       <ToastPrimitive.Viewport className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 w-[380px] max-w-[calc(100vw-2rem)] outline-none" />
     </ToastPrimitive.Provider>
