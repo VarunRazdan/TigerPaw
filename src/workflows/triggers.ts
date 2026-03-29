@@ -147,10 +147,10 @@ export class TriggerManager {
       return false;
     }
 
-    // Verify HMAC secret if configured
-    if (reg.secret && headers) {
-      const signature = headers["x-webhook-signature"] ?? headers["x-hub-signature-256"] ?? "";
-      if (signature && !this.verifyHmac(reg.secret, JSON.stringify(body), signature)) {
+    // Verify HMAC secret if configured — reject when signature is missing or invalid
+    if (reg.secret) {
+      const signature = headers?.["x-webhook-signature"] ?? headers?.["x-hub-signature-256"] ?? "";
+      if (!signature || !this.verifyHmac(reg.secret, JSON.stringify(body), signature)) {
         return false;
       }
     }
