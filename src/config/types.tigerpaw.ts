@@ -123,7 +123,6 @@ export type OpenClawConfig = {
   memory?: MemoryConfig;
   trading?: TradingConfig;
   assistant?: {
-    persona?: "kiera" | "jarvis";
     dailyBriefing?: {
       enabled?: boolean;
       cronExpression?: string;

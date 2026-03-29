@@ -15,7 +15,7 @@ Tigerpaw is everything [OpenClaw](https://github.com/nicepkg/openclaw) does -- 4
 - Docker multi-arch images (amd64 + arm64) with rootless Podman/systemd support
 - Plugin permission manifests with security audit via `tigerpaw doctor`
 - Local-first by default -- gateway binds to localhost, data stays on your machine
-- AI assistant with dual personas (Kiera/Jarvis) -- tasks, reminders, daily briefings, and knowledge retrieval
+- AI assistant (Jarvis) -- tasks, reminders, daily briefings, and knowledge retrieval
 - Message Hub -- unified inbox across all messaging channels with search, filtering, and date grouping
 - Visual workflow builder for event-driven automation (trading events, cron schedules, message routing)
 - MCP protocol support -- connect external tool servers and expose Tigerpaw tools to other AI agents
@@ -566,12 +566,7 @@ The auto-open is platform-aware:
 
 The **Assistant** page is accessible from the sidebar under Overview. It provides a personal AI assistant powered by your configured LLM provider.
 
-**Personas**: Tigerpaw ships with two assistant personas:
-
-- **Kiera** (default) -- female persona
-- **Jarvis** -- male persona
-
-Switch personas in your config: set `assistant.persona` to `"kiera"` or `"jarvis"`.
+**Assistant**: Tigerpaw's AI assistant is named **Jarvis**.
 
 **Capabilities**:
 

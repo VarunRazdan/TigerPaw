@@ -64,6 +64,7 @@ import {
   resolveCommandSecretsFromActiveRuntimeSnapshot,
 } from "../secrets/runtime.js";
 import { runOnboardingWizard } from "../wizard/onboarding.js";
+import { getWorkflowService } from "../workflows/index.js";
 import { createAuthRateLimiter, type AuthRateLimiter } from "./auth-rate-limit.js";
 import { startChannelHealthMonitor } from "./channel-health-monitor.js";
 import { startGatewayConfigReloader } from "./config-reload.js";
@@ -652,6 +653,10 @@ export async function startGatewayServer(
   });
   let { cron, storePath: cronStorePath } = cronState;
 
+  // ── Workflow engine (deferred start — needs gatewayRequestContext) ──
+  const workflowService = getWorkflowService();
+  workflowService.setCronService(cron);
+
   const { getRuntimeSnapshot, startChannels, startChannel, stopChannel, markChannelLoggedOut } =
     channelManager;
 
@@ -868,6 +873,47 @@ export async function startGatewayServer(
   // scope is set via AsyncLocalStorage.
   setFallbackGatewayContext(gatewayRequestContext);
 
+  // ── Wire workflow engine RPC and start ───────────────────────────
+  workflowService.setGatewayRpc(async (method, params) => {
+    const handler = coreGatewayHandlers[method];
+    if (!handler) {
+      return { ok: false, error: `unknown method: ${method}` };
+    }
+    return new Promise((resolve) => {
+      const respond: import("./server-methods/types.js").RespondFn = (ok, payload, error) => {
+        resolve({
+          ok,
+          payload: (payload as Record<string, unknown>) ?? {},
+          error: error
+            ? String(
+                ((error as Record<string, unknown>).message ?? JSON.stringify(error)) as string,
+              )
+            : undefined,
+        });
+      };
+      void handler({
+        req: {
+          type: "req",
+          id: `wf-${Date.now()}`,
+          method,
+          params,
+        } as import("./protocol/index.js").RequestFrame,
+        params,
+        respond,
+        client: null,
+        isWebchatConnect: () => false,
+        context: gatewayRequestContext,
+      });
+    });
+  });
+  if (!minimalTestGateway) {
+    void workflowService.start().catch((err) => {
+      log.warn(
+        `Workflow service failed to start: ${err instanceof Error ? err.message : String(err as string)}`,
+      );
+    });
+  }
+
   attachGatewayWsHandlers({
     wss,
     clients,
@@ -1058,6 +1104,7 @@ export async function startGatewayServer(
       authRateLimiter?.dispose();
       browserAuthRateLimiter.dispose();
       channelHealthMonitor?.stop();
+      await workflowService.stop().catch(() => {});
       clearSecretsRuntimeSnapshot();
       await close(opts);
     },

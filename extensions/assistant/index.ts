@@ -1,7 +1,7 @@
 /**
  * Tigerpaw Personal Assistant Extension
  *
- * A personal AI assistant with two persona options (Kiera / Jarvis).
+ * Jarvis — Tigerpaw's AI assistant.
  * Provides task management, reminders, daily briefings, conversation
  * summarization, and memory search — all running locally.
  *
@@ -28,7 +28,6 @@ import {
   getPersonaSignoff,
   getPersonaName,
   type AssistantConfig,
-  type AssistantPersona,
 } from "./config.js";
 import { registerBriefingCron } from "./cron-briefing.js";
 
@@ -64,7 +63,7 @@ type Reminder = {
 
 // -- Helpers -----------------------------------------------------------------
 function txt(text: string) {
-  return { content: [{ type: "text" as const, text }] };
+  return { content: [{ type: "text" as const, text }], details: undefined as unknown };
 }
 
 function txtD(text: string, details: unknown) {
@@ -101,7 +100,7 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function formatTask(task: Task, persona: AssistantPersona): string {
+function formatTask(task: Task): string {
   const statusIcon = task.status === "completed" ? "\u2713" : "\u25CB";
   const priorityTag = task.priority !== "medium" ? ` [${task.priority}]` : "";
   const dueTag = task.due ? ` (due: ${task.due})` : "";
@@ -125,8 +124,7 @@ export default {
 
   register(api: OpenClawPluginApi) {
     const cfg = assistantConfigSchema.parse(api.pluginConfig);
-    const persona = cfg.persona;
-    const personaName = getPersonaName(persona);
+    const personaName = getPersonaName();
 
     // -- Tool 1: Daily Briefing --------------------------------------------
     api.registerTool(
@@ -158,7 +156,7 @@ export default {
             .slice(0, 5);
 
           const lines: string[] = [];
-          lines.push(getPersonaGreeting(persona));
+          lines.push(getPersonaGreeting());
           lines.push(
             `Here's your briefing for ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}:`,
           );
@@ -167,14 +165,14 @@ export default {
           // Overdue
           if (overdueTasks.length > 0) {
             lines.push(`\u26A0 OVERDUE (${overdueTasks.length}):`);
-            overdueTasks.forEach((t) => lines.push(`  ${formatTask(t, persona)}`));
+            overdueTasks.forEach((t) => lines.push(`  ${formatTask(t)}`));
             lines.push("");
           }
 
           // Due today
           if (dueTodayTasks.length > 0) {
             lines.push(`\uD83D\uDCCB DUE TODAY (${dueTodayTasks.length}):`);
-            dueTodayTasks.forEach((t) => lines.push(`  ${formatTask(t, persona)}`));
+            dueTodayTasks.forEach((t) => lines.push(`  ${formatTask(t)}`));
             lines.push("");
           }
 
@@ -188,7 +186,7 @@ export default {
             );
             if (nonDueUrgent.length > 0) {
               lines.push(`\uD83D\uDD34 URGENT (${nonDueUrgent.length}):`);
-              nonDueUrgent.forEach((t) => lines.push(`  ${formatTask(t, persona)}`));
+              nonDueUrgent.forEach((t) => lines.push(`  ${formatTask(t)}`));
               lines.push("");
             }
           }
@@ -214,7 +212,7 @@ export default {
           }
 
           lines.push("");
-          lines.push(getPersonaSignoff(persona));
+          lines.push(getPersonaSignoff());
 
           return txtD(lines.join("\n"), {
             openTasks: openTasks.length,
@@ -357,7 +355,7 @@ export default {
 
           const lines = [`${personaName}'s task list (${tasks.length} ${statusFilter}):`, ""];
           tasks.forEach((t, i) => {
-            lines.push(`${i + 1}. ${formatTask(t, persona)}`);
+            lines.push(`${i + 1}. ${formatTask(t)}`);
             lines.push(`   ID: ${t.id.slice(0, 8)}`);
           });
 
@@ -586,7 +584,7 @@ export default {
             text: p.summary.trim(),
             tags: Array.isArray(p.tags) ? p.tags.filter((t) => typeof t === "string") : [],
             timestamp: new Date().toISOString(),
-            persona,
+            persona: personaName,
           };
 
           const memoriesFile = join(DATA_DIR, "memories.jsonl");
@@ -665,7 +663,7 @@ export default {
     // Register daily briefing cron job
     const briefingCron = cfg.dailyBriefing?.cronExpression ?? "0 8 * * *";
     if (cfg.dailyBriefing?.enabled !== false) {
-      registerBriefingCron(api, persona, briefingCron);
+      registerBriefingCron(api, briefingCron);
     }
   },
 };

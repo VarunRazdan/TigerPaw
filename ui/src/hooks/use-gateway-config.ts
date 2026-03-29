@@ -11,6 +11,7 @@ export function useGatewayConfig(): void {
   const setTradingEnabled = useAppStore((s) => s.setTradingEnabled);
   const setConfigLoaded = useAppStore((s) => s.setConfigLoaded);
   const setChannelStatuses = useAppStore((s) => s.setChannelStatuses);
+  const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
   const configLoaded = useAppStore((s) => s.configLoaded);
 
   useEffect(() => {
@@ -35,6 +36,9 @@ export function useGatewayConfig(): void {
             const config = JSON.parse(result.payload.raw);
             const enabled = config?.trading?.enabled === true;
             setTradingEnabled(enabled);
+            if (config?.gateway?.onboardingComplete === true) {
+              setOnboardingComplete(true);
+            }
           } catch {
             // Parse failed — keep defaults
           }
@@ -58,5 +62,5 @@ export function useGatewayConfig(): void {
     return () => {
       cancelled = true;
     };
-  }, [configLoaded, setTradingEnabled, setConfigLoaded, setChannelStatuses]);
+  }, [configLoaded, setTradingEnabled, setConfigLoaded, setChannelStatuses, setOnboardingComplete]);
 }

@@ -102,6 +102,31 @@ const BASE_METHODS = [
   "chat.history",
   "chat.abort",
   "chat.send",
+  // Workflow engine
+  "workflows.list",
+  "workflows.get",
+  "workflows.save",
+  "workflows.delete",
+  "workflows.toggle",
+  "workflows.execute",
+  "workflows.history",
+  "workflows.execution",
+  "workflows.clearHistory",
+  "workflows.diagnostics",
+  "workflows.import",
+  "workflows.export",
+  // Credential vault
+  "workflows.credentials.list",
+  "workflows.credentials.get",
+  "workflows.credentials.save",
+  "workflows.credentials.delete",
+  "workflows.credentials.test",
+  // Version history
+  "workflows.versions.list",
+  "workflows.versions.get",
+  "workflows.versions.rollback",
+  "workflows.versions.diff",
+  "workflows.versions.clear",
 ];
 
 export function listGatewayMethods(): string[] {

@@ -8,6 +8,7 @@ import mcp from "./mcp.json";
 import messageHub from "./messageHub.json";
 import models from "./models.json";
 import notifications from "./notifications.json";
+import onboarding from "./onboarding.json";
 import platforms from "./platforms.json";
 import security from "./security.json";
 import settings from "./settings.json";
@@ -30,4 +31,5 @@ export default {
   workflows,
   mcp,
   models,
+  onboarding,
 } as Record<string, unknown>;

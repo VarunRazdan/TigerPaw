@@ -112,5 +112,8 @@
   "disableAll": "Desactivar todo",
   "enableAll": "Activar todo",
   "globalEventsNote": "Los eventos globales (interruptor de emergencia, advertencias de límite) siempre se muestran independientemente del filtro de plataforma.",
-  "notificationLimitNote": "Se mantienen hasta 50 notificaciones en memoria. La insignia de la campana muestra hasta 9+. Las notificaciones persisten hasta que se descartan o eliminan."
+  "notificationLimitNote": "Se mantienen hasta 50 notificaciones en memoria. La insignia de la campana muestra hasta 9+. Las notificaciones persisten hasta que se descartan o eliminan.",
+  "setupWizard": "Asistente de configuración",
+  "setupWizardDesc": "Vuelva a ejecutar el asistente de configuración inicial para reconfigurar proveedores de IA, canales y plataformas de trading.",
+  "rerunWizard": "Volver a ejecutar el asistente de configuración"
 }

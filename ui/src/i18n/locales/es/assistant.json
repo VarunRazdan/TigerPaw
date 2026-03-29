@@ -1,9 +1,6 @@
 {
   "title": "Asistente personal",
-  "persona": "Persona",
-  "kiera": "Kiera",
   "jarvis": "Jarvis",
-  "switchPersona": "Cambiar persona",
   "dailyBriefing": "Resumen diario",
   "generateBriefing": "Generar resumen",
   "lastGenerated": "Última generación",

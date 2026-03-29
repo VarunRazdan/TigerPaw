@@ -9,7 +9,7 @@ import { createT, getConfiguredLocale } from "../i18n/index.js";
 
 type ToolTextResult = {
   content: { type: "text"; text: string }[];
-  details?: unknown;
+  details: unknown;
 };
 
 /**
@@ -30,7 +30,10 @@ export function createLocalizedHelpers(
 
     /** Wrap translated text as a tool result */
     txt(key: string, vars?: Record<string, unknown>): ToolTextResult {
-      return { content: [{ type: "text" as const, text: t(key, vars) }] };
+      return {
+        content: [{ type: "text" as const, text: t(key, vars) }],
+        details: undefined as unknown,
+      };
     },
 
     /** Wrap translated text as a tool result with structured details */
@@ -43,7 +46,7 @@ export function createLocalizedHelpers(
 
     /** Wrap a raw (pre-formatted) string as a tool result */
     rawTxt(text: string): ToolTextResult {
-      return { content: [{ type: "text" as const, text }] };
+      return { content: [{ type: "text" as const, text }], details: undefined as unknown };
     },
 
     /** Wrap a raw string as a tool result with details */

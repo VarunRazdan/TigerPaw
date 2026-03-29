@@ -112,5 +112,8 @@
   "disableAll": "모두 비활성화",
   "enableAll": "모두 활성화",
   "globalEventsNote": "글로벌 이벤트(킬 스위치, 한도 경고)는 플랫폼 필터에 관계없이 항상 표시됩니다.",
-  "notificationLimitNote": "메모리에 최대 50개의 알림이 유지됩니다. 벨 배지는 최대 9+까지 표시됩니다. 알림은 닫거나 삭제할 때까지 유지됩니다."
+  "notificationLimitNote": "메모리에 최대 50개의 알림이 유지됩니다. 벨 배지는 최대 9+까지 표시됩니다. 알림은 닫거나 삭제할 때까지 유지됩니다.",
+  "setupWizard": "설정 마법사",
+  "setupWizardDesc": "초기 설정 마법사를 다시 실행하여 AI 제공자, 채널 및 거래 플랫폼을 재구성합니다.",
+  "rerunWizard": "설정 마법사 다시 실행"
 }

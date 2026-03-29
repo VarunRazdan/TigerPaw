@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { ConnectDialog } from "@/components/ConnectDialog";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PlatformApiInfo } from "@/components/PlatformApiInfo";
 import { PlatformIcon } from "@/components/PlatformIcon";
 import { PnlChart } from "@/components/PnlChart";
@@ -161,8 +162,8 @@ function MarketPrices() {
   const [prices, setPrices] = useState<CryptoPrice[]>([]);
 
   useEffect(() => {
-    fetchCryptoPrices().then(setPrices);
-    const interval = setInterval(() => fetchCryptoPrices().then(setPrices), 60_000);
+    void fetchCryptoPrices().then(setPrices);
+    const interval = setInterval(() => void fetchCryptoPrices().then(setPrices), 60_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -208,6 +209,13 @@ export function DashboardPage() {
   const { t } = useTranslation("dashboard");
   const { t: tc } = useTranslation("common");
   const tradingEnabled = useAppStore((s) => s.tradingEnabled);
+  const onboardingComplete = useAppStore((s) => s.onboardingComplete);
+  const configLoaded = useAppStore((s) => s.configLoaded);
+  const channelStatuses = useAppStore((s) => s.channelStatuses);
+
+  const showOnboarding =
+    configLoaded && !onboardingComplete && !channelStatuses?.some((c) => c.connected);
+
   const {
     dailyPnlUsd,
     dailyTradeCount,
@@ -217,6 +225,17 @@ export function DashboardPage() {
     platforms,
     demoMode,
   } = useTradingStore();
+
+  // Full-screen onboarding: hide dashboard entirely during setup
+  if (showOnboarding) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
+        <div className="w-full max-w-lg">
+          <OnboardingWizard />
+        </div>
+      </div>
+    );
+  }
 
   const pnlColor = dailyPnlUsd >= 0 ? "text-green-400" : "text-red-400";
   const pnlSign = dailyPnlUsd >= 0 ? "+" : "";

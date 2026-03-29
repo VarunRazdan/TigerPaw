@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- LM Studio - stylized LM -->
+  <path d="M7 8V24H14" stroke="#818CF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M18 24V8L22 18L26 8V24" stroke="#818CF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

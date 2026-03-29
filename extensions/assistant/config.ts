@@ -1,7 +1,4 @@
-export type AssistantPersona = "kiera" | "jarvis";
-
 export type AssistantConfig = {
-  persona: AssistantPersona;
   dailyBriefing: {
     enabled: boolean;
     cronExpression: string;
@@ -18,21 +15,18 @@ export type AssistantConfig = {
   };
 };
 
-const PERSONA_GREETINGS: Record<AssistantPersona, { greeting: string; signoff: string }> = {
-  kiera: { greeting: "Hey there!", signoff: "— Kiera" },
-  jarvis: { greeting: "Good day.", signoff: "— Jarvis" },
-};
+export const ASSISTANT_NAME = "Jarvis";
 
-export function getPersonaGreeting(persona: AssistantPersona): string {
-  return PERSONA_GREETINGS[persona].greeting;
+export function getPersonaGreeting(): string {
+  return "Good day.";
 }
 
-export function getPersonaSignoff(persona: AssistantPersona): string {
-  return PERSONA_GREETINGS[persona].signoff;
+export function getPersonaSignoff(): string {
+  return "— Jarvis";
 }
 
-export function getPersonaName(persona: AssistantPersona): string {
-  return persona === "kiera" ? "Kiera" : "Jarvis";
+export function getPersonaName(): string {
+  return "Jarvis";
 }
 
 export const assistantConfigSchema = {
@@ -40,12 +34,6 @@ export const assistantConfigSchema = {
     const cfg = (
       value && typeof value === "object" && !Array.isArray(value) ? value : {}
     ) as Record<string, unknown>;
-
-    // Persona
-    let persona: AssistantPersona = "kiera";
-    if (cfg.persona === "kiera" || cfg.persona === "jarvis") {
-      persona = cfg.persona;
-    }
 
     // Daily briefing
     const briefingRaw = (
@@ -88,15 +76,8 @@ export const assistantConfigSchema = {
       autoSummarize: typeof memRaw.autoSummarize === "boolean" ? memRaw.autoSummarize : true,
     };
 
-    return { persona, dailyBriefing, taskManagement, memoryIntegration };
+    return { dailyBriefing, taskManagement, memoryIntegration };
   },
 
-  uiHints: {
-    persona: {
-      label: "Assistant Persona",
-      sensitive: false,
-      placeholder: "kiera",
-      help: 'Choose "kiera" (female, default) or "jarvis" (male) as your assistant persona.',
-    },
-  },
+  uiHints: {},
 };

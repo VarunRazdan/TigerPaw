@@ -1,9 +1,6 @@
 {
   "title": "المساعد الشخصي",
-  "persona": "الشخصية",
-  "kiera": "Kiera",
   "jarvis": "Jarvis",
-  "switchPersona": "تبديل الشخصية",
   "dailyBriefing": "الملخص اليومي",
   "generateBriefing": "إنشاء الملخص",
   "lastGenerated": "آخر إنشاء",

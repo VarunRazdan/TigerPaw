@@ -8,14 +8,17 @@ import { RiskOverviewPanel } from "@/components/RiskOverviewPanel";
 import { TradeHistoryTable } from "@/components/TradeHistoryTable";
 import { useTradingData } from "@/hooks/use-trading-data";
 import { cn } from "@/lib/utils";
+import { useMessageHubStore } from "@/stores/message-hub-store";
+import { useNotificationStore } from "@/stores/notification-store";
 import { useTradingStore } from "@/stores/trading-store";
+import { useWorkflowStore } from "@/stores/workflow-store";
 
-// Seed demo data for visual review
+// Seed demo data for visual review — only when demoMode is active
 function useDemoData() {
   const store = useTradingStore();
   useEffect(() => {
-    // Only seed once if no data
-    if (store.positions.length > 0) {
+    // Only seed when in demo mode and no data yet
+    if (!store.demoMode || store.positions.length > 0) {
       return;
     }
 
@@ -111,15 +114,21 @@ function useDemoData() {
   }, []);
 }
 
+function syncAllDemoMode(enabled: boolean) {
+  useTradingStore.getState().setDemoMode(enabled);
+  useNotificationStore.getState().setDemoMode(enabled);
+  useWorkflowStore.getState().setDemoMode(enabled);
+  useMessageHubStore.getState().setDemoMode(enabled);
+}
+
 function DataModeSelector() {
   const { t } = useTranslation("trading");
   const demoMode = useTradingStore((s) => s.demoMode);
-  const setDemoMode = useTradingStore((s) => s.setDemoMode);
 
   return (
     <div className="flex items-center gap-1 rounded-full border border-[var(--glass-border)] bg-[var(--glass-subtle)] p-0.5">
       <button
-        onClick={() => setDemoMode(true)}
+        onClick={() => syncAllDemoMode(true)}
         className={cn(
           "px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer",
           demoMode ? "bg-amber-600 text-white" : "text-neutral-500 hover:text-neutral-300",
@@ -128,7 +137,7 @@ function DataModeSelector() {
         {t("demoData", "Demo")}
       </button>
       <button
-        onClick={() => setDemoMode(false)}
+        onClick={() => syncAllDemoMode(false)}
         className={cn(
           "px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer",
           !demoMode ? "bg-green-600 text-white" : "text-neutral-500 hover:text-neutral-300",

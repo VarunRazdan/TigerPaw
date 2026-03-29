@@ -1,9 +1,6 @@
 {
   "title": "개인 어시스턴트",
-  "persona": "페르소나",
-  "kiera": "Kiera",
   "jarvis": "Jarvis",
-  "switchPersona": "페르소나 전환",
   "dailyBriefing": "일일 브리핑",
   "generateBriefing": "브리핑 생성",
   "lastGenerated": "마지막 생성",

@@ -11,6 +11,7 @@ import en_mcp from "./locales/en/mcp.json";
 import en_messageHub from "./locales/en/messageHub.json";
 import en_models from "./locales/en/models.json";
 import en_notifications from "./locales/en/notifications.json";
+import en_onboarding from "./locales/en/onboarding.json";
 import en_platforms from "./locales/en/platforms.json";
 import en_security from "./locales/en/security.json";
 import en_settings from "./locales/en/settings.json";
@@ -48,6 +49,7 @@ const NAMESPACES = [
   "workflows",
   "mcp",
   "models",
+  "onboarding",
 ] as const;
 
 // Lazy-load non-English locale bundles
@@ -105,6 +107,7 @@ void i18n
         workflows: en_workflows,
         mcp: en_mcp,
         models: en_models,
+        onboarding: en_onboarding,
       },
     },
     fallbackLng: "en",

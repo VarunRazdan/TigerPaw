@@ -18,12 +18,14 @@ export type PlatformNotificationFilters = Record<string, boolean>;
 
 type NotificationState = {
   notifications: TradingNotification[];
+  demoMode: boolean;
   browserNotificationsEnabled: boolean;
   toastsEnabled: boolean;
   platformFilters: PlatformNotificationFilters;
   addNotification: (n: Omit<TradingNotification, "id" | "dismissed">) => void;
   dismissNotification: (id: string) => void;
   clearAll: () => void;
+  setDemoMode: (enabled: boolean) => void;
   setBrowserNotifications: (enabled: boolean) => void;
   setToastsEnabled: (enabled: boolean) => void;
   setPlatformFilter: (platformId: string, enabled: boolean) => void;
@@ -110,6 +112,7 @@ let nextId = 100;
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: DEMO_NOTIFICATIONS,
+  demoMode: true,
   browserNotificationsEnabled: false,
   toastsEnabled: true,
   platformFilters: {
@@ -158,6 +161,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     set((s) => ({
       notifications: s.notifications.map((n) => ({ ...n, dismissed: true })),
     })),
+
+  setDemoMode: (enabled) =>
+    set({
+      demoMode: enabled,
+      notifications: enabled ? DEMO_NOTIFICATIONS : [],
+    }),
 
   setBrowserNotifications: (enabled) => set({ browserNotificationsEnabled: enabled }),
 

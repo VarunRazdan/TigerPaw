@@ -85,6 +85,12 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "talk.config",
     "agents.files.list",
     "agents.files.get",
+    "workflows.list",
+    "workflows.get",
+    "workflows.history",
+    "workflows.execution",
+    "workflows.diagnostics",
+    "workflows.export",
   ],
   [WRITE_SCOPE]: [
     "send",
@@ -129,10 +135,24 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "set-heartbeats",
     "system-event",
     "agents.files.set",
+    "workflows.save",
+    "workflows.delete",
+    "workflows.toggle",
+    "workflows.execute",
+    "workflows.clearHistory",
+    "workflows.import",
   ],
 };
 
-const ADMIN_METHOD_PREFIXES = ["exec.approvals.", "config.", "wizard.", "update."] as const;
+const ADMIN_METHOD_PREFIXES = [
+  "exec.approvals.",
+  "config.",
+  "wizard.",
+  "update.",
+  "onboarding.",
+  "workflows.credentials.",
+  "workflows.versions.",
+] as const;
 
 const METHOD_SCOPE_BY_NAME = new Map<string, OperatorScope>(
   Object.entries(METHOD_SCOPE_GROUPS).flatMap(([scope, methods]) =>

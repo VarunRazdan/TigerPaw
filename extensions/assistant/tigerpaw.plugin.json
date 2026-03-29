@@ -8,11 +8,6 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "persona": {
-        "type": "string",
-        "enum": ["kiera", "jarvis"],
-        "default": "kiera"
-      },
       "dailyBriefing": {
         "type": "object",
         "properties": {

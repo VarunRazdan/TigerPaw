@@ -75,7 +75,7 @@
 - **Docker Multi-Arch Images** -- amd64 + arm64 with rootless Podman/systemd support
 - **Plugin Permission Manifests** -- Declarative permission model for extensions (network, trading, filesystem, secrets) with security audit via `tigerpaw doctor`
 - **Local-First by Default** -- Gateway binds to localhost; API keys and data never leave your machine
-- **AI Assistant** -- Dual personas (Kiera + Jarvis), task management, reminders, daily briefings, and knowledge retrieval
+- **AI Assistant (Jarvis)** -- Task management, reminders, daily briefings, and knowledge retrieval
 - **Message Hub** -- Unified inbox across all messaging channels with search, filtering, and date grouping
 - **Visual Workflow Builder** -- Drag-and-drop event-driven automation (trading events, cron schedules, message routing)
 - **MCP Protocol Support** -- Connect external tool servers (stdio + SSE) and expose Tigerpaw tools to external AI agents
@@ -149,7 +149,7 @@ Tigerpaw is a strict superset of [OpenClaw](https://github.com/nicepkg/openclaw)
 - Zero-config `tigerpaw start` experience
 - Docker multi-arch images (amd64 + arm64)
 - Declarative plugin permission manifests with security audit
-- AI assistant with dual personas (Kiera/Jarvis) and daily briefings
+- AI assistant (Jarvis) with daily briefings
 - Message Hub for unified cross-channel messaging
 - Visual workflow builder for event-driven automation
 - MCP protocol support (client + server)
@@ -490,7 +490,7 @@ The gateway serves a React dashboard at `http://localhost:18789` with:
 
 - **Dashboard** -- Portfolio overview, daily P&L chart, extension status, and market prices
 - **Message Hub** -- Unified inbox across all channels with search, filtering, and date grouping
-- **Assistant** -- AI assistant with tasks, reminders, daily briefings, and dual personas (Kiera/Jarvis)
+- **Assistant (Jarvis)** -- AI assistant with tasks, reminders, daily briefings, and knowledge retrieval
 - **Trading Hub** -- Positions, trade history, approval queue, and risk gauges
 - **Platform Pages** -- Dedicated pages for each of the 9 trading platforms with TradingView charts (collapsible), order entry forms, and platform-specific data
 - **Channels** -- Manage 20+ messaging integrations with live status

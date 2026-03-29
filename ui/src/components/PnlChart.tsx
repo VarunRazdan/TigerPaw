@@ -122,18 +122,30 @@ function CustomTooltip({
 export function PnlChart({ data: dataProp }: { data?: PnlDataPoint[] }) {
   const { t } = useTranslation("trading");
   const storeHistory = useTradingStore((s) => s.pnlHistory);
+  const demoMode = useTradingStore((s) => s.demoMode);
   const [range, setRange] = useState<TimeRange>("1W");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
 
-  // Generate demo data for each range (deterministic via seeded random)
+  // Use real data when available; only use demo data when demoMode is on
   const rangeData = useMemo<Record<"1W" | "1M" | "6M", PnlDataPoint[]>>(() => {
     return {
-      "1W": storeHistory.length >= 7 ? storeHistory.slice(-7) : generateDemoData(7, 42),
-      "1M": storeHistory.length >= 30 ? storeHistory.slice(-30) : generateDemoData(30, 137),
-      "6M": generateDemoData(180, 891),
+      "1W":
+        storeHistory.length >= 7 ? storeHistory.slice(-7) : demoMode ? generateDemoData(7, 42) : [],
+      "1M":
+        storeHistory.length >= 30
+          ? storeHistory.slice(-30)
+          : demoMode
+            ? generateDemoData(30, 137)
+            : [],
+      "6M":
+        storeHistory.length >= 180
+          ? storeHistory.slice(-180)
+          : demoMode
+            ? generateDemoData(180, 891)
+            : [],
     };
-  }, [storeHistory]);
+  }, [storeHistory, demoMode]);
 
   const data = useMemo(() => {
     if (dataProp) {

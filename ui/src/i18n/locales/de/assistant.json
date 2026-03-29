@@ -1,9 +1,6 @@
 {
   "title": "Persönlicher Assistent",
-  "persona": "Persona",
-  "kiera": "Kiera",
   "jarvis": "Jarvis",
-  "switchPersona": "Persona wechseln",
   "dailyBriefing": "Tagesbriefing",
   "generateBriefing": "Briefing erstellen",
   "lastGenerated": "Zuletzt erstellt",

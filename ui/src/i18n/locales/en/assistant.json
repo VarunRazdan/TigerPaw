@@ -1,9 +1,5 @@
 {
-  "title": "Personal Assistant",
-  "persona": "Persona",
-  "kiera": "Kiera",
-  "jarvis": "Jarvis",
-  "switchPersona": "Switch persona",
+  "title": "Jarvis — AI Assistant",
   "dailyBriefing": "Daily Briefing",
   "generateBriefing": "Generate Briefing",
   "lastGenerated": "Last generated",

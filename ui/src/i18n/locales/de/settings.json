@@ -112,5 +112,8 @@
   "disableAll": "Alle deaktivieren",
   "enableAll": "Alle aktivieren",
   "globalEventsNote": "Globale Ereignisse (Notschalter, Limit-Warnungen) werden unabhängig vom Plattformfilter immer angezeigt.",
-  "notificationLimitNote": "Bis zu 50 Benachrichtigungen werden im Speicher gehalten. Das Glocken-Badge zeigt bis zu 9+. Benachrichtigungen bleiben bestehen, bis sie geschlossen oder gelöscht werden."
+  "notificationLimitNote": "Bis zu 50 Benachrichtigungen werden im Speicher gehalten. Das Glocken-Badge zeigt bis zu 9+. Benachrichtigungen bleiben bestehen, bis sie geschlossen oder gelöscht werden.",
+  "setupWizard": "Einrichtungsassistent",
+  "setupWizardDesc": "Führen Sie den Einrichtungsassistenten erneut aus, um KI-Anbieter, Kanäle und Handelsplattformen neu zu konfigurieren.",
+  "rerunWizard": "Einrichtungsassistent erneut ausführen"
 }

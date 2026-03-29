@@ -4,11 +4,14 @@
  * Returns real-time trading state from policy-state.json.
  * Only responds when trading is enabled in the config.
  */
-import type { ServerMethodContext } from "./types.js";
+type ServerMethodContext = {
+  rpc: { addMethod: (name: string, handler: (...args: unknown[]) => unknown) => void };
+  config: () => Record<string, unknown> | undefined;
+};
 
 export function registerTradingStateMethods(ctx: ServerMethodContext): void {
   ctx.rpc.addMethod("trading.getState", async () => {
-    const config = ctx.config();
+    const config = ctx.config() as { trading?: { enabled?: boolean } } | undefined;
     if (!config?.trading?.enabled) {
       return { ok: false, error: "Trading is not enabled" };
     }

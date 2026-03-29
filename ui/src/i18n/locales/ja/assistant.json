@@ -1,9 +1,6 @@
 {
   "title": "パーソナルアシスタント",
-  "persona": "ペルソナ",
-  "kiera": "Kiera",
   "jarvis": "Jarvis",
-  "switchPersona": "ペルソナを切り替え",
   "dailyBriefing": "デイリーブリーフィング",
   "generateBriefing": "ブリーフィングを生成",
   "lastGenerated": "最終生成",

@@ -56,7 +56,10 @@ async function promptLlmProvider(): Promise<void> {
       ...cfg.models,
       providers: {
         ...cfg.models?.providers,
-        ollama: { type: "ollama", baseUrl: baseUrl || "http://localhost:11434" },
+        ollama: {
+          type: "ollama",
+          baseUrl: baseUrl || "http://localhost:11434",
+        } as unknown as Record<string, unknown>,
       },
     };
   } else {
@@ -74,7 +77,10 @@ async function promptLlmProvider(): Promise<void> {
       ...cfg.models,
       providers: {
         ...cfg.models?.providers,
-        [provider as string]: { type: providerType, apiKey: apiKey },
+        [provider as string]: { type: providerType, apiKey: apiKey } as unknown as Record<
+          string,
+          unknown
+        >,
       },
     };
   }

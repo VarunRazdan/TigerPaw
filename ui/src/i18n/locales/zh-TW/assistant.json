@@ -1,9 +1,6 @@
 {
   "title": "個人助理",
-  "persona": "角色",
-  "kiera": "Kiera",
   "jarvis": "Jarvis",
-  "switchPersona": "切換角色",
   "dailyBriefing": "每日簡報",
   "generateBriefing": "產生簡報",
   "lastGenerated": "上次產生",

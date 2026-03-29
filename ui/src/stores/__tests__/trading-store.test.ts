@@ -158,20 +158,65 @@ describe("trading-store", () => {
 
   describe("updatePositionStopLoss", () => {
     it("updates matching symbol", () => {
+      // Seed a position first
+      useTradingStore
+        .getState()
+        .setPositions([
+          {
+            symbol: "AAPL",
+            extensionId: "alpaca",
+            quantity: 15,
+            valueUsd: 3285,
+            unrealizedPnl: 67.5,
+            percentOfPortfolio: 6.9,
+            stopLoss: 212,
+          },
+        ]);
       useTradingStore.getState().updatePositionStopLoss("AAPL", 200);
       const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
       expect(pos?.stopLoss).toBe(200);
     });
 
     it("does not affect other positions", () => {
+      useTradingStore.getState().setPositions([
+        {
+          symbol: "AAPL",
+          extensionId: "alpaca",
+          quantity: 15,
+          valueUsd: 3285,
+          unrealizedPnl: 67.5,
+          percentOfPortfolio: 6.9,
+          stopLoss: 212,
+        },
+        {
+          symbol: "TSLA",
+          extensionId: "alpaca",
+          quantity: 5,
+          valueUsd: 1375,
+          unrealizedPnl: -22.3,
+          percentOfPortfolio: 2.9,
+          stopLoss: 268,
+        },
+      ]);
       useTradingStore.getState().updatePositionStopLoss("AAPL", 200);
       const tsla = useTradingStore.getState().positions.find((p) => p.symbol === "TSLA");
-      expect(tsla?.stopLoss).toBe(
-        initialState.positions.find((p) => p.symbol === "TSLA")?.stopLoss,
-      );
+      expect(tsla?.stopLoss).toBe(268);
     });
 
     it("can clear stop loss with undefined", () => {
+      useTradingStore
+        .getState()
+        .setPositions([
+          {
+            symbol: "AAPL",
+            extensionId: "alpaca",
+            quantity: 15,
+            valueUsd: 3285,
+            unrealizedPnl: 67.5,
+            percentOfPortfolio: 6.9,
+            stopLoss: 212,
+          },
+        ]);
       useTradingStore.getState().updatePositionStopLoss("AAPL", undefined);
       const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
       expect(pos?.stopLoss).toBeUndefined();
@@ -180,6 +225,18 @@ describe("trading-store", () => {
 
   describe("updatePositionTakeProfit", () => {
     it("updates matching symbol", () => {
+      useTradingStore
+        .getState()
+        .setPositions([
+          {
+            symbol: "AAPL",
+            extensionId: "alpaca",
+            quantity: 15,
+            valueUsd: 3285,
+            unrealizedPnl: 67.5,
+            percentOfPortfolio: 6.9,
+          },
+        ]);
       useTradingStore.getState().updatePositionTakeProfit("AAPL", 250);
       const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
       expect(pos?.takeProfit).toBe(250);
@@ -188,7 +245,7 @@ describe("trading-store", () => {
 
   describe("addPendingApproval", () => {
     it("appends to existing approvals", () => {
-      const countBefore = useTradingStore.getState().pendingApprovals.length;
+      expect(useTradingStore.getState().pendingApprovals).toHaveLength(0);
       useTradingStore.getState().addPendingApproval({
         id: "pa-new",
         extensionId: "alpaca",
@@ -201,12 +258,24 @@ describe("trading-store", () => {
         timeoutMs: 15_000,
         createdAt: Date.now(),
       });
-      expect(useTradingStore.getState().pendingApprovals).toHaveLength(countBefore + 1);
+      expect(useTradingStore.getState().pendingApprovals).toHaveLength(1);
     });
   });
 
   describe("removePendingApproval", () => {
     it("removes by id", () => {
+      useTradingStore.getState().addPendingApproval({
+        id: "pa-1",
+        extensionId: "alpaca",
+        symbol: "NVDA",
+        side: "buy",
+        quantity: 10,
+        notionalUsd: 1340,
+        riskPercent: 2.8,
+        mode: "confirm",
+        timeoutMs: 15_000,
+        createdAt: Date.now(),
+      });
       useTradingStore.getState().removePendingApproval("pa-1");
       const ids = useTradingStore.getState().pendingApprovals.map((a) => a.id);
       expect(ids).not.toContain("pa-1");
@@ -249,7 +318,11 @@ describe("trading-store", () => {
 
   describe("disconnectPlatform", () => {
     it("sets connected to false", () => {
+      // First connect it
+      const alpaca = useTradingStore.getState().platforms.alpaca;
+      useTradingStore.getState().setPlatformStatus("alpaca", { ...alpaca, connected: true });
       expect(useTradingStore.getState().platforms.alpaca.connected).toBe(true);
+
       useTradingStore.getState().disconnectPlatform("alpaca");
       expect(useTradingStore.getState().platforms.alpaca.connected).toBe(false);
     });
@@ -261,6 +334,8 @@ describe("trading-store", () => {
     });
 
     it("preserves other platform fields", () => {
+      const alpaca = useTradingStore.getState().platforms.alpaca;
+      useTradingStore.getState().setPlatformStatus("alpaca", { ...alpaca, connected: true });
       const before = useTradingStore.getState().platforms.alpaca;
       useTradingStore.getState().disconnectPlatform("alpaca");
       const after = useTradingStore.getState().platforms.alpaca;
@@ -278,25 +353,68 @@ describe("trading-store", () => {
     });
   });
 
-  describe("initial demo data", () => {
-    it("has populated positions", () => {
-      expect(initialState.positions.length).toBeGreaterThan(0);
+  describe("initial state is empty (no demo data)", () => {
+    it("has empty positions", () => {
+      expect(initialState.positions).toEqual([]);
     });
 
-    it("has populated trade history", () => {
-      expect(initialState.tradeHistory.length).toBeGreaterThan(0);
+    it("has empty trade history", () => {
+      expect(initialState.tradeHistory).toEqual([]);
     });
 
-    it("has populated pending approvals", () => {
-      expect(initialState.pendingApprovals.length).toBeGreaterThan(0);
+    it("has empty pending approvals", () => {
+      expect(initialState.pendingApprovals).toEqual([]);
     });
 
-    it("has populated pnl history", () => {
-      expect(initialState.pnlHistory.length).toBeGreaterThan(0);
+    it("has empty pnl history", () => {
+      expect(initialState.pnlHistory).toEqual([]);
     });
 
-    it("has non-zero portfolio value", () => {
-      expect(initialState.currentPortfolioValueUsd).toBeGreaterThan(0);
+    it("has zero portfolio value", () => {
+      expect(initialState.currentPortfolioValueUsd).toBe(0);
+    });
+
+    it("all platforms disconnected by default", () => {
+      for (const p of Object.values(initialState.platforms)) {
+        expect(p.connected).toBe(false);
+      }
+    });
+
+    it("demoMode defaults to false", () => {
+      expect(initialState.demoMode).toBe(false);
+    });
+  });
+
+  describe("setDemoMode", () => {
+    it("populates demo data when enabled", () => {
+      useTradingStore.getState().setDemoMode(true);
+      const s = useTradingStore.getState();
+      expect(s.demoMode).toBe(true);
+      expect(s.positions.length).toBeGreaterThan(0);
+      expect(s.tradeHistory.length).toBeGreaterThan(0);
+      expect(s.pendingApprovals.length).toBeGreaterThan(0);
+      expect(s.pnlHistory.length).toBeGreaterThan(0);
+      expect(s.currentPortfolioValueUsd).toBeGreaterThan(0);
+    });
+
+    it("connects demo platforms", () => {
+      useTradingStore.getState().setDemoMode(true);
+      const { platforms } = useTradingStore.getState();
+      expect(platforms.alpaca.connected).toBe(true);
+      expect(platforms.polymarket.connected).toBe(true);
+      expect(platforms.kraken.connected).toBe(true);
+    });
+
+    it("clears demo data when disabled", () => {
+      useTradingStore.getState().setDemoMode(true);
+      useTradingStore.getState().setDemoMode(false);
+      const s = useTradingStore.getState();
+      expect(s.demoMode).toBe(false);
+      expect(s.positions).toEqual([]);
+      expect(s.tradeHistory).toEqual([]);
+      expect(s.pendingApprovals).toEqual([]);
+      expect(s.pnlHistory).toEqual([]);
+      expect(s.currentPortfolioValueUsd).toBe(0);
     });
   });
 });

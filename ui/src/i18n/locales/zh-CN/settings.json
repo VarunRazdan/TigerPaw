@@ -112,5 +112,8 @@
   "disableAll": "全部禁用",
   "enableAll": "全部启用",
   "globalEventsNote": "全局事件（紧急停止开关、限额警告）无论平台过滤器如何都始终显示。",
-  "notificationLimitNote": "内存中最多保留 50 条通知。铃铛徽章最多显示 9+。通知将持续存在直到被关闭或清除。"
+  "notificationLimitNote": "内存中最多保留 50 条通知。铃铛徽章最多显示 9+。通知将持续存在直到被关闭或清除。",
+  "setupWizard": "设置向导",
+  "setupWizardDesc": "重新运行初始设置向导以重新配置 AI 提供商、频道和交易平台。",
+  "rerunWizard": "重新运行设置向导"
 }

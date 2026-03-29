@@ -112,5 +112,8 @@
   "disableAll": "Tout désactiver",
   "enableAll": "Tout activer",
   "globalEventsNote": "Les événements globaux (coupe-circuit, avertissements de limite) sont toujours affichés quel que soit le filtre de plateforme.",
-  "notificationLimitNote": "Jusqu'à 50 notifications sont conservées en mémoire. Le badge de la cloche affiche jusqu'à 9+. Les notifications persistent jusqu'à ce qu'elles soient ignorées ou effacées."
+  "notificationLimitNote": "Jusqu'à 50 notifications sont conservées en mémoire. Le badge de la cloche affiche jusqu'à 9+. Les notifications persistent jusqu'à ce qu'elles soient ignorées ou effacées.",
+  "setupWizard": "Assistant de configuration",
+  "setupWizardDesc": "Relancez l'assistant de configuration initiale pour reconfigurer les fournisseurs d'IA, les canaux et les plateformes de trading.",
+  "rerunWizard": "Relancer l'assistant de configuration"
 }

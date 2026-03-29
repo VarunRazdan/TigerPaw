@@ -29,6 +29,7 @@ type MessageHubState = {
   filter: string | null;
   searchQuery: string;
   demoMode: boolean;
+  setDemoMode: (enabled: boolean) => void;
   fetchRecentMessages: () => Promise<void>;
   addMessage: (msg: Omit<MessageHubMessage, "id">) => void;
   markRead: (id: string) => void;
@@ -210,6 +211,12 @@ export const useMessageHubStore = create<MessageHubState>((set, get) => ({
   filter: null,
   searchQuery: "",
   demoMode: true,
+
+  setDemoMode: (enabled) =>
+    set({
+      demoMode: enabled,
+      messages: enabled ? DEMO_MESSAGES : [],
+    }),
 
   fetchRecentMessages: async () => {
     try {

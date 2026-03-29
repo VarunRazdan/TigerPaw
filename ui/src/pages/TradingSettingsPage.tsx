@@ -1,6 +1,7 @@
+import { RotateCcw } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +14,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { saveConfigPatch } from "@/lib/save-config";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app-store";
+import { useMessageHubStore } from "@/stores/message-hub-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useThemeStore, THEMES, type ThemeId } from "@/stores/theme-store";
 import {
@@ -22,6 +25,7 @@ import {
   type PerPlatformOverride,
   type PolicyLimits,
 } from "@/stores/trading-store";
+import { useWorkflowStore } from "@/stores/workflow-store";
 
 const TIER_PRESETS: Record<Exclude<RiskTier, "custom">, { labelKey: string; descKey: string }> = {
   conservative: { labelKey: "conservative", descKey: "conservativeDesc" },
@@ -190,14 +194,45 @@ function PlatformOverrideSection({
   );
 }
 
+function SetupWizardSection() {
+  const { t: ts } = useTranslation("settings");
+  const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
+  const navigate = useNavigate();
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-1">{ts("setupWizard")}</h3>
+      <p className="text-xs text-neutral-500 mb-3">{ts("setupWizardDesc")}</p>
+      <button
+        type="button"
+        onClick={() => {
+          setOnboardingComplete(false);
+          void navigate("/");
+        }}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition-all cursor-pointer"
+      >
+        <RotateCcw className="w-3 h-3" />
+        {ts("rerunWizard")}
+      </button>
+    </div>
+  );
+}
+
 function DataModeSelector() {
   const { t: ts } = useTranslation("settings");
   const { demoMode, setDemoMode } = useTradingStore();
   const [confirmLive, setConfirmLive] = useState(false);
 
+  function syncAllDemoMode(enabled: boolean) {
+    setDemoMode(enabled);
+    useNotificationStore.getState().setDemoMode(enabled);
+    useWorkflowStore.getState().setDemoMode(enabled);
+    useMessageHubStore.getState().setDemoMode(enabled);
+  }
+
   function handleSelect(mode: "demo" | "live") {
     if (mode === "demo" && !demoMode) {
-      setDemoMode(true);
+      syncAllDemoMode(true);
     } else if (mode === "live" && demoMode) {
       setConfirmLive(true);
     }
@@ -258,7 +293,7 @@ function DataModeSelector() {
             <AlertDialogAction
               className="bg-green-700 hover:bg-green-600 text-white"
               onClick={() => {
-                setDemoMode(false);
+                syncAllDemoMode(false);
                 setConfirmLive(false);
               }}
             >
@@ -640,7 +675,7 @@ function NotificationSettings() {
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             {Object.entries(platforms).map(([id, p]) => {
-              const enabled = platformFilters[id] !== false;
+              const enabled = platformFilters[id];
               return (
                 <button
                   key={id}
@@ -709,6 +744,9 @@ export function TradingSettingsPage() {
           ← Back to Trading
         </NavLink>
       </div>
+
+      {/* Setup Wizard */}
+      <SetupWizardSection />
 
       {/* Appearance */}
       <ThemeSelector />

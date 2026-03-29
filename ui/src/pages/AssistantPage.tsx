@@ -55,13 +55,12 @@ interface MemoryResult {
   text: string;
 }
 
-type Persona = "kiera" | "jarvis";
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const PERSONA_STORAGE_KEY = "tigerpaw-persona";
+const ASSISTANT_NAME = "Jarvis";
+const ASSISTANT_COLOR = "text-blue-400";
 
 const PRIORITY_STYLES: Record<Priority, string> = {
   urgent: "bg-red-900/30 text-red-400 border-red-800",
@@ -69,35 +68,6 @@ const PRIORITY_STYLES: Record<Priority, string> = {
   medium: "bg-blue-900/30 text-blue-400 border-blue-800",
   low: "bg-neutral-800 text-neutral-400 border-neutral-700",
 };
-
-const PERSONA_INFO: Record<Persona, { label: string; color: string }> = {
-  kiera: { label: "Kiera", color: "text-amber-400" },
-  jarvis: { label: "Jarvis", color: "text-blue-400" },
-};
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function loadPersona(): Persona {
-  try {
-    const stored = localStorage.getItem(PERSONA_STORAGE_KEY);
-    if (stored === "kiera" || stored === "jarvis") {
-      return stored;
-    }
-  } catch {
-    // localStorage unavailable
-  }
-  return "kiera";
-}
-
-function savePersona(p: Persona) {
-  try {
-    localStorage.setItem(PERSONA_STORAGE_KEY, p);
-  } catch {
-    // localStorage unavailable
-  }
-}
 
 function formatDateTime(iso: string): string {
   try {
@@ -779,18 +749,9 @@ function BriefingPanel() {
 
 export function AssistantPage() {
   const { t } = useTranslation("assistant");
-  const [persona, setPersona] = useState<Persona>(loadPersona);
   const [briefingLoading, setBriefingLoading] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [showAddReminder, setShowAddReminder] = useState(false);
-
-  const togglePersona = () => {
-    const next: Persona = persona === "kiera" ? "jarvis" : "kiera";
-    setPersona(next);
-    savePersona(next);
-  };
-
-  const info = PERSONA_INFO[persona];
 
   // Quick action: generate briefing (scrolls to briefing panel)
   const handleQuickBriefing = async () => {
@@ -818,18 +779,10 @@ export function AssistantPage() {
           </p>
         </div>
 
-        <button
-          onClick={togglePersona}
-          className={cn(
-            "flex items-center gap-2 rounded-xl glass-panel-interactive px-3 py-2",
-            "transition-all duration-200 cursor-pointer hover:shadow-md",
-          )}
-          title={t("switchPersona", "Switch persona")}
-        >
-          <User className={cn("w-4 h-4", info.color)} />
-          <span className={cn("text-sm font-medium", info.color)}>{info.label}</span>
-          <span className="text-[10px] text-neutral-600 ml-1">{t("persona", "persona")}</span>
-        </button>
+        <div className={cn("flex items-center gap-2 rounded-xl glass-panel px-3 py-2")}>
+          <User className={cn("w-4 h-4", ASSISTANT_COLOR)} />
+          <span className={cn("text-sm font-medium", ASSISTANT_COLOR)}>{ASSISTANT_NAME}</span>
+        </div>
       </div>
 
       {/* Quick Actions Row */}

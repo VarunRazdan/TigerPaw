@@ -15,7 +15,29 @@ import {
   Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Save, Play, ArrowLeft, Zap, GitBranch, Send, Shuffle, Plus } from "lucide-react";
+import {
+  Save,
+  Play,
+  ArrowLeft,
+  Zap,
+  GitBranch,
+  Send,
+  Shuffle,
+  Plus,
+  Download,
+  Upload,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Clock,
+  AlertTriangle,
+  Copy,
+  Trash2,
+  X,
+  RotateCcw,
+  Settings2,
+  History,
+} from "lucide-react";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
@@ -26,6 +48,9 @@ import {
   useWorkflowStore,
   type WorkflowNode,
   type WorkflowNodeType,
+  type WorkflowExecution,
+  type RetryConfig,
+  type WorkflowVersionMeta,
 } from "@/stores/workflow-store";
 
 // ---------------------------------------------------------------------------
@@ -67,6 +92,7 @@ const PALETTE_GROUPS: PaletteGroup[] = [
       { subtype: "sender_matches", label: "Sender Matches", nodeType: "condition" },
       { subtype: "time_of_day", label: "Time of Day", nodeType: "condition" },
       { subtype: "channel_is", label: "Channel Is", nodeType: "condition" },
+      { subtype: "expression", label: "Expression", nodeType: "condition" },
     ],
   },
   {
@@ -75,9 +101,11 @@ const PALETTE_GROUPS: PaletteGroup[] = [
     color: "text-green-400",
     items: [
       { subtype: "send_message", label: "Send Message", nodeType: "action" },
-      { subtype: "invoke_tool", label: "Invoke Tool", nodeType: "action" },
       { subtype: "call_webhook", label: "Call Webhook", nodeType: "action" },
       { subtype: "run_llm_task", label: "Run LLM Task", nodeType: "action" },
+      { subtype: "killswitch", label: "Kill Switch", nodeType: "action" },
+      { subtype: "trade", label: "Submit Trade", nodeType: "action" },
+      { subtype: "run_workflow", label: "Run Sub-Workflow", nodeType: "action" },
     ],
   },
   {
@@ -88,6 +116,19 @@ const PALETTE_GROUPS: PaletteGroup[] = [
       { subtype: "extract_data", label: "Extract Data", nodeType: "transform" },
       { subtype: "format_text", label: "Format Text", nodeType: "transform" },
       { subtype: "parse_json", label: "Parse JSON", nodeType: "transform" },
+    ],
+  },
+  {
+    title: "Error Handling",
+    icon: <AlertTriangle className="w-3.5 h-3.5" />,
+    color: "text-red-400",
+    items: [
+      { subtype: "log", label: "Log Error", nodeType: "error_handler" as WorkflowNodeType },
+      {
+        subtype: "notify",
+        label: "Notify on Error",
+        nodeType: "error_handler" as WorkflowNodeType,
+      },
     ],
   },
 ];
@@ -116,6 +157,11 @@ const NODE_COLORS: Record<WorkflowNodeType, { header: string; border: string; ri
     header: "bg-purple-600",
     border: "border-purple-700/50",
     ring: "ring-purple-500/30",
+  },
+  error_handler: {
+    header: "bg-red-600",
+    border: "border-red-700/50",
+    ring: "ring-red-500/30",
   },
 };
 
@@ -265,6 +311,379 @@ function PaletteSidebar() {
 }
 
 // ---------------------------------------------------------------------------
+// Node config field schemas (defines which fields appear in the inspector)
+// ---------------------------------------------------------------------------
+
+const NODE_CONFIG_FIELDS: Record<
+  string,
+  Array<{
+    key: string;
+    label: string;
+    type: "text" | "number" | "select" | "textarea";
+    options?: string[];
+    placeholder?: string;
+  }>
+> = {
+  // Triggers
+  cron: [
+    { key: "expression", label: "Cron Expression", type: "text", placeholder: "0 18 * * *" },
+    { key: "timezone", label: "Timezone", type: "text", placeholder: "UTC" },
+  ],
+  "trading.event": [
+    { key: "event", label: "Event Type", type: "text", placeholder: "trading.order.denied" },
+  ],
+  "message.received": [
+    { key: "channel", label: "Channel Filter", type: "text", placeholder: "discord" },
+    { key: "sender", label: "Sender Filter", type: "text" },
+  ],
+  webhook: [{ key: "path", label: "Webhook Path", type: "text", placeholder: "/hooks/my-trigger" }],
+  // Conditions
+  contains_keyword: [
+    { key: "keyword", label: "Keyword", type: "text" },
+    { key: "caseSensitive", label: "Case Sensitive", type: "select", options: ["false", "true"] },
+  ],
+  sender_matches: [{ key: "pattern", label: "Pattern (regex)", type: "text" }],
+  channel_is: [{ key: "channel", label: "Channel", type: "text" }],
+  time_of_day: [
+    { key: "after", label: "After (HH:MM)", type: "text", placeholder: "09:00" },
+    { key: "before", label: "Before (HH:MM)", type: "text", placeholder: "17:00" },
+    { key: "timezone", label: "Timezone", type: "text", placeholder: "UTC" },
+  ],
+  expression: [
+    { key: "left", label: "Left Value", type: "text", placeholder: "$symbol" },
+    {
+      key: "operator",
+      label: "Operator",
+      type: "select",
+      options: [
+        "==",
+        "!=",
+        ">",
+        ">=",
+        "<",
+        "<=",
+        "contains",
+        "starts_with",
+        "ends_with",
+        "matches",
+      ],
+    },
+    { key: "right", label: "Right Value", type: "text" },
+  ],
+  // Actions
+  send_message: [
+    { key: "channel", label: "Channel", type: "text", placeholder: "discord" },
+    { key: "to", label: "To", type: "text", placeholder: "#channel or user" },
+    {
+      key: "template",
+      label: "Message Template",
+      type: "textarea",
+      placeholder: "Order {{symbol}} was {{status}}",
+    },
+  ],
+  call_webhook: [
+    { key: "url", label: "URL", type: "text", placeholder: "https://..." },
+    {
+      key: "method",
+      label: "Method",
+      type: "select",
+      options: ["POST", "GET", "PUT", "PATCH", "DELETE"],
+    },
+    { key: "body", label: "Body (JSON)", type: "textarea" },
+  ],
+  run_llm_task: [
+    {
+      key: "prompt",
+      label: "Prompt Template",
+      type: "textarea",
+      placeholder: "Summarize: {{text}}",
+    },
+    { key: "model", label: "Model", type: "text", placeholder: "default" },
+  ],
+  killswitch: [
+    { key: "mode", label: "Mode", type: "select", options: ["activate", "deactivate", "check"] },
+    { key: "reason", label: "Reason", type: "text" },
+    { key: "switchMode", label: "Switch Mode", type: "select", options: ["hard", "soft"] },
+  ],
+  trade: [
+    { key: "extensionId", label: "Extension ID", type: "text" },
+    { key: "symbol", label: "Symbol", type: "text", placeholder: "AAPL" },
+    { key: "side", label: "Side", type: "select", options: ["buy", "sell"] },
+    { key: "quantity", label: "Quantity", type: "number" },
+    { key: "orderType", label: "Order Type", type: "select", options: ["market", "limit"] },
+  ],
+  run_workflow: [{ key: "workflowId", label: "Workflow ID", type: "text", placeholder: "wf-..." }],
+  // Transforms
+  extract_data: [
+    { key: "path", label: "Data Path", type: "text", placeholder: "event.payload.symbol" },
+    { key: "outputKey", label: "Output Key", type: "text", placeholder: "extracted" },
+  ],
+  format_text: [
+    {
+      key: "template",
+      label: "Template",
+      type: "textarea",
+      placeholder: "Symbol: {{symbol}}, Price: {{price}}",
+    },
+    { key: "outputKey", label: "Output Key", type: "text", placeholder: "formatted" },
+  ],
+  parse_json: [
+    { key: "inputKey", label: "Input Key", type: "text", placeholder: "webhookResponse" },
+    { key: "outputKey", label: "Output Key", type: "text", placeholder: "parsed" },
+  ],
+  // Error handlers
+  log: [{ key: "action", label: "Action", type: "text", placeholder: "log" }],
+  notify: [
+    { key: "action", label: "Action", type: "text", placeholder: "notify" },
+    { key: "channel", label: "Channel", type: "text", placeholder: "discord" },
+    {
+      key: "template",
+      label: "Message Template",
+      type: "textarea",
+      placeholder: "Error in {{error.nodeLabel}}: {{error.message}}",
+    },
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Node Property Inspector
+// ---------------------------------------------------------------------------
+
+function NodePropertyInspector({
+  node,
+  allNodes,
+  onUpdate,
+  onDuplicate,
+  onDelete,
+  onClose,
+}: {
+  node: WorkflowNode;
+  allNodes: WorkflowNode[];
+  onUpdate: (updated: WorkflowNode) => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  onClose: () => void;
+}) {
+  const fields = NODE_CONFIG_FIELDS[node.subtype] ?? [];
+  const colors = NODE_COLORS[node.type] ?? NODE_COLORS.action;
+
+  const updateConfig = (key: string, value: unknown) => {
+    onUpdate({ ...node, config: { ...node.config, [key]: value } });
+  };
+
+  const updateRetry = (patch: Partial<RetryConfig>) => {
+    const current: RetryConfig = node.retryConfig ?? {
+      maxRetries: 0,
+      backoff: "none",
+      delayMs: 1000,
+      maxDelayMs: 30000,
+    };
+    onUpdate({ ...node, retryConfig: { ...current, ...patch } });
+  };
+
+  const errorHandlerNodes = allNodes.filter((n) => n.type === "error_handler" && n.id !== node.id);
+
+  return (
+    <aside className="w-[260px] shrink-0 border-l border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] overflow-y-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 pt-3 pb-2">
+        <div className="flex items-center gap-1.5">
+          <Settings2 className="w-3.5 h-3.5 text-neutral-500" />
+          <span className="text-[11px] font-semibold text-neutral-400">Properties</span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1 rounded hover:bg-[var(--glass-subtle-hover)] text-neutral-600 hover:text-neutral-400 cursor-pointer"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Node header */}
+      <div
+        className={cn(
+          "mx-3 px-2.5 py-1.5 rounded-md text-[11px] font-semibold text-white",
+          colors.header,
+        )}
+      >
+        {node.label}
+      </div>
+
+      {/* Label */}
+      <div className="px-3 pt-3 space-y-3">
+        <div>
+          <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">
+            Label
+          </label>
+          <Input
+            value={node.label}
+            onChange={(e) => onUpdate({ ...node, label: e.target.value })}
+            className="h-7 text-xs mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)]"
+          />
+        </div>
+
+        {/* Config fields */}
+        {fields.map((field) => (
+          <div key={field.key}>
+            <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">
+              {field.label}
+            </label>
+            {field.type === "textarea" ? (
+              <textarea
+                value={(node.config[field.key] as string | undefined) ?? ""}
+                onChange={(e) => updateConfig(field.key, e.target.value)}
+                placeholder={field.placeholder}
+                rows={3}
+                className="w-full mt-1 px-2 py-1.5 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300 placeholder:text-neutral-700 resize-none focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+              />
+            ) : field.type === "select" ? (
+              <select
+                value={(node.config[field.key] as string | undefined) ?? field.options?.[0] ?? ""}
+                onChange={(e) => updateConfig(field.key, e.target.value)}
+                className="w-full mt-1 h-7 px-2 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+              >
+                {field.options?.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                type={field.type}
+                value={(node.config[field.key] as string | undefined) ?? ""}
+                onChange={(e) =>
+                  updateConfig(
+                    field.key,
+                    field.type === "number" ? Number(e.target.value) : e.target.value,
+                  )
+                }
+                placeholder={field.placeholder}
+                className="h-7 text-xs mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)]"
+              />
+            )}
+          </div>
+        ))}
+
+        {/* Error handler assignment (for action/transform nodes) */}
+        {(node.type === "action" || node.type === "transform") && errorHandlerNodes.length > 0 && (
+          <div>
+            <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">
+              Error Handler
+            </label>
+            <select
+              value={node.errorHandlerId ?? ""}
+              onChange={(e) => onUpdate({ ...node, errorHandlerId: e.target.value || undefined })}
+              className="w-full mt-1 h-7 px-2 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+            >
+              <option value="">None (fail-fast)</option>
+              {errorHandlerNodes.map((eh) => (
+                <option key={eh.id} value={eh.id}>
+                  {eh.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Retry config (for action/transform nodes) */}
+        {(node.type === "action" || node.type === "transform") && (
+          <div className="border-t border-[var(--glass-border)] pt-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold flex items-center gap-1">
+                <RotateCcw className="w-3 h-3" /> Retry Policy
+              </label>
+            </div>
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] text-neutral-500 w-20 shrink-0">Retries</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={10}
+                  value={node.retryConfig?.maxRetries ?? 0}
+                  onChange={(e) => updateRetry({ maxRetries: Number(e.target.value) })}
+                  className="h-6 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]"
+                />
+              </div>
+              {(node.retryConfig?.maxRetries ?? 0) > 0 && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <label className="text-[10px] text-neutral-500 w-20 shrink-0">Backoff</label>
+                    <select
+                      value={node.retryConfig?.backoff ?? "none"}
+                      onChange={(e) =>
+                        updateRetry({ backoff: e.target.value as RetryConfig["backoff"] })
+                      }
+                      className="flex-1 h-6 px-1 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300"
+                    >
+                      <option value="none">None</option>
+                      <option value="linear">Linear</option>
+                      <option value="exponential">Exponential</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-[10px] text-neutral-500 w-20 shrink-0">Delay (ms)</label>
+                    <Input
+                      type="number"
+                      min={100}
+                      value={node.retryConfig?.delayMs ?? 1000}
+                      onChange={(e) => updateRetry({ delayMs: Number(e.target.value) })}
+                      className="h-6 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-[10px] text-neutral-500 w-20 shrink-0">Max (ms)</label>
+                    <Input
+                      type="number"
+                      min={100}
+                      value={node.retryConfig?.maxDelayMs ?? 30000}
+                      onChange={(e) => updateRetry({ maxDelayMs: Number(e.target.value) })}
+                      className="h-6 text-xs bg-[var(--glass-bg)] border-[var(--glass-border)]"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Credential ID */}
+        {node.type === "action" && (
+          <div>
+            <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">
+              Credential ID
+            </label>
+            <Input
+              value={node.credentialId ?? ""}
+              onChange={(e) => onUpdate({ ...node, credentialId: e.target.value || undefined })}
+              placeholder="cred-..."
+              className="h-7 text-xs mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)]"
+            />
+          </div>
+        )}
+
+        {/* Actions: duplicate / delete */}
+        <div className="border-t border-[var(--glass-border)] pt-3 pb-3 flex items-center gap-2">
+          <button
+            onClick={onDuplicate}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] cursor-pointer transition-colors"
+          >
+            <Copy className="w-3 h-3" /> Duplicate
+          </button>
+          <button
+            onClick={onDelete}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-red-400 hover:text-red-300 hover:bg-red-900/20 cursor-pointer transition-colors"
+          >
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main editor page
 // ---------------------------------------------------------------------------
 
@@ -272,7 +691,18 @@ export function WorkflowEditorPage() {
   const { t } = useTranslation("workflows");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getWorkflow, addWorkflow, updateWorkflow, toggleWorkflow } = useWorkflowStore();
+  const {
+    getWorkflow,
+    addWorkflow,
+    updateWorkflow,
+    toggleWorkflow,
+    executeWorkflow,
+    isExecuting,
+    exportWorkflow,
+    importWorkflow,
+    fetchVersions,
+    rollbackVersion,
+  } = useWorkflowStore();
 
   const isNew = id === "new";
   const existing = isNew ? undefined : getWorkflow(id ?? "");
@@ -280,7 +710,11 @@ export function WorkflowEditorPage() {
   const [workflowName, setWorkflowName] = useState(existing?.name ?? "");
   const [workflowDesc] = useState(existing?.description ?? "");
   const [enabled, setEnabled] = useState(existing?.enabled ?? false);
-  const [testing, setTesting] = useState(false);
+  const [lastExecution, setLastExecution] = useState<WorkflowExecution | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [showVersions, setShowVersions] = useState(false);
+  const [versions, setVersions] = useState<WorkflowVersionMeta[]>([]);
+  const testing = isExecuting === id;
 
   const initialNodes = useMemo(
     () => (existing ? toFlowNodes(existing.nodes) : []),
@@ -397,10 +831,53 @@ export function WorkflowEditorPage() {
     void navigate("/workflows");
   };
 
-  // Test handler
-  const handleTest = () => {
-    setTesting(true);
-    setTimeout(() => setTesting(false), 1500);
+  // Test handler — actually executes the workflow via gateway
+  const handleTest = async () => {
+    if (!id || isNew) {
+      return;
+    }
+    // Save first so the gateway has the latest version
+    handleSave();
+    const execution = await executeWorkflow(id);
+    if (execution) {
+      setLastExecution(execution);
+    }
+  };
+
+  // Export handler
+  const handleExport = async () => {
+    if (!id || isNew) {
+      return;
+    }
+    const workflow = await exportWorkflow(id);
+    if (workflow) {
+      const blob = new Blob([JSON.stringify(workflow, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${workflowName || "workflow"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  // Import handler
+  const handleImport = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.addEventListener("change", async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) {
+        return;
+      }
+      const text = await file.text();
+      const imported = await importWorkflow(text);
+      if (imported) {
+        void navigate(`/workflows/${imported.id}`);
+      }
+    });
+    input.click();
   };
 
   // Toggle enabled
@@ -410,6 +887,94 @@ export function WorkflowEditorPage() {
       toggleWorkflow(id);
     }
   };
+
+  // Node selection
+  const selectedNode = useMemo(() => {
+    if (!selectedNodeId) {
+      return null;
+    }
+    const flowNode = nodes.find((n) => n.id === selectedNodeId);
+    return flowNode ? (flowNode.data as WorkflowNode) : null;
+  }, [selectedNodeId, nodes]);
+
+  const allWfNodes = useMemo(() => nodes.map((n) => n.data as WorkflowNode), [nodes]);
+
+  const handleNodeSelect = useCallback((_: unknown, node: Node) => {
+    setSelectedNodeId(node.id);
+  }, []);
+
+  const handlePaneClick = useCallback(() => {
+    setSelectedNodeId(null);
+  }, []);
+
+  const handleNodeUpdate = useCallback(
+    (updated: WorkflowNode) => {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === updated.id ? { ...n, data: { ...updated, position: n.position } } : n,
+        ),
+      );
+    },
+    [setNodes],
+  );
+
+  const handleNodeDuplicate = useCallback(() => {
+    if (!selectedNode) {
+      return;
+    }
+    const newId = `n-${Date.now()}`;
+    const dup: Node = {
+      id: newId,
+      type: "workflowNode",
+      position: { x: selectedNode.position.x + 40, y: selectedNode.position.y + 40 },
+      data: {
+        ...selectedNode,
+        id: newId,
+        label: `${selectedNode.label} (copy)`,
+        position: { x: selectedNode.position.x + 40, y: selectedNode.position.y + 40 },
+      },
+    };
+    setNodes((nds) => [...nds, dup]);
+    setSelectedNodeId(newId);
+  }, [selectedNode, setNodes]);
+
+  const handleNodeDelete = useCallback(() => {
+    if (!selectedNodeId) {
+      return;
+    }
+    setNodes((nds) => nds.filter((n) => n.id !== selectedNodeId));
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId),
+    );
+    setSelectedNodeId(null);
+  }, [selectedNodeId, setNodes, setEdges]);
+
+  // Version history
+  const handleShowVersions = useCallback(async () => {
+    if (!id || isNew) {
+      return;
+    }
+    const v = await fetchVersions(id);
+    setVersions(v);
+    setShowVersions(true);
+  }, [id, isNew, fetchVersions]);
+
+  const handleRollback = useCallback(
+    async (version: number) => {
+      if (!id) {
+        return;
+      }
+      const restored = await rollbackVersion(id, version);
+      if (restored) {
+        setWorkflowName(restored.name);
+        setEnabled(restored.enabled);
+        setNodes(toFlowNodes(restored.nodes));
+        setEdges(toFlowEdges(restored.edges));
+        setShowVersions(false);
+      }
+    },
+    [id, rollbackVersion, setNodes, setEdges],
+  );
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] -m-4 md:-m-6">
@@ -426,6 +991,8 @@ export function WorkflowEditorPage() {
           onConnect={onConnect}
           onDragOver={onDragOver}
           onDrop={onDrop}
+          onNodeClick={handleNodeSelect}
+          onPaneClick={handlePaneClick}
           onInit={(instance) => {
             reactFlowInstance.current = instance;
           }}
@@ -480,19 +1047,63 @@ export function WorkflowEditorPage() {
 
               <div className="w-px h-5 bg-[var(--glass-border)]" />
 
-              {/* Test */}
+              {/* Test — real execution */}
               <button
-                onClick={handleTest}
-                disabled={testing}
+                onClick={() => void handleTest()}
+                disabled={testing || isNew}
                 className={cn(
                   "inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-colors duration-200",
                   testing
                     ? "bg-amber-900/40 text-amber-400"
                     : "text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)]",
+                  (testing || isNew) && "opacity-50 cursor-not-allowed",
                 )}
               >
-                <Play className="w-3 h-3" />
+                {testing ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Play className="w-3 h-3" />
+                )}
                 {testing ? t("running", "Running...") : t("test", "Test")}
+              </button>
+
+              <div className="w-px h-5 bg-[var(--glass-border)]" />
+
+              {/* Import */}
+              <button
+                onClick={handleImport}
+                className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] cursor-pointer transition-colors duration-150"
+                title={t("import", "Import workflow JSON")}
+              >
+                <Upload className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Export */}
+              <button
+                onClick={() => void handleExport()}
+                disabled={isNew}
+                className={cn(
+                  "p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] cursor-pointer transition-colors duration-150",
+                  isNew && "opacity-50 cursor-not-allowed",
+                )}
+                title={t("export", "Export workflow JSON")}
+              >
+                <Download className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="w-px h-5 bg-[var(--glass-border)]" />
+
+              {/* Version history */}
+              <button
+                onClick={() => void handleShowVersions()}
+                disabled={isNew}
+                className={cn(
+                  "p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] cursor-pointer transition-colors duration-150",
+                  isNew && "opacity-50 cursor-not-allowed",
+                )}
+                title="Version history"
+              >
+                <History className="w-3.5 h-3.5" />
               </button>
 
               {/* Save */}
@@ -509,9 +1120,143 @@ export function WorkflowEditorPage() {
             <Badge variant="secondary" className="text-[10px]">
               {nodes.length} {nodes.length === 1 ? "node" : "nodes"}
             </Badge>
+
+            {/* Last execution result badge */}
+            {lastExecution && (
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "text-[10px] gap-1",
+                  lastExecution.status === "completed" && "text-green-400",
+                  lastExecution.status === "failed" && "text-red-400",
+                )}
+              >
+                {lastExecution.status === "completed" ? (
+                  <CheckCircle2 className="w-3 h-3" />
+                ) : (
+                  <XCircle className="w-3 h-3" />
+                )}
+                {lastExecution.status === "completed" ? "Passed" : "Failed"}
+                {lastExecution.durationMs != null && ` (${lastExecution.durationMs}ms)`}
+              </Badge>
+            )}
           </Panel>
         </ReactFlow>
+
+        {/* Version history dropdown */}
+        {showVersions && (
+          <div className="border-t border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] px-4 py-3 max-h-[200px] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-semibold text-neutral-300 flex items-center gap-1.5">
+                <History className="w-3.5 h-3.5" /> Version History
+              </h4>
+              <button
+                onClick={() => setShowVersions(false)}
+                className="text-[10px] text-neutral-600 hover:text-neutral-400 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+            {versions.length === 0 ? (
+              <p className="text-[11px] text-neutral-600">No version history yet.</p>
+            ) : (
+              <div className="space-y-1">
+                {versions.map((v) => (
+                  <div
+                    key={v.version}
+                    className="flex items-center justify-between text-[11px] py-1 px-2 rounded hover:bg-[var(--glass-subtle-hover)]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-neutral-400 font-medium">v{v.version}</span>
+                      <span className="text-neutral-600">
+                        {new Date(v.savedAt).toLocaleString()}
+                      </span>
+                      <span className="text-neutral-700">
+                        {v.nodeCount} nodes, {v.edgeCount} edges
+                      </span>
+                      {v.description && (
+                        <span className="text-neutral-500 italic">{v.description}</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => void handleRollback(v.version)}
+                      className="text-[10px] text-orange-400 hover:text-orange-300 cursor-pointer"
+                    >
+                      Restore
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Execution result panel */}
+        {lastExecution && (
+          <div className="border-t border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] px-4 py-3 max-h-[200px] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-semibold text-neutral-300">Execution Result</h4>
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "text-[10px]",
+                    lastExecution.status === "completed" ? "text-green-400" : "text-red-400",
+                  )}
+                >
+                  {lastExecution.status}
+                </Badge>
+                {lastExecution.durationMs != null && (
+                  <span className="text-[10px] text-neutral-500 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {lastExecution.durationMs}ms
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setLastExecution(null)}
+                className="text-[10px] text-neutral-600 hover:text-neutral-400 cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+
+            {lastExecution.error && (
+              <p className="text-xs text-red-400 mb-2">{lastExecution.error}</p>
+            )}
+
+            <div className="space-y-1">
+              {lastExecution.nodeResults.map((nr) => (
+                <div key={nr.nodeId} className="flex items-center gap-2 text-[11px]">
+                  {nr.status === "success" ? (
+                    <CheckCircle2 className="w-3 h-3 text-green-400 shrink-0" />
+                  ) : nr.status === "error" ? (
+                    <XCircle className="w-3 h-3 text-red-400 shrink-0" />
+                  ) : (
+                    <span className="w-3 h-3 rounded-full border border-neutral-600 shrink-0" />
+                  )}
+                  <span className="text-neutral-400 font-medium">{nr.nodeLabel}</span>
+                  <span className="text-neutral-600">{nr.nodeType}</span>
+                  <span className="text-neutral-700">{nr.completedAt - nr.startedAt}ms</span>
+                  {nr.error && <span className="text-red-400 truncate">{nr.error}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Node Property Inspector */}
+      {selectedNode && (
+        <NodePropertyInspector
+          node={selectedNode}
+          allNodes={allWfNodes}
+          onUpdate={handleNodeUpdate}
+          onDuplicate={handleNodeDuplicate}
+          onDelete={handleNodeDelete}
+          onClose={() => setSelectedNodeId(null)}
+        />
+      )}
     </div>
   );
 }

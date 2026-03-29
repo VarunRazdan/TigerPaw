@@ -1,7 +1,16 @@
 import { create } from "zustand";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 
-export type WorkflowNodeType = "trigger" | "condition" | "action" | "transform";
+export type WorkflowNodeType = "trigger" | "condition" | "action" | "transform" | "error_handler";
+
+export type BackoffStrategy = "none" | "linear" | "exponential";
+
+export type RetryConfig = {
+  maxRetries: number;
+  backoff: BackoffStrategy;
+  delayMs: number;
+  maxDelayMs: number;
+};
 
 export type WorkflowNode = {
   id: string;
@@ -10,6 +19,9 @@ export type WorkflowNode = {
   label: string;
   config: Record<string, unknown>;
   position: { x: number; y: number };
+  retryConfig?: RetryConfig;
+  errorHandlerId?: string;
+  credentialId?: string;
 };
 
 export type WorkflowEdge = {
@@ -30,18 +42,84 @@ export type Workflow = {
   updatedAt: string;
   lastRunAt?: string;
   runCount: number;
+  version?: number;
+};
+
+export type WorkflowVersionMeta = {
+  version: number;
+  savedAt: string;
+  description?: string;
+  nodeCount: number;
+  edgeCount: number;
+};
+
+export type StoredCredentialMeta = {
+  id: string;
+  name: string;
+  type: string;
+  fieldKeys: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type NodeExecutionResult = {
+  nodeId: string;
+  nodeLabel: string;
+  nodeType: WorkflowNodeType;
+  status: "success" | "error" | "skipped" | "retrying";
+  startedAt: number;
+  completedAt: number;
+  output?: Record<string, unknown>;
+  error?: string;
+  retryCount?: number;
+};
+
+export type WorkflowExecution = {
+  id: string;
+  workflowId: string;
+  workflowName: string;
+  triggeredBy: string;
+  triggerData?: Record<string, unknown>;
+  status: "running" | "completed" | "failed" | "cancelled";
+  startedAt: number;
+  completedAt?: number;
+  durationMs?: number;
+  nodeResults: NodeExecutionResult[];
+  error?: string;
+  parentExecutionId?: string;
 };
 
 type WorkflowState = {
   workflows: Workflow[];
   demoMode: boolean;
+  executionHistory: WorkflowExecution[];
+  isExecuting: string | null; // workflow ID being executed
 
+  setDemoMode: (enabled: boolean) => void;
   fetchWorkflows: () => Promise<void>;
   addWorkflow: (workflow: Workflow) => void;
   updateWorkflow: (id: string, patch: Partial<Omit<Workflow, "id">>) => void;
   deleteWorkflow: (id: string) => void;
   toggleWorkflow: (id: string) => void;
   getWorkflow: (id: string) => Workflow | undefined;
+
+  // Execution
+  executeWorkflow: (
+    id: string,
+    testData?: Record<string, unknown>,
+  ) => Promise<WorkflowExecution | null>;
+  fetchHistory: (workflowId?: string) => Promise<void>;
+
+  // Import/Export
+  importWorkflow: (json: string) => Promise<Workflow | null>;
+  exportWorkflow: (id: string) => Promise<Record<string, unknown> | null>;
+
+  // Version history
+  fetchVersions: (workflowId: string) => Promise<WorkflowVersionMeta[]>;
+  rollbackVersion: (workflowId: string, version: number) => Promise<Workflow | null>;
+
+  // Credentials
+  fetchCredentials: () => Promise<StoredCredentialMeta[]>;
 };
 
 const DEMO_WORKFLOWS: Workflow[] = [
@@ -158,6 +236,15 @@ const DEMO_WORKFLOWS: Workflow[] = [
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   workflows: DEMO_WORKFLOWS,
   demoMode: true,
+  executionHistory: [],
+  isExecuting: null,
+
+  setDemoMode: (enabled) =>
+    set({
+      demoMode: enabled,
+      workflows: enabled ? DEMO_WORKFLOWS : [],
+      executionHistory: [],
+    }),
 
   fetchWorkflows: async () => {
     try {
@@ -212,4 +299,126 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   getWorkflow: (id) => get().workflows.find((w) => w.id === id),
+
+  executeWorkflow: async (id, testData) => {
+    set({ isExecuting: id });
+    try {
+      const result = await gatewayRpc<{ execution?: WorkflowExecution }>("workflows.execute", {
+        id,
+        testData,
+      });
+      set({ isExecuting: null });
+      if (result.ok && result.payload?.execution) {
+        const execution = result.payload.execution;
+        // Update the workflow's lastRunAt and runCount in local state
+        set((s) => ({
+          executionHistory: [execution, ...s.executionHistory].slice(0, 50),
+          workflows: s.workflows.map((w) =>
+            w.id === id
+              ? {
+                  ...w,
+                  lastRunAt: new Date(execution.startedAt).toISOString(),
+                  runCount: w.runCount + 1,
+                }
+              : w,
+          ),
+        }));
+        return execution;
+      }
+      return null;
+    } catch {
+      set({ isExecuting: null });
+      return null;
+    }
+  },
+
+  fetchHistory: async (workflowId) => {
+    try {
+      const result = await gatewayRpc<{ executions?: WorkflowExecution[]; total?: number }>(
+        "workflows.history",
+        { workflowId, limit: 50 },
+      );
+      if (result.ok && Array.isArray(result.payload?.executions)) {
+        set({ executionHistory: result.payload.executions });
+      }
+    } catch {
+      // Gateway offline
+    }
+  },
+
+  importWorkflow: async (json) => {
+    try {
+      const parsed = JSON.parse(json);
+      const result = await gatewayRpc<{ workflow?: Workflow }>("workflows.import", {
+        workflow: parsed,
+      });
+      if (result.ok && result.payload?.workflow) {
+        const workflow = result.payload.workflow;
+        set((s) => ({ workflows: [...s.workflows, workflow] }));
+        return workflow;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  exportWorkflow: async (id) => {
+    try {
+      const result = await gatewayRpc<{ workflow?: Record<string, unknown> }>("workflows.export", {
+        id,
+      });
+      if (result.ok && result.payload?.workflow) {
+        return result.payload.workflow;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  fetchVersions: async (workflowId) => {
+    try {
+      const result = await gatewayRpc<{ versions?: WorkflowVersionMeta[]; total?: number }>(
+        "workflows.versions.list",
+        { workflowId, limit: 50 },
+      );
+      return result.ok && Array.isArray(result.payload?.versions) ? result.payload.versions : [];
+    } catch {
+      return [];
+    }
+  },
+
+  rollbackVersion: async (workflowId, version) => {
+    try {
+      const result = await gatewayRpc<{ workflow?: Workflow }>("workflows.versions.rollback", {
+        workflowId,
+        version,
+      });
+      if (result.ok && result.payload?.workflow) {
+        const restored = result.payload.workflow;
+        set((s) => ({
+          workflows: s.workflows.map((w) => (w.id === workflowId ? restored : w)),
+        }));
+        return restored;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  fetchCredentials: async () => {
+    try {
+      const result = await gatewayRpc<{ credentials?: StoredCredentialMeta[] }>(
+        "workflows.credentials.list",
+        {},
+      );
+      return result.ok && Array.isArray(result.payload?.credentials)
+        ? result.payload.credentials
+        : [];
+    } catch {
+      return [];
+    }
+  },
 }));
