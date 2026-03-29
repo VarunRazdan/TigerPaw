@@ -107,5 +107,20 @@
     "custom": "自定义"
   },
   "selectCredential": "选择凭证...",
-  "noneSelected": "无"
+  "noneSelected": "无",
+  "searchNodes": "搜索节点...",
+  "noMatchingNodes": "没有匹配的节点",
+  "unsavedChanges": "未保存的更改",
+  "portfolioRebalance": "投资组合再平衡",
+  "portfolioRebalanceDesc": "当持仓偏离目标配置时发出警报",
+  "webhookForwarder": "Webhook 转发器",
+  "webhookForwarderDesc": "接收外部 Webhook 并转发至 Slack",
+  "stopLossGuardian": "止损守护",
+  "stopLossGuardianDesc": "当达到亏损限额时自动启用紧急停止",
+  "newsSentiment": "新闻情绪",
+  "newsSentimentDesc": "分析新闻标题并在检测到负面情绪时发出警报",
+  "multiExchangeArb": "多交易所套利",
+  "multiExchangeArbDesc": "扫描不同交易所之间的价格差异",
+  "riskLimitNotify": "风险限额通知",
+  "riskLimitNotifyDesc": "当投资组合风险指标超过阈值时发出警报"
 }

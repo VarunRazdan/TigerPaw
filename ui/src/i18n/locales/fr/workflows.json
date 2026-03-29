@@ -107,5 +107,20 @@
     "custom": "Personnalisé"
   },
   "selectCredential": "Sélectionner un identifiant...",
-  "noneSelected": "Aucun"
+  "noneSelected": "Aucun",
+  "searchNodes": "Rechercher des nœuds...",
+  "noMatchingNodes": "Aucun nœud correspondant",
+  "unsavedChanges": "Modifications non enregistrées",
+  "portfolioRebalance": "Rééquilibrage du portefeuille",
+  "portfolioRebalanceDesc": "Alerte lorsque les positions s'écartent de l'allocation cible",
+  "webhookForwarder": "Relais de Webhooks",
+  "webhookForwarderDesc": "Recevoir des webhooks externes et les relayer vers Slack",
+  "stopLossGuardian": "Gardien Stop-Loss",
+  "stopLossGuardianDesc": "Activer automatiquement l'arrêt d'urgence lorsque la limite de perte est atteinte",
+  "newsSentiment": "Sentiment des actualités",
+  "newsSentimentDesc": "Analyser les titres d'actualités et alerter en cas de sentiment négatif",
+  "multiExchangeArb": "Arbitrage multi-plateformes",
+  "multiExchangeArbDesc": "Scanner les écarts de prix entre les plateformes",
+  "riskLimitNotify": "Notification de limite de risque",
+  "riskLimitNotifyDesc": "Alerte lorsque les indicateurs de risque du portefeuille dépassent les seuils"
 }

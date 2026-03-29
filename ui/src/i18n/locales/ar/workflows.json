@@ -107,5 +107,20 @@
     "custom": "مخصص"
   },
   "selectCredential": "اختر بيانات الاعتماد...",
-  "noneSelected": "لا شيء"
+  "noneSelected": "لا شيء",
+  "searchNodes": "البحث عن العُقد...",
+  "noMatchingNodes": "لا توجد عُقد مطابقة",
+  "unsavedChanges": "تغييرات غير محفوظة",
+  "portfolioRebalance": "إعادة توازن المحفظة",
+  "portfolioRebalanceDesc": "تنبيه عند انحراف الحيازات عن التخصيص المستهدف",
+  "webhookForwarder": "مُعيد توجيه Webhook",
+  "webhookForwarderDesc": "استقبال Webhooks خارجية وإعادة توجيهها إلى Slack",
+  "stopLossGuardian": "حارس وقف الخسارة",
+  "stopLossGuardianDesc": "تفعيل مفتاح الإيقاف تلقائياً عند بلوغ حد الخسارة",
+  "newsSentiment": "تحليل معنويات الأخبار",
+  "newsSentimentDesc": "تحليل عناوين الأخبار والتنبيه عند وجود معنويات سلبية",
+  "multiExchangeArb": "مراجحة متعددة المنصات",
+  "multiExchangeArbDesc": "مسح فروق الأسعار عبر المنصات",
+  "riskLimitNotify": "إشعار حد المخاطر",
+  "riskLimitNotifyDesc": "تنبيه عند تجاوز مقاييس مخاطر المحفظة للحدود المسموحة"
 }

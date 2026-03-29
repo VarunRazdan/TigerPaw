@@ -107,5 +107,20 @@
     "custom": "Benutzerdefiniert"
   },
   "selectCredential": "Anmeldedaten auswählen...",
-  "noneSelected": "Keine"
+  "noneSelected": "Keine",
+  "searchNodes": "Knoten suchen...",
+  "noMatchingNodes": "Keine passenden Knoten",
+  "unsavedChanges": "Ungespeicherte Änderungen",
+  "portfolioRebalance": "Portfolio-Rebalancing",
+  "portfolioRebalanceDesc": "Warnung, wenn Bestände von der Zielallokation abweichen",
+  "webhookForwarder": "Webhook-Weiterleitung",
+  "webhookForwarderDesc": "Externe Webhooks empfangen und an Slack weiterleiten",
+  "stopLossGuardian": "Stop-Loss-Wächter",
+  "stopLossGuardianDesc": "Notausschalter automatisch aktivieren, wenn das Verlustlimit erreicht wird",
+  "newsSentiment": "Nachrichtenstimmung",
+  "newsSentimentDesc": "Nachrichtenüberschriften analysieren und bei negativer Stimmung warnen",
+  "multiExchangeArb": "Multi-Börsen-Arbitrage",
+  "multiExchangeArbDesc": "Preisunterschiede zwischen Börsen scannen",
+  "riskLimitNotify": "Risikolimit-Benachrichtigung",
+  "riskLimitNotifyDesc": "Warnung, wenn Portfolio-Risikokennzahlen Schwellenwerte überschreiten"
 }

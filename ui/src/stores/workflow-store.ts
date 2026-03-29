@@ -456,6 +456,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         "workflows.credentials.test",
         {},
       );
+      if (!result.ok) {
+        return { ok: false, error: result.error };
+      }
       return { ok: result.payload?.ok === true, error: result.payload?.error };
     } catch {
       return { ok: false, error: "Gateway unavailable" };

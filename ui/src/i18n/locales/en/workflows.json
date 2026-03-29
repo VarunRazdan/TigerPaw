@@ -107,5 +107,20 @@
     "custom": "Custom"
   },
   "selectCredential": "Select credential...",
-  "noneSelected": "None"
+  "noneSelected": "None",
+  "searchNodes": "Search nodes...",
+  "noMatchingNodes": "No matching nodes",
+  "unsavedChanges": "Unsaved changes",
+  "portfolioRebalance": "Portfolio Rebalance",
+  "portfolioRebalanceDesc": "Alert when holdings drift from target allocation",
+  "webhookForwarder": "Webhook Forwarder",
+  "webhookForwarderDesc": "Receive external webhooks and relay to Slack",
+  "stopLossGuardian": "Stop-Loss Guardian",
+  "stopLossGuardianDesc": "Auto-activate kill switch when loss limit is hit",
+  "newsSentiment": "News Sentiment",
+  "newsSentimentDesc": "Analyze news headlines and alert on negative sentiment",
+  "multiExchangeArb": "Multi-Exchange Arb",
+  "multiExchangeArbDesc": "Scan price differences across exchanges",
+  "riskLimitNotify": "Risk Limit Notify",
+  "riskLimitNotifyDesc": "Alert when portfolio risk metrics exceed thresholds"
 }

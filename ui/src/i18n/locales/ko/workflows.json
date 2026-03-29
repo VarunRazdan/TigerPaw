@@ -107,5 +107,20 @@
     "custom": "사용자 정의"
   },
   "selectCredential": "자격 증명 선택...",
-  "noneSelected": "없음"
+  "noneSelected": "없음",
+  "searchNodes": "노드 검색...",
+  "noMatchingNodes": "일치하는 노드 없음",
+  "unsavedChanges": "저장되지 않은 변경 사항",
+  "portfolioRebalance": "포트폴리오 리밸런싱",
+  "portfolioRebalanceDesc": "보유 자산이 목표 배분에서 벗어나면 알림",
+  "webhookForwarder": "Webhook 포워더",
+  "webhookForwarderDesc": "외부 웹훅을 수신하여 Slack으로 전달",
+  "stopLossGuardian": "스톱로스 가디언",
+  "stopLossGuardianDesc": "손실 한도에 도달하면 킬 스위치를 자동 활성화",
+  "newsSentiment": "뉴스 센티먼트",
+  "newsSentimentDesc": "뉴스 헤드라인을 분석하고 부정적 센티먼트 감지 시 알림",
+  "multiExchangeArb": "다중 거래소 차익거래",
+  "multiExchangeArbDesc": "거래소 간 가격 차이 스캔",
+  "riskLimitNotify": "리스크 한도 알림",
+  "riskLimitNotifyDesc": "포트폴리오 리스크 지표가 임계값을 초과하면 알림"
 }

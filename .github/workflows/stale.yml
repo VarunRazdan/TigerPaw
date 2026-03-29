@@ -28,6 +28,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_FALLBACK }}
       - name: Mark stale issues and pull requests (primary)
         id: stale-primary
+        if: steps.app-token.outputs.token || steps.app-token-fallback.outputs.token
         continue-on-error: true
         uses: actions/stale@v9
         with:
@@ -64,7 +65,7 @@ jobs:
         continue-on-error: true
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
-          github-token: ${{ steps.app-token-fallback.outputs.token || steps.app-token.outputs.token }}
+          github-token: ${{ steps.app-token-fallback.outputs.token || steps.app-token.outputs.token || github.token }}
           script: |
             const cacheKey = "_state";
             const { owner, repo } = context.repo;
@@ -116,7 +117,6 @@ jobs:
             If you believe this PR should be revived, reopen it or contact maintainers via GitHub Discussions.
 
   lock-closed-issues:
-    if: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
     permissions:
       issues: write
     runs-on: ubuntu-latest
@@ -128,10 +128,9 @@ jobs:
           app-id: "2729701"
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
       - name: Lock closed issues after 48h of no comments
-        if: steps.app-token.outputs.token
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
-          github-token: ${{ steps.app-token.outputs.token }}
+          github-token: ${{ steps.app-token.outputs.token || github.token }}
           script: |
             const lockAfterHours = 48;
             const lockAfterMs = lockAfterHours * 60 * 60 * 1000;

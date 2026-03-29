@@ -107,5 +107,20 @@
     "custom": "自訂"
   },
   "selectCredential": "選擇憑證...",
-  "noneSelected": "無"
+  "noneSelected": "無",
+  "searchNodes": "搜尋節點...",
+  "noMatchingNodes": "沒有符合的節點",
+  "unsavedChanges": "未儲存的變更",
+  "portfolioRebalance": "投資組合再平衡",
+  "portfolioRebalanceDesc": "當持倉偏離目標配置時發出警示",
+  "webhookForwarder": "Webhook 轉發器",
+  "webhookForwarderDesc": "接收外部 Webhook 並轉發至 Slack",
+  "stopLossGuardian": "停損守護者",
+  "stopLossGuardianDesc": "當達到虧損限額時自動啟用緊急停止",
+  "newsSentiment": "新聞情緒",
+  "newsSentimentDesc": "分析新聞標題並在偵測到負面情緒時發出警示",
+  "multiExchangeArb": "多交易所套利",
+  "multiExchangeArbDesc": "掃描不同交易所之間的價格差異",
+  "riskLimitNotify": "風險限額通知",
+  "riskLimitNotifyDesc": "當投資組合風險指標超過閾值時發出警示"
 }

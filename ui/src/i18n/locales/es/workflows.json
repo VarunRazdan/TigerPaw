@@ -107,5 +107,20 @@
     "custom": "Personalizado"
   },
   "selectCredential": "Seleccionar credencial...",
-  "noneSelected": "Ninguna"
+  "noneSelected": "Ninguna",
+  "searchNodes": "Buscar nodos...",
+  "noMatchingNodes": "No hay nodos coincidentes",
+  "unsavedChanges": "Cambios sin guardar",
+  "portfolioRebalance": "Rebalanceo de cartera",
+  "portfolioRebalanceDesc": "Alerta cuando las posiciones se desvían de la asignación objetivo",
+  "webhookForwarder": "Reenviador de Webhooks",
+  "webhookForwarderDesc": "Recibir webhooks externos y reenviarlos a Slack",
+  "stopLossGuardian": "Guardián de Stop-Loss",
+  "stopLossGuardianDesc": "Activar automáticamente el interruptor de emergencia al alcanzar el límite de pérdidas",
+  "newsSentiment": "Sentimiento de noticias",
+  "newsSentimentDesc": "Analizar titulares de noticias y alertar sobre sentimiento negativo",
+  "multiExchangeArb": "Arbitraje multi-exchange",
+  "multiExchangeArbDesc": "Escanear diferencias de precios entre exchanges",
+  "riskLimitNotify": "Notificación de límite de riesgo",
+  "riskLimitNotifyDesc": "Alerta cuando las métricas de riesgo de la cartera superan los umbrales"
 }

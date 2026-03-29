@@ -7,6 +7,7 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
+  MarkerType,
   type Node,
   type Edge,
   type OnConnect,
@@ -40,6 +41,7 @@ import {
   KeyRound,
   ShieldCheck,
   ShieldAlert,
+  Search,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -254,8 +256,14 @@ function toFlowEdges(
     source: e.source,
     target: e.target,
     label: e.label,
+    type: "smoothstep",
     animated: true,
     style: { stroke: "#525252" },
+    labelStyle: { fill: "#a3a3a3", fontSize: 10, fontWeight: 500 },
+    labelBgStyle: { fill: "#1a1917", fillOpacity: 0.85 },
+    labelBgPadding: [4, 2] as [number, number],
+    labelBgBorderRadius: 4,
+    markerEnd: { type: MarkerType.ArrowClosed, color: "#525252", width: 16, height: 16 },
   }));
 }
 
@@ -265,6 +273,7 @@ function toFlowEdges(
 
 function PaletteSidebar() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState("");
 
   const toggle = (title: string) => setCollapsed((s) => ({ ...s, [title]: !s[title] }));
 
@@ -273,12 +282,37 @@ function PaletteSidebar() {
     e.dataTransfer.effectAllowed = "move";
   };
 
+  const lowerSearch = search.toLowerCase();
+
+  const filteredGroups = search
+    ? PALETTE_GROUPS.map((g) => ({
+        ...g,
+        items: g.items.filter(
+          (i) =>
+            i.label.toLowerCase().includes(lowerSearch) ||
+            i.subtype.toLowerCase().includes(lowerSearch),
+        ),
+      })).filter((g) => g.items.length > 0)
+    : PALETTE_GROUPS;
+
   return (
     <aside className="w-[180px] shrink-0 border-r border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] overflow-y-auto">
       <div className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
         Nodes
       </div>
-      {PALETTE_GROUPS.map((group) => (
+      {/* Search filter */}
+      <div className="px-2 pb-1.5">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-600 pointer-events-none" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search nodes..."
+            className="w-full h-6 pl-6 pr-2 text-[11px] rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300 placeholder:text-neutral-700 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+          />
+        </div>
+      </div>
+      {filteredGroups.map((group) => (
         <div key={group.title} className="mb-1">
           <button
             onClick={() => toggle(group.title)}
@@ -290,10 +324,10 @@ function PaletteSidebar() {
             {group.icon}
             {group.title}
             <span className="ml-auto text-neutral-700 text-[10px]">
-              {collapsed[group.title] ? "+" : "\u2212"}
+              {collapsed[group.title] && !search ? "+" : "\u2212"}
             </span>
           </button>
-          {!collapsed[group.title] && (
+          {(!collapsed[group.title] || search) && (
             <div className="px-2 pb-1 space-y-0.5">
               {group.items.map((item) => (
                 <div
@@ -310,6 +344,9 @@ function PaletteSidebar() {
           )}
         </div>
       ))}
+      {search && filteredGroups.length === 0 && (
+        <p className="px-3 py-4 text-[11px] text-neutral-600 text-center">No matching nodes</p>
+      )}
     </aside>
   );
 }
@@ -1032,6 +1069,7 @@ export function WorkflowEditorPage() {
   const [showCredentials, setShowCredentials] = useState(false);
   const [versions, setVersions] = useState<WorkflowVersionMeta[]>([]);
   const [credentialsList, setCredentialsList] = useState<StoredCredentialMeta[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
   const testing = isExecuting === id;
 
   const initialNodes = useMemo(
@@ -1069,10 +1107,31 @@ export function WorkflowEditorPage() {
     void fetchCredentials().then(setCredentialsList);
   }, [fetchCredentials]);
 
+  // Track dirty state on any node/edge change after initial load
+  useEffect(() => {
+    setIsDirty(true);
+  }, [nodes, edges, workflowName, enabled]);
+
+  // Reset dirty after loading or saving
+  useEffect(() => {
+    setIsDirty(false);
+  }, [id]);
+
   // Edge connection callback
   const onConnect: OnConnect = useCallback(
     (params) =>
-      setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: "#525252" } }, eds)),
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            type: "smoothstep",
+            animated: true,
+            style: { stroke: "#525252" },
+            markerEnd: { type: MarkerType.ArrowClosed, color: "#525252", width: 16, height: 16 },
+          },
+          eds,
+        ),
+      ),
     [setEdges],
   );
 
@@ -1272,6 +1331,31 @@ export function WorkflowEditorPage() {
     setSelectedNodeId(null);
   }, [selectedNodeId, setNodes, setEdges]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Ignore when typing in an input/textarea/select
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+        return;
+      }
+
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedNodeId) {
+        e.preventDefault();
+        handleNodeDelete();
+      }
+      if (e.key === "Escape" && selectedNodeId) {
+        setSelectedNodeId(null);
+      }
+      if (e.key === "d" && (e.metaKey || e.ctrlKey) && selectedNodeId) {
+        e.preventDefault();
+        handleNodeDuplicate();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selectedNodeId, handleNodeDelete, handleNodeDuplicate]);
+
   // Version history
   const handleShowVersions = useCallback(async () => {
     if (!id || isNew) {
@@ -1448,11 +1532,17 @@ export function WorkflowEditorPage() {
 
               {/* Save */}
               <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-600 hover:bg-orange-500 text-white text-[11px] font-medium cursor-pointer transition-colors duration-200"
+                onClick={() => {
+                  handleSave();
+                  setIsDirty(false);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-600 hover:bg-orange-500 text-white text-[11px] font-medium cursor-pointer transition-colors duration-200 relative"
               >
                 <Save className="w-3 h-3" />
                 {t("save", "Save")}
+                {isDirty && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-400" />
+                )}
               </button>
             </div>
 

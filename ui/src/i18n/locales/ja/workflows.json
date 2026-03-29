@@ -107,5 +107,20 @@
     "custom": "カスタム"
   },
   "selectCredential": "資格情報を選択...",
-  "noneSelected": "なし"
+  "noneSelected": "なし",
+  "searchNodes": "ノードを検索...",
+  "noMatchingNodes": "一致するノードがありません",
+  "unsavedChanges": "未保存の変更",
+  "portfolioRebalance": "ポートフォリオリバランス",
+  "portfolioRebalanceDesc": "保有資産が目標配分から逸脱した場合にアラート",
+  "webhookForwarder": "Webhook フォワーダー",
+  "webhookForwarderDesc": "外部 Webhook を受信して Slack に転送",
+  "stopLossGuardian": "ストップロスガーディアン",
+  "stopLossGuardianDesc": "損失限度に達した際にキルスイッチを自動的に作動",
+  "newsSentiment": "ニュースセンチメント",
+  "newsSentimentDesc": "ニュースの見出しを分析し、ネガティブなセンチメントを検知してアラート",
+  "multiExchangeArb": "マルチ取引所アービトラージ",
+  "multiExchangeArbDesc": "取引所間の価格差をスキャン",
+  "riskLimitNotify": "リスク限度通知",
+  "riskLimitNotifyDesc": "ポートフォリオのリスク指標がしきい値を超えた場合にアラート"
 }

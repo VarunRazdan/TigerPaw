@@ -1,10 +1,25 @@
-import { Plus, Workflow, Play, Pause, Trash2, Clock, Zap, MessageSquare, Bot } from "lucide-react";
+import {
+  Plus,
+  Workflow,
+  Play,
+  Pause,
+  Trash2,
+  Clock,
+  Zap,
+  MessageSquare,
+  Bot,
+  Webhook,
+  ShieldAlert,
+  Newspaper,
+  BarChart3,
+  Bell,
+} from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useWorkflowStore } from "@/stores/workflow-store";
+import { useWorkflowStore, type Workflow as WorkflowType } from "@/stores/workflow-store";
 
 const TEMPLATES = [
   {
@@ -28,7 +43,284 @@ const TEMPLATES = [
     icon: <Bot className="w-5 h-5 text-purple-400" />,
     color: "border-purple-700/40 hover:border-purple-600/60",
   },
+  {
+    id: "tpl-webhook-forwarder",
+    name: "Webhook Forwarder",
+    description: "Receive external webhooks and relay to Slack.",
+    icon: <Webhook className="w-5 h-5 text-cyan-400" />,
+    color: "border-cyan-700/40 hover:border-cyan-600/60",
+  },
+  {
+    id: "tpl-stop-loss-guardian",
+    name: "Stop-Loss Guardian",
+    description: "Auto-activate kill switch on large losses.",
+    icon: <ShieldAlert className="w-5 h-5 text-red-400" />,
+    color: "border-red-700/40 hover:border-red-600/60",
+  },
+  {
+    id: "tpl-news-sentiment",
+    name: "News Sentiment",
+    description: "Analyze headlines and alert on negative sentiment.",
+    icon: <Newspaper className="w-5 h-5 text-emerald-400" />,
+    color: "border-emerald-700/40 hover:border-emerald-600/60",
+  },
+  {
+    id: "tpl-portfolio-rebalance",
+    name: "Portfolio Rebalance",
+    description: "Alert when holdings drift from target allocation.",
+    icon: <BarChart3 className="w-5 h-5 text-orange-400" />,
+    color: "border-orange-700/40 hover:border-orange-600/60",
+  },
+  {
+    id: "tpl-risk-limit-notify",
+    name: "Risk Limit Notify",
+    description: "Notify when risk metrics exceed thresholds.",
+    icon: <Bell className="w-5 h-5 text-yellow-400" />,
+    color: "border-yellow-700/40 hover:border-yellow-600/60",
+  },
 ] as const;
+
+const TEMPLATE_DEFINITIONS: Record<
+  string,
+  Omit<WorkflowType, "id" | "createdAt" | "updatedAt" | "runCount">
+> = {
+  "tpl-webhook-forwarder": {
+    name: "Webhook Forwarder",
+    description: "Receive external webhooks and forward the payload to Slack.",
+    enabled: false,
+    nodes: [
+      {
+        id: "n1",
+        type: "trigger",
+        subtype: "webhook",
+        label: "Incoming Webhook",
+        config: { path: "external-hook" },
+        position: { x: 100, y: 200 },
+      },
+      {
+        id: "n2",
+        type: "transform",
+        subtype: "format_text",
+        label: "Format Payload",
+        config: { template: "Webhook received: {{body}}", outputKey: "formatted" },
+        position: { x: 400, y: 200 },
+      },
+      {
+        id: "n3",
+        type: "action",
+        subtype: "send_message",
+        label: "Send to Slack",
+        config: { channel: "slack", to: "#webhooks", template: "{{formatted}}" },
+        position: { x: 700, y: 200 },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n2", target: "n3" },
+    ],
+  },
+  "tpl-stop-loss-guardian": {
+    name: "Stop-Loss Guardian",
+    description: "Monitor trading events and activate kill switch when loss threshold is breached.",
+    enabled: false,
+    nodes: [
+      {
+        id: "n1",
+        type: "trigger",
+        subtype: "trading.event",
+        label: "Trade Executed",
+        config: { event: "trading.order.filled" },
+        position: { x: 100, y: 200 },
+      },
+      {
+        id: "n2",
+        type: "condition",
+        subtype: "expression",
+        label: "Loss > Threshold?",
+        config: { left: "$pnlPercent", operator: "<", right: "-5" },
+        position: { x: 400, y: 200 },
+      },
+      {
+        id: "n3",
+        type: "action",
+        subtype: "killswitch",
+        label: "Activate Kill Switch",
+        config: { mode: "activate", reason: "Stop-loss threshold breached", switchMode: "soft" },
+        position: { x: 700, y: 120 },
+      },
+      {
+        id: "n4",
+        type: "action",
+        subtype: "send_message",
+        label: "Alert Owner",
+        config: {
+          channel: "discord",
+          template: "Kill switch activated: P&L {{pnlPercent}}% breached -5% threshold",
+        },
+        position: { x: 700, y: 300 },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n2", target: "n3", label: "match" },
+      { id: "e3", source: "n3", target: "n4" },
+    ],
+  },
+  "tpl-news-sentiment": {
+    name: "News Sentiment",
+    description: "Analyze news headlines with an LLM and alert on negative market sentiment.",
+    enabled: false,
+    nodes: [
+      {
+        id: "n1",
+        type: "trigger",
+        subtype: "cron",
+        label: "Every 30 min",
+        config: { expression: "*/30 * * * *", timezone: "UTC" },
+        position: { x: 100, y: 200 },
+      },
+      {
+        id: "n2",
+        type: "action",
+        subtype: "call_webhook",
+        label: "Fetch Headlines",
+        config: { url: "https://api.example.com/news/latest", method: "GET" },
+        position: { x: 350, y: 200 },
+      },
+      {
+        id: "n3",
+        type: "action",
+        subtype: "run_llm_task",
+        label: "Analyze Sentiment",
+        config: {
+          prompt:
+            "Rate the market sentiment of these headlines as positive, neutral, or negative. Explain briefly:\n\n{{webhookResponse}}",
+          model: "default",
+        },
+        position: { x: 600, y: 200 },
+      },
+      {
+        id: "n4",
+        type: "condition",
+        subtype: "contains_keyword",
+        label: "Is Negative?",
+        config: { keyword: "negative", caseSensitive: false },
+        position: { x: 850, y: 200 },
+      },
+      {
+        id: "n5",
+        type: "action",
+        subtype: "send_message",
+        label: "Send Alert",
+        config: { channel: "discord", template: "Negative sentiment detected:\n{{llmResult}}" },
+        position: { x: 1100, y: 200 },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n2", target: "n3" },
+      { id: "e3", source: "n3", target: "n4" },
+      { id: "e4", source: "n4", target: "n5", label: "match" },
+    ],
+  },
+  "tpl-portfolio-rebalance": {
+    name: "Portfolio Rebalance",
+    description: "Check portfolio allocation daily and alert when holdings drift from targets.",
+    enabled: false,
+    nodes: [
+      {
+        id: "n1",
+        type: "trigger",
+        subtype: "cron",
+        label: "Daily at 9 AM",
+        config: { expression: "0 9 * * *", timezone: "UTC" },
+        position: { x: 100, y: 200 },
+      },
+      {
+        id: "n2",
+        type: "action",
+        subtype: "run_llm_task",
+        label: "Analyze Allocation",
+        config: {
+          prompt:
+            "Given the current portfolio, check if any position has drifted more than 10% from target allocation. List positions that need rebalancing.",
+          model: "default",
+        },
+        position: { x: 400, y: 200 },
+      },
+      {
+        id: "n3",
+        type: "condition",
+        subtype: "contains_keyword",
+        label: "Needs Rebalance?",
+        config: { keyword: "rebalancing", caseSensitive: false },
+        position: { x: 700, y: 200 },
+      },
+      {
+        id: "n4",
+        type: "action",
+        subtype: "send_message",
+        label: "Notify",
+        config: { channel: "telegram", template: "Portfolio rebalance needed:\n{{llmResult}}" },
+        position: { x: 1000, y: 200 },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n2", target: "n3" },
+      { id: "e3", source: "n3", target: "n4", label: "match" },
+    ],
+  },
+  "tpl-risk-limit-notify": {
+    name: "Risk Limit Notify",
+    description:
+      "Alert when portfolio risk metrics (drawdown, concentration) exceed safe thresholds.",
+    enabled: false,
+    nodes: [
+      {
+        id: "n1",
+        type: "trigger",
+        subtype: "trading.event",
+        label: "Any Trading Event",
+        config: {},
+        position: { x: 100, y: 200 },
+      },
+      {
+        id: "n2",
+        type: "transform",
+        subtype: "extract_data",
+        label: "Extract Metrics",
+        config: { path: "event.payload", outputKey: "metrics" },
+        position: { x: 350, y: 200 },
+      },
+      {
+        id: "n3",
+        type: "condition",
+        subtype: "expression",
+        label: "Drawdown > 10%?",
+        config: { left: "$metrics.drawdownPct", operator: ">", right: "10" },
+        position: { x: 600, y: 200 },
+      },
+      {
+        id: "n4",
+        type: "action",
+        subtype: "send_message",
+        label: "Send Risk Alert",
+        config: {
+          channel: "discord",
+          to: "#risk-alerts",
+          template: "Risk limit breached: drawdown {{metrics.drawdownPct}}% exceeds 10% threshold",
+        },
+        position: { x: 900, y: 200 },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n2", target: "n3" },
+      { id: "e3", source: "n3", target: "n4", label: "match" },
+    ],
+  },
+};
 
 function triggerBadge(nodes: { type: string; subtype: string }[]) {
   const trigger = nodes.find((n) => n.type === "trigger");
@@ -38,8 +330,12 @@ function triggerBadge(nodes: { type: string; subtype: string }[]) {
 
   const map: Record<string, { label: string; variant: "default" | "warning" | "secondary" }> = {
     "trading.order.denied": { label: "Trading Event", variant: "warning" },
+    "trading.order.filled": { label: "Trading Event", variant: "warning" },
+    "trading.event": { label: "Trading Event", variant: "warning" },
     "message.received": { label: "Message", variant: "default" },
     cron: { label: "Scheduled", variant: "secondary" },
+    webhook: { label: "Webhook", variant: "secondary" },
+    manual: { label: "Manual", variant: "secondary" },
   };
 
   const info = map[trigger.subtype] ?? { label: trigger.subtype, variant: "secondary" as const };
@@ -76,26 +372,42 @@ export function WorkflowsPage() {
   }, [fetchWorkflows]);
 
   const handleUseTemplate = (tplId: string) => {
-    // Find matching demo workflow to clone
-    const sourceMap: Record<string, string> = {
+    // Try to clone from demo workflows first
+    const demoSourceMap: Record<string, string> = {
       "tpl-trading-alert": "wf-trading-alert",
       "tpl-message-router": "wf-message-router",
       "tpl-daily-digest": "wf-daily-digest",
     };
-    const sourceId = sourceMap[tplId];
-    const source = useWorkflowStore.getState().getWorkflow(sourceId);
-    if (!source) {
-      return;
+    const demoId = demoSourceMap[tplId];
+    if (demoId) {
+      const source = useWorkflowStore.getState().getWorkflow(demoId);
+      if (source) {
+        const newId = `wf-${Date.now()}`;
+        addWorkflow({
+          ...source,
+          id: newId,
+          name: `${source.name} (copy)`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastRunAt: undefined,
+          runCount: 0,
+          enabled: false,
+        });
+        return;
+      }
     }
 
+    // Generate from built-in template definitions
+    const tpl = TEMPLATE_DEFINITIONS[tplId];
+    if (!tpl) {
+      return;
+    }
     const newId = `wf-${Date.now()}`;
     addWorkflow({
-      ...source,
+      ...tpl,
       id: newId,
-      name: `${source.name} (copy)`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      lastRunAt: undefined,
       runCount: 0,
       enabled: false,
     });
