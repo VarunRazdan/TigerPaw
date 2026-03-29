@@ -645,4 +645,46 @@ export const workflowsHandlers: GatewayRequestHandlers = {
       );
     }
   },
+
+  // ── Webhooks ────────────────────────────────────────────────────
+
+  "workflows.webhook": async ({ params, respond }) => {
+    const path = params.path as string | undefined;
+    if (!path) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "path is required"));
+      return;
+    }
+    try {
+      const body = (params.body ?? {}) as Record<string, unknown>;
+      const headers = (params.headers ?? {}) as Record<string, string>;
+      const service = getWorkflowService();
+      const triggered = service.handleWebhook(path, body, headers);
+      respond(true, { triggered }, undefined);
+    } catch (err) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.UNAVAILABLE,
+          err instanceof Error ? err.message : String(err as string),
+        ),
+      );
+    }
+  },
+
+  "workflows.webhooks.list": async ({ respond }) => {
+    try {
+      const webhooks = getWorkflowService().listWebhooks();
+      respond(true, { webhooks }, undefined);
+    } catch (err) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.UNAVAILABLE,
+          err instanceof Error ? err.message : String(err as string),
+        ),
+      );
+    }
+  },
 };

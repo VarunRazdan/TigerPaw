@@ -85,5 +85,27 @@
   "addCredential": "Anmeldedaten hinzufügen",
   "credentialName": "Name der Anmeldedaten",
   "credentialType": "Typ der Anmeldedaten",
-  "noCredentials": "Keine Anmeldedaten gespeichert"
+  "noCredentials": "Keine Anmeldedaten gespeichert",
+  "editCredential": "Anmeldedaten bearbeiten",
+  "credentialFields": "Felder",
+  "noCredentialsHint": "Fügen Sie API-Schlüssel und Tokens hinzu, die von Workflow-Aktionen verwendet werden.",
+  "credentialSaved": "Anmeldedaten gespeichert",
+  "credentialDeleted": "Anmeldedaten gelöscht",
+  "deleteConfirm": "Diese Anmeldedaten löschen? Workflows, die sie verwenden, verlieren den Zugriff.",
+  "vaultHealthy": "Tresor-Verschlüsselung OK",
+  "vaultUnhealthy": "Tresor-Verschlüsselungsfehler",
+  "fieldName": "Feldname",
+  "fieldValue": "Feldwert",
+  "addField": "Feld hinzufügen",
+  "removeField": "Entfernen",
+  "credentialTypes": {
+    "api_key": "API Key",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth",
+    "bearer_token": "Bearer Token",
+    "webhook_secret": "Webhook Secret",
+    "custom": "Benutzerdefiniert"
+  },
+  "selectCredential": "Anmeldedaten auswählen...",
+  "noneSelected": "Keine"
 }

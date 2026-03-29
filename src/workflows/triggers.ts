@@ -12,6 +12,7 @@
  * which the WorkflowService wires to the engine.
  */
 
+import { createHmac, timingSafeEqual } from "node:crypto";
 import type { CronService } from "../cron/service.js";
 import { onTradingEvent } from "../trading/event-emitter.js";
 import type { TradingEvent } from "../trading/events.js";
@@ -30,8 +31,18 @@ type RegisteredTrigger = {
   cleanup: () => void;
 };
 
+type WebhookRegistration = {
+  workflowId: string;
+  nodeId: string;
+  path: string;
+  secret?: string;
+  workflow: Workflow;
+  node: WorkflowNode;
+};
+
 export class TriggerManager {
   private triggers: RegisteredTrigger[] = [];
+  private webhooks = new Map<string, WebhookRegistration>();
   private cronService: CronService | null = null;
   private onTrigger: TriggerCallback;
 
@@ -76,6 +87,13 @@ export class TriggerManager {
       trigger.cleanup();
     }
     this.triggers = this.triggers.filter((t) => t.workflowId !== workflowId);
+
+    // Remove webhook registrations for this workflow
+    for (const [path, reg] of this.webhooks) {
+      if (reg.workflowId === workflowId) {
+        this.webhooks.delete(path);
+      }
+    }
   }
 
   /** Unregister all triggers (shutdown). */
@@ -84,6 +102,7 @@ export class TriggerManager {
       trigger.cleanup();
     }
     this.triggers = [];
+    this.webhooks.clear();
   }
 
   /** Get registered trigger count (for diagnostics). */
@@ -100,6 +119,51 @@ export class TriggerManager {
     }));
   }
 
+  /** List registered webhooks (for diagnostics / the UI). */
+  listWebhooks(): Array<{ workflowId: string; nodeId: string; path: string }> {
+    return [...this.webhooks.values()].map((r) => ({
+      workflowId: r.workflowId,
+      nodeId: r.nodeId,
+      path: r.path,
+    }));
+  }
+
+  /**
+   * Handle an incoming webhook request.
+   * Called from the gateway webhook route handler.
+   *
+   * @param path    The webhook path (e.g. "my-hook" from /webhooks/my-hook)
+   * @param body    The parsed request body
+   * @param headers Request headers (for HMAC verification)
+   * @returns true if a matching webhook was found and triggered
+   */
+  handleWebhook(
+    path: string,
+    body: Record<string, unknown>,
+    headers?: Record<string, string>,
+  ): boolean {
+    const reg = this.webhooks.get(path);
+    if (!reg) {
+      return false;
+    }
+
+    // Verify HMAC secret if configured
+    if (reg.secret && headers) {
+      const signature = headers["x-webhook-signature"] ?? headers["x-hub-signature-256"] ?? "";
+      if (signature && !this.verifyHmac(reg.secret, JSON.stringify(body), signature)) {
+        return false;
+      }
+    }
+
+    this.onTrigger(reg.workflow, reg.node, {
+      triggerType: "webhook",
+      path,
+      body,
+      receivedAt: new Date().toISOString(),
+    });
+    return true;
+  }
+
   // ── Private: register a single trigger node ─────────────────────
 
   private async registerNode(
@@ -114,8 +178,7 @@ export class TriggerManager {
       case "message.received":
         return this.registerMessageReceived(workflow, node);
       case "webhook":
-        // Webhook triggers require HTTP route registration — deferred
-        return null;
+        return this.registerWebhook(workflow, node);
       case "manual":
         // Manual triggers are fired on-demand, no registration needed
         return null;
@@ -273,5 +336,48 @@ export class TriggerManager {
       type: "message.received",
       cleanup: unsubscribe,
     };
+  }
+
+  // ── Webhook trigger ──────────────────────────────────────────────
+
+  private registerWebhook(workflow: Workflow, node: WorkflowNode): RegisteredTrigger | null {
+    const path =
+      (node.config.path as string | undefined) ?? (node.config.webhookPath as string | undefined);
+    if (!path) {
+      return null;
+    }
+
+    // Normalize: strip leading slash
+    const normalizedPath = path.replace(/^\/+/, "");
+    const secret = node.config.secret as string | undefined;
+
+    this.webhooks.set(normalizedPath, {
+      workflowId: workflow.id,
+      nodeId: node.id,
+      path: normalizedPath,
+      secret,
+      workflow,
+      node,
+    });
+
+    return {
+      workflowId: workflow.id,
+      nodeId: node.id,
+      type: "webhook",
+      cleanup: () => {
+        this.webhooks.delete(normalizedPath);
+      },
+    };
+  }
+
+  // ── HMAC verification ────────────────────────────────────────────
+
+  private verifyHmac(secret: string, payload: string, signature: string): boolean {
+    try {
+      const expected = "sha256=" + createHmac("sha256", secret).update(payload).digest("hex");
+      return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    } catch {
+      return false;
+    }
   }
 }

@@ -191,11 +191,26 @@ export class WorkflowService {
     clearHistory(workflowId);
   }
 
+  /** Handle an incoming webhook and fire the matching trigger. */
+  handleWebhook(
+    path: string,
+    body: Record<string, unknown>,
+    headers?: Record<string, string>,
+  ): boolean {
+    return this.triggers.handleWebhook(path, body, headers);
+  }
+
+  /** List registered webhook paths. */
+  listWebhooks(): Array<{ workflowId: string; nodeId: string; path: string }> {
+    return this.triggers.listWebhooks();
+  }
+
   /** Service diagnostics. */
   diagnostics() {
     return {
       running: this.running,
       registeredTriggers: this.triggers.listRegistered(),
+      registeredWebhooks: this.triggers.listWebhooks(),
       recentLogs: this.executionLogs.slice(-20),
     };
   }

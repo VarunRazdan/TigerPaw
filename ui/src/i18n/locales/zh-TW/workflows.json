@@ -85,5 +85,27 @@
   "addCredential": "新增憑證",
   "credentialName": "憑證名稱",
   "credentialType": "憑證類型",
-  "noCredentials": "尚無儲存的憑證"
+  "noCredentials": "尚無儲存的憑證",
+  "editCredential": "編輯憑證",
+  "credentialFields": "欄位",
+  "noCredentialsHint": "新增工作流程動作使用的 API 金鑰和權杖。",
+  "credentialSaved": "憑證已儲存",
+  "credentialDeleted": "憑證已刪除",
+  "deleteConfirm": "刪除此憑證？使用該憑證的工作流程將失去存取權限。",
+  "vaultHealthy": "保險庫加密正常",
+  "vaultUnhealthy": "保險庫加密錯誤",
+  "fieldName": "欄位名稱",
+  "fieldValue": "欄位值",
+  "addField": "新增欄位",
+  "removeField": "移除",
+  "credentialTypes": {
+    "api_key": "API Key（API 金鑰）",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth（基本驗證）",
+    "bearer_token": "Bearer Token（持有者權杖）",
+    "webhook_secret": "Webhook Secret（Webhook 密鑰）",
+    "custom": "自訂"
+  },
+  "selectCredential": "選擇憑證...",
+  "noneSelected": "無"
 }

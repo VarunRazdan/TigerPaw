@@ -85,5 +85,27 @@
   "addCredential": "資格情報を追加",
   "credentialName": "資格情報名",
   "credentialType": "資格情報タイプ",
-  "noCredentials": "保存された資格情報はありません"
+  "noCredentials": "保存された資格情報はありません",
+  "editCredential": "資格情報を編集",
+  "credentialFields": "フィールド",
+  "noCredentialsHint": "ワークフローアクションで使用する API キーとトークンを追加してください。",
+  "credentialSaved": "資格情報を保存しました",
+  "credentialDeleted": "資格情報を削除しました",
+  "deleteConfirm": "この資格情報を削除しますか？使用中のワークフローはアクセスできなくなります。",
+  "vaultHealthy": "Vault 暗号化 OK",
+  "vaultUnhealthy": "Vault 暗号化エラー",
+  "fieldName": "フィールド名",
+  "fieldValue": "フィールド値",
+  "addField": "フィールドを追加",
+  "removeField": "削除",
+  "credentialTypes": {
+    "api_key": "API Key（APIキー）",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth（基本認証）",
+    "bearer_token": "Bearer Token（ベアラートークン）",
+    "webhook_secret": "Webhook Secret（Webhookシークレット）",
+    "custom": "カスタム"
+  },
+  "selectCredential": "資格情報を選択...",
+  "noneSelected": "なし"
 }

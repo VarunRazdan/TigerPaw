@@ -37,6 +37,9 @@ import {
   RotateCcw,
   Settings2,
   History,
+  KeyRound,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -51,6 +54,7 @@ import {
   type WorkflowExecution,
   type RetryConfig,
   type WorkflowVersionMeta,
+  type StoredCredentialMeta,
 } from "@/stores/workflow-store";
 
 // ---------------------------------------------------------------------------
@@ -452,6 +456,7 @@ const NODE_CONFIG_FIELDS: Record<
 function NodePropertyInspector({
   node,
   allNodes,
+  credentials,
   onUpdate,
   onDuplicate,
   onDelete,
@@ -459,11 +464,13 @@ function NodePropertyInspector({
 }: {
   node: WorkflowNode;
   allNodes: WorkflowNode[];
+  credentials: StoredCredentialMeta[];
   onUpdate: (updated: WorkflowNode) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("workflows");
   const fields = NODE_CONFIG_FIELDS[node.subtype] ?? [];
   const colors = NODE_COLORS[node.type] ?? NODE_COLORS.action;
 
@@ -648,18 +655,24 @@ function NodePropertyInspector({
           </div>
         )}
 
-        {/* Credential ID */}
+        {/* Credential */}
         {node.type === "action" && (
           <div>
-            <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">
-              Credential ID
+            <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold flex items-center gap-1">
+              <KeyRound className="w-3 h-3" /> {t("credentialId")}
             </label>
-            <Input
+            <select
               value={node.credentialId ?? ""}
               onChange={(e) => onUpdate({ ...node, credentialId: e.target.value || undefined })}
-              placeholder="cred-..."
-              className="h-7 text-xs mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)]"
-            />
+              className="mt-1 w-full h-7 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-200 px-2"
+            >
+              <option value="">{t("noneSelected")}</option>
+              {credentials.map((cred) => (
+                <option key={cred.id} value={cred.id}>
+                  {cred.name} ({t(`credentialTypes.${cred.type}`, cred.type)})
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
@@ -684,6 +697,308 @@ function NodePropertyInspector({
 }
 
 // ---------------------------------------------------------------------------
+// Credential Vault Panel
+// ---------------------------------------------------------------------------
+
+const CREDENTIAL_TYPES = [
+  "api_key",
+  "oauth2",
+  "basic_auth",
+  "bearer_token",
+  "webhook_secret",
+  "custom",
+] as const;
+
+function CredentialVaultPanel({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation("workflows");
+  const { fetchCredentials, saveCredential, deleteCredential, testVault } = useWorkflowStore();
+
+  const [credentials, setCredentials] = useState<StoredCredentialMeta[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<{
+    id: string;
+    name: string;
+    type: string;
+    fields: Array<{ key: string; value: string }>;
+    isNew: boolean;
+  } | null>(null);
+  const [vaultStatus, setVaultStatus] = useState<{ ok: boolean; error?: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const creds = await fetchCredentials();
+    setCredentials(creds);
+    setLoading(false);
+  }, [fetchCredentials]);
+
+  useEffect(() => {
+    void refresh();
+    void testVault().then(setVaultStatus);
+  }, [refresh, testVault]);
+
+  const handleNew = () => {
+    setEditing({
+      id: `cred-${Date.now().toString(36)}`,
+      name: "",
+      type: "api_key",
+      fields: [{ key: "", value: "" }],
+      isNew: true,
+    });
+  };
+
+  const handleSave = async () => {
+    if (!editing || !editing.name.trim()) {
+      return;
+    }
+    setSaving(true);
+    const fields: Record<string, string> = {};
+    for (const f of editing.fields) {
+      if (f.key.trim()) {
+        fields[f.key.trim()] = f.value;
+      }
+    }
+    const ok = await saveCredential({
+      id: editing.id,
+      name: editing.name.trim(),
+      type: editing.type,
+      fields,
+    });
+    setSaving(false);
+    if (ok) {
+      setEditing(null);
+      void refresh();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const ok = await deleteCredential(id);
+    if (ok) {
+      void refresh();
+    }
+  };
+
+  return (
+    <div className="absolute right-0 top-0 bottom-0 w-80 bg-neutral-900/95 backdrop-blur-lg border-l border-neutral-700/50 z-30 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b border-neutral-700/50">
+        <div className="flex items-center gap-2">
+          <KeyRound className="w-4 h-4 text-amber-400" />
+          <span className="text-sm font-semibold text-neutral-200">{t("credentials")}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {vaultStatus && (
+            <span
+              title={
+                vaultStatus.ok ? t("vaultHealthy") : (vaultStatus.error ?? t("vaultUnhealthy"))
+              }
+            >
+              {vaultStatus.ok ? (
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+              )}
+            </span>
+          )}
+          <button onClick={onClose} className="p-1 rounded hover:bg-neutral-800 cursor-pointer">
+            <X className="w-4 h-4 text-neutral-400" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {editing ? (
+          /* ── Edit / Create Form ── */
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
+                {t("credentialName")}
+              </label>
+              <Input
+                value={editing.name}
+                onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                placeholder="My API Key"
+                className="h-7 text-xs mt-1 bg-neutral-800/50 border-neutral-700/50"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
+                {t("credentialType")}
+              </label>
+              <select
+                value={editing.type}
+                onChange={(e) => setEditing({ ...editing, type: e.target.value })}
+                className="mt-1 w-full h-7 text-xs rounded-md bg-neutral-800/50 border border-neutral-700/50 text-neutral-200 px-2"
+              >
+                {CREDENTIAL_TYPES.map((ct) => (
+                  <option key={ct} value={ct}>
+                    {t(`credentialTypes.${ct}`, ct)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] text-neutral-500 uppercase tracking-wider font-semibold">
+                  {t("credentialFields")}
+                </label>
+                <button
+                  onClick={() =>
+                    setEditing({ ...editing, fields: [...editing.fields, { key: "", value: "" }] })
+                  }
+                  className="text-[10px] text-blue-400 hover:text-blue-300 cursor-pointer"
+                >
+                  + {t("addField")}
+                </button>
+              </div>
+              <div className="mt-1 space-y-1.5">
+                {editing.fields.map((field, i) => (
+                  <div key={i} className="flex gap-1">
+                    <Input
+                      value={field.key}
+                      onChange={(e) => {
+                        const next = [...editing.fields];
+                        next[i] = { ...next[i], key: e.target.value };
+                        setEditing({ ...editing, fields: next });
+                      }}
+                      placeholder={t("fieldName")}
+                      className="h-6 text-[11px] flex-1 bg-neutral-800/50 border-neutral-700/50"
+                    />
+                    <Input
+                      type="password"
+                      value={field.value}
+                      onChange={(e) => {
+                        const next = [...editing.fields];
+                        next[i] = { ...next[i], value: e.target.value };
+                        setEditing({ ...editing, fields: next });
+                      }}
+                      placeholder={t("fieldValue")}
+                      className="h-6 text-[11px] flex-1 bg-neutral-800/50 border-neutral-700/50"
+                    />
+                    {editing.fields.length > 1 && (
+                      <button
+                        onClick={() => {
+                          const next = editing.fields.filter((_, j) => j !== i);
+                          setEditing({ ...editing, fields: next });
+                        }}
+                        className="px-1 text-neutral-500 hover:text-red-400 cursor-pointer"
+                        title={t("removeField")}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => void handleSave()}
+                disabled={saving || !editing.name.trim()}
+                className="flex-1 h-7 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-40 cursor-pointer transition-colors"
+              >
+                {saving ? "..." : t("save")}
+              </button>
+              <button
+                onClick={() => setEditing(null)}
+                className="h-7 px-3 text-xs rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 cursor-pointer transition-colors"
+              >
+                {t("back")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* ── Credential List ── */
+          <>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />
+              </div>
+            ) : credentials.length === 0 ? (
+              <div className="text-center py-8">
+                <KeyRound className="w-8 h-8 mx-auto text-neutral-600 mb-2" />
+                <p className="text-xs text-neutral-500">{t("noCredentials")}</p>
+                <p className="text-[10px] text-neutral-600 mt-1">{t("noCredentialsHint")}</p>
+              </div>
+            ) : (
+              credentials.map((cred) => (
+                <div
+                  key={cred.id}
+                  className="rounded-lg border border-neutral-700/40 bg-neutral-800/30 p-2.5 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <KeyRound className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
+                      <span className="text-xs font-medium text-neutral-200 truncate">
+                        {cred.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() =>
+                          setEditing({
+                            id: cred.id,
+                            name: cred.name,
+                            type: cred.type,
+                            fields: cred.fieldKeys.map((k) => ({ key: k, value: "" })),
+                            isNew: false,
+                          })
+                        }
+                        className="p-1 rounded hover:bg-neutral-700 cursor-pointer"
+                        title={t("editCredential")}
+                      >
+                        <Settings2 className="w-3 h-3 text-neutral-400" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(t("deleteConfirm"))) {
+                            void handleDelete(cred.id);
+                          }
+                        }}
+                        className="p-1 rounded hover:bg-neutral-700 cursor-pointer"
+                        title={t("delete")}
+                      >
+                        <Trash2 className="w-3 h-3 text-neutral-500 hover:text-red-400" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-[10px] text-neutral-500">
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] px-1.5 py-0 h-4 border-neutral-700/50 text-neutral-500"
+                    >
+                      {t(`credentialTypes.${cred.type}`, cred.type)}
+                    </Badge>
+                    <span>{cred.fieldKeys.length} fields</span>
+                  </div>
+                  <div className="mt-1 text-[10px] text-neutral-600 font-mono truncate">
+                    {cred.id}
+                  </div>
+                </div>
+              ))
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      {!editing && (
+        <div className="p-3 border-t border-neutral-700/50">
+          <button
+            onClick={handleNew}
+            className="w-full h-7 text-xs font-medium rounded-md bg-neutral-800 hover:bg-neutral-700 text-neutral-200 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <Plus className="w-3 h-3" /> {t("addCredential")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main editor page
 // ---------------------------------------------------------------------------
 
@@ -702,6 +1017,7 @@ export function WorkflowEditorPage() {
     importWorkflow,
     fetchVersions,
     rollbackVersion,
+    fetchCredentials,
   } = useWorkflowStore();
 
   const isNew = id === "new";
@@ -713,7 +1029,9 @@ export function WorkflowEditorPage() {
   const [lastExecution, setLastExecution] = useState<WorkflowExecution | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showVersions, setShowVersions] = useState(false);
+  const [showCredentials, setShowCredentials] = useState(false);
   const [versions, setVersions] = useState<WorkflowVersionMeta[]>([]);
+  const [credentialsList, setCredentialsList] = useState<StoredCredentialMeta[]>([]);
   const testing = isExecuting === id;
 
   const initialNodes = useMemo(
@@ -745,6 +1063,11 @@ export function WorkflowEditorPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Fetch credentials for the node inspector dropdown
+  useEffect(() => {
+    void fetchCredentials().then(setCredentialsList);
+  }, [fetchCredentials]);
 
   // Edge connection callback
   const onConnect: OnConnect = useCallback(
@@ -957,6 +1280,7 @@ export function WorkflowEditorPage() {
     const v = await fetchVersions(id);
     setVersions(v);
     setShowVersions(true);
+    setShowCredentials(false);
   }, [id, isNew, fetchVersions]);
 
   const handleRollback = useCallback(
@@ -982,7 +1306,8 @@ export function WorkflowEditorPage() {
       <PaletteSidebar />
 
       {/* Canvas area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {showCredentials && <CredentialVaultPanel onClose={() => setShowCredentials(false)} />}
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -1104,6 +1429,21 @@ export function WorkflowEditorPage() {
                 title="Version history"
               >
                 <History className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Credentials */}
+              <button
+                onClick={() => {
+                  setShowCredentials((v) => !v);
+                  setShowVersions(false);
+                }}
+                className={cn(
+                  "p-1.5 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] cursor-pointer transition-colors duration-150",
+                  showCredentials && "text-amber-400 bg-[var(--glass-subtle-hover)]",
+                )}
+                title={t("credentials")}
+              >
+                <KeyRound className="w-3.5 h-3.5" />
               </button>
 
               {/* Save */}
@@ -1251,6 +1591,7 @@ export function WorkflowEditorPage() {
         <NodePropertyInspector
           node={selectedNode}
           allNodes={allWfNodes}
+          credentials={credentialsList}
           onUpdate={handleNodeUpdate}
           onDuplicate={handleNodeDuplicate}
           onDelete={handleNodeDelete}

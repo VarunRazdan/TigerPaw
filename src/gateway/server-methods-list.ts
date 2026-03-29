@@ -127,6 +127,8 @@ const BASE_METHODS = [
   "workflows.versions.rollback",
   "workflows.versions.diff",
   "workflows.versions.clear",
+  "workflows.webhook",
+  "workflows.webhooks.list",
 ];
 
 export function listGatewayMethods(): string[] {

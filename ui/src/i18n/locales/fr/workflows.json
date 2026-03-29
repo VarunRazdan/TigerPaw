@@ -85,5 +85,27 @@
   "addCredential": "Ajouter un identifiant",
   "credentialName": "Nom de l'identifiant",
   "credentialType": "Type d'identifiant",
-  "noCredentials": "Aucun identifiant enregistré"
+  "noCredentials": "Aucun identifiant enregistré",
+  "editCredential": "Modifier l'identifiant",
+  "credentialFields": "Champs",
+  "noCredentialsHint": "Ajoutez des clés API et des jetons utilisés par les actions de workflow.",
+  "credentialSaved": "Identifiant enregistré",
+  "credentialDeleted": "Identifiant supprimé",
+  "deleteConfirm": "Supprimer cet identifiant ? Les workflows qui l'utilisent perdront l'accès.",
+  "vaultHealthy": "Chiffrement du coffre OK",
+  "vaultUnhealthy": "Erreur de chiffrement du coffre",
+  "fieldName": "Nom du champ",
+  "fieldValue": "Valeur du champ",
+  "addField": "Ajouter un champ",
+  "removeField": "Supprimer",
+  "credentialTypes": {
+    "api_key": "API Key",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth",
+    "bearer_token": "Bearer Token",
+    "webhook_secret": "Webhook Secret",
+    "custom": "Personnalisé"
+  },
+  "selectCredential": "Sélectionner un identifiant...",
+  "noneSelected": "Aucun"
 }

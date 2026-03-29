@@ -85,5 +85,27 @@
   "addCredential": "添加凭证",
   "credentialName": "凭证名称",
   "credentialType": "凭证类型",
-  "noCredentials": "暂无存储的凭证"
+  "noCredentials": "暂无存储的凭证",
+  "editCredential": "编辑凭证",
+  "credentialFields": "字段",
+  "noCredentialsHint": "添加工作流操作使用的 API 密钥和令牌。",
+  "credentialSaved": "凭证已保存",
+  "credentialDeleted": "凭证已删除",
+  "deleteConfirm": "删除此凭证？使用该凭证的工作流将失去访问权限。",
+  "vaultHealthy": "保险库加密正常",
+  "vaultUnhealthy": "保险库加密错误",
+  "fieldName": "字段名称",
+  "fieldValue": "字段值",
+  "addField": "添加字段",
+  "removeField": "移除",
+  "credentialTypes": {
+    "api_key": "API Key（API 密钥）",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth（基本认证）",
+    "bearer_token": "Bearer Token（持有者令牌）",
+    "webhook_secret": "Webhook Secret（Webhook 密钥）",
+    "custom": "自定义"
+  },
+  "selectCredential": "选择凭证...",
+  "noneSelected": "无"
 }

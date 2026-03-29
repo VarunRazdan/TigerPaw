@@ -83,7 +83,29 @@
   "running": "Running...",
   "credentials": "Credentials",
   "addCredential": "Add Credential",
+  "editCredential": "Edit Credential",
   "credentialName": "Credential Name",
   "credentialType": "Credential Type",
-  "noCredentials": "No credentials stored"
+  "credentialFields": "Fields",
+  "noCredentials": "No credentials stored",
+  "noCredentialsHint": "Add API keys and tokens used by workflow actions.",
+  "credentialSaved": "Credential saved",
+  "credentialDeleted": "Credential deleted",
+  "deleteConfirm": "Delete this credential? Workflows using it will lose access.",
+  "vaultHealthy": "Vault encryption OK",
+  "vaultUnhealthy": "Vault encryption error",
+  "fieldName": "Field name",
+  "fieldValue": "Field value",
+  "addField": "Add Field",
+  "removeField": "Remove",
+  "credentialTypes": {
+    "api_key": "API Key",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth",
+    "bearer_token": "Bearer Token",
+    "webhook_secret": "Webhook Secret",
+    "custom": "Custom"
+  },
+  "selectCredential": "Select credential...",
+  "noneSelected": "None"
 }

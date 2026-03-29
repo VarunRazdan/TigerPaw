@@ -120,6 +120,14 @@ type WorkflowState = {
 
   // Credentials
   fetchCredentials: () => Promise<StoredCredentialMeta[]>;
+  saveCredential: (credential: {
+    id: string;
+    name: string;
+    type: string;
+    fields: Record<string, string>;
+  }) => Promise<boolean>;
+  deleteCredential: (id: string) => Promise<boolean>;
+  testVault: () => Promise<{ ok: boolean; error?: string }>;
 };
 
 const DEMO_WORKFLOWS: Workflow[] = [
@@ -419,6 +427,38 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         : [];
     } catch {
       return [];
+    }
+  },
+
+  saveCredential: async (credential) => {
+    try {
+      const result = await gatewayRpc<{ ok?: boolean }>("workflows.credentials.save", {
+        credential,
+      });
+      return result.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  deleteCredential: async (id) => {
+    try {
+      const result = await gatewayRpc<{ ok?: boolean }>("workflows.credentials.delete", { id });
+      return result.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  testVault: async () => {
+    try {
+      const result = await gatewayRpc<{ ok?: boolean; error?: string }>(
+        "workflows.credentials.test",
+        {},
+      );
+      return { ok: result.payload?.ok === true, error: result.payload?.error };
+    } catch {
+      return { ok: false, error: "Gateway unavailable" };
     }
   },
 }));

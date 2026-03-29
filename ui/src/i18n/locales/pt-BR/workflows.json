@@ -85,5 +85,27 @@
   "addCredential": "Adicionar credencial",
   "credentialName": "Nome da credencial",
   "credentialType": "Tipo da credencial",
-  "noCredentials": "Nenhuma credencial armazenada"
+  "noCredentials": "Nenhuma credencial armazenada",
+  "editCredential": "Editar credencial",
+  "credentialFields": "Campos",
+  "noCredentialsHint": "Adicione chaves de API e tokens usados pelas ações do fluxo de trabalho.",
+  "credentialSaved": "Credencial salva",
+  "credentialDeleted": "Credencial excluída",
+  "deleteConfirm": "Excluir esta credencial? Fluxos de trabalho que a utilizam perderão o acesso.",
+  "vaultHealthy": "Criptografia do cofre OK",
+  "vaultUnhealthy": "Erro de criptografia do cofre",
+  "fieldName": "Nome do campo",
+  "fieldValue": "Valor do campo",
+  "addField": "Adicionar campo",
+  "removeField": "Remover",
+  "credentialTypes": {
+    "api_key": "API Key",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth",
+    "bearer_token": "Bearer Token",
+    "webhook_secret": "Webhook Secret",
+    "custom": "Personalizado"
+  },
+  "selectCredential": "Selecionar credencial...",
+  "noneSelected": "Nenhuma"
 }

@@ -85,5 +85,27 @@
   "addCredential": "إضافة بيانات اعتماد",
   "credentialName": "اسم بيانات الاعتماد",
   "credentialType": "نوع بيانات الاعتماد",
-  "noCredentials": "لا توجد بيانات اعتماد مُخزّنة"
+  "noCredentials": "لا توجد بيانات اعتماد مُخزّنة",
+  "editCredential": "تعديل بيانات الاعتماد",
+  "credentialFields": "الحقول",
+  "noCredentialsHint": "أضف مفاتيح API والرموز المميزة المستخدمة في إجراءات سير العمل.",
+  "credentialSaved": "تم حفظ بيانات الاعتماد",
+  "credentialDeleted": "تم حذف بيانات الاعتماد",
+  "deleteConfirm": "هل تريد حذف بيانات الاعتماد هذه؟ ستفقد سير العمل التي تستخدمها إمكانية الوصول.",
+  "vaultHealthy": "تشفير الخزنة سليم",
+  "vaultUnhealthy": "خطأ في تشفير الخزنة",
+  "fieldName": "اسم الحقل",
+  "fieldValue": "قيمة الحقل",
+  "addField": "إضافة حقل",
+  "removeField": "إزالة",
+  "credentialTypes": {
+    "api_key": "API Key",
+    "oauth2": "OAuth 2.0",
+    "basic_auth": "Basic Auth",
+    "bearer_token": "Bearer Token",
+    "webhook_secret": "Webhook Secret",
+    "custom": "مخصص"
+  },
+  "selectCredential": "اختر بيانات الاعتماد...",
+  "noneSelected": "لا شيء"
 }
