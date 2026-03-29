@@ -1,0 +1,47 @@
+{
+  "title": "集成",
+  "subtitle": "连接邮件、日历和会议服务",
+  "categories": {
+    "email": "邮件",
+    "calendar": "日历",
+    "meeting": "会议"
+  },
+  "categoryDesc": {
+    "email": "连接邮件账户以阅读、发送、搜索和整理消息",
+    "calendar": "连接日历以创建事件、查看可用时间和管理日程",
+    "meeting": "连接会议平台以安排通话和获取加入链接"
+  },
+  "providers": {
+    "gmail": { "name": "Gmail", "description": "通过 Gmail API 阅读、发送、搜索和整理邮件" },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "通过 Microsoft Graph 阅读、发送、搜索和整理邮件"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "通过 Google Calendar API 创建、更新和管理日历事件"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "通过 Microsoft Graph 创建、更新和管理日历事件"
+    },
+    "zoom": { "name": "Zoom", "description": "通过 Zoom API 安排会议和获取加入链接" },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "通过 Calendar API 安排带有 Google Meet 链接的会议"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "通过 Microsoft Graph 安排 Teams 会议和获取加入链接"
+    }
+  },
+  "oauthPending": "等待授权中...",
+  "oauthSuccess": "连接成功！",
+  "oauthError": "授权失败",
+  "expired": "令牌已过期 — 点击重新连接",
+  "lastUsed": "上次使用",
+  "disconnectTitle": "断开 {{provider}}？",
+  "disconnectDescription": "这将撤销访问权限并删除已存储的令牌。您可以稍后重新连接。",
+  "oauthHintTitle": "OAuth 设置",
+  "oauthHintBody": "集成使用 OAuth2 进行安全访问。请在您的环境中设置 GOOGLE_CLIENT_ID、GOOGLE_CLIENT_SECRET、MICROSOFT_CLIENT_ID、MICROSOFT_CLIENT_SECRET 和 ZOOM_CLIENT_ID、ZOOM_CLIENT_SECRET 以启用连接。"
+}

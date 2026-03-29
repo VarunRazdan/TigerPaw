@@ -67,5 +67,7 @@
   "nav.workflows": "Workflows",
   "nav.mcp": "MCP",
   "nav.models": "Models",
+  "nav.integrations": "Integrations",
+  "nav.integrationsHub": "Integrations",
   "to": "to"
 }

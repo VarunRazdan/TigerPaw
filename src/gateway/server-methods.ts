@@ -16,6 +16,7 @@ import { deviceHandlers } from "./server-methods/devices.js";
 import { doctorHandlers } from "./server-methods/doctor.js";
 import { execApprovalsHandlers } from "./server-methods/exec-approvals.js";
 import { healthHandlers } from "./server-methods/health.js";
+import { integrationsHandlers } from "./server-methods/integrations.js";
 import { logsHandlers } from "./server-methods/logs.js";
 import { mcpServersHandlers } from "./server-methods/mcp-servers.js";
 import { messagesHandlers } from "./server-methods/messages.js";
@@ -103,6 +104,7 @@ export const coreGatewayHandlers: GatewayRequestHandlers = {
   ...mcpServersHandlers,
   ...messagesHandlers,
   ...onboardingHandlers,
+  ...integrationsHandlers,
 };
 
 export async function handleGatewayRequest(

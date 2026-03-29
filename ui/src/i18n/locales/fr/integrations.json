@@ -1,0 +1,53 @@
+{
+  "title": "Intégrations",
+  "subtitle": "Connecter les services de messagerie, calendrier et réunion",
+  "categories": {
+    "email": "E-mail",
+    "calendar": "Calendrier",
+    "meeting": "Réunions"
+  },
+  "categoryDesc": {
+    "email": "Connecter des comptes e-mail pour lire, envoyer, rechercher et organiser les messages",
+    "calendar": "Connecter des calendriers pour créer des événements, vérifier les disponibilités et gérer les plannings",
+    "meeting": "Connecter des plateformes de réunion pour planifier des appels et récupérer les liens de participation"
+  },
+  "providers": {
+    "gmail": {
+      "name": "Gmail",
+      "description": "Lire, envoyer, rechercher et organiser les e-mails via la Gmail API"
+    },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "Lire, envoyer, rechercher et organiser les e-mails via Microsoft Graph"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "Créer, mettre à jour et gérer les événements de calendrier via la Google Calendar API"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "Créer, mettre à jour et gérer les événements de calendrier via Microsoft Graph"
+    },
+    "zoom": {
+      "name": "Zoom",
+      "description": "Planifier des réunions et récupérer les liens de participation via la Zoom API"
+    },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "Planifier des réunions avec des liens Google Meet via la Calendar API"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "Planifier des réunions Teams et récupérer les liens de participation via Microsoft Graph"
+    }
+  },
+  "oauthPending": "En attente d'autorisation...",
+  "oauthSuccess": "Connecté avec succès !",
+  "oauthError": "L'autorisation a échoué",
+  "expired": "Token expiré — cliquez pour reconnecter",
+  "lastUsed": "Dernière utilisation",
+  "disconnectTitle": "Déconnecter {{provider}} ?",
+  "disconnectDescription": "Cela révoquera l'accès et supprimera les tokens stockés. Vous pourrez vous reconnecter ultérieurement.",
+  "oauthHintTitle": "Configuration OAuth",
+  "oauthHintBody": "Les intégrations utilisent OAuth2 pour un accès sécurisé. Définissez GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET et ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET dans votre environnement pour activer les connexions."
+}

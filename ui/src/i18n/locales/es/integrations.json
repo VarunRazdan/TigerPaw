@@ -1,0 +1,53 @@
+{
+  "title": "Integraciones",
+  "subtitle": "Conecta servicios de correo, calendario y reuniones",
+  "categories": {
+    "email": "Correo electrónico",
+    "calendar": "Calendario",
+    "meeting": "Reuniones"
+  },
+  "categoryDesc": {
+    "email": "Conecta cuentas de correo para leer, enviar, buscar y organizar mensajes",
+    "calendar": "Conecta calendarios para crear eventos, consultar disponibilidad y gestionar agendas",
+    "meeting": "Conecta plataformas de reuniones para programar llamadas y obtener enlaces de acceso"
+  },
+  "providers": {
+    "gmail": {
+      "name": "Gmail",
+      "description": "Lee, envía, busca y organiza correos mediante la Gmail API"
+    },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "Lee, envía, busca y organiza correos mediante Microsoft Graph"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "Crea, actualiza y gestiona eventos de calendario mediante la Google Calendar API"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "Crea, actualiza y gestiona eventos de calendario mediante Microsoft Graph"
+    },
+    "zoom": {
+      "name": "Zoom",
+      "description": "Programa reuniones y obtén enlaces de acceso mediante la Zoom API"
+    },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "Programa reuniones con enlaces de Google Meet mediante la Calendar API"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "Programa reuniones de Teams y obtén enlaces de acceso mediante Microsoft Graph"
+    }
+  },
+  "oauthPending": "Esperando autorización...",
+  "oauthSuccess": "¡Conectado exitosamente!",
+  "oauthError": "La autorización falló",
+  "expired": "Token expirado — haz clic para reconectar",
+  "lastUsed": "Último uso",
+  "disconnectTitle": "¿Desconectar {{provider}}?",
+  "disconnectDescription": "Esto revocará el acceso y eliminará los tokens almacenados. Puedes reconectar más tarde.",
+  "oauthHintTitle": "Configuración de OAuth",
+  "oauthHintBody": "Las integraciones usan OAuth2 para acceso seguro. Configura GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET y ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET en tu entorno para habilitar las conexiones."
+}

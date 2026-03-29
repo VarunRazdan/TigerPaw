@@ -13,6 +13,7 @@ import {
   Workflow,
   Plug,
   Cpu,
+  Blocks,
 } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -136,6 +137,18 @@ function useNavGroups(): NavGroup[] {
       ],
     });
   }
+
+  groups.push({
+    title: t("nav.integrations", "Integrations"),
+    items: [
+      {
+        to: "/integrations",
+        label: t("nav.integrationsHub", "Integrations"),
+        icon: <Blocks className="w-4 h-4" />,
+        end: true,
+      },
+    ],
+  });
 
   groups.push({
     title: t("nav.system", "System"),

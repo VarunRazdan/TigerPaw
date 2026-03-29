@@ -1,0 +1,47 @@
+{
+  "title": "整合",
+  "subtitle": "連接電子郵件、行事曆和會議服務",
+  "categories": {
+    "email": "電子郵件",
+    "calendar": "行事曆",
+    "meeting": "會議"
+  },
+  "categoryDesc": {
+    "email": "連接電子郵件帳戶以閱讀、傳送、搜尋和整理訊息",
+    "calendar": "連接行事曆以建立活動、查看可用時間和管理排程",
+    "meeting": "連接會議平台以排程通話和取得加入連結"
+  },
+  "providers": {
+    "gmail": { "name": "Gmail", "description": "透過 Gmail API 閱讀、傳送、搜尋和整理電子郵件" },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "透過 Microsoft Graph 閱讀、傳送、搜尋和整理電子郵件"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "透過 Google Calendar API 建立、更新和管理行事曆活動"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "透過 Microsoft Graph 建立、更新和管理行事曆活動"
+    },
+    "zoom": { "name": "Zoom", "description": "透過 Zoom API 排程會議和取得加入連結" },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "透過 Calendar API 排程附有 Google Meet 連結的會議"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "透過 Microsoft Graph 排程 Teams 會議和取得加入連結"
+    }
+  },
+  "oauthPending": "等待授權中...",
+  "oauthSuccess": "連接成功！",
+  "oauthError": "授權失敗",
+  "expired": "權杖已過期 — 點擊重新連接",
+  "lastUsed": "上次使用",
+  "disconnectTitle": "中斷 {{provider}} 的連接？",
+  "disconnectDescription": "這將撤銷存取權限並移除已儲存的權杖。您可以稍後重新連接。",
+  "oauthHintTitle": "OAuth 設定",
+  "oauthHintBody": "整合使用 OAuth2 進行安全存取。請在您的環境中設定 GOOGLE_CLIENT_ID、GOOGLE_CLIENT_SECRET、MICROSOFT_CLIENT_ID、MICROSOFT_CLIENT_SECRET 和 ZOOM_CLIENT_ID、ZOOM_CLIENT_SECRET 以啟用連接。"
+}

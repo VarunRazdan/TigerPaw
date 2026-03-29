@@ -4,6 +4,7 @@ import common from "./common.json";
 import config from "./config.json";
 import connect from "./connect.json";
 import dashboard from "./dashboard.json";
+import integrations from "./integrations.json";
 import mcp from "./mcp.json";
 import messageHub from "./messageHub.json";
 import models from "./models.json";
@@ -32,4 +33,5 @@ export default {
   mcp,
   models,
   onboarding,
+  integrations,
 } as Record<string, unknown>;

@@ -92,6 +92,9 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "workflows.diagnostics",
     "workflows.export",
     "workflows.webhooks.list",
+    "integrations.providers",
+    "integrations.connections",
+    "integrations.connection.get",
   ],
   [WRITE_SCOPE]: [
     "send",
@@ -143,6 +146,10 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "workflows.execute",
     "workflows.clearHistory",
     "workflows.import",
+    "integrations.oauth2.start",
+    "integrations.oauth2.complete",
+    "integrations.disconnect",
+    "integrations.test",
   ],
 };
 

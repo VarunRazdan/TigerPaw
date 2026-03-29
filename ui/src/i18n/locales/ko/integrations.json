@@ -1,0 +1,53 @@
+{
+  "title": "통합",
+  "subtitle": "이메일, 캘린더 및 회의 서비스 연결",
+  "categories": {
+    "email": "이메일",
+    "calendar": "캘린더",
+    "meeting": "회의"
+  },
+  "categoryDesc": {
+    "email": "이메일 계정을 연결하여 메시지를 읽고, 보내고, 검색하고, 정리합니다",
+    "calendar": "캘린더를 연결하여 일정을 만들고, 가용성을 확인하고, 스케줄을 관리합니다",
+    "meeting": "회의 플랫폼을 연결하여 통화를 예약하고 참여 링크를 가져옵니다"
+  },
+  "providers": {
+    "gmail": {
+      "name": "Gmail",
+      "description": "Gmail API를 통해 이메일을 읽고, 보내고, 검색하고, 정리합니다"
+    },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "Microsoft Graph를 통해 이메일을 읽고, 보내고, 검색하고, 정리합니다"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "Google Calendar API를 통해 캘린더 일정을 만들고, 업데이트하고, 관리합니다"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "Microsoft Graph를 통해 캘린더 일정을 만들고, 업데이트하고, 관리합니다"
+    },
+    "zoom": {
+      "name": "Zoom",
+      "description": "Zoom API를 통해 회의를 예약하고 참여 링크를 가져옵니다"
+    },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "Calendar API를 통해 Google Meet 링크로 회의를 예약합니다"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "Microsoft Graph를 통해 Teams 회의를 예약하고 참여 링크를 가져옵니다"
+    }
+  },
+  "oauthPending": "인증 대기 중...",
+  "oauthSuccess": "연결에 성공했습니다!",
+  "oauthError": "인증에 실패했습니다",
+  "expired": "토큰 만료됨 — 클릭하여 재연결",
+  "lastUsed": "마지막 사용",
+  "disconnectTitle": "{{provider}} 연결을 해제하시겠습니까?",
+  "disconnectDescription": "접근 권한이 취소되고 저장된 토큰이 삭제됩니다. 나중에 다시 연결할 수 있습니다.",
+  "oauthHintTitle": "OAuth 설정",
+  "oauthHintBody": "통합은 안전한 접근을 위해 OAuth2를 사용합니다. 연결을 활성화하려면 환경에 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET를 설정하세요."
+}

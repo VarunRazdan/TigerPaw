@@ -1,0 +1,53 @@
+{
+  "title": "Integrationen",
+  "subtitle": "E-Mail-, Kalender- und Meeting-Dienste verbinden",
+  "categories": {
+    "email": "E-Mail",
+    "calendar": "Kalender",
+    "meeting": "Meetings"
+  },
+  "categoryDesc": {
+    "email": "E-Mail-Konten verbinden, um Nachrichten zu lesen, zu senden, zu suchen und zu organisieren",
+    "calendar": "Kalender verbinden, um Termine zu erstellen, Verfügbarkeiten zu prüfen und Zeitpläne zu verwalten",
+    "meeting": "Meeting-Plattformen verbinden, um Anrufe zu planen und Teilnahmelinks abzurufen"
+  },
+  "providers": {
+    "gmail": {
+      "name": "Gmail",
+      "description": "E-Mails lesen, senden, suchen und organisieren über die Gmail API"
+    },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "E-Mails lesen, senden, suchen und organisieren über Microsoft Graph"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "Kalendertermine erstellen, aktualisieren und verwalten über die Google Calendar API"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "Kalendertermine erstellen, aktualisieren und verwalten über Microsoft Graph"
+    },
+    "zoom": {
+      "name": "Zoom",
+      "description": "Meetings planen und Teilnahmelinks abrufen über die Zoom API"
+    },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "Meetings mit Google Meet-Links über die Calendar API planen"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "Teams-Meetings planen und Teilnahmelinks abrufen über Microsoft Graph"
+    }
+  },
+  "oauthPending": "Warten auf Autorisierung...",
+  "oauthSuccess": "Erfolgreich verbunden!",
+  "oauthError": "Autorisierung fehlgeschlagen",
+  "expired": "Token abgelaufen — klicken, um erneut zu verbinden",
+  "lastUsed": "Zuletzt verwendet",
+  "disconnectTitle": "{{provider}} trennen?",
+  "disconnectDescription": "Dadurch wird der Zugriff widerrufen und gespeicherte Tokens werden entfernt. Sie können sich später erneut verbinden.",
+  "oauthHintTitle": "OAuth-Einrichtung",
+  "oauthHintBody": "Integrationen verwenden OAuth2 für sicheren Zugriff. Setzen Sie GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET und ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET in Ihrer Umgebung, um Verbindungen zu aktivieren."
+}

@@ -33,6 +33,9 @@ const McpPage = lazy(() => import("./pages/McpPage").then((m) => ({ default: m.M
 const ModelsPage = lazy(() =>
   import("./pages/ModelsPage").then((m) => ({ default: m.ModelsPage })),
 );
+const IntegrationsPage = lazy(() =>
+  import("./pages/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })),
+);
 const TradingPage = lazy(() =>
   import("./pages/TradingPage").then((m) => ({ default: m.TradingPage })),
 );
@@ -94,6 +97,7 @@ const CORE_ROUTES: RouteObject[] = [
   { path: "workflows/:id", element: <WorkflowEditorPage /> },
   { path: "mcp", element: <McpPage /> },
   { path: "models", element: <ModelsPage /> },
+  { path: "integrations", element: <IntegrationsPage /> },
 ];
 
 export function App() {

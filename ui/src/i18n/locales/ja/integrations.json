@@ -1,0 +1,53 @@
+{
+  "title": "インテグレーション",
+  "subtitle": "メール、カレンダー、会議サービスを接続",
+  "categories": {
+    "email": "メール",
+    "calendar": "カレンダー",
+    "meeting": "会議"
+  },
+  "categoryDesc": {
+    "email": "メールアカウントを接続して、メッセージの閲覧、送信、検索、整理を行います",
+    "calendar": "カレンダーを接続して、イベントの作成、空き状況の確認、スケジュールの管理を行います",
+    "meeting": "会議プラットフォームを接続して、通話のスケジュールと参加リンクの取得を行います"
+  },
+  "providers": {
+    "gmail": {
+      "name": "Gmail",
+      "description": "Gmail APIを使用してメールの閲覧、送信、検索、整理を行います"
+    },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "Microsoft Graphを使用してメールの閲覧、送信、検索、整理を行います"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "Google Calendar APIを使用してカレンダーイベントの作成、更新、管理を行います"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "Microsoft Graphを使用してカレンダーイベントの作成、更新、管理を行います"
+    },
+    "zoom": {
+      "name": "Zoom",
+      "description": "Zoom APIを使用して会議のスケジュールと参加リンクの取得を行います"
+    },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "Calendar APIを使用してGoogle Meetリンク付きの会議をスケジュールします"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "Microsoft Graphを使用してTeams会議のスケジュールと参加リンクの取得を行います"
+    }
+  },
+  "oauthPending": "認証を待っています...",
+  "oauthSuccess": "接続に成功しました！",
+  "oauthError": "認証に失敗しました",
+  "expired": "トークンの期限切れ — クリックして再接続",
+  "lastUsed": "最終使用",
+  "disconnectTitle": "{{provider}}を切断しますか？",
+  "disconnectDescription": "アクセスが取り消され、保存されたトークンが削除されます。後で再接続できます。",
+  "oauthHintTitle": "OAuthの設定",
+  "oauthHintBody": "インテグレーションはOAuth2を使用して安全にアクセスします。接続を有効にするには、環境にGOOGLE_CLIENT_ID、GOOGLE_CLIENT_SECRET、MICROSOFT_CLIENT_ID、MICROSOFT_CLIENT_SECRET、ZOOM_CLIENT_ID、ZOOM_CLIENT_SECRETを設定してください。"
+}

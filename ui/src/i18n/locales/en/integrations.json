@@ -1,0 +1,53 @@
+{
+  "title": "Integrations",
+  "subtitle": "Connect email, calendar, and meeting services",
+  "categories": {
+    "email": "Email",
+    "calendar": "Calendar",
+    "meeting": "Meetings"
+  },
+  "categoryDesc": {
+    "email": "Connect email accounts to read, send, search, and organize messages",
+    "calendar": "Connect calendars to create events, check availability, and manage schedules",
+    "meeting": "Connect meeting platforms to schedule calls and retrieve join links"
+  },
+  "providers": {
+    "gmail": {
+      "name": "Gmail",
+      "description": "Read, send, search, and organize email via Gmail API"
+    },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "Read, send, search, and organize email via Microsoft Graph"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "Create, update, and manage calendar events via Google Calendar API"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "Create, update, and manage calendar events via Microsoft Graph"
+    },
+    "zoom": {
+      "name": "Zoom",
+      "description": "Schedule meetings and retrieve join links via Zoom API"
+    },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "Schedule meetings with Google Meet links via Calendar API"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "Schedule Teams meetings and retrieve join links via Microsoft Graph"
+    }
+  },
+  "oauthPending": "Waiting for authorization...",
+  "oauthSuccess": "Successfully connected!",
+  "oauthError": "Authorization failed",
+  "expired": "Token expired — click to reconnect",
+  "lastUsed": "Last used",
+  "disconnectTitle": "Disconnect {{provider}}?",
+  "disconnectDescription": "This will revoke access and remove stored tokens. You can reconnect later.",
+  "oauthHintTitle": "OAuth Setup",
+  "oauthHintBody": "Integrations use OAuth2 for secure access. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, and ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET in your environment to enable connections."
+}

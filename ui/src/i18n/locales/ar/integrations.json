@@ -1,0 +1,53 @@
+{
+  "title": "التكاملات",
+  "subtitle": "ربط خدمات البريد الإلكتروني والتقويم والاجتماعات",
+  "categories": {
+    "email": "البريد الإلكتروني",
+    "calendar": "التقويم",
+    "meeting": "الاجتماعات"
+  },
+  "categoryDesc": {
+    "email": "ربط حسابات البريد الإلكتروني لقراءة الرسائل وإرسالها والبحث فيها وتنظيمها",
+    "calendar": "ربط التقويمات لإنشاء الأحداث والتحقق من التوفر وإدارة الجداول الزمنية",
+    "meeting": "ربط منصات الاجتماعات لجدولة المكالمات والحصول على روابط الانضمام"
+  },
+  "providers": {
+    "gmail": {
+      "name": "Gmail",
+      "description": "قراءة البريد الإلكتروني وإرساله والبحث فيه وتنظيمه عبر Gmail API"
+    },
+    "outlook_mail": {
+      "name": "Outlook",
+      "description": "قراءة البريد الإلكتروني وإرساله والبحث فيه وتنظيمه عبر Microsoft Graph"
+    },
+    "google_calendar": {
+      "name": "Google Calendar",
+      "description": "إنشاء أحداث التقويم وتحديثها وإدارتها عبر Google Calendar API"
+    },
+    "outlook_calendar": {
+      "name": "Outlook Calendar",
+      "description": "إنشاء أحداث التقويم وتحديثها وإدارتها عبر Microsoft Graph"
+    },
+    "zoom": {
+      "name": "Zoom",
+      "description": "جدولة الاجتماعات والحصول على روابط الانضمام عبر Zoom API"
+    },
+    "google_meet": {
+      "name": "Google Meet",
+      "description": "جدولة الاجتماعات مع روابط Google Meet عبر Calendar API"
+    },
+    "ms_teams_meetings": {
+      "name": "Microsoft Teams",
+      "description": "جدولة اجتماعات Teams والحصول على روابط الانضمام عبر Microsoft Graph"
+    }
+  },
+  "oauthPending": "في انتظار التفويض...",
+  "oauthSuccess": "تم الاتصال بنجاح!",
+  "oauthError": "فشل التفويض",
+  "expired": "انتهت صلاحية الرمز — انقر لإعادة الاتصال",
+  "lastUsed": "آخر استخدام",
+  "disconnectTitle": "قطع الاتصال بـ {{provider}}؟",
+  "disconnectDescription": "سيؤدي هذا إلى إلغاء الوصول وإزالة الرموز المخزنة. يمكنك إعادة الاتصال لاحقاً.",
+  "oauthHintTitle": "إعداد OAuth",
+  "oauthHintBody": "تستخدم التكاملات OAuth2 للوصول الآمن. قم بتعيين GOOGLE_CLIENT_ID وGOOGLE_CLIENT_SECRET وMICROSOFT_CLIENT_ID وMICROSOFT_CLIENT_SECRET وZOOM_CLIENT_ID وZOOM_CLIENT_SECRET في بيئتك لتمكين الاتصالات."
+}

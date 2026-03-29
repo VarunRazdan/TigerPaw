@@ -16,12 +16,14 @@ jobs:
     steps:
       - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
         id: app-token
+        if: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
         continue-on-error: true
         with:
           app-id: "2729701"
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
       - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
         id: app-token-fallback
+        if: ${{ secrets.GH_APP_PRIVATE_KEY_FALLBACK != '' }}
         continue-on-error: true
         with:
           app-id: "2971289"
@@ -123,6 +125,7 @@ jobs:
     steps:
       - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
         id: app-token
+        if: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
         continue-on-error: true
         with:
           app-id: "2729701"

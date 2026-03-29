@@ -129,6 +129,14 @@ const BASE_METHODS = [
   "workflows.versions.clear",
   "workflows.webhook",
   "workflows.webhooks.list",
+  // Integrations
+  "integrations.providers",
+  "integrations.connections",
+  "integrations.connection.get",
+  "integrations.oauth2.start",
+  "integrations.oauth2.complete",
+  "integrations.disconnect",
+  "integrations.test",
 ];
 
 export function listGatewayMethods(): string[] {
