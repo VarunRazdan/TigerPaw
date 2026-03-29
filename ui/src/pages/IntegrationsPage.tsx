@@ -209,30 +209,29 @@ export function IntegrationsPage() {
                             </div>
                           </div>
 
-                          {/* Status dot */}
-                          <span
-                            className={`w-2 h-2 rounded-full shrink-0 transition-colors duration-300 ${
-                              isConnected
-                                ? "bg-green-500"
-                                : isExpired
-                                  ? "bg-amber-500"
-                                  : "bg-white/[0.1]"
-                            }`}
-                          />
-
-                          {/* Disconnect button */}
-                          {isConnected && conn && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDisconnecting(conn.id);
-                              }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-white/5 transition-colors duration-200"
-                              aria-label={`Disconnect ${provider.name}`}
-                            >
-                              <Power className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                          {/* Status indicator / disconnect button */}
+                          <div className="shrink-0 flex items-center justify-center w-7 h-7">
+                            {isConnected && conn ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDisconnecting(conn.id);
+                                }}
+                                className="relative p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-white/5 cursor-pointer transition-colors duration-200"
+                                aria-label={`Disconnect ${provider.name}`}
+                              >
+                                <Power className="w-3.5 h-3.5" />
+                                {/* Green dot aligned to power icon */}
+                                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-500" />
+                              </button>
+                            ) : (
+                              <span
+                                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                  isExpired ? "bg-amber-500" : "bg-white/[0.1]"
+                                }`}
+                              />
+                            )}
+                          </div>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
