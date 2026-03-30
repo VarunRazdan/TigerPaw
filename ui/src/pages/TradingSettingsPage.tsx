@@ -2,6 +2,7 @@ import { RotateCcw } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, useNavigate } from "react-router-dom";
+import { syncAllDemoMode } from "@/components/DataModeSelector";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +16,6 @@ import {
 import { saveConfigPatch } from "@/lib/save-config";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
-import { useMessageHubStore } from "@/stores/message-hub-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useThemeStore, THEMES, type ThemeId } from "@/stores/theme-store";
 import {
@@ -25,7 +25,6 @@ import {
   type PerPlatformOverride,
   type PolicyLimits,
 } from "@/stores/trading-store";
-import { useWorkflowStore } from "@/stores/workflow-store";
 
 const TIER_PRESETS: Record<Exclude<RiskTier, "custom">, { labelKey: string; descKey: string }> = {
   conservative: { labelKey: "conservative", descKey: "conservativeDesc" },
@@ -220,15 +219,8 @@ function SetupWizardSection() {
 
 function DataModeSelector() {
   const { t: ts } = useTranslation("settings");
-  const { demoMode, setDemoMode } = useTradingStore();
+  const demoMode = useTradingStore((s) => s.demoMode);
   const [confirmLive, setConfirmLive] = useState(false);
-
-  function syncAllDemoMode(enabled: boolean) {
-    setDemoMode(enabled);
-    useNotificationStore.getState().setDemoMode(enabled);
-    useWorkflowStore.getState().setDemoMode(enabled);
-    useMessageHubStore.getState().setDemoMode(enabled);
-  }
 
   function handleSelect(mode: "demo" | "live") {
     if (mode === "demo" && !demoMode) {
@@ -606,6 +598,32 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
   );
 }
 
+function ChartSettings() {
+  const { t } = useTranslation("settings");
+  const chartsEnabled = useAppStore((s) => s.chartsEnabled);
+  const setChartsEnabled = useAppStore((s) => s.setChartsEnabled);
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{t("charts", "Charts")}</h3>
+      <label className="flex items-center justify-between cursor-pointer">
+        <div>
+          <div className="text-sm text-neutral-200">
+            {t("loadCharts", "Load TradingView Charts")}
+          </div>
+          <div className="text-[11px] text-neutral-500">
+            {t(
+              "loadChartsDesc",
+              "When disabled, charts are completely removed from trading pages — no scripts loaded, no network requests. Saves bandwidth on metered connections.",
+            )}
+          </div>
+        </div>
+        <ToggleSwitch enabled={chartsEnabled} onToggle={() => setChartsEnabled(!chartsEnabled)} />
+      </label>
+    </div>
+  );
+}
+
 function NotificationSettings() {
   const { t } = useTranslation("settings");
   const toastsEnabled = useNotificationStore((s) => s.toastsEnabled);
@@ -759,6 +777,9 @@ export function TradingSettingsPage() {
 
       {/* Notifications */}
       <NotificationSettings />
+
+      {/* Charts */}
+      <ChartSettings />
 
       {/* Risk Tier */}
       <div className="rounded-2xl glass-panel p-4 transition-all duration-300">

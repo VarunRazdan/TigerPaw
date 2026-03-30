@@ -54,6 +54,7 @@ import { sendGatewayAuthFailure, setDefaultSecurityHeaders } from "./http-common
 import { getBearerToken } from "./http-utils.js";
 import { handleOpenAiHttpRequest } from "./openai-http.js";
 import { handleOpenResponsesHttpRequest } from "./openresponses-http.js";
+import { handleOAuth2CallbackRequest } from "./server-http-oauth-callback.js";
 import {
   authorizeCanvasRequest,
   enforcePluginRouteGatewayAuth,
@@ -654,6 +655,10 @@ export function createGatewayHttpServer(opts: {
         {
           name: "slack",
           run: () => handleSlackHttpRequest(req, res),
+        },
+        {
+          name: "oauth2-callback",
+          run: () => handleOAuth2CallbackRequest(req, res),
         },
       ];
       if (openResponsesEnabled) {

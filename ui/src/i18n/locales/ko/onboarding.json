@@ -55,12 +55,12 @@
   },
 
   "messaging": {
-    "title": "메시징 채널 연결",
-    "description": "채팅 플랫폼을 연결하여 Tigerpaw에서 알림, 경고 및 거래 확인을 받으세요.",
-    "clickToConnect": "채널을 클릭하여 설정하세요. 각 채널에는 자체 설정 가이드가 있습니다.",
+    "title": "에이전트 채널 설정",
+    "description": "에이전트 채널을 사용하면 즐겨 사용하는 채팅 앱에서 Jarvis와 대화할 수 있습니다. 아래에서 플랫폼을 연결하세요 — Tigerpaw가 당신과 Jarvis 사이에서 메시지를 중계하는 경량 에이전트를 생성합니다. 에이전트에게 메시지를 보내면 Jarvis가 응답합니다. 모든 처리는 내 컴퓨터에서 이루어집니다.",
+    "clickToConnect": "채널을 클릭하여 설정하세요. 각 플랫폼에는 자체 설정 가이드가 있습니다.",
     "securityNote": "토큰은 이 기기에 로컬로 저장됩니다.",
     "slackAppTokenPlaceholder": "앱 수준 토큰 (xapp-...)",
-    "botUsername": "봇: {{name}}"
+    "agentUsername": "에이전트: {{name}}"
   },
 
   "trading": {

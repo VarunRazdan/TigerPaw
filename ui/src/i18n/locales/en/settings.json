@@ -115,5 +115,8 @@
   "notificationLimitNote": "Up to 50 notifications are kept in memory. The bell badge shows up to 9+. Notifications persist until dismissed or cleared.",
   "setupWizard": "Setup Wizard",
   "setupWizardDesc": "Re-run the initial setup wizard to reconfigure AI providers, channels, and trading platforms.",
-  "rerunWizard": "Re-run Setup Wizard"
+  "rerunWizard": "Re-run Setup Wizard",
+  "charts": "Charts",
+  "loadCharts": "Load TradingView Charts",
+  "loadChartsDesc": "When disabled, charts are completely removed from trading pages — no scripts loaded, no network requests. Saves bandwidth on metered connections."
 }

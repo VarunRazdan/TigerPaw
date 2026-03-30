@@ -2,6 +2,7 @@ import { BarChart3, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app-store";
 import { useThemeStore, THEMES } from "@/stores/theme-store";
 
 type Props = {
@@ -25,6 +26,7 @@ export function TradingViewChart({
   defaultCollapsed = false,
 }: Props) {
   const { t } = useTranslation("trading");
+  const chartsEnabled = useAppStore((s) => s.chartsEnabled);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = `tv-widget-${symbol.replace(/[^a-zA-Z0-9]/g, "-")}`;
@@ -32,7 +34,7 @@ export function TradingViewChart({
   const themeInfo = THEMES[theme];
 
   useEffect(() => {
-    if (collapsed) {
+    if (collapsed || !chartsEnabled) {
       return;
     }
 
@@ -81,7 +83,21 @@ export function TradingViewChart({
         container.innerHTML = "";
       }
     };
-  }, [symbol, interval, height, collapsed, theme, themeInfo.chartBg, themeInfo.chartToolbar]);
+  }, [
+    symbol,
+    interval,
+    height,
+    collapsed,
+    chartsEnabled,
+    theme,
+    themeInfo.chartBg,
+    themeInfo.chartToolbar,
+  ]);
+
+  // Globally disabled — render nothing (no script, no iframe, no bandwidth)
+  if (!chartsEnabled) {
+    return null;
+  }
 
   return (
     <div className={cn("rounded-2xl glass-panel overflow-hidden", className)}>

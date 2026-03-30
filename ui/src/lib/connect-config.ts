@@ -292,7 +292,7 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
     name: "Discord",
     iconPath: "/icons/messaging-channels/discord.svg",
     setupUrl: "https://discord.com/developers/applications",
-    description: "Discord bot for guilds, DMs, and voice channels",
+    description: "Discord agent for guilds, DMs, and voice channels",
     configSection: "discord",
     credentials: [
       {
@@ -316,7 +316,7 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
     name: "Telegram",
     iconPath: "/icons/messaging-channels/telegram.svg",
     setupUrl: "https://t.me/BotFather",
-    description: "Telegram bot for chats and groups",
+    description: "Telegram agent for chats and groups",
     configSection: "telegram",
     credentials: [
       {
@@ -337,7 +337,7 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
     name: "Slack",
     iconPath: "/icons/messaging-channels/slack.svg",
     setupUrl: "https://api.slack.com/apps",
-    description: "Slack bot for workspaces and channels",
+    description: "Slack agent for workspaces and channels",
     configSection: "slack",
     credentials: [
       {
@@ -444,7 +444,7 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
     name: "MS Teams",
     iconPath: "/icons/messaging-channels/ms-teams.svg",
     setupUrl: "https://dev.teams.microsoft.com/",
-    description: "Microsoft Teams bot via Azure",
+    description: "Microsoft Teams agent via Azure",
     configSection: "msteams",
     credentials: [
       {
@@ -486,7 +486,7 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
     name: "Line",
     iconPath: "/icons/messaging-channels/line.svg",
     setupUrl: "https://developers.line.biz/",
-    description: "LINE Messaging API bot",
+    description: "LINE Messaging API agent",
     configSection: "line",
     credentials: [
       {

@@ -62,6 +62,7 @@ export function NotificationBell() {
   const { t: tc } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const notifications = useNotificationStore((s) => s.notifications);
+  const demoMode = useNotificationStore((s) => s.demoMode);
   const undismissedCount = notifications.filter((n) => !n.dismissed).length;
   const dismissNotification = useNotificationStore((s) => s.dismissNotification);
   const clearAll = useNotificationStore((s) => s.clearAll);
@@ -105,12 +106,14 @@ export function NotificationBell() {
                 {t("title")}
               </span>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={fireTestNotification}
-                  className="text-[10px] text-orange-500/70 hover:text-orange-400 transition-colors cursor-pointer"
-                >
-                  {tc("test")}
-                </button>
+                {demoMode && (
+                  <button
+                    onClick={fireTestNotification}
+                    className="text-[10px] text-orange-500/70 hover:text-orange-400 transition-colors cursor-pointer"
+                  >
+                    {tc("test")}
+                  </button>
+                )}
                 {undismissedCount > 0 && (
                   <button
                     onClick={() => {

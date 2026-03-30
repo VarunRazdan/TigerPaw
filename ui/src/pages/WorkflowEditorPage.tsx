@@ -112,6 +112,9 @@ const PALETTE_GROUPS: PaletteGroup[] = [
       { subtype: "killswitch", label: "Kill Switch", nodeType: "action" },
       { subtype: "trade", label: "Submit Trade", nodeType: "action" },
       { subtype: "run_workflow", label: "Run Sub-Workflow", nodeType: "action" },
+      { subtype: "send_email", label: "Send Email", nodeType: "action" },
+      { subtype: "create_calendar_event", label: "Create Calendar Event", nodeType: "action" },
+      { subtype: "schedule_meeting", label: "Schedule Meeting", nodeType: "action" },
     ],
   },
   {
@@ -122,6 +125,17 @@ const PALETTE_GROUPS: PaletteGroup[] = [
       { subtype: "extract_data", label: "Extract Data", nodeType: "transform" },
       { subtype: "format_text", label: "Format Text", nodeType: "transform" },
       { subtype: "parse_json", label: "Parse JSON", nodeType: "transform" },
+      { subtype: "merge", label: "Merge", nodeType: "transform" },
+    ],
+  },
+  {
+    title: "Flow Control",
+    icon: <GitBranch className="w-3.5 h-3.5" />,
+    color: "text-teal-400",
+    items: [
+      { subtype: "if_else", label: "If / Else", nodeType: "router" as WorkflowNodeType },
+      { subtype: "switch", label: "Switch", nodeType: "router" as WorkflowNodeType },
+      { subtype: "loop", label: "Loop", nodeType: "router" as WorkflowNodeType },
     ],
   },
   {
@@ -169,20 +183,61 @@ const NODE_COLORS: Record<WorkflowNodeType, { header: string; border: string; ri
     border: "border-red-700/50",
     ring: "ring-red-500/30",
   },
+  router: {
+    header: "bg-teal-600",
+    border: "border-teal-700/50",
+    ring: "ring-teal-500/30",
+  },
+  annotation: {
+    header: "bg-yellow-600",
+    border: "border-yellow-700/50",
+    ring: "ring-yellow-500/30",
+  },
 };
 
 // ---------------------------------------------------------------------------
 // Custom node component
 // ---------------------------------------------------------------------------
 
+/** Derive output handles for router nodes based on subtype. */
+function getRouterOutputs(data: WorkflowNode): string[] {
+  if (data.outputs && data.outputs.length > 0) {
+    return data.outputs;
+  }
+  if (data.subtype === "if_else") {
+    return ["true", "false"];
+  }
+  if (data.subtype === "switch") {
+    const cases = (data.config.cases as Array<{ output: string }> | undefined) ?? [];
+    const fallback = (data.config.fallback as string | undefined) ?? "default";
+    return [...cases.map((c) => c.output), fallback];
+  }
+  if (data.subtype === "loop") {
+    return ["loop", "done"];
+  }
+  return [];
+}
+
+/** Color for router output handle labels. */
+const OUTPUT_LABEL_COLORS: Record<string, string> = {
+  true: "text-green-400",
+  false: "text-red-400",
+  default: "text-neutral-500",
+  loop: "text-teal-300",
+  done: "text-emerald-400",
+};
+
 function WorkflowNodeComponent({ data }: { data: WorkflowNode }) {
   const colors = NODE_COLORS[data.type] ?? NODE_COLORS.action;
+  const isRouter = data.type === "router";
+  const routerOutputs = isRouter ? getRouterOutputs(data) : [];
 
   return (
     <div
       className={cn(
         "rounded-lg border shadow-lg min-w-[160px] bg-[var(--glass-bg,#141210)]",
         colors.border,
+        data.disabled && "opacity-40",
       )}
     >
       {/* Input handle (hidden for triggers) */}
@@ -197,11 +252,13 @@ function WorkflowNodeComponent({ data }: { data: WorkflowNode }) {
       {/* Colored header */}
       <div
         className={cn(
-          "px-3 py-1.5 rounded-t-lg text-[11px] font-semibold text-white",
+          "px-3 py-1.5 rounded-t-lg text-[11px] font-semibold text-white flex items-center gap-1.5",
           colors.header,
         )}
       >
+        {isRouter && <GitBranch className="w-3 h-3" />}
         {data.label}
+        {data.disabled && <span className="ml-auto text-[9px] opacity-70">OFF</span>}
       </div>
 
       {/* Body */}
@@ -210,6 +267,7 @@ function WorkflowNodeComponent({ data }: { data: WorkflowNode }) {
         {data.config && Object.keys(data.config).length > 0 && (
           <p className="text-[10px] text-neutral-600 mt-1 truncate max-w-[140px]">
             {Object.entries(data.config)
+              .filter(([k]) => k !== "cases")
               .slice(0, 2)
               .map(([k, v]) => `${k}: ${String(v)}`)
               .join(", ")}
@@ -217,12 +275,43 @@ function WorkflowNodeComponent({ data }: { data: WorkflowNode }) {
         )}
       </div>
 
-      {/* Output handle */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-2.5 !h-2.5 !bg-neutral-400 !border-2 !border-neutral-700"
-      />
+      {/* Multi-output handles for router nodes */}
+      {isRouter && routerOutputs.length > 0 ? (
+        <div className="relative pb-1">
+          {routerOutputs.map((output, i) => {
+            const total = routerOutputs.length;
+            const spacing = 100 / (total + 1);
+            const topPercent = spacing * (i + 1);
+            return (
+              <Handle
+                key={output}
+                type="source"
+                position={Position.Right}
+                id={output}
+                style={{ top: `${topPercent}%` }}
+                className="!w-2.5 !h-2.5 !bg-teal-400 !border-2 !border-teal-700"
+              >
+                <span
+                  className={cn(
+                    "absolute right-4 -translate-y-1/2 text-[9px] font-medium whitespace-nowrap pointer-events-none select-none",
+                    OUTPUT_LABEL_COLORS[output] ?? "text-teal-300",
+                  )}
+                  style={{ top: "50%" }}
+                >
+                  {output}
+                </span>
+              </Handle>
+            );
+          })}
+        </div>
+      ) : (
+        /* Single output handle for non-router nodes */
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-2.5 !h-2.5 !bg-neutral-400 !border-2 !border-neutral-700"
+        />
+      )}
     </div>
   );
 }
@@ -454,6 +543,40 @@ const NODE_CONFIG_FIELDS: Record<
     { key: "orderType", label: "Order Type", type: "select", options: ["market", "limit"] },
   ],
   run_workflow: [{ key: "workflowId", label: "Workflow ID", type: "text", placeholder: "wf-..." }],
+  // Routers (Flow Control)
+  if_else: [
+    { key: "left", label: "Left Value", type: "text", placeholder: "$price" },
+    {
+      key: "operator",
+      label: "Operator",
+      type: "select",
+      options: [
+        "==",
+        "!=",
+        ">",
+        ">=",
+        "<",
+        "<=",
+        "contains",
+        "starts_with",
+        "ends_with",
+        "is_empty",
+        "is_not_empty",
+        "matches",
+      ],
+    },
+    { key: "right", label: "Right Value", type: "text" },
+  ],
+  switch: [
+    { key: "field", label: "Field to Match", type: "text", placeholder: "$status" },
+    { key: "fallback", label: "Fallback Output", type: "text", placeholder: "default" },
+  ],
+  loop: [
+    { key: "arrayPath", label: "Array Path", type: "text", placeholder: "$items" },
+    { key: "itemVariable", label: "Item Variable", type: "text", placeholder: "item" },
+    { key: "indexVariable", label: "Index Variable", type: "text", placeholder: "index" },
+    { key: "maxIterations", label: "Max Iterations", type: "number", placeholder: "1000" },
+  ],
   // Transforms
   extract_data: [
     { key: "path", label: "Data Path", type: "text", placeholder: "event.payload.symbol" },
@@ -471,6 +594,15 @@ const NODE_CONFIG_FIELDS: Record<
   parse_json: [
     { key: "inputKey", label: "Input Key", type: "text", placeholder: "webhookResponse" },
     { key: "outputKey", label: "Output Key", type: "text", placeholder: "parsed" },
+  ],
+  merge: [
+    {
+      key: "mode",
+      label: "Merge Mode",
+      type: "select",
+      options: ["append", "combine", "wait_all"],
+    },
+    { key: "outputKey", label: "Output Key", type: "text", placeholder: "merged" },
   ],
   // Error handlers
   log: [{ key: "action", label: "Action", type: "text", placeholder: "log" }],
@@ -1117,21 +1249,30 @@ export function WorkflowEditorPage() {
     setIsDirty(false);
   }, [id]);
 
-  // Edge connection callback
+  // Edge connection callback — auto-labels edges from router output handles
   const onConnect: OnConnect = useCallback(
-    (params) =>
+    (params) => {
+      // If the source handle has an ID (router output), use it as the edge label
+      const label = params.sourceHandle ?? undefined;
+
       setEdges((eds) =>
         addEdge(
           {
             ...params,
+            label,
             type: "smoothstep",
             animated: true,
             style: { stroke: "#525252" },
+            labelStyle: label ? { fill: "#a3a3a3", fontSize: 10, fontWeight: 500 } : undefined,
+            labelBgStyle: label ? { fill: "#1a1917", fillOpacity: 0.85 } : undefined,
+            labelBgPadding: label ? ([4, 2] as [number, number]) : undefined,
+            labelBgBorderRadius: label ? 4 : undefined,
             markerEnd: { type: MarkerType.ArrowClosed, color: "#525252", width: 16, height: 16 },
           },
           eds,
         ),
-      ),
+      );
+    },
     [setEdges],
   );
 
@@ -1155,17 +1296,29 @@ export function WorkflowEditorPage() {
         ? reactFlowInstance.current.screenToFlowPosition({ x: e.clientX, y: e.clientY })
         : { x: e.clientX, y: e.clientY };
 
+      const nodeId = `n-${Date.now()}`;
+      // Set default outputs for router nodes
+      const outputs =
+        item.nodeType === "router" && item.subtype === "if_else"
+          ? ["true", "false"]
+          : item.nodeType === "router" && item.subtype === "switch"
+            ? ["default"]
+            : item.nodeType === "router" && item.subtype === "loop"
+              ? ["loop", "done"]
+              : undefined;
+
       const newNode: Node = {
-        id: `n-${Date.now()}`,
+        id: nodeId,
         type: "workflowNode",
         position,
         data: {
-          id: `n-${Date.now()}`,
+          id: nodeId,
           type: item.nodeType,
           subtype: item.subtype,
           label: item.label,
           config: {},
           position,
+          ...(outputs ? { outputs } : {}),
         } satisfies WorkflowNode,
       };
 

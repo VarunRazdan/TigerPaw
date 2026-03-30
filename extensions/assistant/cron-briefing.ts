@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { OpenClawPluginApi } from "tigerpaw/plugin-sdk/core";
+import { getEmailClient, getCalendarClient } from "../../src/integrations/clients/index.js";
 import { getPersonaName } from "./config.js";
 
 const DATA_DIR = join(homedir(), ".tigerpaw", "assistant");
@@ -22,7 +23,49 @@ function loadJsonl<T>(path: string): T[] {
     .map((line) => JSON.parse(line) as T);
 }
 
-function buildBriefingSummary(): string {
+async function fetchEmailSummary(): Promise<string[]> {
+  try {
+    const client = await getEmailClient();
+    const unread = await client.listMessages({ unreadOnly: true, maxResults: 5 });
+    if (unread.length === 0) return ["Inbox: No unread emails."];
+    const lines = [`Inbox: ${unread.length}+ unread emails. Top subjects:`];
+    for (const msg of unread.slice(0, 3)) {
+      lines.push(`  - ${msg.subject} (from ${msg.from.split("<")[0].trim()})`);
+    }
+    return lines;
+  } catch {
+    return []; // No email provider connected
+  }
+}
+
+async function fetchCalendarSummary(): Promise<string[]> {
+  try {
+    const client = await getCalendarClient();
+    const now = new Date();
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+    const events = await client.listEvents({
+      timeMin: now.toISOString(),
+      timeMax: endOfDay.toISOString(),
+      maxResults: 10,
+    });
+    if (events.length === 0) return ["Calendar: No remaining events today."];
+    const lines = [`Calendar: ${events.length} events today:`];
+    for (const ev of events) {
+      const time = new Date(ev.start).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const meetTag = ev.meetingLink ? " [video]" : "";
+      lines.push(`  - ${time} ${ev.title}${meetTag}`);
+    }
+    return lines;
+  } catch {
+    return []; // No calendar provider connected
+  }
+}
+
+async function buildBriefingSummary(): Promise<string> {
   const personaName = getPersonaName();
   const today = new Date().toISOString().slice(0, 10);
 
@@ -42,9 +85,28 @@ function buildBriefingSummary(): string {
       new Date(r.triggerAt).getTime() < now + 86_400_000,
   );
 
+  // Fetch integration data in parallel
+  const [emailLines, calendarLines] = await Promise.all([
+    fetchEmailSummary(),
+    fetchCalendarSummary(),
+  ]);
+
   const lines: string[] = [];
   lines.push(`Good morning! Here's your briefing from ${personaName}:`);
   lines.push("");
+
+  // Email summary (if connected)
+  if (emailLines.length > 0) {
+    lines.push(...emailLines);
+    lines.push("");
+  }
+
+  // Calendar summary (if connected)
+  if (calendarLines.length > 0) {
+    lines.push(...calendarLines);
+    lines.push("");
+  }
+
   lines.push(`Tasks: ${pending.length} pending (${highPriority.length} high priority)`);
   if (dueSoon.length > 0) {
     lines.push(`Due today/overdue: ${dueSoon.map((t) => t.text).join(", ")}`);
@@ -52,7 +114,12 @@ function buildBriefingSummary(): string {
   if (upcoming.length > 0) {
     lines.push(`Upcoming reminders: ${upcoming.map((r) => r.text).join(", ")}`);
   }
-  if (pending.length === 0 && upcoming.length === 0) {
+  if (
+    pending.length === 0 &&
+    upcoming.length === 0 &&
+    emailLines.length === 0 &&
+    calendarLines.length === 0
+  ) {
     lines.push("Your schedule is clear today.");
   }
 
@@ -67,7 +134,7 @@ function buildBriefingSummary(): string {
 export function registerBriefingCron(api: OpenClawPluginApi, cronExpression: string): void {
   // Register a gateway method so the briefing can be invoked on demand
   api.registerGatewayMethod(`assistant.briefing`, async ({ respond }) => {
-    const summary = buildBriefingSummary();
+    const summary = await buildBriefingSummary();
     respond(true, { summary }, undefined);
   });
 
@@ -79,8 +146,9 @@ export function registerBriefingCron(api: OpenClawPluginApi, cronExpression: str
     start() {
       const interval = cronToMs(cronExpression);
       timer = setInterval(() => {
-        const summary = buildBriefingSummary();
-        api.logger.info(`[Daily Briefing] ${summary.slice(0, 120)}...`);
+        void buildBriefingSummary().then((summary) => {
+          api.logger.info(`[Daily Briefing] ${summary.slice(0, 120)}...`);
+        });
       }, interval);
     },
     stop() {

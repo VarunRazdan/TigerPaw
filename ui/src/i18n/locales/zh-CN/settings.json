@@ -115,5 +115,8 @@
   "notificationLimitNote": "内存中最多保留 50 条通知。铃铛徽章最多显示 9+。通知将持续存在直到被关闭或清除。",
   "setupWizard": "设置向导",
   "setupWizardDesc": "重新运行初始设置向导以重新配置 AI 提供商、频道和交易平台。",
-  "rerunWizard": "重新运行设置向导"
+  "rerunWizard": "重新运行设置向导",
+  "charts": "图表",
+  "loadCharts": "加载 TradingView 图表",
+  "loadChartsDesc": "禁用后，图表将从交易页面完全移除——不加载任何脚本，不发送网络请求。在按量计费的连接上节省带宽。"
 }

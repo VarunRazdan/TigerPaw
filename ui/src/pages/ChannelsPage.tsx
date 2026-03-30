@@ -1,4 +1,4 @@
-import { Power } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, Cpu, Bell } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
@@ -48,6 +48,7 @@ export function ChannelsPage() {
   const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({});
   const [connectIcon, setConnectIcon] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const connectInfo = connectIcon ? CHANNEL_CONNECT_INFO[connectIcon] : null;
 
   // Derive channels from live data + local disconnect overrides + demo fallback
@@ -93,6 +94,41 @@ export function ChannelsPage() {
         <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
       </div>
 
+      {/* How it works explainer */}
+      <div className="rounded-xl border border-neutral-800/60 bg-neutral-900/40 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowHowItWorks((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-neutral-400 hover:text-neutral-300 transition-colors"
+        >
+          {t("howItWorks")}
+          {showHowItWorks ? (
+            <ChevronUp className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5" />
+          )}
+        </button>
+        {showHowItWorks && (
+          <div className="px-4 pb-4 space-y-3 border-t border-neutral-800/40">
+            <p className="text-xs text-neutral-400 mt-3 leading-relaxed">{t("howItWorksBody")}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex items-start gap-2">
+                <MessageSquare className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />
+                <span className="text-[11px] text-neutral-500">{t("howItWorksBullet1")}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Cpu className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />
+                <span className="text-[11px] text-neutral-500">{t("howItWorksBullet2")}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Bell className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />
+                <span className="text-[11px] text-neutral-500">{t("howItWorksBullet3")}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <TooltipProvider>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {channels.map((channel) => (
@@ -100,7 +136,9 @@ export function ChannelsPage() {
               <TooltipTrigger asChild>
                 <div
                   onClick={() => {
-                    if (channel.status !== "connected" && CHANNEL_CONNECT_INFO[channel.icon]) {
+                    if (channel.status === "connected") {
+                      setDisconnecting(channel.name);
+                    } else if (CHANNEL_CONNECT_INFO[channel.icon]) {
                       setConnectIcon(channel.icon);
                     }
                   }}
@@ -124,22 +162,12 @@ export function ChannelsPage() {
                     </div>
                   </div>
                   <span
-                    className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                      channel.status === "connected" ? "bg-green-500" : "bg-white/[0.1]"
+                    className={`w-2.5 h-2.5 rounded-full shrink-0 transition-colors duration-300 ${
+                      channel.status === "connected"
+                        ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]"
+                        : "bg-neutral-600"
                     }`}
                   />
-                  {channel.status === "connected" && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDisconnecting(channel.name);
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-white/5 transition-colors duration-200"
-                      aria-label={`Disconnect ${channel.name}`}
-                    >
-                      <Power className="w-3.5 h-3.5" />
-                    </button>
-                  )}
                 </div>
               </TooltipTrigger>
               <TooltipContent>

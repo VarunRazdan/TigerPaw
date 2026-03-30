@@ -122,6 +122,12 @@ export type OpenClawConfig = {
   gateway?: GatewayConfig;
   memory?: MemoryConfig;
   trading?: TradingConfig;
+  database?: {
+    /** Override database file path. Default: ~/.tigerpaw/tigerpaw.db */
+    path?: string;
+    /** Disable SQLite and use legacy flat-file storage. Default: false */
+    legacyFileStorage?: boolean;
+  };
   assistant?: {
     dailyBriefing?: {
       enabled?: boolean;

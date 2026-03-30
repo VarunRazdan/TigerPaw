@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { ConnectDialog } from "@/components/ConnectDialog";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PlatformApiInfo } from "@/components/PlatformApiInfo";
 import { PlatformIcon } from "@/components/PlatformIcon";
@@ -207,7 +208,6 @@ function MarketPrices() {
 
 export function DashboardPage() {
   const { t } = useTranslation("dashboard");
-  const { t: tc } = useTranslation("common");
   const tradingEnabled = useAppStore((s) => s.tradingEnabled);
   const onboardingComplete = useAppStore((s) => s.onboardingComplete);
   const configLoaded = useAppStore((s) => s.configLoaded);
@@ -223,7 +223,6 @@ export function DashboardPage() {
     positions,
     killSwitchActive,
     platforms,
-    demoMode,
   } = useTradingStore();
 
   // Full-screen onboarding: hide dashboard entirely during setup
@@ -247,15 +246,7 @@ export function DashboardPage() {
           <h1 className="text-2xl font-bold text-neutral-100">{t("title")}</h1>
           <p className="text-sm text-neutral-500 mt-1">{t("subtitle")}</p>
         </div>
-        {tradingEnabled && demoMode && (
-          <NavLink
-            to="/trading/settings"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-700/50 bg-amber-950/30 text-amber-400 text-xs font-medium hover:bg-amber-950/50 transition-all duration-200 cursor-pointer"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            {tc("demoData")}
-          </NavLink>
-        )}
+        {tradingEnabled && <DataModeSelector />}
       </div>
 
       {tradingEnabled && killSwitchActive && (

@@ -3,6 +3,13 @@ import * as fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import {
+  dalAppendAuditEntry,
+  dalGetLastAuditEntryJson,
+  dalIsAuditAvailable,
+  dalReadAuditEntries,
+  type AuditEntryRow,
+} from "../dal/trading-audit.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { withFileLock } from "../plugin-sdk/file-lock.js";
 import type { TradeOrder } from "./policy-engine.js";
@@ -17,13 +24,6 @@ const DEFAULT_ROTATE_COUNT = 5;
 
 /**
  * Resolve the HMAC key for audit log integrity.
- *
- * Priority:
- *  1. TIGERPAW_AUDIT_HMAC_KEY env var (operator-supplied)
- *  2. Persisted random key at ~/.tigerpaw/trading/.audit-hmac-key
- *
- * The key is cryptographically random (32 bytes hex) and stored with
- * owner-only permissions (0o600) in a directory restricted to 0o700.
  */
 function resolveHmacKey(): string {
   const envKey = process.env.TIGERPAW_AUDIT_HMAC_KEY;
@@ -123,99 +123,64 @@ export function configureAuditLog(opts: {
     maxFileSizeBytes: (opts.maxFileSizeMb ?? 50) * 1024 * 1024,
     rotateCount: opts.rotateCount ?? DEFAULT_ROTATE_COUNT,
   };
-  // Reset cached hash so next write re-reads the chain tail.
   lastEntryHash = undefined;
 }
 
-/**
- * Compute SHA-256 of a JSONL line for chain linking.
- */
 function sha256(data: string): string {
   return createHash("sha256").update(data, "utf8").digest("hex");
 }
 
-/**
- * Compute HMAC-SHA256 for a serialized entry, providing tamper evidence.
- */
 function hmacSha256(data: string): string {
   return createHmac("sha256", HMAC_KEY).update(data, "utf8").digest("hex");
 }
 
-/**
- * Read the hash of the last line in the audit file to continue the chain.
- * Returns the genesis hash "0" when the file is empty or missing.
- *
- * For files >= 64 KB, uses a streaming approach that reads from the end of
- * the file to avoid loading the entire audit log into memory.
- */
-async function readLastHash(filePath: string): Promise<string> {
-  const SMALL_FILE_THRESHOLD = 64 * 1024; // 64 KB
+// ── Legacy file-based helpers ────────────────────────────────────
 
+async function readLastHash(filePath: string): Promise<string> {
+  const SMALL_FILE_THRESHOLD = 64 * 1024;
   try {
     const stat = await fs.stat(filePath);
     if (stat.size === 0) {
       return "0";
     }
 
-    // Small files: read the whole thing (simple path).
     if (stat.size < SMALL_FILE_THRESHOLD) {
       const content = await fs.readFile(filePath, "utf8");
       const lines = content.trimEnd().split("\n");
       const lastLine = lines[lines.length - 1];
-      if (lastLine) {
-        return sha256(lastLine);
-      }
-      return "0";
+      return lastLine ? sha256(lastLine) : "0";
     }
 
-    // Large files: read backward from the end to find the last newline.
     const fd = await fs.open(filePath, "r");
     try {
       const CHUNK_SIZE = 8192;
       let position = stat.size;
       let tail = Buffer.alloc(0);
-
       while (position > 0) {
         const readSize = Math.min(CHUNK_SIZE, position);
         position -= readSize;
         const buf = Buffer.alloc(readSize);
         await fd.read(buf, 0, readSize, position);
         tail = Buffer.concat([buf, tail]);
-
-        // We need to find the last non-empty line. Trim trailing newlines,
-        // then look for the preceding newline to isolate the last line.
         const trimmed = tail.toString("utf8").trimEnd();
         const nlIndex = trimmed.lastIndexOf("\n");
         if (nlIndex !== -1) {
           const lastLine = trimmed.slice(nlIndex + 1);
-          if (lastLine) {
-            return sha256(lastLine);
-          }
-          return "0";
+          return lastLine ? sha256(lastLine) : "0";
         }
-
-        // If we've read the entire file without finding a second newline,
-        // the whole content is a single line.
         if (position === 0) {
-          if (trimmed) {
-            return sha256(trimmed);
-          }
-          return "0";
+          return trimmed ? sha256(trimmed) : "0";
         }
       }
     } finally {
       await fd.close();
     }
   } catch {
-    // File does not exist or cannot be read -- start a new chain.
+    // File does not exist or cannot be read
   }
   return "0";
 }
 
-/**
- * Rotate the audit log file when it exceeds the size limit.
- * Renames audit.jsonl -> audit.jsonl.1, .1 -> .2, ..., dropping the oldest.
- */
 async function rotateIfNeeded(filePath: string, maxBytes: number, keep: number): Promise<void> {
   try {
     const stat = await fs.stat(filePath);
@@ -223,37 +188,63 @@ async function rotateIfNeeded(filePath: string, maxBytes: number, keep: number):
       return;
     }
   } catch {
-    // File doesn't exist yet -- nothing to rotate.
     return;
   }
-
-  // Shift existing rotations (oldest first so we don't overwrite).
   for (let i = keep; i >= 1; i -= 1) {
     const src = i === 1 ? filePath : `${filePath}.${i - 1}`;
     const dst = `${filePath}.${i}`;
     try {
       await fs.rename(src, dst);
     } catch {
-      // Source may not exist; that's fine.
+      /* source may not exist */
     }
   }
-
-  // Reset cached hash since the primary file is now empty.
-  // Each rotated file forms an independently verifiable chain starting from "0".
-  // Cross-file chain continuity is tracked via the rotation metadata (file ordering).
   lastEntryHash = "0";
 }
 
 /**
- * Append an audit entry to the JSONL log.
- *
- * This function is intentionally fire-and-forget safe: it never throws.
- * Errors are logged to stderr so they never block trade execution.
+ * Append an audit entry to the log.
+ * Uses SQLite when available, falls back to JSONL file.
  */
 export async function writeAuditEntry(
   entry: Omit<AuditLogEntry, "timestamp" | "prevHash" | "hmac">,
 ): Promise<void> {
   try {
+    if (dalIsAuditAvailable()) {
+      // SQLite path — no file locking needed
+      if (lastEntryHash === undefined) {
+        const lastJson = dalGetLastAuditEntryJson();
+        lastEntryHash = lastJson ? sha256(lastJson) : "0";
+      }
+
+      const entryWithoutHmac = {
+        timestamp: new Date().toISOString(),
+        ...entry,
+        prevHash: lastEntryHash,
+      };
+      const hmac = hmacSha256(JSON.stringify(entryWithoutHmac));
+
+      const fullEntry: AuditLogEntry = { ...entryWithoutHmac, hmac };
+      const line = JSON.stringify(fullEntry);
+
+      const row: AuditEntryRow = {
+        timestamp: fullEntry.timestamp,
+        extensionId: fullEntry.extensionId,
+        action: fullEntry.action,
+        actor: fullEntry.actor,
+        orderSnapshot: fullEntry.orderSnapshot ? JSON.stringify(fullEntry.orderSnapshot) : null,
+        policySnapshot: fullEntry.policySnapshot ? JSON.stringify(fullEntry.policySnapshot) : null,
+        error: fullEntry.error ?? null,
+        prevHash: fullEntry.prevHash,
+        hmac: fullEntry.hmac,
+      };
+
+      dalAppendAuditEntry(row);
+      lastEntryHash = sha256(line);
+      return;
+    }
+
+    // Legacy JSONL file path
     const dir = path.dirname(auditConfig.filePath);
     await fs.mkdir(dir, { recursive: true });
 
@@ -268,40 +259,60 @@ export async function writeAuditEntry(
         lastEntryHash = await readLastHash(auditConfig.filePath);
       }
 
-      // Build the entry without HMAC first, then compute HMAC over its serialization.
       const entryWithoutHmac = {
         timestamp: new Date().toISOString(),
         ...entry,
         prevHash: lastEntryHash,
       };
       const hmac = hmacSha256(JSON.stringify(entryWithoutHmac));
-
-      const fullEntry: AuditLogEntry = {
-        ...entryWithoutHmac,
-        hmac,
-      };
-
+      const fullEntry: AuditLogEntry = { ...entryWithoutHmac, hmac };
       const line = JSON.stringify(fullEntry);
-      const signedLine = `${line}\n`;
 
-      await fs.appendFile(auditConfig.filePath, signedLine, { mode: 0o600 });
-
-      // Update the chain hash for the next entry.
+      await fs.appendFile(auditConfig.filePath, `${line}\n`, { mode: 0o600 });
       lastEntryHash = sha256(line);
     });
   } catch (err) {
-    // Never throw from the audit writer -- log to stderr and move on.
     log.error(`audit log write failed: ${String(err)}`);
   }
 }
 
 /**
- * Verify the HMAC chain integrity of an audit log file.
- * Returns the number of valid entries and the index of the first broken link (if any).
+ * Verify the HMAC chain integrity of the audit log.
  */
 export async function verifyAuditChain(
   filePath?: string,
 ): Promise<{ valid: number; brokenAt?: number; hmacFailedAt?: number }> {
+  if (dalIsAuditAvailable() && !filePath) {
+    // Verify from SQLite
+    const entries = dalReadAuditEntries();
+    let prevHash = "0";
+
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if (e.prevHash !== prevHash) {
+        return { valid: i, brokenAt: i };
+      }
+      // Reconstruct entry for HMAC verification
+      const reconstructed = {
+        timestamp: e.timestamp,
+        extensionId: e.extensionId,
+        action: e.action,
+        actor: e.actor,
+        ...(e.orderSnapshot ? { orderSnapshot: JSON.parse(e.orderSnapshot) } : {}),
+        ...(e.policySnapshot ? { policySnapshot: JSON.parse(e.policySnapshot) } : {}),
+        ...(e.error ? { error: e.error } : {}),
+        prevHash: e.prevHash,
+      };
+      const expectedHmac = hmacSha256(JSON.stringify(reconstructed));
+      if (e.hmac && e.hmac !== expectedHmac) {
+        return { valid: i, brokenAt: i, hmacFailedAt: i };
+      }
+      prevHash = sha256(JSON.stringify({ ...reconstructed, hmac: e.hmac }));
+    }
+    return { valid: entries.length };
+  }
+
+  // Legacy file-based verification
   const target = filePath ?? auditConfig.filePath;
   let content: string;
   try {
@@ -320,8 +331,6 @@ export async function verifyAuditChain(
       if (entry.prevHash !== prevHash) {
         return { valid: i, brokenAt: i };
       }
-
-      // Verify HMAC if present (entries written before the fix won't have it).
       if (entry.hmac) {
         const { hmac: _hmac, ...entryWithoutHmac } = entry;
         const expectedHmac = hmacSha256(JSON.stringify(entryWithoutHmac));
@@ -329,7 +338,6 @@ export async function verifyAuditChain(
           return { valid: i, brokenAt: i, hmacFailedAt: i };
         }
       }
-
       prevHash = sha256(line);
     } catch {
       return { valid: i, brokenAt: i };
@@ -340,10 +348,25 @@ export async function verifyAuditChain(
 }
 
 /**
- * Read all audit entries from the log file.
- * Useful for diagnostics and UI display.
+ * Read all audit entries from the log.
  */
 export async function readAuditEntries(filePath?: string): Promise<AuditLogEntry[]> {
+  if (dalIsAuditAvailable() && !filePath) {
+    const rows = dalReadAuditEntries();
+    return rows.map((r) => ({
+      timestamp: r.timestamp,
+      extensionId: r.extensionId,
+      action: r.action as AuditAction,
+      actor: r.actor as AuditActor,
+      orderSnapshot: r.orderSnapshot ? JSON.parse(r.orderSnapshot) : undefined,
+      policySnapshot: r.policySnapshot ? JSON.parse(r.policySnapshot) : undefined,
+      error: r.error ?? undefined,
+      prevHash: r.prevHash,
+      hmac: r.hmac,
+    }));
+  }
+
+  // Legacy file-based read
   const target = filePath ?? auditConfig.filePath;
   let content: string;
   try {

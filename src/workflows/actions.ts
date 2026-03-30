@@ -5,6 +5,11 @@
  * (gateway RPC, kill switch, logger). Returns output data to merge into context.
  */
 
+import {
+  getEmailClient,
+  getCalendarClient,
+  getMeetingClient,
+} from "../integrations/clients/index.js";
 import type { ExecutionContext } from "./context.js";
 import type { ActionDependencies } from "./types.js";
 
@@ -185,6 +190,121 @@ const trade: ActionExecutor = async (config, ctx, deps) => {
   };
 };
 
+// ── Send Email ────────────────────────────────────────────────────
+
+const sendEmail: ActionExecutor = async (config, ctx, deps) => {
+  const to = ctx
+    .resolveTemplate((config.to as string | undefined) ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const subject = ctx.resolveTemplate((config.subject as string | undefined) ?? "");
+  const bodyTemplate = (config.bodyTemplate ?? config.body ?? "") as string;
+  const body = ctx.resolveTemplate(bodyTemplate);
+  const cc = config.cc
+    ? ctx
+        .resolveTemplate(config.cc as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
+
+  if (!to.length) {
+    throw new Error("send_email: at least one recipient is required");
+  }
+  if (!subject) {
+    throw new Error("send_email: subject is required");
+  }
+  if (!body) {
+    throw new Error("send_email: body is required");
+  }
+
+  deps.log(`Sending email to ${to.join(", ")}: "${subject}"`);
+
+  const client = await getEmailClient();
+  const result = await client.sendMessage({ to, subject, body, cc });
+
+  return { emailSent: true, emailId: result.id, recipients: to };
+};
+
+// ── Create Calendar Event ─────────────────────────────────────────
+
+const createCalendarEvent: ActionExecutor = async (config, ctx, deps) => {
+  const title = ctx.resolveTemplate((config.title as string | undefined) ?? "");
+  const start = ctx.resolveTemplate((config.start as string | undefined) ?? "");
+  const end = ctx.resolveTemplate((config.end as string | undefined) ?? "");
+  const description = config.description
+    ? ctx.resolveTemplate(config.description as string)
+    : undefined;
+  const attendees = config.attendees
+    ? ctx
+        .resolveTemplate(config.attendees as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
+
+  if (!title) {
+    throw new Error("create_calendar_event: title is required");
+  }
+  if (!start || !end) {
+    throw new Error("create_calendar_event: start and end are required");
+  }
+
+  deps.log(`Creating calendar event: "${title}"`);
+
+  const client = await getCalendarClient();
+  const event = await client.createEvent({
+    title,
+    start,
+    end,
+    description,
+    attendees,
+    addMeetingLink: config.addMeetingLink === true,
+  });
+
+  return {
+    eventCreated: true,
+    eventId: event.id,
+    eventTitle: event.title,
+    meetingLink: event.meetingLink,
+  };
+};
+
+// ── Schedule Meeting ──────────────────────────────────────────────
+
+const scheduleMeeting: ActionExecutor = async (config, ctx, deps) => {
+  const topic = ctx.resolveTemplate((config.topic as string | undefined) ?? "");
+  const startTime = ctx.resolveTemplate((config.startTime as string | undefined) ?? "");
+  const duration = Number(config.duration ?? 30);
+  const attendees = config.attendees
+    ? ctx
+        .resolveTemplate(config.attendees as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
+
+  if (!topic) {
+    throw new Error("schedule_meeting: topic is required");
+  }
+  if (!startTime) {
+    throw new Error("schedule_meeting: startTime is required");
+  }
+
+  deps.log(`Scheduling meeting: "${topic}"`);
+
+  const client = await getMeetingClient();
+  const meeting = await client.createMeeting({ topic, startTime, duration, attendees });
+
+  return {
+    meetingScheduled: true,
+    meetingId: meeting.id,
+    joinUrl: meeting.joinUrl,
+    provider: meeting.provider,
+  };
+};
+
 // ── Registry ──────────────────────────────────────────────────────
 
 const executors: Record<string, ActionExecutor> = {
@@ -193,6 +313,9 @@ const executors: Record<string, ActionExecutor> = {
   run_llm_task: runLlmTask,
   killswitch,
   trade,
+  send_email: sendEmail,
+  create_calendar_event: createCalendarEvent,
+  schedule_meeting: scheduleMeeting,
 };
 
 /**

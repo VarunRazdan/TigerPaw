@@ -1,4 +1,13 @@
 {
-  "title": "チャンネル",
-  "subtitle": "メッセージングチャンネルの連携を管理"
+  "title": "エージェントチャネル",
+  "subtitle": "メッセージングプラットフォームを接続して、Jarvisがどこからでもあなたに連絡できるようにします",
+  "howItWorks": "仕組み",
+  "howItWorksBody": "各チャネルは、選択したプラットフォーム（Discord、Telegram、Slackなど）で軽量エージェントを実行します。通常のチャットアプリからエージェントにメッセージを送信すると、Jarvisに中継され、Jarvisが応答し、ワークフローを実行し、アラートを送信します。すべての処理はお使いのマシン上で行われます。",
+  "howItWorksBullet1": "通常のチャットアプリからエージェントにメッセージを送信",
+  "howItWorksBullet2": "Jarvisがリクエストをローカルで処理",
+  "howItWorksBullet3": "応答、アラート、取引確認が返ってきます",
+  "disconnectTitle": "{{channel}}を切断しますか？",
+  "disconnectDescription": "このチャネルのすべてのメッセージルーティングが停止します。後で再接続できます。",
+  "cancel": "キャンセル",
+  "confirmDisconnect": "確認"
 }

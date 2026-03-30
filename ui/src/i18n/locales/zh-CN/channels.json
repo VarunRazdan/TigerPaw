@@ -1,4 +1,13 @@
 {
-  "title": "频道",
-  "subtitle": "管理消息频道集成"
+  "title": "代理频道",
+  "subtitle": "连接消息平台，让 Jarvis 随时随地联系您",
+  "howItWorks": "工作原理",
+  "howItWorksBody": "每个频道在您选择的平台（Discord、Telegram、Slack 等）上运行一个轻量级代理。您从常用的聊天应用向代理发送消息 — 它将消息转发给 Jarvis，Jarvis 进行响应、运行工作流并向您发送警报。所有处理都在您的本机上完成。",
+  "howItWorksBullet1": "从常用的聊天应用向代理发送消息",
+  "howItWorksBullet2": "Jarvis 在本地处理您的请求",
+  "howItWorksBullet3": "响应、警报和交易确认会反馈给您",
+  "disconnectTitle": "断开 {{channel}}？",
+  "disconnectDescription": "这将停止此频道的所有消息路由。您可以稍后重新连接。",
+  "cancel": "取消",
+  "confirmDisconnect": "确认"
 }

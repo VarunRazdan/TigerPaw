@@ -2,6 +2,7 @@ import fs from "node:fs";
 import JSON5 from "json5";
 import { CONFIG_PATH } from "../config/config.js";
 import { type OpenClawConfig, writeConfigFile } from "../config/config.js";
+import type { ModelProviderConfig } from "../config/types.models.js";
 import { defaultRuntime } from "../runtime.js";
 import { setupCommand } from "./setup.js";
 
@@ -59,7 +60,8 @@ async function promptLlmProvider(): Promise<void> {
         ollama: {
           type: "ollama",
           baseUrl: baseUrl || "http://localhost:11434",
-        } as unknown as Record<string, unknown>,
+          models: [],
+        } as unknown as ModelProviderConfig,
       },
     };
   } else {
@@ -77,10 +79,12 @@ async function promptLlmProvider(): Promise<void> {
       ...cfg.models,
       providers: {
         ...cfg.models?.providers,
-        [provider as string]: { type: providerType, apiKey: apiKey } as unknown as Record<
-          string,
-          unknown
-        >,
+        [provider as string]: {
+          type: providerType,
+          apiKey,
+          baseUrl: "",
+          models: [],
+        } as unknown as ModelProviderConfig,
       },
     };
   }

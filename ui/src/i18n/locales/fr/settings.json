@@ -115,5 +115,8 @@
   "notificationLimitNote": "Jusqu'à 50 notifications sont conservées en mémoire. Le badge de la cloche affiche jusqu'à 9+. Les notifications persistent jusqu'à ce qu'elles soient ignorées ou effacées.",
   "setupWizard": "Assistant de configuration",
   "setupWizardDesc": "Relancez l'assistant de configuration initiale pour reconfigurer les fournisseurs d'IA, les canaux et les plateformes de trading.",
-  "rerunWizard": "Relancer l'assistant de configuration"
+  "rerunWizard": "Relancer l'assistant de configuration",
+  "charts": "Graphiques",
+  "loadCharts": "Charger les graphiques TradingView",
+  "loadChartsDesc": "Lorsque désactivé, les graphiques sont entièrement supprimés des pages de trading — aucun script chargé, aucune requête réseau. Économise la bande passante sur les connexions limitées."
 }

@@ -1,4 +1,13 @@
 {
-  "title": "Canais",
-  "subtitle": "Gerenciar integrações de canais de mensagens"
+  "title": "Canais de Agente",
+  "subtitle": "Conecte plataformas de mensagens para que o Jarvis possa alcançá-lo em qualquer lugar",
+  "howItWorks": "Como funciona",
+  "howItWorksBody": "Cada canal executa um agente leve na plataforma escolhida (Discord, Telegram, Slack, etc.). Você envia mensagens ao agente pelo seu app de chat normal — ele retransmite suas mensagens ao Jarvis, que responde, executa workflows e envia alertas. Todo o processamento permanece na sua máquina.",
+  "howItWorksBullet1": "Envie uma mensagem ao agente pelo seu app de chat normal",
+  "howItWorksBullet2": "O Jarvis processa sua solicitação localmente",
+  "howItWorksBullet3": "Respostas, alertas e confirmações de operações retornam para você",
+  "disconnectTitle": "Desconectar {{channel}}?",
+  "disconnectDescription": "Isso interromperá todo o roteamento de mensagens para este canal. Você pode reconectá-lo depois.",
+  "cancel": "Cancelar",
+  "confirmDisconnect": "Confirmar"
 }

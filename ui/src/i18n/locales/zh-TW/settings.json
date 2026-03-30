@@ -115,5 +115,8 @@
   "notificationLimitNote": "記憶體中最多保留 50 則通知。鈴鐺徽章最多顯示 9+。通知將持續存在直到被關閉或清除。",
   "setupWizard": "設定精靈",
   "setupWizardDesc": "重新執行初始設定精靈以重新配置 AI 供應商、頻道和交易平台。",
-  "rerunWizard": "重新執行設定精靈"
+  "rerunWizard": "重新執行設定精靈",
+  "charts": "圖表",
+  "loadCharts": "載入 TradingView 圖表",
+  "loadChartsDesc": "停用後，圖表將從交易頁面完全移除——不載入任何腳本，不發送網路請求。在按量計費的連線上節省頻寬。"
 }

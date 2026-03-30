@@ -31,11 +31,18 @@ type RegisteredTrigger = {
   cleanup: () => void;
 };
 
+/** Max webhook calls per path within the rate-limit window. */
+const WEBHOOK_RATE_LIMIT = 30;
+/** Rate-limit window in milliseconds (60 seconds). */
+const WEBHOOK_RATE_WINDOW_MS = 60_000;
+/** Maximum age (ms) of a webhook timestamp header before rejection (5 minutes). */
+const WEBHOOK_TIMESTAMP_MAX_AGE_MS = 5 * 60 * 1000;
+
 type WebhookRegistration = {
   workflowId: string;
   nodeId: string;
   path: string;
-  secret?: string;
+  secret: string;
   workflow: Workflow;
   node: WorkflowNode;
 };
@@ -43,6 +50,7 @@ type WebhookRegistration = {
 export class TriggerManager {
   private triggers: RegisteredTrigger[] = [];
   private webhooks = new Map<string, WebhookRegistration>();
+  private webhookRateCounters = new Map<string, { count: number; resetAt: number }>();
   private cronService: CronService | null = null;
   private onTrigger: TriggerCallback;
 
@@ -147,13 +155,33 @@ export class TriggerManager {
       return false;
     }
 
-    // Verify HMAC secret if configured — reject when signature is missing or invalid
-    if (reg.secret) {
-      const signature = headers?.["x-webhook-signature"] ?? headers?.["x-hub-signature-256"] ?? "";
-      if (!signature || !this.verifyHmac(reg.secret, JSON.stringify(body), signature)) {
-        return false;
+    // ── Rate limiting (per-path) ────────────────────────────────
+    const now = Date.now();
+    let counter = this.webhookRateCounters.get(path);
+    if (!counter || now >= counter.resetAt) {
+      counter = { count: 0, resetAt: now + WEBHOOK_RATE_WINDOW_MS };
+      this.webhookRateCounters.set(path, counter);
+    }
+    if (counter.count >= WEBHOOK_RATE_LIMIT) {
+      return false; // rate-limited
+    }
+
+    // ── HMAC signature verification (always required) ───────────
+    const signature = headers?.["x-webhook-signature"] ?? headers?.["x-hub-signature-256"] ?? "";
+    if (!signature || !this.verifyHmac(reg.secret, JSON.stringify(body), signature)) {
+      return false;
+    }
+
+    // ── Replay protection: reject stale timestamps ──────────────
+    const tsHeader = headers?.["x-webhook-timestamp"] ?? headers?.["x-timestamp"] ?? "";
+    if (tsHeader) {
+      const tsMs = tsHeader.length <= 12 ? Number(tsHeader) * 1000 : Number(tsHeader); // seconds or ms
+      if (Number.isFinite(tsMs) && Math.abs(now - tsMs) > WEBHOOK_TIMESTAMP_MAX_AGE_MS) {
+        return false; // stale or future-dated
       }
     }
+
+    counter.count += 1;
 
     this.onTrigger(reg.workflow, reg.node, {
       triggerType: "webhook",
@@ -350,6 +378,11 @@ export class TriggerManager {
     // Normalize: strip leading slash
     const normalizedPath = path.replace(/^\/+/, "");
     const secret = node.config.secret as string | undefined;
+
+    // Reject webhook registration without a secret — unsigned webhooks are not allowed
+    if (!secret) {
+      return null;
+    }
 
     this.webhooks.set(normalizedPath, {
       workflowId: workflow.id,

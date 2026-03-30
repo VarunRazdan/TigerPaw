@@ -21,10 +21,21 @@ export type ActionSubtype =
   | "run_llm_task"
   | "killswitch"
   | "trade"
-  | "run_workflow";
-export type TransformSubtype = "extract_data" | "format_text" | "parse_json";
+  | "run_workflow"
+  | "send_email"
+  | "create_calendar_event"
+  | "schedule_meeting";
+export type TransformSubtype = "extract_data" | "format_text" | "parse_json" | "merge";
+export type RouterSubtype = "if_else" | "switch" | "loop";
 
-export type WorkflowNodeType = "trigger" | "condition" | "action" | "transform" | "error_handler";
+export type WorkflowNodeType =
+  | "trigger"
+  | "condition"
+  | "action"
+  | "transform"
+  | "error_handler"
+  | "router"
+  | "annotation";
 
 // ── Retry / backoff configuration ─────────────────────────────────
 
@@ -52,6 +63,10 @@ export type WorkflowNode = {
   errorHandlerId?: string;
   /** Credential ID to inject into context before execution. */
   credentialId?: string;
+  /** Named output handles for router nodes (e.g. ["true","false"] or case names). */
+  outputs?: string[];
+  /** When true, the engine skips this node and passes data through to successors. */
+  disabled?: boolean;
 };
 
 export type WorkflowEdge = {

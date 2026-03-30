@@ -1,6 +1,6 @@
 # Tigerpaw - Getting Started Guide
 
-Tigerpaw is everything [OpenClaw](https://github.com/nicepkg/openclaw) does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder, MCP protocol support, local LLM integration, and i18n in 10 languages. Whether you're building AI-powered messaging bots, trading bots, or both, Tigerpaw does it all from one install.
+Tigerpaw is everything [OpenClaw](https://github.com/openclaw/openclaw) does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder, MCP protocol support, local LLM integration, and i18n in 10 languages. Whether you're building AI-powered messaging bots, trading bots, or both, Tigerpaw does it all from one install.
 
 ---
 
@@ -548,6 +548,40 @@ Click "Not Connected" on any platform badge or the Dashboard extensions grid to 
 - A "Save to Config" button that writes credentials directly to `tigerpaw.json`
 - A clipboard fallback if the gateway is not running
 
+### Connecting Email & Calendar
+
+Navigate to the **Integrations** page from the sidebar. You'll see cards for each supported provider:
+
+- **Email**: Gmail, Outlook
+- **Calendar**: Google Calendar, Outlook Calendar
+- **Meetings**: Zoom, Google Meet, Microsoft Teams
+
+**Setup:**
+
+1. **Set OAuth credentials** — Each provider requires a Client ID and Client Secret. Set them as environment variables:
+
+   ```bash
+   # Google (Gmail, Calendar, Meet)
+   export GOOGLE_CLIENT_ID="your-client-id"
+   export GOOGLE_CLIENT_SECRET="your-client-secret"
+
+   # Microsoft (Outlook, Calendar, Teams)
+   export MICROSOFT_CLIENT_ID="your-client-id"
+   export MICROSOFT_CLIENT_SECRET="your-client-secret"
+
+   # Zoom
+   export ZOOM_CLIENT_ID="your-client-id"
+   export ZOOM_CLIENT_SECRET="your-client-secret"
+   ```
+
+2. **Click "Connect"** — Your browser opens the provider's consent screen. After approving, you're redirected back to Tigerpaw and the connection is established.
+
+3. **Use via Jarvis** — Once connected, Jarvis can read emails, create calendar events, and schedule meetings. Try: "Jarvis, summarize my unread emails" or "Jarvis, what's on my calendar today?"
+
+4. **Use in Workflows** — Three new workflow action nodes are available: `Send Email`, `Create Calendar Event`, and `Schedule Meeting`. These use your connected providers automatically.
+
+**Security:** OAuth tokens are encrypted at rest using AES-256-GCM via the credential vault. Tokens auto-refresh before expiry. All API calls run locally — your data never passes through Tigerpaw's servers.
+
 ### Dashboard Auto-Open
 
 ```bash
@@ -841,10 +875,11 @@ tigerpaw agents bind <id> <channel> # Bind agent to channel
 
 ```
 ~/.tigerpaw/
-  tigerpaw.json          # Main configuration
-  credentials/            # OAuth tokens
+  tigerpaw.json          # Main configuration (JSON5, editable)
+  tigerpaw.db            # SQLite database (workflows, credentials, audit log, state)
   sessions/               # Agent session logs
-  trading/
-    audit.jsonl           # Trade audit log
-    policy-state.json     # Current risk state
 ```
+
+**Backup:** Copy `tigerpaw.db` while the server is stopped. This single file contains all workflows, encrypted credentials, execution history, and trading state.
+
+**Upgrading from flat files:** On first startup after upgrade, Tigerpaw automatically migrates data from `credentials/`, `workflows/`, and `trading/` directories into `tigerpaw.db`. Original files are renamed with `.pre-sqlite-backup` suffix.

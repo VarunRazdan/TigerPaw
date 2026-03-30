@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 import { saveConfigPatch } from "@/lib/save-config";
 import { useAppStore } from "@/stores/app-store";
+import { useIntegrationStore } from "@/stores/integration-store";
 import { useMessageHubStore } from "@/stores/message-hub-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useTradingStore } from "@/stores/trading-store";
@@ -401,6 +402,7 @@ export function useOnboarding() {
       useNotificationStore.getState().setDemoMode(withDemoData);
       useWorkflowStore.getState().setDemoMode(withDemoData);
       useMessageHubStore.getState().setDemoMode(withDemoData);
+      useIntegrationStore.getState().setDemoMode(withDemoData);
 
       setOnboardingComplete(true);
       void gatewayRpc("config.patch", {

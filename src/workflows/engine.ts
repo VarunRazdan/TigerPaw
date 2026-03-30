@@ -19,6 +19,7 @@
 import { executeAction } from "./actions.js";
 import { evaluateCondition } from "./conditions.js";
 import { ExecutionContext } from "./context.js";
+import { evaluateRouter } from "./routers.js";
 import { executeTransform } from "./transforms.js";
 import type {
   Workflow,
@@ -74,6 +75,42 @@ function sleep(ms: number): Promise<void> {
 
 /** Max depth for sub-workflow recursion. */
 const MAX_SUB_WORKFLOW_DEPTH = 10;
+
+/** Default max loop iterations to prevent infinite loops. */
+const DEFAULT_MAX_LOOP_ITERATIONS = 1000;
+
+// ── Merge sync state ────────────────────────────────────────────────
+
+type MergeState = {
+  /** IDs of merge nodes in this workflow. */
+  mergeNodeIds: Set<string>;
+  /** Number of incoming edges per merge node. */
+  inDegree: Map<string, number>;
+  /** How many branches have arrived at each merge node. */
+  arrivalCounts: Map<string, number>;
+  /** Collected context snapshots from each arriving branch. */
+  branchOutputs: Map<string, Record<string, unknown>[]>;
+};
+
+/** Compute merge state for a workflow: identify merge nodes and their inDegree. */
+function computeMergeState(nodes: WorkflowNode[], edges: WorkflowEdge[]): MergeState {
+  const mergeNodeIds = new Set(
+    nodes.filter((n) => n.type === "transform" && n.subtype === "merge").map((n) => n.id),
+  );
+
+  const inDegree = new Map<string, number>();
+  for (const nodeId of mergeNodeIds) {
+    const count = edges.filter((e) => e.target === nodeId).length;
+    inDegree.set(nodeId, count);
+  }
+
+  return {
+    mergeNodeIds,
+    inDegree,
+    arrivalCounts: new Map(),
+    branchOutputs: new Map(),
+  };
+}
 
 export class WorkflowEngine {
   private deps: ActionDependencies;
@@ -132,6 +169,7 @@ export class WorkflowEngine {
     const adjacency = buildAdjacency(workflow.edges);
     const ctx = new ExecutionContext(triggerData);
     const visited = new Set<string>();
+    const mergeState = computeMergeState(workflow.nodes, workflow.edges);
 
     try {
       // Verify trigger node exists
@@ -153,7 +191,17 @@ export class WorkflowEngine {
       visited.add(triggerNodeId);
 
       // Traverse from trigger node
-      await this.traverse(triggerNodeId, nodeMap, adjacency, ctx, execution, visited, depth);
+      await this.traverse(
+        triggerNodeId,
+        nodeMap,
+        adjacency,
+        ctx,
+        execution,
+        visited,
+        depth,
+        undefined,
+        mergeState,
+      );
 
       execution.status = "completed";
     } catch (err) {
@@ -169,6 +217,9 @@ export class WorkflowEngine {
   /**
    * Recursively traverse the graph from a node, executing successors.
    * When a node has multiple outgoing edges, execute branches in parallel.
+   *
+   * @param filterLabel  When set, only follow edges whose label matches this value.
+   *                     Used by router nodes to direct flow to a specific output.
    */
   private async traverse(
     fromNodeId: string,
@@ -178,11 +229,45 @@ export class WorkflowEngine {
     execution: WorkflowExecution,
     visited: Set<string>,
     depth: number,
+    filterLabel?: string,
+    mergeState?: MergeState,
   ): Promise<void> {
     const outEdges = adjacency.get(fromNodeId) ?? [];
 
-    // Filter to edges whose target hasn't been visited yet
-    const pendingEdges = outEdges.filter((e) => !visited.has(e.target) && nodeMap.has(e.target));
+    // When a filterLabel is specified, only follow edges with a matching label.
+    // Unlabeled edges are also followed when no filterLabel is set.
+    const labelFiltered =
+      filterLabel != null ? outEdges.filter((e) => e.label === filterLabel) : outEdges;
+
+    // Separate merge node targets from regular targets.
+    // Merge nodes use arrival counting instead of simple visited checks.
+    const pendingEdges: WorkflowEdge[] = [];
+
+    for (const edge of labelFiltered) {
+      if (!nodeMap.has(edge.target)) {
+        continue;
+      }
+
+      if (mergeState && mergeState.mergeNodeIds.has(edge.target)) {
+        // Record arrival at merge node
+        const arrivals = (mergeState.arrivalCounts.get(edge.target) ?? 0) + 1;
+        mergeState.arrivalCounts.set(edge.target, arrivals);
+
+        // Store a context snapshot from this branch
+        const outputs = mergeState.branchOutputs.get(edge.target) ?? [];
+        outputs.push(ctx.toJSON());
+        mergeState.branchOutputs.set(edge.target, outputs);
+
+        const needed = mergeState.inDegree.get(edge.target) ?? 1;
+        if (arrivals >= needed && !visited.has(edge.target)) {
+          // All branches have arrived — ready to execute the merge node
+          pendingEdges.push(edge);
+        }
+        // If not all branches arrived yet, this path stops here
+      } else if (!visited.has(edge.target)) {
+        pendingEdges.push(edge);
+      }
+    }
 
     if (pendingEdges.length === 0) {
       return;
@@ -206,6 +291,7 @@ export class WorkflowEngine {
           execution,
           visited,
           depth,
+          mergeState,
         );
       });
 
@@ -233,12 +319,13 @@ export class WorkflowEngine {
       execution,
       visited,
       depth,
+      mergeState,
     );
   }
 
   /**
    * Execute a single node and continue traversal from it.
-   * Handles error routing and retry logic.
+   * Handles error routing, retry logic, disabled passthrough, and router edge selection.
    */
   private async executeAndContinue(
     node: WorkflowNode,
@@ -249,13 +336,45 @@ export class WorkflowEngine {
     execution: WorkflowExecution,
     visited: Set<string>,
     depth: number,
+    mergeState?: MergeState,
   ): Promise<void> {
+    // Disabled node passthrough: skip execution, continue traversal
+    if (node.disabled) {
+      execution.nodeResults.push({
+        nodeId: node.id,
+        nodeLabel: node.label,
+        nodeType: node.type,
+        status: "skipped",
+        startedAt: Date.now(),
+        completedAt: Date.now(),
+        output: { disabled: true },
+      });
+      await this.traverse(
+        node.id,
+        nodeMap,
+        adjacency,
+        ctx,
+        execution,
+        visited,
+        depth,
+        undefined,
+        mergeState,
+      );
+      return;
+    }
+
     // Inject credential into context if configured
     if (node.credentialId && this.deps.resolveCredential) {
       const creds = this.deps.resolveCredential(node.credentialId);
       if (creds) {
         ctx.merge({ credentials: creds });
       }
+    }
+
+    // Inject collected branch outputs for merge nodes
+    if (node.type === "transform" && node.subtype === "merge" && mergeState) {
+      const branchOutputs = mergeState.branchOutputs.get(node.id) ?? [];
+      ctx.set("__branchOutputs", branchOutputs);
     }
 
     const result = await this.executeWithRetry(node, edge, ctx, depth);
@@ -285,7 +404,17 @@ export class WorkflowEngine {
           }
 
           // Continue from error handler
-          await this.traverse(errorHandler.id, nodeMap, adjacency, ctx, execution, visited, depth);
+          await this.traverse(
+            errorHandler.id,
+            nodeMap,
+            adjacency,
+            ctx,
+            execution,
+            visited,
+            depth,
+            undefined,
+            mergeState,
+          );
           return;
         }
       }
@@ -316,6 +445,7 @@ export class WorkflowEngine {
               execution,
               visited,
               depth,
+              mergeState,
             );
           }
         }
@@ -326,18 +456,69 @@ export class WorkflowEngine {
       throw new Error(`Node "${node.label}" failed: ${result.error}`);
     }
 
-    if (result.status === "skipped") {
-      // Condition didn't match — don't traverse further from this path
-      return;
-    }
-
     // Merge output into context for downstream nodes
     if (result.output) {
       ctx.merge(result.output);
     }
 
-    // Continue traversal to successors
-    await this.traverse(node.id, nodeMap, adjacency, ctx, execution, visited, depth);
+    // Loop nodes: iterate over an array, executing the loop body per item
+    if (node.type === "router" && node.subtype === "loop") {
+      await this.executeLoop(node, nodeMap, adjacency, ctx, execution, visited, depth, mergeState);
+      return;
+    }
+
+    // Router nodes: use selectedOutput to filter which edges to follow
+    if (node.type === "router" && result.output?.selectedOutput) {
+      const selectedLabel = result.output.selectedOutput as string;
+      await this.traverse(
+        node.id,
+        nodeMap,
+        adjacency,
+        ctx,
+        execution,
+        visited,
+        depth,
+        selectedLabel,
+        mergeState,
+      );
+      return;
+    }
+
+    // Condition nodes: route based on conditionResult
+    if (node.type === "condition") {
+      const matched = result.output?.conditionResult === true;
+      const label = matched ? "match" : "no-match";
+      await this.traverse(
+        node.id,
+        nodeMap,
+        adjacency,
+        ctx,
+        execution,
+        visited,
+        depth,
+        label,
+        mergeState,
+      );
+      return;
+    }
+
+    if (result.status === "skipped") {
+      // Non-condition skipped nodes — don't traverse further
+      return;
+    }
+
+    // Continue traversal to successors (no label filter)
+    await this.traverse(
+      node.id,
+      nodeMap,
+      adjacency,
+      ctx,
+      execution,
+      visited,
+      depth,
+      undefined,
+      mergeState,
+    );
   }
 
   /**
@@ -397,18 +578,8 @@ export class WorkflowEngine {
         case "condition": {
           const matched = evaluateCondition(node.subtype, node.config, ctx);
 
-          if (!matched) {
-            return {
-              nodeId: node.id,
-              nodeLabel: node.label,
-              nodeType: "condition",
-              status: "skipped",
-              startedAt,
-              completedAt: Date.now(),
-              output: { conditionResult: false },
-            };
-          }
-
+          // Conditions always succeed — the engine uses conditionResult
+          // to decide which edge label ("match" / "no-match") to follow.
           return {
             nodeId: node.id,
             nodeLabel: node.label,
@@ -416,7 +587,23 @@ export class WorkflowEngine {
             status: "success",
             startedAt,
             completedAt: Date.now(),
-            output: { conditionResult: true },
+            output: { conditionResult: matched },
+          };
+        }
+
+        case "router": {
+          const routerResult = evaluateRouter(node.subtype, node.config, ctx);
+          return {
+            nodeId: node.id,
+            nodeLabel: node.label,
+            nodeType: "router",
+            status: "success",
+            startedAt,
+            completedAt: Date.now(),
+            output: {
+              selectedOutput: routerResult.selectedOutput,
+              evaluatedValue: routerResult.evaluatedValue,
+            },
           };
         }
 
@@ -481,6 +668,17 @@ export class WorkflowEngine {
           };
         }
 
+        case "annotation":
+          // Annotations are visual-only — engine ignores them
+          return {
+            nodeId: node.id,
+            nodeLabel: node.label,
+            nodeType: "annotation",
+            status: "skipped",
+            startedAt,
+            completedAt: Date.now(),
+          };
+
         case "trigger":
           // Additional triggers in the graph are no-ops (only the first trigger fires)
           return {
@@ -506,6 +704,109 @@ export class WorkflowEngine {
         error: err instanceof Error ? err.message : String(err as string),
       };
     }
+  }
+
+  /**
+   * Execute a loop node: iterate over an array, running the loop body per item.
+   *
+   * Loop edges (label "loop") form the loop body. After all iterations,
+   * traversal continues via "done" edges.
+   */
+  private async executeLoop(
+    node: WorkflowNode,
+    nodeMap: Map<string, WorkflowNode>,
+    adjacency: Map<string, WorkflowEdge[]>,
+    ctx: ExecutionContext,
+    execution: WorkflowExecution,
+    visited: Set<string>,
+    depth: number,
+    mergeState?: MergeState,
+  ): Promise<void> {
+    const arrayPath = (node.config.arrayPath as string | undefined) ?? "";
+    const itemVariable = (node.config.itemVariable as string | undefined) ?? "item";
+    const indexVariable = (node.config.indexVariable as string | undefined) ?? "index";
+    const maxIterations =
+      (node.config.maxIterations as number | undefined) ?? DEFAULT_MAX_LOOP_ITERATIONS;
+
+    // Resolve the array from context
+    const rawArray = arrayPath.startsWith("$")
+      ? ctx.getPath(arrayPath.slice(1))
+      : ctx.get(arrayPath);
+
+    const items = Array.isArray(rawArray) ? rawArray : [];
+    const iterationCount = Math.min(items.length, maxIterations);
+
+    // Empty array — skip directly to "done" edges
+    if (iterationCount === 0) {
+      ctx.set("loopResults", []);
+      ctx.set("loopCount", 0);
+      await this.traverse(
+        node.id,
+        nodeMap,
+        adjacency,
+        ctx,
+        execution,
+        visited,
+        depth,
+        "done",
+        mergeState,
+      );
+      return;
+    }
+
+    // Snapshot visited state before loop iterations
+    const beforeVisited = new Set(visited);
+    const loopResults: unknown[] = [];
+
+    for (let i = 0; i < iterationCount; i++) {
+      // Inject loop variables
+      ctx.set(itemVariable, items[i]);
+      ctx.set(indexVariable, i);
+      ctx.set("loopTotal", items.length);
+
+      // Between iterations, clear nodes added during the previous iteration
+      // so loop body nodes can re-execute
+      if (i > 0) {
+        for (const id of visited) {
+          if (!beforeVisited.has(id)) {
+            visited.delete(id);
+          }
+        }
+      }
+
+      // Traverse "loop" edges (the loop body)
+      await this.traverse(
+        node.id,
+        nodeMap,
+        adjacency,
+        ctx,
+        execution,
+        visited,
+        depth,
+        "loop",
+        mergeState,
+      );
+
+      // Collect context state after this iteration
+      loopResults.push(ctx.toJSON());
+    }
+
+    // Set aggregated results
+    ctx.set("loopResults", loopResults);
+    ctx.set("loopCount", iterationCount);
+
+    // Continue to "done" edges
+    await this.traverse(
+      node.id,
+      nodeMap,
+      adjacency,
+      ctx,
+      execution,
+      visited,
+      depth,
+      "done",
+      mergeState,
+    );
   }
 
   /**

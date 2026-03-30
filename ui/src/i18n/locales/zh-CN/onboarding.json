@@ -55,12 +55,12 @@
   },
 
   "messaging": {
-    "title": "连接消息频道",
-    "description": "连接聊天平台，以便 Tigerpaw 向您发送通知、警报和交易确认。",
-    "clickToConnect": "点击频道进行配置。每个频道都有自己的设置指南。",
+    "title": "设置代理频道",
+    "description": "代理频道让您可以从喜爱的聊天应用与 Jarvis 对话。在下方连接一个平台 — Tigerpaw 会创建一个轻量级代理，在您和 Jarvis 之间中转消息。您向代理发送消息，Jarvis 进行响应。所有处理都在您的本机上完成。",
+    "clickToConnect": "点击频道进行配置。每个平台都有自己的设置指南。",
     "securityNote": "您的令牌存储在此设备本地。",
     "slackAppTokenPlaceholder": "应用级令牌 (xapp-...)",
-    "botUsername": "机器人: {{name}}"
+    "agentUsername": "代理: {{name}}"
   },
 
   "trading": {

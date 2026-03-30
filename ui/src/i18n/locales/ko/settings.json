@@ -115,5 +115,8 @@
   "notificationLimitNote": "메모리에 최대 50개의 알림이 유지됩니다. 벨 배지는 최대 9+까지 표시됩니다. 알림은 닫거나 삭제할 때까지 유지됩니다.",
   "setupWizard": "설정 마법사",
   "setupWizardDesc": "초기 설정 마법사를 다시 실행하여 AI 제공자, 채널 및 거래 플랫폼을 재구성합니다.",
-  "rerunWizard": "설정 마법사 다시 실행"
+  "rerunWizard": "설정 마법사 다시 실행",
+  "charts": "차트",
+  "loadCharts": "TradingView 차트 로드",
+  "loadChartsDesc": "비활성화하면 거래 페이지에서 차트가 완전히 제거됩니다 — 스크립트 로드 없음, 네트워크 요청 없음. 데이터 제한 연결에서 대역폭을 절약합니다."
 }

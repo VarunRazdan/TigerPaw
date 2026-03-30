@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 
-export type WorkflowNodeType = "trigger" | "condition" | "action" | "transform" | "error_handler";
+export type WorkflowNodeType =
+  | "trigger"
+  | "condition"
+  | "action"
+  | "transform"
+  | "error_handler"
+  | "router"
+  | "annotation";
 
 export type BackoffStrategy = "none" | "linear" | "exponential";
 
@@ -22,6 +29,8 @@ export type WorkflowNode = {
   retryConfig?: RetryConfig;
   errorHandlerId?: string;
   credentialId?: string;
+  outputs?: string[];
+  disabled?: boolean;
 };
 
 export type WorkflowEdge = {

@@ -55,12 +55,12 @@
   },
 
   "messaging": {
-    "title": "Conectar un canal de mensajería",
-    "description": "Conecta una plataforma de chat para que Tigerpaw pueda enviarte notificaciones, alertas y confirmaciones de operaciones.",
-    "clickToConnect": "Haz clic en un canal para configurarlo. Cada canal tiene su propia guía de configuración.",
+    "title": "Configurar un Canal de Agente",
+    "description": "Los canales de agente te permiten hablar con Jarvis desde tu app de chat favorita. Conecta una plataforma a continuación — Tigerpaw crea un agente ligero que retransmite mensajes entre tú y Jarvis. Le envías un mensaje al agente, Jarvis responde. Todo el procesamiento permanece en tu máquina.",
+    "clickToConnect": "Haz clic en un canal para configurarlo. Cada plataforma tiene su propia guía de configuración.",
     "securityNote": "Tu token se almacena localmente en este dispositivo.",
     "slackAppTokenPlaceholder": "Token de nivel de app (xapp-...)",
-    "botUsername": "Bot: {{name}}"
+    "agentUsername": "Agente: {{name}}"
   },
 
   "trading": {

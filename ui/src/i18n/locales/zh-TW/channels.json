@@ -1,4 +1,13 @@
 {
-  "title": "頻道",
-  "subtitle": "管理訊息頻道整合"
+  "title": "代理頻道",
+  "subtitle": "連接訊息平台，讓 Jarvis 隨時隨地聯繫您",
+  "howItWorks": "運作方式",
+  "howItWorksBody": "每個頻道在您選擇的平台（Discord、Telegram、Slack 等）上執行一個輕量級代理。您從常用的聊天應用程式向代理發送訊息 — 它將訊息轉發給 Jarvis，Jarvis 進行回應、執行工作流程並向您發送警報。所有處理都在您的本機上完成。",
+  "howItWorksBullet1": "從常用的聊天應用程式向代理發送訊息",
+  "howItWorksBullet2": "Jarvis 在本地處理您的請求",
+  "howItWorksBullet3": "回應、警報和交易確認會回饋給您",
+  "disconnectTitle": "中斷 {{channel}}？",
+  "disconnectDescription": "這將停止此頻道的所有訊息路由。您可以稍後重新連接。",
+  "cancel": "取消",
+  "confirmDisconnect": "確認"
 }

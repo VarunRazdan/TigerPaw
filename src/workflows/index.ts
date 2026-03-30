@@ -9,10 +9,8 @@
  * The service is a singleton initialized by the gateway on startup.
  */
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
 import type { CronService } from "../cron/service.js";
+import { dalGetWorkflow, dalListWorkflows, dalUpdateRunStats } from "../dal/workflows.js";
 import {
   activateKillSwitch,
   deactivateKillSwitch,
@@ -30,8 +28,6 @@ import {
 import { TriggerManager } from "./triggers.js";
 import type { Workflow, WorkflowExecution, ActionDependencies } from "./types.js";
 import { saveVersion } from "./versioning.js";
-
-const WORKFLOWS_DIR = join(homedir(), ".tigerpaw", "workflows");
 
 export class WorkflowService {
   private engine: WorkflowEngine;
@@ -253,51 +249,31 @@ export class WorkflowService {
     return saveVersion(workflow, description);
   }
 
-  /** Update lastRunAt and runCount on the workflow JSON file. */
+  /** Update lastRunAt and runCount via DAL. */
   private updateWorkflowRunStats(workflowId: string, execution: WorkflowExecution): void {
     try {
-      const filePath = join(WORKFLOWS_DIR, `${workflowId}.json`);
-      if (!existsSync(filePath)) {
+      const workflow = dalGetWorkflow(workflowId);
+      if (!workflow) {
         return;
       }
-
-      const workflow = JSON.parse(readFileSync(filePath, "utf-8"));
-      workflow.lastRunAt = new Date(execution.startedAt).toISOString();
-      workflow.runCount = (workflow.runCount ?? 0) + 1;
-      writeFileSync(filePath, JSON.stringify(workflow, null, 2), "utf-8");
+      dalUpdateRunStats(
+        workflowId,
+        new Date(execution.startedAt).toISOString(),
+        (workflow.runCount ?? 0) + 1,
+      );
     } catch {
       // Non-critical — don't fail the execution
     }
   }
 
-  /** Load a single workflow from disk. */
+  /** Load a single workflow via DAL. */
   private loadWorkflow(id: string): Workflow | null {
-    const filePath = join(WORKFLOWS_DIR, `${id}.json`);
-    if (!existsSync(filePath)) {
-      return null;
-    }
-    try {
-      return JSON.parse(readFileSync(filePath, "utf-8"));
-    } catch {
-      return null;
-    }
+    return dalGetWorkflow(id);
   }
 
-  /** Load all workflows from disk. */
+  /** Load all workflows via DAL. */
   private loadAllWorkflows(): Workflow[] {
-    if (!existsSync(WORKFLOWS_DIR)) {
-      return [];
-    }
-    return readdirSync(WORKFLOWS_DIR)
-      .filter((f) => f.endsWith(".json"))
-      .map((f) => {
-        try {
-          return JSON.parse(readFileSync(join(WORKFLOWS_DIR, f), "utf-8"));
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
+    return dalListWorkflows();
   }
 
   /** Build dependencies for the engine's action executors. */

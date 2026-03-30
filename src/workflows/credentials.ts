@@ -1,35 +1,24 @@
 /**
  * Credential Vault — encrypted-at-rest credential storage for workflows.
  *
- * Stores credentials as JSON files in ~/.tigerpaw/credentials/.
- * Each credential has a unique ID, a type, and a set of key-value fields.
- * Fields are encrypted using AES-256-GCM with a key derived from the machine ID.
+ * Encryption/decryption logic lives here. Storage is delegated to the DAL
+ * (SQLite or flat-file fallback). Fields are encrypted before save and
+ * decrypted after retrieval.
  */
 
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
+import { hostname, homedir } from "node:os";
 import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-  unlinkSync,
-} from "node:fs";
-import { homedir, hostname } from "node:os";
-import { join } from "node:path";
+  dalListCredentials,
+  dalGetCredentialRaw,
+  dalSaveCredentialRaw,
+  dalDeleteCredential,
+} from "../dal/credentials.js";
 import type { StoredCredential } from "./types.js";
 
-const CREDS_DIR = join(homedir(), ".tigerpaw", "credentials");
 const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
-const _AUTH_TAG_LENGTH = 16;
-
-function ensureDir(): void {
-  if (!existsSync(CREDS_DIR)) {
-    mkdirSync(CREDS_DIR, { recursive: true });
-  }
-}
 
 /** Derive an encryption key from a stable machine-local seed. */
 function deriveKey(): Buffer {
@@ -99,44 +88,19 @@ function decryptFields(fields: Record<string, string>): Record<string, string> {
 export function listCredentials(): Array<
   Omit<StoredCredential, "fields"> & { fieldKeys: string[] }
 > {
-  ensureDir();
-  const files = readdirSync(CREDS_DIR).filter((f) => f.endsWith(".json"));
-
-  return files
-    .map((f) => {
-      try {
-        const raw = JSON.parse(readFileSync(join(CREDS_DIR, f), "utf-8"));
-        return {
-          id: raw.id as string,
-          name: raw.name as string,
-          type: raw.type as string,
-          fieldKeys: Object.keys(raw.fields ?? {}),
-          createdAt: raw.createdAt as string,
-          updatedAt: raw.updatedAt as string,
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean) as Array<Omit<StoredCredential, "fields"> & { fieldKeys: string[] }>;
+  return dalListCredentials();
 }
 
 /** Get a credential by ID (decrypted). */
 export function getCredential(id: string): StoredCredential | null {
-  const filePath = join(CREDS_DIR, `${id}.json`);
-  if (!existsSync(filePath)) {
+  const raw = dalGetCredentialRaw(id);
+  if (!raw) {
     return null;
   }
-
-  try {
-    const raw = JSON.parse(readFileSync(filePath, "utf-8"));
-    return {
-      ...raw,
-      fields: decryptFields(raw.fields ?? {}),
-    };
-  } catch {
-    return null;
-  }
+  return {
+    ...raw,
+    fields: decryptFields(raw.fields ?? {}),
+  };
 }
 
 /** Resolve a credential's fields by ID (for template injection). */
@@ -147,26 +111,16 @@ export function resolveCredential(id: string): Record<string, string> | null {
 
 /** Save a credential (encrypts fields before writing). */
 export function saveCredential(credential: StoredCredential): void {
-  ensureDir();
   const encrypted = {
     ...credential,
     fields: encryptFields(credential.fields),
   };
-  writeFileSync(
-    join(CREDS_DIR, `${credential.id}.json`),
-    JSON.stringify(encrypted, null, 2),
-    "utf-8",
-  );
+  dalSaveCredentialRaw(encrypted);
 }
 
 /** Delete a credential by ID. */
 export function deleteCredential(id: string): boolean {
-  const filePath = join(CREDS_DIR, `${id}.json`);
-  if (!existsSync(filePath)) {
-    return false;
-  }
-  unlinkSync(filePath);
-  return true;
+  return dalDeleteCredential(id);
 }
 
 /** Test that encryption/decryption works (health check). */

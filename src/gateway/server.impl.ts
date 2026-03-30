@@ -21,6 +21,7 @@ import {
 import { formatConfigIssueLines } from "../config/issue-format.js";
 import { applyPluginAutoEnable } from "../config/plugin-auto-enable.js";
 import { resolveMainSessionKey } from "../config/sessions.js";
+import { initDatabase } from "../dal/init.js";
 import { clearAgentRunContext, onAgentEvent } from "../infra/agent-events.js";
 import {
   ensureControlUiAssetsBuilt,
@@ -906,6 +907,15 @@ export async function startGatewayServer(
       });
     });
   });
+  // ── Initialize SQLite database (schema + migration from flat files) ──
+  try {
+    initDatabase();
+  } catch (err) {
+    log.warn(
+      `SQLite database init failed, using legacy flat-file storage: ${err instanceof Error ? err.message : String(err as string)}`,
+    );
+  }
+
   if (!minimalTestGateway) {
     void workflowService.start().catch((err) => {
       log.warn(

@@ -150,9 +150,35 @@ export function isTelegramPollingNetworkError(err: unknown): boolean {
 }
 
 /**
+ * Returns true if the error carries a `retry_after` parameter, indicating a Telegram
+ * 429 rate-limit response. Checks the error itself and common grammY error wrappers.
+ */
+function hasRetryAfterParameter(err: unknown): boolean {
+  for (const candidate of collectTelegramErrorCandidates(err)) {
+    if (!candidate || typeof candidate !== "object") {
+      continue;
+    }
+    if (
+      "parameters" in candidate &&
+      candidate.parameters &&
+      typeof candidate.parameters === "object" &&
+      "retry_after" in candidate.parameters &&
+      typeof (candidate.parameters as { retry_after?: unknown }).retry_after === "number"
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Returns true if the error is safe to retry for a non-idempotent Telegram send operation
  * (e.g. sendMessage). Only matches errors that are guaranteed to have occurred *before*
  * the request reached Telegram's servers, preventing duplicate message delivery.
+ *
+ * Also returns true for HTTP 429 (rate limit) errors, which include a `retry_after`
+ * parameter — Telegram explicitly rejected the request without processing it, so the
+ * message was never delivered and retrying is safe.
  *
  * Use this instead of isRecoverableTelegramNetworkError for sendMessage/sendPhoto/etc.
  * calls where a retry would create a duplicate visible message.
@@ -161,9 +187,19 @@ export function isSafeToRetrySendError(err: unknown): boolean {
   if (!err) {
     return false;
   }
+  // 429 rate-limit errors are safe: Telegram rejected the request without delivering it.
+  if (hasRetryAfterParameter(err) || hasTelegramErrorCode(err, (code) => code === 429)) {
+    return true;
+  }
   for (const candidate of collectTelegramErrorCandidates(err)) {
     const code = normalizeCode(getErrorCode(candidate));
     if (code && PRE_CONNECT_ERROR_CODES.has(code)) {
+      return true;
+    }
+    // grammY "network request failed after N attempts" means the transport-level
+    // fetch never received a success response — the message was not delivered.
+    const message = formatErrorMessage(candidate).trim().toLowerCase();
+    if (message && GRAMMY_NETWORK_REQUEST_FAILED_AFTER_RE.test(message)) {
       return true;
     }
   }

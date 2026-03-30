@@ -13,6 +13,8 @@ import {
   Newspaper,
   BarChart3,
   Bell,
+  TrendingUp,
+  Scale,
 } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -77,6 +79,20 @@ const TEMPLATES = [
     description: "Notify when risk metrics exceed thresholds.",
     icon: <Bell className="w-5 h-5 text-yellow-400" />,
     color: "border-yellow-700/40 hover:border-yellow-600/60",
+  },
+  {
+    id: "tpl-tradingview-signal",
+    name: "TradingView Signal",
+    description: "Execute trades from TradingView webhook alerts.",
+    icon: <TrendingUp className="w-5 h-5 text-teal-400" />,
+    color: "border-teal-700/40 hover:border-teal-600/60",
+  },
+  {
+    id: "tpl-prediction-arb",
+    name: "Prediction Arb",
+    description: "Detect price gaps between prediction markets.",
+    icon: <Scale className="w-5 h-5 text-indigo-400" />,
+    color: "border-indigo-700/40 hover:border-indigo-600/60",
   },
 ] as const;
 
@@ -312,6 +328,132 @@ const TEMPLATE_DEFINITIONS: Record<
           template: "Risk limit breached: drawdown {{metrics.drawdownPct}}% exceeds 10% threshold",
         },
         position: { x: 900, y: 200 },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n2", target: "n3" },
+      { id: "e3", source: "n3", target: "n4", label: "match" },
+    ],
+  },
+  "tpl-tradingview-signal": {
+    name: "TradingView Signal",
+    description:
+      "Receive TradingView webhook alerts and execute trades automatically via the policy engine.",
+    enabled: false,
+    nodes: [
+      {
+        id: "n1",
+        type: "trigger",
+        subtype: "webhook",
+        label: "TradingView Alert",
+        config: { path: "tradingview", secret: "" },
+        position: { x: 100, y: 200 },
+      },
+      {
+        id: "n2",
+        type: "transform",
+        subtype: "extract_data",
+        label: "Extract Symbol",
+        config: { path: "body.symbol", outputKey: "symbol" },
+        position: { x: 350, y: 120 },
+      },
+      {
+        id: "n3",
+        type: "transform",
+        subtype: "extract_data",
+        label: "Extract Action",
+        config: { path: "body.action", outputKey: "action" },
+        position: { x: 350, y: 280 },
+      },
+      {
+        id: "n4",
+        type: "condition",
+        subtype: "expression",
+        label: "Is Buy or Sell?",
+        config: { left: "$action", operator: "in", right: "buy,sell" },
+        position: { x: 600, y: 200 },
+      },
+      {
+        id: "n5",
+        type: "action",
+        subtype: "trade",
+        label: "Place Trade",
+        config: {
+          extensionId: "alpaca",
+          symbol: "${symbol}",
+          side: "${action}",
+          quantity: 1,
+          orderType: "market",
+        },
+        position: { x: 850, y: 120 },
+      },
+      {
+        id: "n6",
+        type: "action",
+        subtype: "send_message",
+        label: "Confirm via Telegram",
+        config: {
+          channel: "telegram",
+          template: "TradingView signal executed: ${action} ${symbol}",
+        },
+        position: { x: 850, y: 280 },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "n1", target: "n2" },
+      { id: "e2", source: "n1", target: "n3" },
+      { id: "e3", source: "n2", target: "n4" },
+      { id: "e4", source: "n3", target: "n4" },
+      { id: "e5", source: "n4", target: "n5", label: "match" },
+      { id: "e6", source: "n5", target: "n6" },
+    ],
+  },
+  "tpl-prediction-arb": {
+    name: "Prediction Arb",
+    description:
+      "Check for price discrepancies between Polymarket and Kalshi on the same event, and alert when an arbitrage opportunity is found.",
+    enabled: false,
+    nodes: [
+      {
+        id: "n1",
+        type: "trigger",
+        subtype: "cron",
+        label: "Every 5 min",
+        config: { expression: "*/5 * * * *", timezone: "UTC" },
+        position: { x: 100, y: 200 },
+      },
+      {
+        id: "n2",
+        type: "action",
+        subtype: "run_llm_task",
+        label: "Compare Markets",
+        config: {
+          prompt:
+            "Compare the current YES prices for the same event on Polymarket and Kalshi. If the sum of the cheapest YES on one platform and the cheapest NO on the other is less than $1.00, report the arbitrage opportunity with the exact prices and expected profit. Otherwise say NO_ARB.",
+          model: "default",
+        },
+        position: { x: 400, y: 200 },
+      },
+      {
+        id: "n3",
+        type: "condition",
+        subtype: "contains_keyword",
+        label: "Arb Found?",
+        config: { keyword: "NO_ARB", caseSensitive: true, negate: true },
+        position: { x: 700, y: 200 },
+      },
+      {
+        id: "n4",
+        type: "action",
+        subtype: "send_message",
+        label: "Alert Opportunity",
+        config: {
+          channel: "discord",
+          to: "#arb-alerts",
+          template: "Prediction market arbitrage detected:\n{{llmResult}}",
+        },
+        position: { x: 1000, y: 200 },
       },
     ],
     edges: [

@@ -1,13 +1,10 @@
 import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  unlinkSync,
-  writeFileSync,
-} from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
+  dalDeleteWorkflow,
+  dalGetWorkflow,
+  dalListWorkflows,
+  dalSaveWorkflow,
+  dalToggleWorkflow,
+} from "../../dal/workflows.js";
 import {
   listCredentials,
   getCredential,
@@ -16,7 +13,7 @@ import {
   testVault,
 } from "../../workflows/credentials.js";
 import { getWorkflowService } from "../../workflows/index.js";
-import type { StoredCredential } from "../../workflows/types.js";
+import type { StoredCredential, Workflow } from "../../workflows/types.js";
 import {
   listVersions,
   getVersion,
@@ -28,38 +25,10 @@ import { saveVersion } from "../../workflows/versioning.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
 import type { GatewayRequestHandlers } from "./types.js";
 
-const WORKFLOWS_DIR = join(homedir(), ".tigerpaw", "workflows");
-
-function ensureDir(): void {
-  if (!existsSync(WORKFLOWS_DIR)) {
-    mkdirSync(WORKFLOWS_DIR, { recursive: true });
-  }
-}
-
-function listWorkflows(): unknown[] {
-  ensureDir();
-  const files = readdirSync(WORKFLOWS_DIR).filter((f) => f.endsWith(".json"));
-  return files
-    .map((f) => {
-      try {
-        return JSON.parse(readFileSync(join(WORKFLOWS_DIR, f), "utf-8"));
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-}
-
-function saveWorkflow(workflow: Record<string, unknown>): void {
-  ensureDir();
-  const id = workflow.id as string;
-  writeFileSync(join(WORKFLOWS_DIR, `${id}.json`), JSON.stringify(workflow, null, 2), "utf-8");
-}
-
 export const workflowsHandlers: GatewayRequestHandlers = {
   "workflows.list": async ({ respond }) => {
     try {
-      const workflows = listWorkflows();
+      const workflows = dalListWorkflows();
       respond(true, { workflows }, undefined);
     } catch (err) {
       respond(
@@ -80,12 +49,11 @@ export const workflowsHandlers: GatewayRequestHandlers = {
       return;
     }
     try {
-      const filePath = join(WORKFLOWS_DIR, `${id}.json`);
-      if (!existsSync(filePath)) {
+      const workflow = dalGetWorkflow(id);
+      if (!workflow) {
         respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "workflow not found"));
         return;
       }
-      const workflow = JSON.parse(readFileSync(filePath, "utf-8"));
       respond(true, { workflow }, undefined);
     } catch (err) {
       respond(
@@ -111,10 +79,9 @@ export const workflowsHandlers: GatewayRequestHandlers = {
     }
     try {
       // Save a version snapshot before overwriting
-      const existingPath = join(WORKFLOWS_DIR, `${workflow.id as string}.json`);
-      if (existsSync(existingPath)) {
+      const existing = dalGetWorkflow(workflow.id as string);
+      if (existing) {
         try {
-          const existing = JSON.parse(readFileSync(existingPath, "utf-8"));
           saveVersion(existing, params.versionDescription as string | undefined);
         } catch {
           // Non-critical — skip version save
@@ -124,7 +91,7 @@ export const workflowsHandlers: GatewayRequestHandlers = {
       // Increment version number
       workflow.version = ((workflow.version as number) ?? 0) + 1;
 
-      saveWorkflow(workflow);
+      dalSaveWorkflow(workflow as unknown as Workflow);
       // Re-register triggers if the workflow changed
       void getWorkflowService().onWorkflowChanged(workflow.id as string);
       respond(true, { ok: true, version: workflow.version }, undefined);
@@ -147,10 +114,7 @@ export const workflowsHandlers: GatewayRequestHandlers = {
       return;
     }
     try {
-      const filePath = join(WORKFLOWS_DIR, `${id}.json`);
-      if (existsSync(filePath)) {
-        unlinkSync(filePath);
-      }
+      dalDeleteWorkflow(id);
       void getWorkflowService().onWorkflowDeleted(id);
       respond(true, { ok: true }, undefined);
     } catch (err) {
@@ -172,15 +136,11 @@ export const workflowsHandlers: GatewayRequestHandlers = {
       return;
     }
     try {
-      const filePath = join(WORKFLOWS_DIR, `${id}.json`);
-      if (!existsSync(filePath)) {
+      const workflow = dalToggleWorkflow(id);
+      if (!workflow) {
         respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "workflow not found"));
         return;
       }
-      const workflow = JSON.parse(readFileSync(filePath, "utf-8"));
-      workflow.enabled = !workflow.enabled;
-      workflow.updatedAt = new Date().toISOString();
-      writeFileSync(filePath, JSON.stringify(workflow, null, 2), "utf-8");
       // Update triggers for the toggled workflow
       void getWorkflowService().onWorkflowChanged(id);
       respond(true, { workflow }, undefined);
@@ -332,7 +292,7 @@ export const workflowsHandlers: GatewayRequestHandlers = {
       workflow.runCount = 0;
       delete workflow.lastRunAt;
 
-      saveWorkflow(workflow);
+      dalSaveWorkflow(workflow as unknown as Workflow);
       respond(true, { workflow }, undefined);
     } catch (err) {
       respond(
@@ -353,16 +313,16 @@ export const workflowsHandlers: GatewayRequestHandlers = {
       return;
     }
     try {
-      const filePath = join(WORKFLOWS_DIR, `${id}.json`);
-      if (!existsSync(filePath)) {
+      const workflow = dalGetWorkflow(id);
+      if (!workflow) {
         respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "workflow not found"));
         return;
       }
-      const workflow = JSON.parse(readFileSync(filePath, "utf-8"));
       // Strip runtime state for clean export
-      delete workflow.lastRunAt;
-      workflow.runCount = 0;
-      respond(true, { workflow }, undefined);
+      const exported = { ...workflow } as Record<string, unknown>;
+      delete exported.lastRunAt;
+      exported.runCount = 0;
+      respond(true, { workflow: exported }, undefined);
     } catch (err) {
       respond(
         false,
@@ -559,10 +519,9 @@ export const workflowsHandlers: GatewayRequestHandlers = {
     }
     try {
       // Save current version as a snapshot before rolling back
-      const currentPath = join(WORKFLOWS_DIR, `${workflowId}.json`);
-      if (existsSync(currentPath)) {
+      const current = dalGetWorkflow(workflowId);
+      if (current) {
         try {
-          const current = JSON.parse(readFileSync(currentPath, "utf-8"));
           saveVersion(current, `Before rollback to v${version}`);
         } catch {
           // Non-critical
@@ -575,7 +534,7 @@ export const workflowsHandlers: GatewayRequestHandlers = {
         return;
       }
 
-      saveWorkflow(restored as unknown as Record<string, unknown>);
+      dalSaveWorkflow(restored);
       void getWorkflowService().onWorkflowChanged(workflowId);
       respond(true, { workflow: restored }, undefined);
     } catch (err) {

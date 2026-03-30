@@ -115,5 +115,8 @@
   "notificationLimitNote": "Até 50 notificações são mantidas na memória. O badge do sino mostra até 9+. Notificações persistem até serem dispensadas ou limpas.",
   "setupWizard": "Assistente de Configuração",
   "setupWizardDesc": "Execute novamente o assistente de configuração inicial para reconfigurar provedores de IA, canais e plataformas de negociação.",
-  "rerunWizard": "Executar Assistente de Configuração Novamente"
+  "rerunWizard": "Executar Assistente de Configuração Novamente",
+  "charts": "Gráficos",
+  "loadCharts": "Carregar gráficos do TradingView",
+  "loadChartsDesc": "Quando desativado, os gráficos são completamente removidos das páginas de negociação — nenhum script carregado, nenhuma solicitação de rede. Economiza largura de banda em conexões com limite de dados."
 }

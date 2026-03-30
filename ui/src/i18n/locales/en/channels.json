@@ -1,4 +1,13 @@
 {
-  "title": "Channels",
-  "subtitle": "Manage messaging channel integrations"
+  "title": "Agent Channels",
+  "subtitle": "Connect messaging platforms so Jarvis can reach you anywhere",
+  "howItWorks": "How it works",
+  "howItWorksBody": "Each channel runs a lightweight agent on your chosen platform (Discord, Telegram, Slack, etc.). You message the agent from your normal chat app — it relays your messages to Jarvis, who responds, runs workflows, and sends you alerts. All processing stays on your machine.",
+  "howItWorksBullet1": "Message the agent from your normal chat app",
+  "howItWorksBullet2": "Jarvis processes your request locally",
+  "howItWorksBullet3": "Responses, alerts, and trade confirmations flow back to you",
+  "disconnectTitle": "Disconnect {{channel}}?",
+  "disconnectDescription": "This will stop all message routing for this channel. You can reconnect later.",
+  "cancel": "Cancel",
+  "confirmDisconnect": "Confirm"
 }

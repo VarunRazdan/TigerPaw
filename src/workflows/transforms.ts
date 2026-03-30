@@ -69,12 +69,43 @@ function parseJson(
   return { [outputKey]: parsed };
 }
 
+// ── Merge ─────────────────────────────────────────────────────────
+
+function merge(config: Record<string, unknown>, ctx: ExecutionContext): Record<string, unknown> {
+  const mode = (config.mode as string | undefined) ?? "append";
+  const outputKey = (config.outputKey as string | undefined) ?? "merged";
+
+  // The engine injects collected branch outputs into __branchOutputs
+  const branchOutputs = (ctx.get("__branchOutputs") as Record<string, unknown>[] | undefined) ?? [];
+
+  switch (mode) {
+    case "append": {
+      // Concatenate all branch outputs into an array
+      return { [outputKey]: branchOutputs };
+    }
+    case "combine": {
+      // Deep-merge all branch outputs into a single object
+      const combined: Record<string, unknown> = {};
+      for (const output of branchOutputs) {
+        Object.assign(combined, output);
+      }
+      return { [outputKey]: combined };
+    }
+    case "wait_all":
+    default: {
+      // Just synchronize — pass through the count
+      return { [outputKey]: { branchCount: branchOutputs.length } };
+    }
+  }
+}
+
 // ── Registry ──────────────────────────────────────────────────────
 
 const processors: Record<string, TransformProcessor> = {
   extract_data: extractData,
   format_text: formatText,
   parse_json: parseJson,
+  merge,
 };
 
 /**

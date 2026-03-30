@@ -1,36 +1,17 @@
 /**
  * Workflow Version History — snapshot management.
  *
- * Each time a workflow is saved, a version snapshot is stored in
- * ~/.tigerpaw/workflow-versions/{workflowId}/. Supports listing,
- * rollback, diff metadata, and configurable retention.
+ * Delegates storage to the DAL (SQLite or flat-file fallback).
+ * Public API remains unchanged for all consumers.
  */
 
 import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-  unlinkSync,
-  statSync,
-} from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
+  dalSaveVersion,
+  dalListVersions,
+  dalGetVersion,
+  dalClearVersionHistory,
+} from "../dal/workflow-versions.js";
 import type { Workflow, WorkflowVersion } from "./types.js";
-
-const VERSIONS_DIR = join(homedir(), ".tigerpaw", "workflow-versions");
-const MAX_VERSIONS_PER_WORKFLOW = 50;
-
-function ensureDir(dir: string): void {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-}
-
-function workflowVersionsDir(workflowId: string): string {
-  return join(VERSIONS_DIR, workflowId);
-}
 
 // ── Public API ────────────────────────────────────────────────────
 
@@ -39,26 +20,7 @@ function workflowVersionsDir(workflowId: string): string {
  * Returns the version number assigned.
  */
 export function saveVersion(workflow: Workflow, description?: string): number {
-  const dir = workflowVersionsDir(workflow.id);
-  ensureDir(dir);
-
-  // Determine next version number
-  const existing = listVersionNumbers(dir);
-  const nextVersion = existing.length > 0 ? Math.max(...existing) + 1 : 1;
-
-  const snapshot: WorkflowVersion = {
-    version: nextVersion,
-    workflow: structuredClone(workflow),
-    savedAt: new Date().toISOString(),
-    description,
-  };
-
-  writeFileSync(join(dir, `v${nextVersion}.json`), JSON.stringify(snapshot, null, 2), "utf-8");
-
-  // Prune old versions
-  pruneVersions(dir, MAX_VERSIONS_PER_WORKFLOW);
-
-  return nextVersion;
+  return dalSaveVersion(workflow, description);
 }
 
 /**
@@ -78,64 +40,14 @@ export function listVersions(
   }>;
   total: number;
 } {
-  const dir = workflowVersionsDir(workflowId);
-  if (!existsSync(dir)) {
-    return { versions: [], total: 0 };
-  }
-
-  const files = readdirSync(dir)
-    .filter((f) => f.startsWith("v") && f.endsWith(".json"))
-    .map((f) => {
-      const stat = statSync(join(dir, f));
-      return { name: f, mtime: stat.mtimeMs };
-    })
-    .toSorted((a, b) => b.mtime - a.mtime); // newest first
-
-  const total = files.length;
-  const limit = opts?.limit ?? 20;
-  const offset = opts?.offset ?? 0;
-  const slice = files.slice(offset, offset + limit);
-
-  const versions = slice
-    .map((file) => {
-      try {
-        const raw: WorkflowVersion = JSON.parse(readFileSync(join(dir, file.name), "utf-8"));
-        return {
-          version: raw.version,
-          savedAt: raw.savedAt,
-          description: raw.description,
-          nodeCount: raw.workflow.nodes?.length ?? 0,
-          edgeCount: raw.workflow.edges?.length ?? 0,
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean) as Array<{
-    version: number;
-    savedAt: string;
-    description?: string;
-    nodeCount: number;
-    edgeCount: number;
-  }>;
-
-  return { versions, total };
+  return dalListVersions(workflowId, opts);
 }
 
 /**
  * Get a specific version snapshot.
  */
 export function getVersion(workflowId: string, version: number): WorkflowVersion | null {
-  const filePath = join(workflowVersionsDir(workflowId), `v${version}.json`);
-  if (!existsSync(filePath)) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(readFileSync(filePath, "utf-8"));
-  } catch {
-    return null;
-  }
+  return dalGetVersion(workflowId, version);
 }
 
 /**
@@ -181,12 +93,10 @@ export function diffVersions(
   const nodesRemoved: string[] = [];
   const nodesModified: string[] = [];
 
-  // Nodes in B but not in A → added
   for (const [id, node] of nodesB) {
     if (!nodesA.has(id)) {
       nodesAdded.push(node.label);
     } else {
-      // Check if modified
       const nodeA = nodesA.get(id)!;
       if (
         nodeA.label !== node.label ||
@@ -198,7 +108,6 @@ export function diffVersions(
     }
   }
 
-  // Nodes in A but not in B → removed
   for (const [id, node] of nodesA) {
     if (!nodesB.has(id)) {
       nodesRemoved.push(node.label);
@@ -228,51 +137,5 @@ export function diffVersions(
  * Delete all version history for a workflow.
  */
 export function clearVersionHistory(workflowId: string): void {
-  const dir = workflowVersionsDir(workflowId);
-  if (!existsSync(dir)) {
-    return;
-  }
-
-  for (const file of readdirSync(dir)) {
-    try {
-      unlinkSync(join(dir, file));
-    } catch {
-      // Ignore
-    }
-  }
-}
-
-// ── Private helpers ───────────────────────────────────────────────
-
-function listVersionNumbers(dir: string): number[] {
-  if (!existsSync(dir)) {
-    return [];
-  }
-  return readdirSync(dir)
-    .filter((f) => f.startsWith("v") && f.endsWith(".json"))
-    .map((f) => parseInt(f.slice(1, -5), 10))
-    .filter((n) => !isNaN(n));
-}
-
-function pruneVersions(dir: string, maxVersions: number): void {
-  const files = readdirSync(dir)
-    .filter((f) => f.startsWith("v") && f.endsWith(".json"))
-    .map((f) => {
-      const stat = statSync(join(dir, f));
-      return { name: f, mtime: stat.mtimeMs };
-    })
-    .toSorted((a, b) => a.mtime - b.mtime); // oldest first
-
-  const excess = files.length - maxVersions;
-  if (excess <= 0) {
-    return;
-  }
-
-  for (let i = 0; i < excess; i++) {
-    try {
-      unlinkSync(join(dir, files[i].name));
-    } catch {
-      // Ignore
-    }
-  }
+  dalClearVersionHistory(workflowId);
 }

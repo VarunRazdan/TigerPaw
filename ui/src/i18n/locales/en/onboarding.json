@@ -55,12 +55,12 @@
   },
 
   "messaging": {
-    "title": "Connect a Messaging Channel",
-    "description": "Connect a chat platform so Tigerpaw can send you notifications, alerts, and trade confirmations.",
-    "clickToConnect": "Click a channel to configure it. Each channel has its own setup guide.",
+    "title": "Set Up an Agent Channel",
+    "description": "Agent channels let you talk to Jarvis from your favorite chat app. Connect a platform below — Tigerpaw creates a lightweight agent that relays messages between you and Jarvis. You message the agent, Jarvis responds. All processing stays on your machine.",
+    "clickToConnect": "Click a channel to configure it. Each platform has its own setup guide.",
     "securityNote": "Your token is stored locally on this device.",
     "slackAppTokenPlaceholder": "App-level token (xapp-...)",
-    "botUsername": "Bot: {{name}}"
+    "agentUsername": "Agent: {{name}}"
   },
 
   "trading": {
@@ -84,7 +84,7 @@
     "configured": "Configured",
     "notConfigured": "Not configured",
     "meetJarvis": "Meet Jarvis, your AI assistant",
-    "exploreChannels": "Explore your channels",
+    "exploreChannels": "Explore your agent channels",
     "tradingDashboard": "View your trading dashboard",
     "whatYouCanDo": "What you can do",
     "howToStart": "How would you like to start?",
@@ -99,12 +99,12 @@
     "dailyBriefingDesc": "Morning summary of portfolio, markets, and channel activity",
     "createWorkflow": "Create a workflow",
     "createWorkflowDesc": "Automate tasks with event triggers — price alerts, scheduled reports",
-    "sendMessage": "Send from any channel",
-    "sendMessageDesc": "Message your connected channels directly from the dashboard",
+    "sendMessage": "Send from any agent channel",
+    "sendMessageDesc": "Message your connected agent channels directly from the dashboard",
     "notifications": "Multi-channel alerts",
-    "notificationsDesc": "Get alerts on Discord, Telegram, or Slack for important events",
+    "notificationsDesc": "Get alerts on Discord, Telegram, or Slack — anywhere your agents are connected",
     "checkPortfolio": "Check portfolio from chat",
-    "checkPortfolioDesc": "Ask 'What's my portfolio?' in any connected channel",
+    "checkPortfolioDesc": "Ask 'What's my portfolio?' in any connected agent channel",
     "marketPrices": "Monitor market prices",
     "marketPricesDesc": "Track crypto and stock prices in real-time on the dashboard",
     "riskControls": "Manage risk controls",
@@ -112,6 +112,6 @@
     "paperTrade": "Paper trade first",
     "paperTradeDesc": "Practice with simulated money before going live",
     "chatTrading": "Trade from chat",
-    "chatTradingDesc": "Use 8 trading bot commands from any messaging channel"
+    "chatTradingDesc": "Use 8 trading commands from any connected agent channel"
   }
 }

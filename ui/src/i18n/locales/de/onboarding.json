@@ -55,12 +55,12 @@
   },
 
   "messaging": {
-    "title": "Messaging-Kanal verbinden",
-    "description": "Verbinde eine Chat-Plattform, damit Tigerpaw dir Benachrichtigungen, Warnungen und Handelsbestätigungen senden kann.",
-    "clickToConnect": "Klicke auf einen Kanal, um ihn zu konfigurieren. Jeder Kanal hat seine eigene Einrichtungsanleitung.",
-    "securityNote": "Ihr Token wird lokal auf diesem Gerät gespeichert.",
+    "title": "Agent-Kanal einrichten",
+    "description": "Agent-Kanäle ermöglichen dir, mit Jarvis über deine bevorzugte Chat-App zu sprechen. Verbinde unten eine Plattform — Tigerpaw erstellt einen leichtgewichtigen Agenten, der Nachrichten zwischen dir und Jarvis weiterleitet. Du schreibst dem Agenten, Jarvis antwortet. Die gesamte Verarbeitung bleibt auf deinem Rechner.",
+    "clickToConnect": "Klicke auf einen Kanal, um ihn zu konfigurieren. Jede Plattform hat ihre eigene Einrichtungsanleitung.",
+    "securityNote": "Dein Token wird lokal auf diesem Gerät gespeichert.",
     "slackAppTokenPlaceholder": "App-Level-Token (xapp-...)",
-    "botUsername": "Bot: {{name}}"
+    "agentUsername": "Agent: {{name}}"
   },
 
   "trading": {

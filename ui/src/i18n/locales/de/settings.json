@@ -115,5 +115,8 @@
   "notificationLimitNote": "Bis zu 50 Benachrichtigungen werden im Speicher gehalten. Das Glocken-Badge zeigt bis zu 9+. Benachrichtigungen bleiben bestehen, bis sie geschlossen oder gelöscht werden.",
   "setupWizard": "Einrichtungsassistent",
   "setupWizardDesc": "Führen Sie den Einrichtungsassistenten erneut aus, um KI-Anbieter, Kanäle und Handelsplattformen neu zu konfigurieren.",
-  "rerunWizard": "Einrichtungsassistent erneut ausführen"
+  "rerunWizard": "Einrichtungsassistent erneut ausführen",
+  "charts": "Diagramme",
+  "loadCharts": "TradingView-Diagramme laden",
+  "loadChartsDesc": "Wenn deaktiviert, werden Diagramme vollständig von den Handelsseiten entfernt — keine Skripte geladen, keine Netzwerkanfragen. Spart Bandbreite bei getakteten Verbindungen."
 }

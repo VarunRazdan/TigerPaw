@@ -16,6 +16,14 @@
  *   assistant_cancel_reminder      — Cancel a reminder
  *   assistant_summarize_conversation — Summarize and store in memory
  *   assistant_search_memory        — Search personal memory
+ *   assistant_read_emails           — List recent/unread emails
+ *   assistant_read_email            — Get full email by ID
+ *   assistant_send_email            — Send an email
+ *   assistant_list_calendar_events  — List upcoming calendar events
+ *   assistant_create_calendar_event — Create a calendar event
+ *   assistant_update_calendar_event — Update a calendar event
+ *   assistant_delete_calendar_event — Delete a calendar event
+ *   assistant_schedule_meeting      — Schedule a video meeting
  */
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from "node:fs";
@@ -30,6 +38,7 @@ import {
   type AssistantConfig,
 } from "./config.js";
 import { registerBriefingCron } from "./cron-briefing.js";
+import { registerIntegrationTools } from "./integration-tools.js";
 
 // -- Constants ---------------------------------------------------------------
 const EXTENSION_ID = "assistant";
@@ -659,6 +668,9 @@ export default {
       },
       { name: "assistant_search_memory" },
     );
+
+    // Register integration tools (email, calendar, meetings)
+    registerIntegrationTools(api);
 
     // Register daily briefing cron job
     const briefingCron = cfg.dailyBriefing?.cronExpression ?? "0 8 * * *";

@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@greatlyrecommended/tigerpaw"><img src="https://img.shields.io/npm/v/@greatlyrecommended/tigerpaw?color=orange" alt="npm" /></a>
   <a href="https://github.com/varunrazdan/tigerpaw/actions/workflows/ci.yml"><img src="https://github.com/varunrazdan/tigerpaw/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
-  <a href="https://github.com/varunrazdan/tigerpaw/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0" /></a>
+  <a href="https://github.com/varunrazdan/tigerpaw/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="AGPL-3.0" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" />
 </p>
 
@@ -51,7 +51,7 @@
 
 ### For everyone (even if you don't trade)
 
-- **20+ Messaging Channels** (inherited from [OpenClaw](https://github.com/nicepkg/openclaw)) --
+- **20+ Agent Channels** (inherited from [OpenClaw](https://github.com/openclaw/openclaw)) --
   <img src="icons/messaging-channels/telegram.svg" height="14" alt="Telegram"> Telegram
   · <img src="icons/messaging-channels/discord.svg" height="14" alt="Discord"> Discord
   · <img src="icons/messaging-channels/slack.svg" height="14" alt="Slack"> Slack
@@ -76,11 +76,12 @@
 - **Plugin Permission Manifests** -- Declarative permission model for extensions (network, trading, filesystem, secrets) with security audit via `tigerpaw doctor`
 - **Local-First by Default** -- Gateway binds to localhost; API keys and data never leave your machine
 - **AI Assistant (Jarvis)** -- Task management, reminders, daily briefings, and knowledge retrieval
-- **Message Hub** -- Unified inbox across all messaging channels with search, filtering, and date grouping
+- **Message Hub** -- Unified inbox across all agent channels with search, filtering, and date grouping
 - **Visual Workflow Builder** -- Drag-and-drop event-driven automation (trading events, cron schedules, message routing)
 - **MCP Protocol Support** -- Connect external tool servers (stdio + SSE) and expose Tigerpaw tools to external AI agents
 - **Local LLM Support** -- Ollama and LM Studio with auto-detection, model management, and cloud fallback
 - **i18n in 10 Languages** -- English, Spanish, French, German, Japanese, Korean, Chinese (Simplified + Traditional), Portuguese, Arabic
+- **Email, Calendar & Meeting Integrations** -- Connect Gmail, Outlook, Google Calendar, Zoom, Google Meet, and Microsoft Teams via OAuth2. Jarvis can read emails, create events, and schedule meetings. Workflow engine includes send_email, create_calendar_event, and schedule_meeting action nodes.
 - **Code Splitting** -- 21 lazy-loaded routes with 354KB max chunk size for fast initial load
 
 ### For traders
@@ -101,7 +102,7 @@
 - **3 Approval Modes** -- Auto, confirm (configurable timeout + deny/approve on timeout), or manual (configurable timeout)
 - **3 Risk Tiers** -- Conservative, moderate, aggressive presets
 - **Real-Time Notifications** -- In-app toast alerts for order approvals, denials, kill switch changes, and limit warnings
-- **Trading Bot Commands** -- 8 unified trading tools accessible from any messaging channel -- portfolio summary, P&L, positions, kill switch, risk status
+- **Trading Agent Commands** -- 8 unified trading tools accessible from any agent channel -- portfolio summary, P&L, positions, kill switch, risk status
 - **Remote Dashboard Access** -- Access your dashboard from any device via Tailscale (end-to-end encrypted) or Cloudflare Tunnel (free HTTPS)
 - **Per-Platform Risk Overrides** -- Override any limit or approval mode per exchange
 - **Daily P&L Charts + Position Heatmaps** -- Visual portfolio analysis in the dashboard
@@ -142,7 +143,7 @@ These aren't optional add-ons -- they're built into the core. **Every order goes
 
 ### Why Tigerpaw instead of OpenClaw?
 
-Tigerpaw is a strict superset of [OpenClaw](https://github.com/nicepkg/openclaw). Every feature OpenClaw has -- 40+ messaging channels, agent runtime, plugin system -- is included in Tigerpaw. On top of that, Tigerpaw adds:
+Tigerpaw is a strict superset of [OpenClaw](https://github.com/openclaw/openclaw). Every feature OpenClaw has -- 40+ messaging channels, agent runtime, plugin system -- is included in Tigerpaw. On top of that, Tigerpaw adds:
 
 - A modern React 19 dashboard (OpenClaw uses older Lit/Web Components)
 - Gateway security hardening (CORS, rate limiting, request size enforcement, credential rotation)
@@ -163,7 +164,7 @@ If you're choosing between them, Tigerpaw gives you everything OpenClaw has, plu
 ### Who Is This For?
 
 - **Anyone using OpenClaw** -- Tigerpaw is a drop-in upgrade with a better UI, stronger security, and zero-config start
-- **Developers** building AI messaging bots or trading agents who need a multi-channel gateway
+- **Developers** building AI agents or trading systems who need a multi-channel messaging gateway
 - **Quantitative traders** who want local execution with institutional-style risk management
 - **Privacy-conscious users** who don't want their API keys or data on third-party servers
 - **AI agent builders** -- MCP integration lets you wire Tigerpaw into any AI tool ecosystem
@@ -204,7 +205,7 @@ If you find Tigerpaw useful, consider supporting development:
 <p align="center">
   <img src=".github/screenshots/channels.png" alt="Channels" width="720" />
   <br />
-  <em>Channels — Manage messaging integrations (Discord, Telegram, Slack, Signal, etc.)</em>
+  <em>Agent Channels — Talk to Jarvis from Discord, Telegram, Slack, Signal, and 20+ more platforms</em>
 </p>
 
 <p align="center">
@@ -420,7 +421,7 @@ Any limit field or `approvalMode` can be overridden per platform. Unset fields i
 
 ### Kill Switch
 
-Activate via the dashboard UI (kill switch button) or from any messaging channel:
+Activate via the dashboard UI (kill switch button) or from any agent channel:
 
 ```
 "Stop all trading" → AI calls trading_killswitch_activate
@@ -471,7 +472,17 @@ The Control UI includes order entry forms on each platform page. Orders are subm
 4. Logs the decision to the tamper-evident audit log
 5. Returns the result to the UI
 
-Orders can also be placed via messaging channels -- any connected AI agent can invoke trading tools, subject to the same policy gates.
+Orders can also be placed via agent channels -- Jarvis can invoke trading tools from any connected platform, subject to the same policy gates.
+
+### How Agent Channels Work
+
+Agent channels are how you talk to Tigerpaw from your normal chat apps. Each connected platform (Discord, Telegram, Slack, etc.) runs a lightweight agent that bridges your messages to Jarvis:
+
+1. **You message the agent** from your normal chat app (e.g., DM the Tigerpaw agent on Discord)
+2. **Jarvis processes your request** locally on your machine -- trading queries, workflow triggers, or general conversation
+3. **Responses flow back** through the same channel -- alerts, trade confirmations, portfolio summaries, and more
+
+All processing stays on your machine. The agent is just a relay -- your data never passes through third-party servers (beyond the chat platform itself). You can connect multiple channels simultaneously and they all feed into the same Message Hub.
 
 ## CLI Commands
 
@@ -489,11 +500,11 @@ tigerpaw config get               # Show config
 The gateway serves a React dashboard at `http://localhost:18789` with:
 
 - **Dashboard** -- Portfolio overview, daily P&L chart, extension status, and market prices
-- **Message Hub** -- Unified inbox across all channels with search, filtering, and date grouping
+- **Message Hub** -- Unified inbox across all agent channels with search, filtering, and date grouping
 - **Assistant (Jarvis)** -- AI assistant with tasks, reminders, daily briefings, and knowledge retrieval
 - **Trading Hub** -- Positions, trade history, approval queue, and risk gauges
 - **Platform Pages** -- Dedicated pages for each of the 9 trading platforms with TradingView charts (collapsible), order entry forms, and platform-specific data
-- **Channels** -- Manage 20+ messaging integrations with live status
+- **Agent Channels** -- Manage 20+ messaging platform agents with live status
 - **Security** -- Audit findings, credential rotation status, extension permissions
 - **Workflows** -- Visual drag-and-drop automation builder for trading events, cron schedules, and message routing
 - **MCP** -- Connect external tool servers and expose Tigerpaw tools to other AI agents
@@ -515,9 +526,9 @@ Configure in **Settings > Dashboard Access** or during first-run setup (`tigerpa
 
 > **Your API keys never leave your machine** regardless of access mode. Remote access only exposes the dashboard UI -- trade execution and credential storage remain local.
 
-### Trading Bot Commands
+### Trading Agent Commands
 
-The `trading-commands` extension provides 8 tools accessible from any connected messaging channel:
+The `trading-commands` extension provides 8 tools accessible from any connected agent channel:
 
 | Command                         | Description                                      |
 | ------------------------------- | ------------------------------------------------ |
@@ -530,7 +541,7 @@ The `trading-commands` extension provides 8 tools accessible from any connected 
 | `trading_risk_status`           | % utilization of each limit with progress bars   |
 | `trading_recent_trades`         | Recent trade decisions from the audit log        |
 
-These work from Telegram, Discord, Slack, or any connected channel -- ask your AI agent "What's my portfolio?" or "Stop all trading" and it invokes the right tool.
+These work from Telegram, Discord, Slack, or any connected agent channel -- ask Jarvis "What's my portfolio?" or "Stop all trading" and it invokes the right tool.
 
 ## Notifications
 
@@ -556,9 +567,9 @@ Events tracked:
 
 In **Settings > Notifications**, toggle notifications on or off for each trading platform independently. For example, enable notifications only for Polymarket and disable all others. Global events (kill switch activation, limit warnings without a specific platform) are always shown regardless of filter settings.
 
-### Proactive Channel Notifications
+### Proactive Agent Channel Notifications
 
-Optionally push trading alerts to any messaging channel (Telegram, Discord, Slack, etc.):
+Optionally push trading alerts to any agent channel (Telegram, Discord, Slack, etc.):
 
 ```json
 {
@@ -605,13 +616,15 @@ pnpm test           # All tests
 
 ## File Locations
 
-| Purpose         | Path                                    |
-| --------------- | --------------------------------------- |
-| Config          | `~/.tigerpaw/tigerpaw.json`             |
-| Credentials     | `~/.tigerpaw/credentials/`              |
-| Trade audit log | `~/.tigerpaw/trading/audit.jsonl`       |
-| Policy state    | `~/.tigerpaw/trading/policy-state.json` |
-| Sessions        | `~/.tigerpaw/sessions/`                 |
+| Purpose         | Path                        |
+| --------------- | --------------------------- |
+| Config          | `~/.tigerpaw/tigerpaw.json` |
+| SQLite database | `~/.tigerpaw/tigerpaw.db`   |
+| Sessions        | `~/.tigerpaw/sessions/`     |
+
+The SQLite database (`tigerpaw.db`) stores workflows, credentials (encrypted at rest), execution history, the trading audit log, and policy state. To back up your data, copy this single file while the server is stopped.
+
+> **Upgrading from flat files?** On first startup after upgrade, Tigerpaw automatically imports existing data from `credentials/`, `workflows/`, `workflow-runs/`, `workflow-versions/`, and `trading/` into the SQLite database. The original directories are renamed with a `.pre-sqlite-backup` suffix as a safety measure.
 
 ## Security
 
@@ -628,8 +641,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Acknowledgments
 
-Built on [OpenClaw](https://github.com/nicepkg/openclaw) by Peter Steinberger. Tigerpaw includes all of OpenClaw's 40+ messaging channel integrations and agent runtime, and extends them with a trading engine, gateway security hardening, a React 19 dashboard, real-time notifications, and Docker multi-arch images. Grateful to Peter and the OpenClaw community for the foundation.
+Built on [OpenClaw](https://github.com/openclaw/openclaw) by Peter Steinberger. Tigerpaw includes all of OpenClaw's 40+ messaging channel integrations and agent runtime, and extends them with a trading engine, gateway security hardening, a React 19 dashboard, real-time notifications, and Docker multi-arch images. Grateful to Peter and the OpenClaw community for the foundation.
 
 ## License
 
-[Apache License 2.0](LICENSE)
+Dual-licensed. Code originating from [OpenClaw](https://github.com/openclaw/openclaw) remains under [MIT](LICENSE-MIT). All Tigerpaw additions are licensed under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html). See [LICENSE](LICENSE) for details.

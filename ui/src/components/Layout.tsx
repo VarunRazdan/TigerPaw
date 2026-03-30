@@ -7,6 +7,7 @@ import {
   MessageSquare,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Menu,
   Bot,
   Inbox,
@@ -42,8 +43,10 @@ type NavItem = {
 };
 
 type NavGroup = {
+  key: string;
   title: string;
   items: NavItem[];
+  collapsible?: boolean;
 };
 
 function useNavGroups(): NavGroup[] {
@@ -52,6 +55,7 @@ function useNavGroups(): NavGroup[] {
 
   const groups: NavGroup[] = [
     {
+      key: "overview",
       title: t("nav.overview", "Overview"),
       items: [
         {
@@ -76,7 +80,9 @@ function useNavGroups(): NavGroup[] {
 
   if (tradingEnabled) {
     groups.push({
+      key: "trading",
       title: t("nav.trading", "Trading"),
+      collapsible: true,
       items: [
         {
           to: "/trading",
@@ -139,6 +145,7 @@ function useNavGroups(): NavGroup[] {
   }
 
   groups.push({
+    key: "integrations",
     title: t("nav.integrations", "Integrations"),
     items: [
       {
@@ -151,11 +158,13 @@ function useNavGroups(): NavGroup[] {
   });
 
   groups.push({
+    key: "system",
     title: t("nav.system", "System"),
+    collapsible: true,
     items: [
       {
         to: "/channels",
-        label: t("nav.channels", "Channels"),
+        label: t("nav.channels", "Agent Channels"),
         icon: <MessageSquare className="w-4 h-4" />,
       },
       {
@@ -227,6 +236,31 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
 
+  // Collapsible group state — persisted in localStorage
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem("tp-sidebar-groups");
+      if (stored) {
+        return JSON.parse(stored) as Record<string, boolean>;
+      }
+    } catch {
+      /* ignore */
+    }
+    return { trading: true, system: true };
+  });
+
+  const toggleGroup = useCallback((key: string) => {
+    setCollapsedGroups((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem("tp-sidebar-groups", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
   const checkOverflow = useCallback(() => {
     const el = scrollRef.current;
     if (el) {
@@ -286,31 +320,65 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
           onScroll={checkOverflow}
           className={cn("sidebar-scroll h-full py-3 px-2 space-y-4", !hasOverflow && "no-overflow")}
         >
-          {navGroups.map((group) => (
-            <div key={group.title}>
-              <div
-                className={cn(
-                  "px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap",
-                  collapsed ? "h-0 opacity-0 mb-0" : "h-4 opacity-100",
-                )}
-              >
-                {group.title}
+          {navGroups.map((group) => {
+            const isGroupCollapsed = group.collapsible && collapsedGroups[group.key];
+            return (
+              <div key={group.key}>
+                {/* Expanded: text title (clickable when collapsible) */}
+                {!collapsed &&
+                  (group.collapsible ? (
+                    <button
+                      onClick={() => toggleGroup(group.key)}
+                      className="w-full flex items-center justify-between px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600 hover:text-neutral-400 transition-colors duration-200 cursor-pointer"
+                    >
+                      <span>{group.title}</span>
+                      <ChevronDown
+                        className={cn(
+                          "w-3 h-3 transition-transform duration-200",
+                          isGroupCollapsed && "-rotate-90",
+                        )}
+                      />
+                    </button>
+                  ) : (
+                    <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
+                      {group.title}
+                    </div>
+                  ))}
+                {/* Compact: separator line (clickable when collapsible) */}
+                {collapsed &&
+                  (group.collapsible ? (
+                    <button
+                      onClick={() => toggleGroup(group.key)}
+                      className="w-full flex items-center justify-center mb-2 py-1 cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-center w-6 h-6 rounded-md bg-neutral-800/60 group-hover:bg-neutral-700 border border-neutral-700/50 group-hover:border-neutral-600 transition-all duration-200">
+                        <ChevronDown
+                          className={cn(
+                            "w-3.5 h-3.5 text-neutral-400 group-hover:text-neutral-200 transition-all duration-200",
+                            isGroupCollapsed && "-rotate-90",
+                          )}
+                        />
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="mb-2">
+                      <Separator />
+                    </div>
+                  ))}
+                {/* Items — animated collapse in both modes */}
+                <div
+                  className={cn(
+                    "space-y-0.5 transition-all duration-200 ease-in-out overflow-hidden",
+                    isGroupCollapsed ? "max-h-0 opacity-0" : "max-h-[600px] opacity-100",
+                  )}
+                >
+                  {group.items.map((item) => (
+                    <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
+                  ))}
+                </div>
               </div>
-              <div
-                className={cn(
-                  "transition-all duration-300 ease-in-out overflow-hidden",
-                  collapsed ? "h-px opacity-100 mb-2" : "h-0 opacity-0 mb-0",
-                )}
-              >
-                <Separator />
-              </div>
-              <div className="space-y-0.5">
-                {group.items.map((item) => (
-                  <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {/* Bottom padding to keep last items above the fade gradient */}
           {hasOverflow && <div className="h-6" />}
         </nav>
@@ -347,6 +415,31 @@ function MobileNav() {
   const navGroups = useNavGroups();
   const [open, setOpen] = useState(false);
 
+  // Share the same localStorage-persisted collapsed state as desktop
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem("tp-sidebar-groups");
+      if (stored) {
+        return JSON.parse(stored) as Record<string, boolean>;
+      }
+    } catch {
+      /* ignore */
+    }
+    return { trading: true, system: true };
+  });
+
+  const toggleGroup = useCallback((key: string) => {
+    setCollapsedGroups((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem("tp-sidebar-groups", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
   return (
     <>
       <button
@@ -365,34 +458,57 @@ function MobileNav() {
             <SheetDescription className="sr-only">{t("nav.menuLabel")}</SheetDescription>
           </SheetHeader>
           <nav className="flex-1 min-h-0 overflow-y-auto py-3 px-2 space-y-4">
-            {navGroups.map((group) => (
-              <div key={group.title}>
-                <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
-                  {group.title}
-                </div>
-                <div className="space-y-0.5">
-                  {group.items.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      end={item.end}
-                      onClick={() => setOpen(false)}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                          isActive
-                            ? "bg-neutral-800 text-neutral-100"
-                            : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50",
-                        )
-                      }
+            {navGroups.map((group) => {
+              const isGroupCollapsed = group.collapsible && collapsedGroups[group.key];
+              return (
+                <div key={group.key}>
+                  {group.collapsible ? (
+                    <button
+                      onClick={() => toggleGroup(group.key)}
+                      className="w-full flex items-center justify-between px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600 hover:text-neutral-400 transition-colors duration-200 cursor-pointer"
                     >
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </NavLink>
-                  ))}
+                      <span>{group.title}</span>
+                      <ChevronDown
+                        className={cn(
+                          "w-3 h-3 transition-transform duration-200",
+                          isGroupCollapsed && "-rotate-90",
+                        )}
+                      />
+                    </button>
+                  ) : (
+                    <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-600">
+                      {group.title}
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "space-y-0.5 transition-all duration-200 ease-in-out overflow-hidden",
+                      isGroupCollapsed ? "max-h-0 opacity-0" : "max-h-[600px] opacity-100",
+                    )}
+                  >
+                    {group.items.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.end}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          cn(
+                            "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                            isActive
+                              ? "bg-neutral-800 text-neutral-100"
+                              : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50",
+                          )
+                        }
+                      >
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </nav>
         </SheetContent>
       </Sheet>

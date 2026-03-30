@@ -1,6 +1,11 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import {
+  dalIsTradingStateAvailable,
+  dalLoadPolicyStateJson,
+  dalSavePolicyStateJson,
+} from "../dal/trading-state.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { withFileLock } from "../plugin-sdk/file-lock.js";
 
@@ -88,10 +93,6 @@ function createEmptyState(): TradingPolicyState {
   };
 }
 
-/**
- * Reset daily counters if the stored date differs from today (UTC midnight rollover).
- * Preserves non-daily state such as kill switch, high-water mark, and positions.
- */
 function applyDateReset(state: TradingPolicyState): TradingPolicyState {
   const today = todayUtc();
   if (state.date === today) {
@@ -107,25 +108,42 @@ function applyDateReset(state: TradingPolicyState): TradingPolicyState {
   };
 }
 
+function parseState(raw: string): TradingPolicyState | null {
+  try {
+    const parsed = JSON.parse(raw) as TradingPolicyState;
+    if (typeof parsed.date !== "string" || typeof parsed.dailyPnlUsd !== "number") {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Load trading policy state from disk. Returns a fresh state on first run or
- * when the state file is missing/corrupt. Daily counters are automatically
- * reset at UTC midnight.
+ * Load trading policy state. Uses SQLite when available, falls back to file.
  */
 export async function loadPolicyState(): Promise<TradingPolicyState> {
+  if (dalIsTradingStateAvailable()) {
+    const json = dalLoadPolicyStateJson();
+    if (json) {
+      const parsed = parseState(json);
+      return parsed ? applyDateReset(parsed) : createEmptyState();
+    }
+    return createEmptyState();
+  }
+
+  // Legacy file-based path
   await fs.mkdir(STATE_DIR, { recursive: true });
 
   return withFileLock(STATE_FILE, LOCK_OPTIONS, async () => {
     try {
       const raw = await fs.readFile(STATE_FILE, "utf8");
-      const parsed = JSON.parse(raw) as TradingPolicyState;
-
-      // Structural sanity check on the loaded state.
-      if (typeof parsed.date !== "string" || typeof parsed.dailyPnlUsd !== "number") {
+      const parsed = parseState(raw);
+      if (!parsed) {
         log.warn("policy state file has unexpected shape, resetting");
         return createEmptyState();
       }
-
       return applyDateReset(parsed);
     } catch (err) {
       const code = (err as { code?: string }).code;
@@ -138,9 +156,15 @@ export async function loadPolicyState(): Promise<TradingPolicyState> {
 }
 
 /**
- * Atomically persist trading policy state to disk.
+ * Persist trading policy state. Uses SQLite when available, falls back to file.
  */
 export async function savePolicyState(state: TradingPolicyState): Promise<void> {
+  if (dalIsTradingStateAvailable()) {
+    dalSavePolicyStateJson(JSON.stringify(state, null, 2));
+    return;
+  }
+
+  // Legacy file-based path
   await fs.mkdir(STATE_DIR, { recursive: true });
 
   await withFileLock(STATE_FILE, LOCK_OPTIONS, async () => {
@@ -181,23 +205,33 @@ export function withPlatformPositionCount(
 
 /**
  * Load, apply a mutation function, and save the state atomically.
- * Returns the mutated state.
  */
 export async function updatePolicyState(
   mutate: (state: TradingPolicyState) => TradingPolicyState,
 ): Promise<TradingPolicyState> {
+  if (dalIsTradingStateAvailable()) {
+    const json = dalLoadPolicyStateJson();
+    let state: TradingPolicyState;
+    if (json) {
+      const parsed = parseState(json);
+      state = parsed ? applyDateReset(parsed) : createEmptyState();
+    } else {
+      state = createEmptyState();
+    }
+    const updated = mutate(state);
+    dalSavePolicyStateJson(JSON.stringify(updated, null, 2));
+    return updated;
+  }
+
+  // Legacy file-based path
   await fs.mkdir(STATE_DIR, { recursive: true });
 
   return withFileLock(STATE_FILE, LOCK_OPTIONS, async () => {
     let state: TradingPolicyState;
     try {
       const raw = await fs.readFile(STATE_FILE, "utf8");
-      const parsed = JSON.parse(raw) as TradingPolicyState;
-      if (typeof parsed.date !== "string" || typeof parsed.dailyPnlUsd !== "number") {
-        state = createEmptyState();
-      } else {
-        state = applyDateReset(parsed);
-      }
+      const parsed = parseState(raw);
+      state = parsed ? applyDateReset(parsed) : createEmptyState();
     } catch {
       state = createEmptyState();
     }

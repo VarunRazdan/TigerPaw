@@ -17,7 +17,7 @@ function makeOpts(
   const respond = vi.fn();
   return {
     opts: {
-      req: { method, params, id: "test-1" },
+      req: { type: "req" as const, method, params, id: "test-1" },
       params,
       client: null,
       isWebchatConnect: () => false,

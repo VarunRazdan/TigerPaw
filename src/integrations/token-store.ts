@@ -5,12 +5,8 @@
  * This module provides typed helpers for integration-specific token operations.
  */
 
-import {
-  deleteCredential,
-  getCredential,
-  listCredentials,
-  saveCredential,
-} from "../workflows/credentials.js";
+import { dalFindByType } from "../dal/credentials.js";
+import { deleteCredential, getCredential, saveCredential } from "../workflows/credentials.js";
 import type {
   IntegrationConnection,
   IntegrationConnectionFull,
@@ -65,25 +61,23 @@ function credentialFieldsToConnection(
 
 /**
  * List all integration connections (tokens are NOT included).
+ * Uses DAL type-filtered query for efficiency instead of scanning all credentials.
  */
 export function listIntegrationConnections(): IntegrationConnection[] {
-  const all = listCredentials();
-  return all
-    .filter((c) => c.type === CREDENTIAL_TYPE)
-    .map((c) => ({
-      id: c.id,
-      providerId: c.fieldKeys.includes("providerId")
-        ? (getCredential(c.id)?.fields.providerId as IntegrationProviderId)
-        : ("gmail" as IntegrationProviderId),
-      category: (getCredential(c.id)?.fields.category ??
-        "email") as IntegrationConnection["category"],
-      status: (getCredential(c.id)?.fields.status ??
-        "connected") as IntegrationConnection["status"],
-      label: c.name,
-      accountEmail: getCredential(c.id)?.fields.accountEmail || undefined,
+  const integrationCreds = dalFindByType(CREDENTIAL_TYPE);
+  return integrationCreds.map((c) => {
+    const conn = credentialFieldsToConnection(c.id, c.name, c.fields);
+    return {
+      id: conn.id,
+      providerId: conn.providerId,
+      category: conn.category,
+      status: conn.status,
+      label: conn.label,
+      accountEmail: conn.accountEmail,
       connectedAt: c.createdAt,
       lastUsedAt: c.updatedAt,
-    }));
+    };
+  });
 }
 
 /**
@@ -136,18 +130,16 @@ export function deleteIntegrationConnection(id: string): boolean {
 
 /**
  * Find a connection by provider ID (returns first match).
+ * Uses DAL type-filtered query — O(1) with SQLite index vs O(n) file scan.
  */
 export function findConnectionByProvider(
   providerId: IntegrationProviderId,
 ): IntegrationConnectionFull | null {
-  const all = listCredentials();
-  for (const c of all) {
-    if (c.type !== CREDENTIAL_TYPE) {
-      continue;
-    }
-    const full = getIntegrationConnection(c.id);
-    if (full && full.providerId === providerId) {
-      return full;
+  const integrationCreds = dalFindByType(CREDENTIAL_TYPE);
+  for (const c of integrationCreds) {
+    const conn = credentialFieldsToConnection(c.id, c.name, c.fields);
+    if (conn.providerId === providerId) {
+      return conn;
     }
   }
   return null;

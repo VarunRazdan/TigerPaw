@@ -1,6 +1,7 @@
 import { Mail, Calendar, Video, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,7 +56,7 @@ function IntegrationIcon({ icon }: { icon: string }) {
     <img
       src={`/icons/integrations/${icon}.svg`}
       alt=""
-      className="w-6 h-6"
+      className="w-6 h-6 invert brightness-[0.85]"
       onError={() => setFailed(true)}
     />
   );
@@ -152,16 +153,14 @@ export function IntegrationsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-100">{t("title", "Integrations")}</h1>
-        <p className="text-xs text-neutral-500 mt-0.5">
-          {t("subtitle", "Connect email, calendar, and meeting services")}
-        </p>
-        {demoMode && (
-          <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full">
-            {tc("demoData")}
-          </span>
-        )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-100">{t("title", "Integrations")}</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            {t("subtitle", "Connect email, calendar, and meeting services")}
+          </p>
+        </div>
+        <DataModeSelector />
       </div>
 
       <TooltipProvider>

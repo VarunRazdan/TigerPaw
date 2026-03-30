@@ -807,10 +807,11 @@ describe("WorkflowEngine", () => {
       const result = await engine.execute(workflow, "t1", { text: "Nothing special here" });
 
       expect(result.status).toBe("completed");
-      expect(result.nodeResults).toHaveLength(2); // trigger + condition (skipped)
-      expect(result.nodeResults[1].status).toBe("skipped"); // condition did not match
+      expect(result.nodeResults).toHaveLength(2); // trigger + condition
+      expect(result.nodeResults[1].status).toBe("success"); // condition evaluates (routes via edge label)
       expect(result.nodeResults[1].output).toEqual({ conditionResult: false });
-      // Action should NOT be in the results since traversal stopped
+      // Action should NOT be in the results — only "match" edge exists, condition returned false
+      // so the engine follows "no-match" label which has no matching edge
       expect(deps.gatewayRpc).not.toHaveBeenCalled();
     });
   });
@@ -2035,5 +2036,597 @@ describe("Sub-Workflow Execution", () => {
     expect(result.status).toBe("failed");
     expect(result.error).toContain("Failing Sub");
     expect(result.error).toContain("failed");
+  });
+});
+
+// ── Phase A: Router Nodes (If/Else + Switch) + Edge Routing ──────────
+
+describe("Router: If/Else", () => {
+  it("routes to 'true' branch when condition is met", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const ifNode = makeNode({
+      id: "r1",
+      type: "router" as WorkflowNode["type"],
+      subtype: "if_else",
+      label: "If Price > 100",
+      config: { left: "$price", operator: ">", right: "100" },
+      outputs: ["true", "false"],
+    });
+    const trueAction = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "True Branch",
+      config: { channel: "test", template: "Price is high" },
+    });
+    const falseAction = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "False Branch",
+      config: { channel: "test", template: "Price is low" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, ifNode, trueAction, falseAction],
+      [makeEdge("t1", "r1"), makeEdge("r1", "a1", "true"), makeEdge("r1", "a2", "false")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { price: 150 });
+
+    expect(result.status).toBe("completed");
+
+    // True branch should execute
+    const trueResult = result.nodeResults.find((n) => n.nodeId === "a1");
+    expect(trueResult).toBeDefined();
+    expect(trueResult!.status).toBe("success");
+
+    // False branch should NOT execute
+    const falseResult = result.nodeResults.find((n) => n.nodeId === "a2");
+    expect(falseResult).toBeUndefined();
+  });
+
+  it("routes to 'false' branch when condition is not met", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const ifNode = makeNode({
+      id: "r1",
+      type: "router" as WorkflowNode["type"],
+      subtype: "if_else",
+      label: "If Price > 100",
+      config: { left: "$price", operator: ">", right: "100" },
+      outputs: ["true", "false"],
+    });
+    const trueAction = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "True Branch",
+      config: { channel: "test", template: "Price is high" },
+    });
+    const falseAction = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "False Branch",
+      config: { channel: "test", template: "Price is low" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, ifNode, trueAction, falseAction],
+      [makeEdge("t1", "r1"), makeEdge("r1", "a1", "true"), makeEdge("r1", "a2", "false")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { price: 50 });
+
+    expect(result.status).toBe("completed");
+
+    // True branch should NOT execute
+    const trueResult = result.nodeResults.find((n) => n.nodeId === "a1");
+    expect(trueResult).toBeUndefined();
+
+    // False branch should execute
+    const falseResult = result.nodeResults.find((n) => n.nodeId === "a2");
+    expect(falseResult).toBeDefined();
+    expect(falseResult!.status).toBe("success");
+  });
+
+  it("records router result with selectedOutput in node output", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const ifNode = makeNode({
+      id: "r1",
+      type: "router" as WorkflowNode["type"],
+      subtype: "if_else",
+      label: "If",
+      config: { left: "$x", operator: "==", right: "yes" },
+    });
+
+    const workflow = makeWorkflow([trigger, ifNode], [makeEdge("t1", "r1")]);
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { x: "yes" });
+
+    const routerResult = result.nodeResults.find((n) => n.nodeId === "r1");
+    expect(routerResult).toBeDefined();
+    expect(routerResult!.status).toBe("success");
+    expect(routerResult!.output?.selectedOutput).toBe("true");
+  });
+});
+
+describe("Router: Switch", () => {
+  it("routes to matching case", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const switchNode = makeNode({
+      id: "r1",
+      type: "router" as WorkflowNode["type"],
+      subtype: "switch",
+      label: "Switch on Status",
+      config: {
+        field: "$status",
+        cases: [
+          { value: "approved", output: "approved" },
+          { value: "rejected", output: "rejected" },
+        ],
+        fallback: "default",
+      },
+    });
+    const approvedAction = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "Approved",
+      config: { channel: "test", template: "Approved!" },
+    });
+    const rejectedAction = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "Rejected",
+      config: { channel: "test", template: "Rejected!" },
+    });
+    const defaultAction = makeNode({
+      id: "a3",
+      type: "action",
+      subtype: "send_message",
+      label: "Default",
+      config: { channel: "test", template: "Unknown" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, switchNode, approvedAction, rejectedAction, defaultAction],
+      [
+        makeEdge("t1", "r1"),
+        makeEdge("r1", "a1", "approved"),
+        makeEdge("r1", "a2", "rejected"),
+        makeEdge("r1", "a3", "default"),
+      ],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { status: "rejected" });
+
+    expect(result.status).toBe("completed");
+
+    // Only the "rejected" branch should execute
+    expect(result.nodeResults.find((n) => n.nodeId === "a1")).toBeUndefined();
+    expect(result.nodeResults.find((n) => n.nodeId === "a2")?.status).toBe("success");
+    expect(result.nodeResults.find((n) => n.nodeId === "a3")).toBeUndefined();
+  });
+
+  it("routes to fallback when no case matches", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const switchNode = makeNode({
+      id: "r1",
+      type: "router" as WorkflowNode["type"],
+      subtype: "switch",
+      label: "Switch on Status",
+      config: {
+        field: "$status",
+        cases: [{ value: "approved", output: "approved" }],
+        fallback: "other",
+      },
+    });
+    const approvedAction = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "Approved",
+      config: { channel: "test", template: "Approved!" },
+    });
+    const otherAction = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "Other",
+      config: { channel: "test", template: "Fallback" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, switchNode, approvedAction, otherAction],
+      [makeEdge("t1", "r1"), makeEdge("r1", "a1", "approved"), makeEdge("r1", "a2", "other")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { status: "pending" });
+
+    expect(result.status).toBe("completed");
+    expect(result.nodeResults.find((n) => n.nodeId === "a1")).toBeUndefined();
+    expect(result.nodeResults.find((n) => n.nodeId === "a2")?.status).toBe("success");
+  });
+});
+
+describe("Condition edge routing (match/no-match)", () => {
+  it("follows no-match edge when condition is false", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const condition = makeNode({
+      id: "c1",
+      type: "condition",
+      subtype: "expression",
+      label: "Is Urgent",
+      config: { left: "$priority", operator: "==", right: "urgent" },
+    });
+    const matchAction = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "Match",
+      config: { channel: "test", template: "Urgent!" },
+    });
+    const noMatchAction = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "No Match",
+      config: { channel: "test", template: "Normal" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, condition, matchAction, noMatchAction],
+      [makeEdge("t1", "c1"), makeEdge("c1", "a1", "match"), makeEdge("c1", "a2", "no-match")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+
+    // When condition matches
+    const resultMatch = await engine.execute(workflow, "t1", { priority: "urgent" });
+    expect(resultMatch.nodeResults.find((n) => n.nodeId === "a1")?.status).toBe("success");
+    expect(resultMatch.nodeResults.find((n) => n.nodeId === "a2")).toBeUndefined();
+
+    // When condition does NOT match
+    const resultNoMatch = await engine.execute(workflow, "t1", { priority: "low" });
+    expect(resultNoMatch.nodeResults.find((n) => n.nodeId === "a1")).toBeUndefined();
+    expect(resultNoMatch.nodeResults.find((n) => n.nodeId === "a2")?.status).toBe("success");
+  });
+});
+
+describe("Disabled node passthrough", () => {
+  it("skips disabled nodes but continues traversal to successors", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const disabledAction = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "Disabled Send",
+      config: { channel: "test", template: "should not run" },
+      disabled: true,
+    });
+    const nextAction = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "After Disabled",
+      config: { channel: "test", template: "should run" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, disabledAction, nextAction],
+      [makeEdge("t1", "a1"), makeEdge("a1", "a2")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1");
+
+    expect(result.status).toBe("completed");
+
+    // Disabled node should be skipped
+    const disabledResult = result.nodeResults.find((n) => n.nodeId === "a1");
+    expect(disabledResult).toBeDefined();
+    expect(disabledResult!.status).toBe("skipped");
+    expect(disabledResult!.output?.disabled).toBe(true);
+
+    // Next node should still execute
+    const nextResult = result.nodeResults.find((n) => n.nodeId === "a2");
+    expect(nextResult).toBeDefined();
+    expect(nextResult!.status).toBe("success");
+  });
+});
+
+// ── Merge Sync Barrier ────────────────────────────────────────────────
+
+describe("Merge node sync barrier", () => {
+  it("waits for all incoming branches before executing merge", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const action1 = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "Branch A",
+      config: { channel: "test", template: "A" },
+    });
+    const action2 = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "Branch B",
+      config: { channel: "test", template: "B" },
+    });
+    const mergeNode = makeNode({
+      id: "m1",
+      type: "transform",
+      subtype: "merge",
+      label: "Merge",
+      config: { mode: "append", outputKey: "merged" },
+    });
+    const finalAction = makeNode({
+      id: "a3",
+      type: "action",
+      subtype: "send_message",
+      label: "After Merge",
+      config: { channel: "test", template: "done" },
+    });
+
+    // trigger -> a1, trigger -> a2, both -> merge -> final
+    const workflow = makeWorkflow(
+      [trigger, action1, action2, mergeNode, finalAction],
+      [
+        makeEdge("t1", "a1"),
+        makeEdge("t1", "a2"),
+        makeEdge("a1", "m1"),
+        makeEdge("a2", "m1"),
+        makeEdge("m1", "a3"),
+      ],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1");
+
+    expect(result.status).toBe("completed");
+
+    // Merge node should have executed exactly once
+    const mergeResults = result.nodeResults.filter((n) => n.nodeId === "m1");
+    expect(mergeResults).toHaveLength(1);
+    expect(mergeResults[0].status).toBe("success");
+
+    // Final action should have executed
+    const finalResult = result.nodeResults.find((n) => n.nodeId === "a3");
+    expect(finalResult).toBeDefined();
+    expect(finalResult!.status).toBe("success");
+  });
+
+  it("merge with combine mode deep-merges branch outputs", async () => {
+    const deps = mockDeps();
+    deps.gatewayRpc = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, payload: { branchA: "valueA" } })
+      .mockResolvedValueOnce({ ok: true, payload: { branchB: "valueB" } })
+      .mockResolvedValue({ ok: true, payload: {} });
+
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const action1 = makeNode({
+      id: "a1",
+      type: "action",
+      subtype: "send_message",
+      label: "Branch A",
+      config: { channel: "test", template: "A" },
+    });
+    const action2 = makeNode({
+      id: "a2",
+      type: "action",
+      subtype: "send_message",
+      label: "Branch B",
+      config: { channel: "test", template: "B" },
+    });
+    const mergeNode = makeNode({
+      id: "m1",
+      type: "transform",
+      subtype: "merge",
+      label: "Merge",
+      config: { mode: "wait_all", outputKey: "merged" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, action1, action2, mergeNode],
+      [makeEdge("t1", "a1"), makeEdge("t1", "a2"), makeEdge("a1", "m1"), makeEdge("a2", "m1")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1");
+
+    expect(result.status).toBe("completed");
+    const mergeResult = result.nodeResults.find((n) => n.nodeId === "m1");
+    expect(mergeResult).toBeDefined();
+    expect(mergeResult!.status).toBe("success");
+    // wait_all mode returns branch count
+    expect((mergeResult!.output as Record<string, unknown>)?.merged).toEqual({ branchCount: 2 });
+  });
+});
+
+// ── Loop Iteration ────────────────────────────────────────────────────
+
+describe("Loop node iteration", () => {
+  it("iterates over an array, executing loop body per item", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const loopNode = makeNode({
+      id: "loop1",
+      type: "router",
+      subtype: "loop",
+      label: "Loop Items",
+      config: { arrayPath: "$items", itemVariable: "item", indexVariable: "idx" },
+      outputs: ["loop", "done"],
+    });
+    const bodyAction = makeNode({
+      id: "body1",
+      type: "action",
+      subtype: "send_message",
+      label: "Process Item",
+      config: { channel: "test", template: "{{item}}" },
+    });
+    const doneAction = makeNode({
+      id: "done1",
+      type: "action",
+      subtype: "send_message",
+      label: "Done",
+      config: { channel: "test", template: "finished" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, loopNode, bodyAction, doneAction],
+      [
+        makeEdge("t1", "loop1"),
+        makeEdge("loop1", "body1", "loop"),
+        makeEdge("loop1", "done1", "done"),
+      ],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { items: ["a", "b", "c"] });
+
+    expect(result.status).toBe("completed");
+
+    // Loop body should execute 3 times (once per item)
+    const bodyResults = result.nodeResults.filter((n) => n.nodeId === "body1");
+    expect(bodyResults).toHaveLength(3);
+    expect(bodyResults.every((r) => r.status === "success")).toBe(true);
+
+    // Done action should execute once
+    const doneResults = result.nodeResults.filter((n) => n.nodeId === "done1");
+    expect(doneResults).toHaveLength(1);
+    expect(doneResults[0].status).toBe("success");
+  });
+
+  it("skips to done when array is empty", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const loopNode = makeNode({
+      id: "loop1",
+      type: "router",
+      subtype: "loop",
+      label: "Loop Items",
+      config: { arrayPath: "$items" },
+      outputs: ["loop", "done"],
+    });
+    const bodyAction = makeNode({
+      id: "body1",
+      type: "action",
+      subtype: "send_message",
+      label: "Process Item",
+      config: { channel: "test", template: "{{item}}" },
+    });
+    const doneAction = makeNode({
+      id: "done1",
+      type: "action",
+      subtype: "send_message",
+      label: "Done",
+      config: { channel: "test", template: "finished" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, loopNode, bodyAction, doneAction],
+      [
+        makeEdge("t1", "loop1"),
+        makeEdge("loop1", "body1", "loop"),
+        makeEdge("loop1", "done1", "done"),
+      ],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { items: [] });
+
+    expect(result.status).toBe("completed");
+
+    // Loop body should NOT execute
+    const bodyResults = result.nodeResults.filter((n) => n.nodeId === "body1");
+    expect(bodyResults).toHaveLength(0);
+
+    // Done action should still execute
+    const doneResults = result.nodeResults.filter((n) => n.nodeId === "done1");
+    expect(doneResults).toHaveLength(1);
+  });
+
+  it("respects maxIterations limit", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const loopNode = makeNode({
+      id: "loop1",
+      type: "router",
+      subtype: "loop",
+      label: "Loop Items",
+      config: { arrayPath: "$items", maxIterations: 2 },
+      outputs: ["loop", "done"],
+    });
+    const bodyAction = makeNode({
+      id: "body1",
+      type: "action",
+      subtype: "send_message",
+      label: "Process Item",
+      config: { channel: "test", template: "{{item}}" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, loopNode, bodyAction],
+      [makeEdge("t1", "loop1"), makeEdge("loop1", "body1", "loop")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", { items: [1, 2, 3, 4, 5] });
+
+    expect(result.status).toBe("completed");
+
+    // Should only execute 2 iterations (maxIterations: 2)
+    const bodyResults = result.nodeResults.filter((n) => n.nodeId === "body1");
+    expect(bodyResults).toHaveLength(2);
+  });
+
+  it("handles missing array path gracefully", async () => {
+    const deps = mockDeps();
+    const trigger = makeNode({ id: "t1", type: "trigger", subtype: "manual", label: "Trigger" });
+    const loopNode = makeNode({
+      id: "loop1",
+      type: "router",
+      subtype: "loop",
+      label: "Loop Items",
+      config: { arrayPath: "$nonexistent" },
+      outputs: ["loop", "done"],
+    });
+    const doneAction = makeNode({
+      id: "done1",
+      type: "action",
+      subtype: "send_message",
+      label: "Done",
+      config: { channel: "test", template: "finished" },
+    });
+
+    const workflow = makeWorkflow(
+      [trigger, loopNode, doneAction],
+      [makeEdge("t1", "loop1"), makeEdge("loop1", "done1", "done")],
+    );
+
+    const engine = new WorkflowEngine(deps);
+    const result = await engine.execute(workflow, "t1", {});
+
+    expect(result.status).toBe("completed");
+    // Should skip to done since array is undefined (treated as empty)
+    const doneResults = result.nodeResults.filter((n) => n.nodeId === "done1");
+    expect(doneResults).toHaveLength(1);
   });
 });
