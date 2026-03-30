@@ -33,9 +33,12 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
     setTimeout(() => setCopied(null), 1500);
   }
 
+  // For zero-credential channels (WhatsApp, iMessage), generate an enable-only patch
+  const isZeroCred = info.credentials.length === 0;
+
   const configPatch = useMemo(() => {
-    if (info.credentials.length === 0) {
-      return null;
+    if (isZeroCred) {
+      return { channels: { [info.configSection]: { enabled: true } } };
     }
 
     const obj: Record<string, string> = {};
@@ -49,7 +52,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
       return { plugins: { entries: { [pluginId]: { enabled: true, config: obj } } } };
     }
     return { [info.configSection]: obj };
-  }, [values, info]);
+  }, [values, info, isZeroCred]);
 
   const configSnippet = useMemo(
     () => (configPatch ? JSON.stringify(configPatch, null, 2) : null),
@@ -177,7 +180,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
                   ? "bg-green-900/30 border-green-600/40 text-green-400"
                   : saveStatus === "saving"
                     ? "bg-orange-900/10 border-orange-600/20 text-orange-400/50 cursor-wait"
-                    : hasAnyInput
+                    : hasAnyInput || isZeroCred
                       ? "bg-orange-900/20 border-orange-600/40 text-orange-400 hover:bg-orange-900/30 hover:border-orange-600/60 hover:shadow-md"
                       : "bg-orange-900/10 border-orange-600/30 text-orange-400/70 hover:bg-orange-900/20 hover:border-orange-600/50 hover:shadow-md"
               }`}
@@ -186,7 +189,9 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
                 ? t("saving")
                 : saveStatus === "saved"
                   ? t("savedSuccess")
-                  : t("saveToConfig")}
+                  : isZeroCred
+                    ? t("enable", { defaultValue: "Enable" })
+                    : t("saveToConfig")}
             </button>
 
             {/* Error / gateway-down feedback */}

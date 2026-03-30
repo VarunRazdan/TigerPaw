@@ -166,6 +166,7 @@ export const useIntegrationStore = create<IntegrationState>((set, get) => ({
   setDemoMode: (enabled) =>
     set({
       demoMode: enabled,
+      providers: enabled ? DEMO_PROVIDERS : get().providers,
       connections: enabled ? DEMO_CONNECTIONS : [],
     }),
 

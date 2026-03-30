@@ -61,8 +61,52 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
   },
 
   openai: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-03-30",
     models: [
+      {
+        id: "gpt-5.2",
+        name: "GPT-5.2",
+        contextWindow: 400_000,
+        maxOutput: 128_000,
+        pricing: { input: 7.5, output: 30 },
+      },
+      {
+        id: "gpt-5.1",
+        name: "GPT-5.1",
+        contextWindow: 400_000,
+        maxOutput: 128_000,
+        pricing: { input: 5, output: 20 },
+      },
+      {
+        id: "gpt-5.1-codex",
+        name: "GPT-5.1 Codex",
+        contextWindow: 400_000,
+        maxOutput: 128_000,
+        pricing: { input: 2.5, output: 10 },
+      },
+      {
+        id: "gpt-5.1-codex-mini",
+        name: "GPT-5.1 Codex Mini",
+        contextWindow: 400_000,
+        maxOutput: 128_000,
+        pricing: { input: 0.6, output: 2.4 },
+      },
+      {
+        id: "o3",
+        name: "o3",
+        contextWindow: 200_000,
+        maxOutput: 100_000,
+        pricing: { input: 10, output: 40 },
+        reasoning: true,
+      },
+      {
+        id: "o4-mini",
+        name: "o4-mini",
+        contextWindow: 200_000,
+        maxOutput: 100_000,
+        pricing: { input: 1.1, output: 4.4 },
+        reasoning: true,
+      },
       {
         id: "gpt-4.1",
         name: "GPT-4.1",
@@ -83,22 +127,6 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
         contextWindow: 1_047_576,
         maxOutput: 32_768,
         pricing: { input: 0.1, output: 0.4 },
-      },
-      {
-        id: "o3",
-        name: "o3",
-        contextWindow: 200_000,
-        maxOutput: 100_000,
-        pricing: { input: 10, output: 40 },
-        reasoning: true,
-      },
-      {
-        id: "o4-mini",
-        name: "o4-mini",
-        contextWindow: 200_000,
-        maxOutput: 100_000,
-        pricing: { input: 1.1, output: 4.4 },
-        reasoning: true,
       },
       {
         id: "gpt-4o",
