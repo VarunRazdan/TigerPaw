@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, MessageSquare, Cpu, Bell } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { DataModeSelector } from "@/components/DataModeSelector";
@@ -16,6 +16,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CHANNEL_CONNECT_INFO } from "@/lib/connect-config";
 import { gatewayRpc } from "@/lib/gateway-rpc";
+import { assetUrl } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useTradingStore } from "@/stores/trading-store";
 
@@ -54,6 +55,10 @@ export function ChannelsPage() {
   const [connectIcon, setConnectIcon] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [failedIcons, setFailedIcons] = useState<Set<string>>(new Set());
+  const handleIconError = useCallback((icon: string) => {
+    setFailedIcons((prev) => new Set(prev).add(icon));
+  }, []);
   const connectInfo = connectIcon ? CHANNEL_CONNECT_INFO[connectIcon] : null;
 
   // Derive channels from live data + local disconnect overrides + demo fallback
@@ -155,11 +160,16 @@ export function ChannelsPage() {
                   }}
                   className="relative rounded-2xl glass-panel-interactive p-4 flex items-center gap-3 cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
-                  <img
-                    src={`/icons/messaging-channels/${channel.icon}.svg`}
-                    alt={channel.name}
-                    className="w-6 h-6"
-                  />
+                  {failedIcons.has(channel.icon) ? (
+                    <MessageSquare className="w-6 h-6 text-neutral-400" />
+                  ) : (
+                    <img
+                      src={assetUrl(`icons/messaging-channels/${channel.icon}.svg`)}
+                      alt={channel.name}
+                      className="w-6 h-6"
+                      onError={() => handleIconError(channel.icon)}
+                    />
+                  )}
                   <div className="flex-1">
                     <div className="text-sm font-medium text-neutral-200">{channel.name}</div>
                     <div className="text-xs text-neutral-500">

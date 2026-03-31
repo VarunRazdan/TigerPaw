@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { ConnectInfo } from "@/lib/connect-config";
 import { saveConfigPatch } from "@/lib/save-config";
+import { assetUrl } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -87,7 +88,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <img src={info.iconPath} alt="" className="w-8 h-8" />
+            <img src={assetUrl(info.iconPath)} alt="" className="w-8 h-8" />
             <div>
               <DialogTitle>{t("connectPlatform", { platform: info.name })}</DialogTitle>
               <DialogDescription>{info.description}</DialogDescription>

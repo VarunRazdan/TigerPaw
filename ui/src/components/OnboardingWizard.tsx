@@ -37,7 +37,7 @@ import { useOnboarding, type StepId, type ProviderTestStatus } from "@/hooks/use
 import { CHANNEL_CONNECT_INFO, TRADING_CONNECT_INFO } from "@/lib/connect-config";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 import { MODELS_CATALOG, formatTokens, formatPrice } from "@/lib/models-catalog";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useTradingStore } from "@/stores/trading-store";
 
@@ -449,7 +449,7 @@ function AiProviderStep({
                 )}
               >
                 <img
-                  src={`/icons/ai-providers/${p.id}.svg`}
+                  src={assetUrl(`icons/ai-providers/${p.id}.svg`)}
                   alt={t(`ai.${p.key}`)}
                   className="w-5 h-5"
                 />
@@ -639,7 +639,7 @@ function ChannelsGridStep() {
             >
               <div className="relative">
                 <img
-                  src={`/icons/messaging-channels/${id}.svg`}
+                  src={assetUrl(`icons/messaging-channels/${id}.svg`)}
                   alt={info.name}
                   className="w-7 h-7"
                 />

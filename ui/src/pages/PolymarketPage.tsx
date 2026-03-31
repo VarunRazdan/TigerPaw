@@ -4,7 +4,7 @@ import { ConnectDialog } from "@/components/ConnectDialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
 const DEMO_MARKETS = [
@@ -80,7 +80,7 @@ export function PolymarketPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <img src="/icons/trading-platforms/polymarket.svg" alt="" className="w-6 h-6" />
+        <img src={assetUrl("icons/trading-platforms/polymarket.svg")} alt="" className="w-6 h-6" />
         <h1 className="text-xl font-bold text-neutral-100">Polymarket</h1>
         <Badge
           className={cn(
