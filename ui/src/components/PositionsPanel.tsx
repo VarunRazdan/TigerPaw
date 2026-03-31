@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
@@ -5,16 +6,64 @@ import { StopLossConfig } from "./StopLossConfig";
 
 export function PositionsPanel() {
   const { t } = useTranslation("trading");
-  const { positions, limits } = useTradingStore();
+  const { positions, limits, liquidateAll, lastLiquidationResult, setLastLiquidationResult } =
+    useTradingStore();
+  const [closingAll, setClosingAll] = useState(false);
+
+  const handleCloseAll = async () => {
+    if (closingAll) return;
+    setClosingAll(true);
+    setLastLiquidationResult(null);
+    try {
+      await liquidateAll();
+    } finally {
+      setClosingAll(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl glass-panel p-4">
-      <h3 className="text-sm font-semibold text-neutral-300 mb-3">
-        {t("positions")}
-        <span className="ml-2 text-xs text-neutral-500 font-normal">
-          {positions.length}/{limits.maxOpenPositions}
-        </span>
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-neutral-300">
+          {t("positions")}
+          <span className="ml-2 text-xs text-neutral-500 font-normal">
+            {positions.length}/{limits.maxOpenPositions}
+          </span>
+        </h3>
+        {positions.length > 0 && (
+          <button
+            onClick={handleCloseAll}
+            disabled={closingAll}
+            className="text-xs px-2 py-1 rounded bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {closingAll ? t("closingAll") : t("closeAll")}
+          </button>
+        )}
+      </div>
+
+      {lastLiquidationResult && lastLiquidationResult.failed.length > 0 && (
+        <div className="mb-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+          <div className="text-xs text-red-400 font-medium mb-1">
+            {t("closeAllPartialFailure", {
+              succeeded: lastLiquidationResult.succeeded,
+              total: lastLiquidationResult.total,
+            })}
+          </div>
+          <ul className="space-y-0.5">
+            {lastLiquidationResult.failed.map((f) => (
+              <li key={`${f.extensionId}-${f.symbol}`} className="text-xs text-red-300/70">
+                {f.symbol} ({f.extensionId}): {f.error}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={() => setLastLiquidationResult(null)}
+            className="text-xs text-neutral-500 hover:text-neutral-400 mt-1"
+          >
+            {t("dismiss")}
+          </button>
+        </div>
+      )}
       {positions.length === 0 ? (
         <p className="text-xs text-neutral-600 py-4 text-center">{t("noPositions")}</p>
       ) : (

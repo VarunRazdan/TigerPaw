@@ -1,18 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { invokeToolHttp } from "@/lib/gateway-http";
-
-/** Maps extensionId to the tool name registered by that extension. */
-const TOOL_NAME_MAP: Record<string, string> = {
-  alpaca: "alpaca_place_order",
-  polymarket: "polymarket_place_order",
-  kalshi: "kalshi_place_order",
-  manifold: "manifold_place_bet",
-  coinbase: "coinbase_place_order",
-  ibkr: "ibkr_place_order",
-  binance: "binance_place_order",
-  kraken: "kraken_place_order",
-  dydx: "dydx_place_order",
-};
+import { PLACE_ORDER_TOOLS } from "@/lib/tool-names";
 
 export type OrderStatus =
   | { status: "idle" }
@@ -136,37 +124,45 @@ export function useSubmitOrder(): {
   reset: () => void;
 } {
   const [state, setState] = useState<OrderStatus>({ status: "idle" });
+  const submittingRef = useRef(false);
 
   const reset = useCallback(() => setState({ status: "idle" }), []);
 
   const submit = useCallback(async (params: SubmitOrderParams) => {
-    const toolName = TOOL_NAME_MAP[params.extensionId];
-    if (!toolName) {
-      setState({ status: "error", message: `Unknown platform: ${params.extensionId}` });
-      return;
-    }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
 
-    setState({ status: "submitting" });
-
-    const args = buildToolArgs(params);
-    const result = await invokeToolHttp(toolName, args);
-
-    if (!result.ok) {
-      if (result.errorType === "not_found") {
-        setState({
-          status: "error",
-          message: `Tool ${toolName} not available. Is the ${params.extensionId} extension enabled?`,
-        });
-      } else if (result.errorType === "tool_call_blocked") {
-        setState({ status: "denied", reason: result.error });
-      } else {
-        setState({ status: "error", message: result.error });
+    try {
+      const toolName = PLACE_ORDER_TOOLS[params.extensionId];
+      if (!toolName) {
+        setState({ status: "error", message: `Unknown platform: ${params.extensionId}` });
+        return;
       }
-      return;
-    }
 
-    const parsed = parseToolResult(result.result);
-    setState(parsed);
+      setState({ status: "submitting" });
+
+      const args = buildToolArgs(params);
+      const result = await invokeToolHttp(toolName, args);
+
+      if (!result.ok) {
+        if (result.errorType === "not_found") {
+          setState({
+            status: "error",
+            message: `Tool ${toolName} not available. Is the ${params.extensionId} extension enabled?`,
+          });
+        } else if (result.errorType === "tool_call_blocked") {
+          setState({ status: "denied", reason: result.error });
+        } else {
+          setState({ status: "error", message: result.error });
+        }
+        return;
+      }
+
+      const parsed = parseToolResult(result.result);
+      setState(parsed);
+    } finally {
+      submittingRef.current = false;
+    }
   }, []);
 
   return { state, submit, reset };

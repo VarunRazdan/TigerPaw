@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { invokeToolHttp } from "@/lib/gateway-http";
+import { CLOSE_POSITION_TOOLS } from "@/lib/tool-names";
 
 export type ApprovalMode = "auto" | "confirm" | "manual";
 export type TimeoutAction = "approve" | "deny";
@@ -90,6 +92,12 @@ export type PnlDataPoint = {
   pnl: number;
 };
 
+export type LiquidationResult = {
+  total: number;
+  succeeded: number;
+  failed: Array<{ symbol: string; extensionId: string; error: string }>;
+};
+
 export type TradingState = {
   // Kill switch
   killSwitchActive: boolean;
@@ -130,6 +138,9 @@ export type TradingState = {
 
   // Demo mode
   demoMode: boolean;
+
+  // Liquidation
+  lastLiquidationResult: LiquidationResult | null;
 
   // Actions
   setKillSwitch: (active: boolean, reason?: string) => void;
@@ -175,6 +186,8 @@ export type TradingState = {
   disconnectPlatform: (id: string) => void;
   setPnlHistory: (history: PnlDataPoint[]) => void;
   setDemoMode: (enabled: boolean) => void;
+  liquidateAll: () => Promise<LiquidationResult>;
+  setLastLiquidationResult: (result: LiquidationResult | null) => void;
 };
 
 const DEFAULT_LIMITS: PolicyLimits = {
@@ -556,6 +569,7 @@ export const useTradingStore = create<TradingState>((set) => ({
   ],
 
   demoMode: true,
+  lastLiquidationResult: null,
 
   setKillSwitch: (active, reason) => set({ killSwitchActive: active, killSwitchReason: reason }),
   toggleKillSwitch: () =>
@@ -623,4 +637,44 @@ export const useTradingStore = create<TradingState>((set) => ({
     }),
   setPnlHistory: (history) => set({ pnlHistory: history }),
   setDemoMode: (enabled) => set({ demoMode: enabled }),
+  setLastLiquidationResult: (result) => set({ lastLiquidationResult: result }),
+  liquidateAll: async () => {
+    const positions = useTradingStore.getState().positions;
+    const results = await Promise.allSettled(
+      positions.map(async (pos) => {
+        const toolName = CLOSE_POSITION_TOOLS[pos.extensionId];
+        if (!toolName) {
+          throw new Error(`Unknown platform: ${pos.extensionId}`);
+        }
+        const res = await invokeToolHttp(toolName, { symbol: pos.symbol });
+        if (!res.ok) throw new Error(res.error);
+        return pos;
+      }),
+    );
+
+    const failed: LiquidationResult["failed"] = [];
+    let succeeded = 0;
+
+    results.forEach((result, i) => {
+      if (result.status === "fulfilled") {
+        succeeded++;
+      } else {
+        const pos = positions[i];
+        failed.push({
+          symbol: pos.symbol,
+          extensionId: pos.extensionId,
+          error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+        });
+      }
+    });
+
+    const liquidationResult: LiquidationResult = {
+      total: positions.length,
+      succeeded,
+      failed,
+    };
+
+    set({ lastLiquidationResult: liquidationResult });
+    return liquidationResult;
+  },
 }));
