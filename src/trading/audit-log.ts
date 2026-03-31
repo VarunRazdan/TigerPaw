@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { withFileLock } from "../plugin-sdk/file-lock.js";
+import { retrieveSecret, storeSecret } from "../secrets/keychain.js";
 import type { TradeOrder } from "./policy-engine.js";
 import type { TradingPolicyConfig } from "./policy-engine.js";
 
@@ -15,15 +16,17 @@ const DEFAULT_AUDIT_FILE = path.join(DEFAULT_AUDIT_DIR, "audit.jsonl");
 const DEFAULT_MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const DEFAULT_ROTATE_COUNT = 5;
 
+const KEYCHAIN_SECRET_ID = "tigerpaw-audit-hmac-key";
+
 /**
  * Resolve the HMAC key for audit log integrity.
  *
  * Priority:
  *  1. TIGERPAW_AUDIT_HMAC_KEY env var (operator-supplied)
- *  2. Persisted random key at ~/.tigerpaw/trading/.audit-hmac-key
- *
- * The key is cryptographically random (32 bytes hex) and stored with
- * owner-only permissions (0o600) in a directory restricted to 0o700.
+ *  2. Encrypted keychain via retrieveSecret()
+ *  3. Legacy plaintext file at ~/.tigerpaw/trading/.audit-hmac-key
+ *     (if found, migrates to keychain and deletes the file)
+ *  4. Generate new random key and store in keychain
  */
 function resolveHmacKey(): string {
   const envKey = process.env.TIGERPAW_AUDIT_HMAC_KEY;
@@ -31,22 +34,40 @@ function resolveHmacKey(): string {
     return envKey;
   }
 
+  const keychainKey = retrieveSecret(KEYCHAIN_SECRET_ID);
+  if (keychainKey && keychainKey.length > 0) {
+    return keychainKey;
+  }
+
   const keyPath = path.join(DEFAULT_AUDIT_DIR, ".audit-hmac-key");
   try {
     const existing = fsSync.readFileSync(keyPath, "utf8").trim();
     if (existing.length > 0) {
+      try {
+        storeSecret(KEYCHAIN_SECRET_ID, existing);
+        fsSync.unlinkSync(keyPath);
+        log.info("migrated audit HMAC key from plaintext file to keychain");
+      } catch (err) {
+        log.warn(`failed to migrate audit HMAC key to keychain: ${String(err)}`);
+      }
       return existing;
     }
   } catch {
-    // Key file does not exist yet — generate one.
+    // Key file does not exist — fall through to generate.
   }
 
   const key = randomBytes(32).toString("hex");
   try {
-    fsSync.mkdirSync(DEFAULT_AUDIT_DIR, { recursive: true, mode: 0o700 });
-    fsSync.writeFileSync(keyPath, key, { mode: 0o600, encoding: "utf8" });
+    storeSecret(KEYCHAIN_SECRET_ID, key);
   } catch (err) {
-    log.warn(`failed to persist audit HMAC key: ${String(err)}`);
+    // Fall back to plaintext file if keychain storage fails
+    log.warn(`failed to store audit HMAC key in keychain: ${String(err)}`);
+    try {
+      fsSync.mkdirSync(DEFAULT_AUDIT_DIR, { recursive: true, mode: 0o700 });
+      fsSync.writeFileSync(keyPath, key, { mode: 0o600, encoding: "utf8" });
+    } catch (writeErr) {
+      log.warn(`failed to persist audit HMAC key: ${String(writeErr)}`);
+    }
   }
   return key;
 }

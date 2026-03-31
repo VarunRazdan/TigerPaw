@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import * as fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -20,6 +21,15 @@ vi.mock("../logging/subsystem.js", () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
+    debug: vi.fn(),
+  }),
+}));
+
+const mockKeychainStore = new Map<string, string>();
+vi.mock("../secrets/keychain.js", () => ({
+  retrieveSecret: vi.fn((id: string) => mockKeychainStore.get(id)),
+  storeSecret: vi.fn((id: string, value: string) => {
+    mockKeychainStore.set(id, value);
   }),
 }));
 
@@ -32,23 +42,15 @@ function sha256(data: string): string {
 }
 
 /**
- * Read the HMAC key that the module persists to disk.
- * The module always stores the key at ~/.tigerpaw/trading/.audit-hmac-key
- * regardless of the configured audit file path.
- * Falls back to TIGERPAW_AUDIT_HMAC_KEY env var if set.
+ * Read the HMAC key that the module resolved.
+ * Mirrors the priority: env var -> keychain -> generate.
  */
 function readHmacKey(): string {
   const envKey = process.env.TIGERPAW_AUDIT_HMAC_KEY;
   if (envKey && envKey.length > 0) {
     return envKey;
   }
-  const keyPath = path.join(os.homedir(), ".tigerpaw", "trading", ".audit-hmac-key");
-  try {
-    return require("node:fs").readFileSync(keyPath, "utf8").trim();
-  } catch {
-    // Key hasn't been created yet — will be created on first write.
-    return "";
-  }
+  return mockKeychainStore.get("tigerpaw-audit-hmac-key") ?? "";
 }
 
 function hmacSha256(data: string, key: string): string {
@@ -89,6 +91,8 @@ describe("audit-log HMAC chain verification", () => {
   let readAuditEntries: typeof import("./audit-log.js").readAuditEntries;
 
   beforeEach(async () => {
+    vi.resetModules();
+    mockKeychainStore.clear();
     tmpDir = await makeTmpDir();
     auditFile = path.join(tmpDir, "audit.jsonl");
 
@@ -258,6 +262,72 @@ describe("audit-log HMAC chain verification", () => {
 
       const result = await verifyAuditChain();
       expect(result).toEqual({ valid: 100 });
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Key resolution priority chain
+  // -----------------------------------------------------------------------
+  describe("HMAC key resolution priority", () => {
+    it("stores generated key in keychain", async () => {
+      // No env var, no keychain entry, no file -- should generate and store
+      expect(mockKeychainStore.has("tigerpaw-audit-hmac-key")).toBe(true);
+      const key = mockKeychainStore.get("tigerpaw-audit-hmac-key")!;
+      expect(key).toHaveLength(64); // 32 bytes hex
+    });
+
+    it("uses keychain key when available", async () => {
+      // The beforeEach already generated a key in the keychain via module init
+      const key = mockKeychainStore.get("tigerpaw-audit-hmac-key")!;
+      expect(key.length).toBeGreaterThan(0);
+
+      await writeAuditEntry(sampleEntry());
+      const entries = await readAuditEntries();
+      const entry = entries[0];
+      const { hmac: _hmac, ...withoutHmac } = entry;
+      expect(entry.hmac).toBe(hmacSha256(JSON.stringify(withoutHmac), key));
+    });
+
+    it("migrates plaintext file to keychain and deletes the file", async () => {
+      // Reset the module to test migration path
+      vi.resetModules();
+      mockKeychainStore.clear();
+
+      // Write a legacy plaintext key file
+      const auditDir = path.join(os.homedir(), ".tigerpaw", "trading");
+      const keyPath = path.join(auditDir, ".audit-hmac-key");
+      const legacyKey = "a".repeat(64);
+      fsSync.mkdirSync(auditDir, { recursive: true, mode: 0o700 });
+      fsSync.writeFileSync(keyPath, legacyKey, { mode: 0o600, encoding: "utf8" });
+
+      try {
+        // Re-import to trigger resolveHmacKey with the legacy file present
+        const mod = await import("./audit-log.js");
+        configureAuditLog = mod.configureAuditLog;
+        writeAuditEntry = mod.writeAuditEntry;
+        readAuditEntries = mod.readAuditEntries;
+        configureAuditLog({ filePath: auditFile });
+
+        // Key should have been migrated to keychain
+        expect(mockKeychainStore.get("tigerpaw-audit-hmac-key")).toBe(legacyKey);
+
+        // Plaintext file should have been deleted
+        expect(fsSync.existsSync(keyPath)).toBe(false);
+
+        // HMAC should use the migrated key
+        await writeAuditEntry(sampleEntry());
+        const entries = await readAuditEntries();
+        const entry = entries[0];
+        const { hmac: _hmac, ...withoutHmac } = entry;
+        expect(entry.hmac).toBe(hmacSha256(JSON.stringify(withoutHmac), legacyKey));
+      } finally {
+        // Cleanup in case test fails before migration deletes the file
+        try {
+          fsSync.unlinkSync(keyPath);
+        } catch {
+          /* already deleted */
+        }
+      }
     });
   });
 
