@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 
 export type MessageHubMessageType = "message" | "approval" | "alert";
@@ -206,95 +207,106 @@ const DEMO_MESSAGES: MessageHubMessage[] = [
 
 let nextId = 200;
 
-export const useMessageHubStore = create<MessageHubState>((set, get) => ({
-  messages: DEMO_MESSAGES,
-  filter: null,
-  searchQuery: "",
-  demoMode: true,
+export const useMessageHubStore = create<MessageHubState>()(
+  persist(
+    (set, get) => ({
+      messages: DEMO_MESSAGES,
+      filter: null,
+      searchQuery: "",
+      demoMode: true,
 
-  setDemoMode: (enabled) =>
-    set({
-      demoMode: enabled,
-      messages: enabled ? DEMO_MESSAGES : [],
-    }),
+      setDemoMode: (enabled) =>
+        set({
+          demoMode: enabled,
+          messages: enabled ? DEMO_MESSAGES : [],
+        }),
 
-  fetchRecentMessages: async () => {
-    try {
-      const result = await gatewayRpc<{
-        messages?: Array<{
-          id: string;
-          channel: string;
-          author: string;
-          text: string;
-          timestamp: string;
-          type: string;
-          read: boolean;
-        }>;
-      }>("messages.recent", { limit: 50 });
-      if (
-        result.ok &&
-        Array.isArray(result.payload?.messages) &&
-        result.payload.messages.length > 0
-      ) {
-        const liveMessages: MessageHubMessage[] = result.payload.messages.map((m) => ({
-          id: m.id,
-          channel: m.channel,
-          channelIcon: CHANNEL_ICONS[m.channel] ?? m.channel,
-          sender: m.author,
-          preview: m.text,
-          timestamp: new Date(m.timestamp).getTime(),
-          read: m.read,
-          priority: m.type === "approval" ? ("high" as const) : ("normal" as const),
-          type: m.type as MessageHubMessageType,
-        }));
-        set({ messages: liveMessages, demoMode: false });
-      }
-    } catch {
-      // Gateway offline — keep demo data
-    }
-  },
-
-  addMessage: (msg) => {
-    const id = `msg-${nextId++}`;
-    const message: MessageHubMessage = { ...msg, id };
-
-    set((s) => {
-      const updated = [message, ...s.messages];
-      if (updated.length > 100) {
-        updated.length = 100;
-      }
-      return { messages: updated };
-    });
-  },
-
-  markRead: (id) =>
-    set((s) => ({
-      messages: s.messages.map((m) => (m.id === id ? { ...m, read: true } : m)),
-    })),
-
-  markAllRead: (channel) =>
-    set((s) => ({
-      messages: s.messages.map((m) => {
-        if (channel && m.channel !== channel) {
-          return m;
+      fetchRecentMessages: async () => {
+        try {
+          const result = await gatewayRpc<{
+            messages?: Array<{
+              id: string;
+              channel: string;
+              author: string;
+              text: string;
+              timestamp: string;
+              type: string;
+              read: boolean;
+            }>;
+          }>("messages.recent", { limit: 50 });
+          if (
+            result.ok &&
+            Array.isArray(result.payload?.messages) &&
+            result.payload.messages.length > 0
+          ) {
+            const liveMessages: MessageHubMessage[] = result.payload.messages.map((m) => ({
+              id: m.id,
+              channel: m.channel,
+              channelIcon: CHANNEL_ICONS[m.channel] ?? m.channel,
+              sender: m.author,
+              preview: m.text,
+              timestamp: new Date(m.timestamp).getTime(),
+              read: m.read,
+              priority: m.type === "approval" ? ("high" as const) : ("normal" as const),
+              type: m.type as MessageHubMessageType,
+            }));
+            set({ messages: liveMessages, demoMode: false });
+          }
+        } catch {
+          // Gateway offline — keep demo data
         }
-        return { ...m, read: true };
+      },
+
+      addMessage: (msg) => {
+        const id = `msg-${nextId++}`;
+        const message: MessageHubMessage = { ...msg, id };
+
+        set((s) => {
+          const updated = [message, ...s.messages];
+          if (updated.length > 100) {
+            updated.length = 100;
+          }
+          return { messages: updated };
+        });
+      },
+
+      markRead: (id) =>
+        set((s) => ({
+          messages: s.messages.map((m) => (m.id === id ? { ...m, read: true } : m)),
+        })),
+
+      markAllRead: (channel) =>
+        set((s) => ({
+          messages: s.messages.map((m) => {
+            if (channel && m.channel !== channel) {
+              return m;
+            }
+            return { ...m, read: true };
+          }),
+        })),
+
+      setFilter: (channel) => set({ filter: channel }),
+
+      setSearchQuery: (query) => set({ searchQuery: query }),
+
+      unreadCount: () => get().messages.filter((m) => !m.read).length,
+
+      unreadByChannel: () => {
+        const counts: Record<string, number> = {};
+        for (const m of get().messages) {
+          if (!m.read) {
+            counts[m.channel] = (counts[m.channel] ?? 0) + 1;
+          }
+        }
+        return counts;
+      },
+    }),
+    {
+      name: "tigerpaw-message-hub",
+      version: 1,
+      partialize: (state) => ({
+        filter: state.filter,
       }),
-    })),
-
-  setFilter: (channel) => set({ filter: channel }),
-
-  setSearchQuery: (query) => set({ searchQuery: query }),
-
-  unreadCount: () => get().messages.filter((m) => !m.read).length,
-
-  unreadByChannel: () => {
-    const counts: Record<string, number> = {};
-    for (const m of get().messages) {
-      if (!m.read) {
-        counts[m.channel] = (counts[m.channel] ?? 0) + 1;
-      }
-    }
-    return counts;
-  },
-}));
+    },
+  ),
+);

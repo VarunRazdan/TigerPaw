@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import i18n from "@/i18n";
 
 export type NotificationSeverity = "info" | "warning" | "error" | "success";
@@ -110,81 +111,95 @@ const DEMO_NOTIFICATIONS: TradingNotification[] = [
 
 let nextId = 100;
 
-export const useNotificationStore = create<NotificationState>((set, get) => ({
-  notifications: DEMO_NOTIFICATIONS,
-  demoMode: true,
-  browserNotificationsEnabled: false,
-  toastsEnabled: true,
-  platformFilters: {
-    alpaca: true,
-    polymarket: true,
-    kalshi: true,
-    manifold: true,
-    coinbase: true,
-    ibkr: true,
-    binance: true,
-    kraken: true,
-    dydx: true,
-  },
+export const useNotificationStore = create<NotificationState>()(
+  persist(
+    (set, get) => ({
+      notifications: DEMO_NOTIFICATIONS,
+      demoMode: true,
+      browserNotificationsEnabled: false,
+      toastsEnabled: true,
+      platformFilters: {
+        alpaca: true,
+        polymarket: true,
+        kalshi: true,
+        manifold: true,
+        coinbase: true,
+        ibkr: true,
+        binance: true,
+        kraken: true,
+        dydx: true,
+      },
 
-  addNotification: (n) => {
-    const id = `notif-${nextId++}`;
-    const notification: TradingNotification = { ...n, id, dismissed: false };
+      addNotification: (n) => {
+        const id = `notif-${nextId++}`;
+        const notification: TradingNotification = { ...n, id, dismissed: false };
 
-    set((s) => {
-      const updated = [notification, ...s.notifications];
-      // Keep max 50 notifications
-      if (updated.length > 50) {
-        updated.length = 50;
-      }
-      return { notifications: updated };
-    });
+        set((s) => {
+          const updated = [notification, ...s.notifications];
+          // Keep max 50 notifications
+          if (updated.length > 50) {
+            updated.length = 50;
+          }
+          return { notifications: updated };
+        });
 
-    // Browser notification (opt-in)
-    const state = get();
-    if (
-      state.browserNotificationsEnabled &&
-      typeof globalThis.Notification !== "undefined" &&
-      Notification.permission === "granted" &&
-      (n.severity === "error" || n.severity === "warning")
-    ) {
-      new Notification(n.title, { body: n.description });
-    }
-  },
+        // Browser notification (opt-in)
+        const state = get();
+        if (
+          state.browserNotificationsEnabled &&
+          typeof globalThis.Notification !== "undefined" &&
+          Notification.permission === "granted" &&
+          (n.severity === "error" || n.severity === "warning")
+        ) {
+          new Notification(n.title, { body: n.description });
+        }
+      },
 
-  dismissNotification: (id) =>
-    set((s) => ({
-      notifications: s.notifications.map((n) => (n.id === id ? { ...n, dismissed: true } : n)),
-    })),
+      dismissNotification: (id) =>
+        set((s) => ({
+          notifications: s.notifications.map((n) => (n.id === id ? { ...n, dismissed: true } : n)),
+        })),
 
-  clearAll: () =>
-    set((s) => ({
-      notifications: s.notifications.map((n) => ({ ...n, dismissed: true })),
-    })),
+      clearAll: () =>
+        set((s) => ({
+          notifications: s.notifications.map((n) => ({ ...n, dismissed: true })),
+        })),
 
-  setDemoMode: (enabled) =>
-    set({
-      demoMode: enabled,
-      notifications: enabled ? DEMO_NOTIFICATIONS : [],
+      setDemoMode: (enabled) =>
+        set({
+          demoMode: enabled,
+          notifications: enabled ? DEMO_NOTIFICATIONS : [],
+        }),
+
+      setBrowserNotifications: (enabled) => set({ browserNotificationsEnabled: enabled }),
+
+      setToastsEnabled: (enabled) => set({ toastsEnabled: enabled }),
+
+      setPlatformFilter: (platformId, enabled) =>
+        set((s) => ({
+          platformFilters: { ...s.platformFilters, [platformId]: enabled },
+        })),
+
+      isPlatformEnabled: (platformId) => {
+        const val = get().platformFilters[platformId];
+        // Undefined (not in filters) defaults to enabled
+        return val ?? true;
+      },
+
+      undismissedCount: () => get().notifications.filter((n) => !n.dismissed).length,
     }),
-
-  setBrowserNotifications: (enabled) => set({ browserNotificationsEnabled: enabled }),
-
-  setToastsEnabled: (enabled) => set({ toastsEnabled: enabled }),
-
-  setPlatformFilter: (platformId, enabled) =>
-    set((s) => ({
-      platformFilters: { ...s.platformFilters, [platformId]: enabled },
-    })),
-
-  isPlatformEnabled: (platformId) => {
-    const val = get().platformFilters[platformId];
-    // Undefined (not in filters) defaults to enabled
-    return val ?? true;
-  },
-
-  undismissedCount: () => get().notifications.filter((n) => !n.dismissed).length,
-}));
+    {
+      name: "tigerpaw-notifications",
+      version: 1,
+      partialize: (state) => ({
+        notifications: state.notifications,
+        platformFilters: state.platformFilters,
+        toastsEnabled: state.toastsEnabled,
+        browserNotificationsEnabled: state.browserNotificationsEnabled,
+      }),
+    },
+  ),
+);
 
 /** Map a trading event type to notification severity. */
 export function eventSeverity(type: string): NotificationSeverity {

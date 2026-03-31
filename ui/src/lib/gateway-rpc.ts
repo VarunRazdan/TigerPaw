@@ -28,6 +28,9 @@ function nextId(): string {
   return `ui-${Date.now()}-${++reqCounter}`;
 }
 
+/** In-flight request map for deduplicating truly concurrent calls. */
+const inFlight = new Map<string, Promise<GatewayRpcResult<unknown>>>();
+
 type Frame = {
   type: string;
   id?: string;
@@ -39,6 +42,23 @@ type Frame = {
 };
 
 export async function gatewayRpc<T>(
+  method: string,
+  params: unknown,
+  options?: GatewayRpcOptions,
+): Promise<GatewayRpcResult<T>> {
+  const dedupKey = `${method}:${JSON.stringify(params)}`;
+  const existing = inFlight.get(dedupKey);
+  if (existing) {
+    return existing as Promise<GatewayRpcResult<T>>;
+  }
+
+  const promise = gatewayRpcInner<T>(method, params, options);
+  inFlight.set(dedupKey, promise as Promise<GatewayRpcResult<unknown>>);
+  void promise.finally(() => inFlight.delete(dedupKey));
+  return promise;
+}
+
+async function gatewayRpcInner<T>(
   method: string,
   params: unknown,
   options?: GatewayRpcOptions,
