@@ -1,6 +1,7 @@
 import { Search, Inbox, CheckCheck, Mail, MailOpen, Filter, Bell, Shield } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -234,23 +235,26 @@ export function MessageHubPage() {
             {t("subtitle", "All your messages in one place")}
           </p>
         </div>
-        <button
-          onClick={() => markAllRead(filter ?? undefined)}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
-            totalUnread > 0
-              ? "text-orange-400 hover:bg-orange-950/30 border border-orange-700/40 cursor-pointer"
-              : "text-neutral-500 border border-neutral-800 cursor-default",
-          )}
-        >
-          <CheckCheck className="w-3.5 h-3.5" />
-          {t("markAllRead", "Mark all read")}
-          {totalUnread > 0 && (
-            <Badge className="ml-1 text-[10px] px-1.5 py-0 bg-orange-600 text-white border-0">
-              {totalUnread}
-            </Badge>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <DataModeSelector />
+          <button
+            onClick={() => markAllRead(filter ?? undefined)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+              totalUnread > 0
+                ? "text-orange-400 hover:bg-orange-950/30 border border-orange-700/40 cursor-pointer"
+                : "text-neutral-500 border border-neutral-800 cursor-default",
+            )}
+          >
+            <CheckCheck className="w-3.5 h-3.5" />
+            {t("markAllRead", "Mark all read")}
+            {totalUnread > 0 && (
+              <Badge className="ml-1 text-[10px] px-1.5 py-0 bg-orange-600 text-white border-0">
+                {totalUnread}
+              </Badge>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Search */}
