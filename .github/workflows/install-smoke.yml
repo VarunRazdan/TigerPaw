@@ -34,7 +34,7 @@ jobs:
 
   install-smoke:
     needs: [docs-scope]
-    if: needs.docs-scope.outputs.docs_only != 'true'
+    if: needs.docs-scope.outputs.docs_only != 'true' && github.repository_owner == 'anthropics'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout CLI
