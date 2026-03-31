@@ -19,6 +19,7 @@ import {
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useWorkflowStore, type Workflow as WorkflowType } from "@/stores/workflow-store";
@@ -569,13 +570,16 @@ export function WorkflowsPage() {
             {t("subtitle", "Automate actions with visual event-driven pipelines.")}
           </p>
         </div>
-        <Link
-          to="/workflows/new"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium transition-colors duration-200"
-        >
-          <Plus className="w-4 h-4" />
-          {t("create", "Create Workflow")}
-        </Link>
+        <div className="flex items-center gap-2">
+          <DataModeSelector />
+          <Link
+            to="/workflows/new"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-sm font-medium transition-colors duration-200"
+          >
+            <Plus className="w-4 h-4" />
+            {t("create", "Create Workflow")}
+          </Link>
+        </div>
       </div>
 
       {/* Template Gallery */}

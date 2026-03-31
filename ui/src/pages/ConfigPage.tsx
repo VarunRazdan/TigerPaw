@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
 import { useTradingStore } from "@/stores/trading-store";
 
-const LIVE_PLACEHOLDER =
-  "// Connect gateway to view live configuration\n// Run: tigerpaw start";
+const LIVE_PLACEHOLDER = "// Connect gateway to view live configuration\n// Run: tigerpaw start";
 
 const DEMO_CONFIG = `{
   "trading": {

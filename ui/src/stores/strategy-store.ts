@@ -20,8 +20,18 @@ export type StrategyDefinition = {
   extensionId: string;
   signals: SignalConfig[];
   entryRule: { minSignalStrength: number; orderType: string; limitOffsetPercent?: number };
-  exitRule: { stopLossPercent?: number; takeProfitPercent?: number; trailingStopPercent?: number; maxHoldMs?: number };
-  positionSizing: { method: string; fixedUsd?: number; percentPortfolio?: number; maxPositionPercent: number };
+  exitRule: {
+    stopLossPercent?: number;
+    takeProfitPercent?: number;
+    trailingStopPercent?: number;
+    maxHoldMs?: number;
+  };
+  positionSizing: {
+    method: string;
+    fixedUsd?: number;
+    percentPortfolio?: number;
+    maxPositionPercent: number;
+  };
   schedule: "continuous" | "interval";
   intervalMs?: number;
   maxDailyLossUsd?: number;
@@ -105,7 +115,15 @@ type StrategyState = {
   deleteStrategy: (id: string) => Promise<void>;
   toggleStrategy: (id: string, enabled: boolean) => Promise<void>;
   selectStrategy: (id: string | null) => void;
-  runBacktest: (strategyId: string, config?: { symbol?: string; days?: number; initialCapitalUsd?: number; dataSource?: "synthetic" | "alpaca" }) => Promise<void>;
+  runBacktest: (
+    strategyId: string,
+    config?: {
+      symbol?: string;
+      days?: number;
+      initialCapitalUsd?: number;
+      dataSource?: "synthetic" | "alpaca";
+    },
+  ) => Promise<void>;
   clearBacktest: () => void;
   setDemoMode: (enabled: boolean) => void;
 };
@@ -122,7 +140,12 @@ const DEMO_STRATEGIES: StrategyDefinition[] = [
     symbols: ["AAPL", "MSFT", "GOOGL"],
     extensionId: "alpaca",
     signals: [
-      { id: "sig-rsi", type: "rsi", params: { period: 14, overbought: 70, oversold: 30 }, weight: 0.6 },
+      {
+        id: "sig-rsi",
+        type: "rsi",
+        params: { period: 14, overbought: 70, oversold: 30 },
+        weight: 0.6,
+      },
       { id: "sig-vol", type: "volume_spike", params: { threshold: 1.5 }, weight: 0.4 },
     ],
     entryRule: { minSignalStrength: 0.55, orderType: "limit", limitOffsetPercent: 0.1 },
@@ -148,7 +171,12 @@ const DEMO_STRATEGIES: StrategyDefinition[] = [
     extensionId: "alpaca",
     signals: [
       { id: "sig-bb", type: "bollinger_bands", params: { period: 20, stdDev: 2 }, weight: 0.7 },
-      { id: "sig-rsi2", type: "rsi", params: { period: 7, overbought: 80, oversold: 20 }, weight: 0.3 },
+      {
+        id: "sig-rsi2",
+        type: "rsi",
+        params: { period: 7, overbought: 80, oversold: 20 },
+        weight: 0.3,
+      },
     ],
     entryRule: { minSignalStrength: 0.6, orderType: "market" },
     exitRule: { stopLossPercent: 2, takeProfitPercent: 4 },
@@ -158,7 +186,7 @@ const DEMO_STRATEGIES: StrategyDefinition[] = [
     maxDailyLossUsd: 300,
     totalTrades: 63,
     winRate: 62.1,
-    totalPnlUsd: 890.50,
+    totalPnlUsd: 890.5,
   },
   {
     id: "demo-prediction-arb",
@@ -171,7 +199,12 @@ const DEMO_STRATEGIES: StrategyDefinition[] = [
     symbols: ["POLYMARKET:PRES2028", "KALSHI:PRES2028"],
     extensionId: "polymarket",
     signals: [
-      { id: "sig-spread", type: "cross_platform_spread", params: { minSpreadPercent: 3 }, weight: 1.0 },
+      {
+        id: "sig-spread",
+        type: "cross_platform_spread",
+        params: { minSpreadPercent: 3 },
+        weight: 1.0,
+      },
     ],
     entryRule: { minSignalStrength: 0.8, orderType: "limit", limitOffsetPercent: 0.5 },
     exitRule: { takeProfitPercent: 2, maxHoldMs: 86_400_000 },
@@ -180,15 +213,48 @@ const DEMO_STRATEGIES: StrategyDefinition[] = [
     killOnConsecutiveLosses: 5,
     totalTrades: 28,
     winRate: 71.4,
-    totalPnlUsd: 412.30,
+    totalPnlUsd: 412.3,
   },
 ];
 
 const DEMO_EXECUTIONS: StrategyExecution[] = [
-  { id: "exec-1", strategyId: "demo-momentum-1", startedAt: "2026-03-31T09:30:00Z", completedAt: "2026-03-31T09:30:02Z", status: "completed", ordersSubmitted: 2, pnlUsd: 45.20 },
-  { id: "exec-2", strategyId: "demo-momentum-1", startedAt: "2026-03-31T10:31:00Z", completedAt: "2026-03-31T10:31:01Z", status: "completed", ordersSubmitted: 1, pnlUsd: -12.50 },
-  { id: "exec-3", strategyId: "demo-mean-revert-1", startedAt: "2026-03-31T10:00:00Z", completedAt: "2026-03-31T10:00:03Z", status: "completed", ordersSubmitted: 1, pnlUsd: 28.90 },
-  { id: "exec-4", strategyId: "demo-prediction-arb", startedAt: "2026-03-30T14:15:00Z", completedAt: "2026-03-30T14:15:01Z", status: "error", ordersSubmitted: 0, pnlUsd: 0, error: "Extension offline" },
+  {
+    id: "exec-1",
+    strategyId: "demo-momentum-1",
+    startedAt: "2026-03-31T09:30:00Z",
+    completedAt: "2026-03-31T09:30:02Z",
+    status: "completed",
+    ordersSubmitted: 2,
+    pnlUsd: 45.2,
+  },
+  {
+    id: "exec-2",
+    strategyId: "demo-momentum-1",
+    startedAt: "2026-03-31T10:31:00Z",
+    completedAt: "2026-03-31T10:31:01Z",
+    status: "completed",
+    ordersSubmitted: 1,
+    pnlUsd: -12.5,
+  },
+  {
+    id: "exec-3",
+    strategyId: "demo-mean-revert-1",
+    startedAt: "2026-03-31T10:00:00Z",
+    completedAt: "2026-03-31T10:00:03Z",
+    status: "completed",
+    ordersSubmitted: 1,
+    pnlUsd: 28.9,
+  },
+  {
+    id: "exec-4",
+    strategyId: "demo-prediction-arb",
+    startedAt: "2026-03-30T14:15:00Z",
+    completedAt: "2026-03-30T14:15:01Z",
+    status: "error",
+    ordersSubmitted: 0,
+    pnlUsd: 0,
+    error: "Extension offline",
+  },
 ];
 
 export const useStrategyStore = create<StrategyState>((set, get) => ({
@@ -210,7 +276,7 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
     try {
       const res = await gatewayRpc("strategies.list", {});
       if (res.ok) {
-        set({ strategies: (res.payload as any).strategies ?? [] });
+        set({ strategies: (res.payload as Record<string, unknown>).strategies ?? [] });
       }
     } catch (err) {
       set({ error: String(err) });
@@ -221,13 +287,17 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
 
   fetchExecutions: async (strategyId?: string) => {
     if (get().demoMode) {
-      set({ executions: strategyId ? DEMO_EXECUTIONS.filter((e) => e.strategyId === strategyId) : DEMO_EXECUTIONS });
+      set({
+        executions: strategyId
+          ? DEMO_EXECUTIONS.filter((e) => e.strategyId === strategyId)
+          : DEMO_EXECUTIONS,
+      });
       return;
     }
     try {
       const res = await gatewayRpc("strategies.executions", { strategyId });
       if (res.ok) {
-        set({ executions: (res.payload as any).executions ?? [] });
+        set({ executions: (res.payload as Record<string, unknown>).executions ?? [] });
       }
     } catch {
       // silent
@@ -250,7 +320,9 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
     try {
       await gatewayRpc("strategies.delete", { id });
       await get().fetchStrategies();
-      if (get().selectedStrategyId === id) set({ selectedStrategyId: null });
+      if (get().selectedStrategyId === id) {
+        set({ selectedStrategyId: null });
+      }
     } catch (err) {
       set({ error: String(err) });
     }
@@ -278,7 +350,7 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
         dataSource: config?.dataSource,
       });
       if (res.ok) {
-        set({ backtestResult: (res.payload as any) as BacktestResult });
+        set({ backtestResult: res.payload as BacktestResult });
       } else {
         set({ error: "Backtest failed" });
       }
