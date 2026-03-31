@@ -18,7 +18,7 @@ type Frame = {
   error?: { code?: string; message?: string };
 };
 
-function resolveGatewayWsUrl(): string {
+export function resolveGatewayWsUrl(): string {
   const loc = window.location;
   if (loc.port === "5173" || loc.port === "5174") {
     return "ws://127.0.0.1:18789";
@@ -174,7 +174,7 @@ export function useTradingEvents(): { connected: boolean } {
   return { connected };
 }
 
-function formatEventDescription(type: string, payload: Record<string, unknown>): string {
+export function formatEventDescription(type: string, payload: Record<string, unknown>): string {
   const symbol = (payload.symbol as string) ?? "";
   const side = (payload.side as string) ?? "";
   const ext = (payload.extensionId as string) ?? "";

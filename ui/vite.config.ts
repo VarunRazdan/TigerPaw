@@ -2,7 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -43,6 +43,10 @@ export default defineConfig(() => {
       host: true,
       port: 5173,
       strictPort: true,
+    },
+    test: {
+      environment: "jsdom",
+      include: ["src/**/__tests__/**/*.test.ts"],
     },
   };
 });
