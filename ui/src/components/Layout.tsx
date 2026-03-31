@@ -9,17 +9,19 @@ import {
   ChevronRight,
   Menu,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useGatewayConfig } from "@/hooks/use-gateway-config";
 import { useTradingEvents } from "@/hooks/use-trading-events";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { DailyPnlBar } from "./DailyPnlBar";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { KillSwitchButton } from "./KillSwitchButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { PageSkeleton } from "./PageSkeleton";
 import { NotificationBell } from "./TradingNotificationToast";
 import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
@@ -334,6 +336,7 @@ export function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const theme = useThemeStore((s) => s.theme);
   const tradingEnabled = useAppStore((s) => s.tradingEnabled);
+  const { pathname } = useLocation();
   useGatewayConfig();
   useTradingEvents();
 
@@ -388,7 +391,11 @@ export function Layout() {
         {/* Main content */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-[1400px] mx-auto">
-            <Outlet />
+            <ErrorBoundary level="page" resetKey={pathname}>
+              <Suspense fallback={<PageSkeleton />}>
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </main>
       </div>

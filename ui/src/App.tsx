@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { createHashRouter, Navigate, type RouteObject, RouterProvider } from "react-router-dom";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Layout } from "./components/Layout";
 import { ToastNotifications } from "./components/ToastNotifications";
 import { AlpacaPage } from "./pages/AlpacaPage";
@@ -62,7 +63,9 @@ export function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <ErrorBoundary level="page">
+        <RouterProvider router={router} />
+      </ErrorBoundary>
       <ToastNotifications />
     </>
   );
