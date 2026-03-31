@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 import { cn } from "@/lib/utils";
+import { useTradingStore } from "@/stores/trading-store";
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                     */
@@ -466,10 +468,14 @@ function AddServerDialog({
 
 export function McpPage() {
   const { t } = useTranslation("mcp");
+  const demoMode = useTradingStore((s) => s.demoMode);
 
   // Server + tools state (gateway-fetched or demo fallback)
-  const [servers, setServers] = useState<McpServer[]>(DEMO_SERVERS);
-  const [serverTools, setServerTools] = useState<Record<string, string[]>>(DEMO_SERVER_TOOLS);
+  const [servers, setServers] = useState<McpServer[]>(() => (demoMode ? DEMO_SERVERS : []));
+  const [serverTools, setServerTools] = useState<Record<string, string[]>>(() =>
+    demoMode ? DEMO_SERVER_TOOLS : {},
+  );
+  const [isLive, setIsLive] = useState(false);
 
   // Connected-servers state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -519,6 +525,7 @@ export function McpPage() {
             toolsMap[s.id] = s.tools;
           }
           setServerTools(toolsMap);
+          setIsLive(true);
         }
       } catch {
         // Gateway offline — keep demo data
@@ -529,6 +536,14 @@ export function McpPage() {
       cancelled = true;
     };
   }, []);
+
+  // React to demoMode toggle (only when no live data loaded)
+  useEffect(() => {
+    if (!isLive) {
+      setServers(demoMode ? DEMO_SERVERS : []);
+      setServerTools(demoMode ? DEMO_SERVER_TOOLS : {});
+    }
+  }, [demoMode, isLive]);
 
   // Expose-as-server state
   const [exposeEnabled, setExposeEnabled] = useState(false);
@@ -574,11 +589,17 @@ export function McpPage() {
       {/* ------------------------------------------------------------------ */}
       {/* Page header                                                        */}
       {/* ------------------------------------------------------------------ */}
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-100">{t("title", "MCP Protocol")}</h1>
-        <p className="text-sm text-neutral-400 mt-1">
-          {t("subtitle", "Connect to external tool servers and expose Tigerpaw tools to AI agents")}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-100">{t("title", "MCP Protocol")}</h1>
+          <p className="text-sm text-neutral-400 mt-1">
+            {t(
+              "subtitle",
+              "Connect to external tool servers and expose Tigerpaw tools to AI agents",
+            )}
+          </p>
+        </div>
+        <DataModeSelector />
       </div>
 
       {/* ------------------------------------------------------------------ */}

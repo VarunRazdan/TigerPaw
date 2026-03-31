@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   dalDeleteWorkflow,
   dalGetWorkflow,
@@ -285,7 +286,7 @@ export const workflowsHandlers: GatewayRequestHandlers = {
     }
     try {
       // Assign a new ID to avoid conflicts
-      const newId = `wf-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const newId = `wf-${randomUUID().slice(0, 12)}`;
       workflow.id = newId;
       workflow.createdAt = new Date().toISOString();
       workflow.updatedAt = new Date().toISOString();

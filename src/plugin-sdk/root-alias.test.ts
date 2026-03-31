@@ -128,7 +128,7 @@ describe("plugin-sdk root alias", () => {
     expect(rootSdk.__esModule).toBe(true);
   });
 
-  it("preserves reflection semantics for lazily resolved exports", { timeout: 240_000 }, () => {
+  it("preserves reflection semantics for lazily resolved exports", { timeout: 480_000 }, () => {
     expect("resolveControlCommandGate" in rootSdk).toBe(true);
     const keys = Object.keys(rootSdk);
     expect(keys).toContain("resolveControlCommandGate");

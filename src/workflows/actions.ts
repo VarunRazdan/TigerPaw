@@ -5,6 +5,7 @@
  * (gateway RPC, kill switch, logger). Returns output data to merge into context.
  */
 
+import { randomUUID } from "node:crypto";
 import {
   getEmailClient,
   getCalendarClient,
@@ -37,7 +38,7 @@ const sendMessage: ActionExecutor = async (config, ctx, deps) => {
     to,
     message,
     channel: channel || undefined,
-    idempotencyKey: `wf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    idempotencyKey: `wf-${randomUUID().slice(0, 12)}`,
   });
 
   if (!result.ok) {

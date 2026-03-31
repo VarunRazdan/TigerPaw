@@ -6,7 +6,7 @@ import { TradingViewChart } from "@/components/TradingViewChart";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
 function AccountCard() {
@@ -80,7 +80,7 @@ export function AlpacaPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <img src="/icons/trading-platforms/alpaca.svg" alt="" className="w-6 h-6" />
+        <img src={assetUrl("icons/trading-platforms/alpaca.svg")} alt="" className="w-6 h-6" />
         <h1 className="text-xl font-bold text-neutral-100">Alpaca</h1>
         <Badge
           className={cn(

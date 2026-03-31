@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { assetUrl } from "@/lib/utils";
 import { useIntegrationStore } from "@/stores/integration-store";
 import type { IntegrationProvider } from "@/stores/integration-store";
 import { useNotificationStore } from "@/stores/notification-store";
@@ -54,7 +55,7 @@ function IntegrationIcon({ icon }: { icon: string }) {
 
   return (
     <img
-      src={`/icons/integrations/${icon}.svg`}
+      src={assetUrl(`icons/integrations/${icon}.svg`)}
       alt=""
       className="w-6 h-6 invert brightness-[0.85]"
       onError={() => setFailed(true)}

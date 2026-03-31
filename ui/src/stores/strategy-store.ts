@@ -96,9 +96,6 @@ export type BacktestResult = {
   metrics: BacktestMetrics;
   trades: BacktestTrade[];
   equityCurve: EquityPoint[];
-  dataSource?: string;
-  dataCached?: boolean;
-  dataWarning?: string;
 };
 
 type StrategyState = {
@@ -271,6 +268,10 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
   demoMode: false,
 
   fetchStrategies: async () => {
+    if (get().demoMode) {
+      set({ strategies: DEMO_STRATEGIES, executions: DEMO_EXECUTIONS, loading: false });
+      return;
+    }
     set({ loading: true, error: null });
     try {
       const res = await gatewayRpc("strategies.list", {});
@@ -285,6 +286,14 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
   },
 
   fetchExecutions: async (strategyId?: string) => {
+    if (get().demoMode) {
+      set({
+        executions: strategyId
+          ? DEMO_EXECUTIONS.filter((e) => e.strategyId === strategyId)
+          : DEMO_EXECUTIONS,
+      });
+      return;
+    }
     try {
       const res = await gatewayRpc("strategies.executions", { strategyId });
       if (res.ok) {
@@ -341,7 +350,7 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
         dataSource: config?.dataSource,
       });
       if (res.ok) {
-        set({ backtestResult: res.payload as Record<string, unknown> as BacktestResult });
+        set({ backtestResult: res.payload as BacktestResult });
       } else {
         set({ error: "Backtest failed" });
       }

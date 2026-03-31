@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router-dom";
 import { useGatewayConfig } from "@/hooks/use-gateway-config";
 import { useTradingEvents } from "@/hooks/use-trading-events";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { DailyPnlBar } from "./DailyPnlBar";
@@ -32,7 +32,7 @@ import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 
 function PlatformIcon({ name, className }: { name: string; className?: string }) {
-  return <img src={`/icons/trading-platforms/${name}.svg`} alt="" className={className} />;
+  return <img src={assetUrl(`icons/trading-platforms/${name}.svg`)} alt="" className={className} />;
 }
 
 type NavItem = {

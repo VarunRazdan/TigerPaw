@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useTradingStore } from "@/stores/trading-store";
@@ -233,9 +234,12 @@ export function SecurityPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
-        <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
+        </div>
+        <DataModeSelector />
       </div>
 
       {/* Summary */}

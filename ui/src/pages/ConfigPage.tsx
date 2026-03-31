@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DataModeSelector } from "@/components/DataModeSelector";
+import { useTradingStore } from "@/stores/trading-store";
+
+const LIVE_PLACEHOLDER = "// Connect gateway to view live configuration\n// Run: tigerpaw start";
 
 const DEMO_CONFIG = `{
   "trading": {
@@ -38,13 +42,23 @@ const DEMO_CONFIG = `{
 export function ConfigPage() {
   const { t } = useTranslation("config");
   const { t: tc } = useTranslation("common");
-  const [config, setConfig] = useState(DEMO_CONFIG);
+  const demoMode = useTradingStore((s) => s.demoMode);
+  const [config, setConfig] = useState(() =>
+    useTradingStore.getState().demoMode ? DEMO_CONFIG : LIVE_PLACEHOLDER,
+  );
+
+  useEffect(() => {
+    setConfig(demoMode ? DEMO_CONFIG : LIVE_PLACEHOLDER);
+  }, [demoMode]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
-        <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
+        </div>
+        <DataModeSelector />
       </div>
 
       <div className="rounded-2xl glass-panel overflow-hidden">

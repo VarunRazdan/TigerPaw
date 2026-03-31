@@ -1,7 +1,8 @@
 import { ChevronDown, ChevronUp, MessageSquare, Cpu, Bell } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +16,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CHANNEL_CONNECT_INFO } from "@/lib/connect-config";
 import { gatewayRpc } from "@/lib/gateway-rpc";
+import { assetUrl } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
+import { useTradingStore } from "@/stores/trading-store";
 
 const CHANNELS = [
   { name: "Discord", status: "connected", icon: "discord" },
@@ -41,20 +44,30 @@ const CHANNELS = [
   { name: "BlueBubbles", status: "not configured", icon: "bluebubbles" },
 ];
 
+const CHANNELS_DEFAULT = CHANNELS.map((ch) => ({ ...ch, status: "not configured" }));
+
 export function ChannelsPage() {
   const { t } = useTranslation("channels");
   const { t: tc } = useTranslation("common");
+  const demoMode = useTradingStore((s) => s.demoMode);
   const liveStatuses = useAppStore((s) => s.channelStatuses);
   const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({});
   const [connectIcon, setConnectIcon] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [failedIcons, setFailedIcons] = useState<Set<string>>(new Set());
+  const handleIconError = useCallback((icon: string) => {
+    setFailedIcons((prev) => new Set(prev).add(icon));
+  }, []);
   const connectInfo = connectIcon ? CHANNEL_CONNECT_INFO[connectIcon] : null;
 
   // Derive channels from live data + local disconnect overrides + demo fallback
   const channels = useMemo(() => {
     const liveMap = liveStatuses ? new Map(liveStatuses.map((s) => [s.id, s])) : null;
-    return CHANNELS.map((ch) => {
+    // In live mode without gateway data, show all as "not configured"
+    // In demo mode without gateway data, show hardcoded demo statuses
+    const baseChannels = !liveMap && !demoMode ? CHANNELS_DEFAULT : CHANNELS;
+    return baseChannels.map((ch) => {
       if (localOverrides[ch.icon]) {
         return { ...ch, status: localOverrides[ch.icon] };
       }
@@ -70,7 +83,7 @@ export function ChannelsPage() {
         status: live.connected ? "connected" : live.enabled ? "disconnected" : "not configured",
       };
     });
-  }, [liveStatuses, localOverrides]);
+  }, [liveStatuses, localOverrides, demoMode]);
 
   const disconnectingChannel = disconnecting
     ? channels.find((ch) => ch.name === disconnecting)
@@ -89,9 +102,12 @@ export function ChannelsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
-        <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
+        </div>
+        <DataModeSelector />
       </div>
 
       {/* How it works explainer */}
@@ -144,11 +160,16 @@ export function ChannelsPage() {
                   }}
                   className="relative rounded-2xl glass-panel-interactive p-4 flex items-center gap-3 cursor-pointer hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
-                  <img
-                    src={`/icons/messaging-channels/${channel.icon}.svg`}
-                    alt={channel.name}
-                    className="w-6 h-6"
-                  />
+                  {failedIcons.has(channel.icon) ? (
+                    <MessageSquare className="w-6 h-6 text-neutral-400" />
+                  ) : (
+                    <img
+                      src={assetUrl(`icons/messaging-channels/${channel.icon}.svg`)}
+                      alt={channel.name}
+                      className="w-6 h-6"
+                      onError={() => handleIconError(channel.icon)}
+                    />
+                  )}
                   <div className="flex-1">
                     <div className="text-sm font-medium text-neutral-200">{channel.name}</div>
                     <div className="text-xs text-neutral-500">
