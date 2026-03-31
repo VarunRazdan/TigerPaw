@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useIntegrationStore } from "@/stores/integration-store";
 import { useMessageHubStore } from "@/stores/message-hub-store";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useStrategyStore } from "@/stores/strategy-store";
 import { useTradingStore } from "@/stores/trading-store";
 import { useWorkflowStore } from "@/stores/workflow-store";
 
@@ -13,6 +14,7 @@ export function syncAllDemoMode(enabled: boolean) {
   useWorkflowStore.getState().setDemoMode(enabled);
   useMessageHubStore.getState().setDemoMode(enabled);
   useIntegrationStore.getState().setDemoMode(enabled);
+  useStrategyStore.getState().setDemoMode(enabled);
 }
 
 /** Compact pill toggle for switching between Demo and Live data. */
