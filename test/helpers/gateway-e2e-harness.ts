@@ -361,6 +361,26 @@ export async function waitForNodeStatus(
   throw new Error(`timeout waiting for node status for ${nodeId}`);
 }
 
+export function connectScopedClient(
+  inst: GatewayInstance,
+  label: string,
+  scopes: string[],
+  tokenOverride?: string,
+) {
+  return connectGatewayClient({
+    url: `ws://127.0.0.1:${inst.port}`,
+    token: tokenOverride ?? inst.gatewayToken,
+    clientName: GATEWAY_CLIENT_NAMES.CLI,
+    clientDisplayName: label,
+    clientVersion: "1.0.0",
+    platform: "test",
+    mode: GATEWAY_CLIENT_MODES.CLI,
+    scopes,
+    timeoutMs: 10_000,
+    timeoutMessage: `timeout connecting ${label}`,
+  });
+}
+
 export async function waitForChatFinalEvent(params: {
   events: ChatEventPayload[];
   runId: string;
