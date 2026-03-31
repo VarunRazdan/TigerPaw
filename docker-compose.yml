@@ -20,6 +20,23 @@ services:
       # - /var/run/docker.sock:/var/run/docker.sock
     # group_add:
     #   - "${DOCKER_GID:-999}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"
+        reservations:
+          memory: 512m
+          cpus: "0.5"
     ports:
       - "${TIGERPAW_GATEWAY_PORT:-18789}:18789"
       - "${TIGERPAW_BRIDGE_PORT:-18790}:18790"
@@ -52,10 +69,19 @@ services:
     image: ${TIGERPAW_IMAGE:-tigerpaw:local}
     network_mode: "service:tigerpaw-gateway"
     cap_drop:
-      - NET_RAW
-      - NET_ADMIN
+      - ALL
     security_opt:
       - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
     environment:
       HOME: /home/node
       TERM: xterm-256color

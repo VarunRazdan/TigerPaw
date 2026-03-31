@@ -1,0 +1,16 @@
+# Opt-in hardened overlay — apply with:
+#   docker compose -f docker-compose.yml -f docker-compose.hardened.yml up
+#
+# Adds read-only root filesystem with tmpfs mounts for writable paths.
+# Not enabled by default because some extensions/skills may need to write
+# outside /tmp and /home/node/.cache.
+services:
+  tigerpaw-gateway:
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,noexec,nosuid,nodev
+      - /home/node/.cache:size=128m
+  tigerpaw-cli:
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,noexec,nosuid,nodev
