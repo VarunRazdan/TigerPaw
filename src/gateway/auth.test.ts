@@ -1,26 +1,31 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AuthRateLimiter } from "./auth-rate-limit.js";
 import {
   assertGatewayAuthConfigured,
   authorizeGatewayConnect,
   authorizeHttpGatewayConnect,
   authorizeWsControlUiGatewayConnect,
+  estimateEntropy,
   resolveGatewayAuth,
+  validateTokenStrength,
 } from "./auth.js";
 
 function createLimiterSpy(): AuthRateLimiter & {
   check: ReturnType<typeof vi.fn>;
   recordFailure: ReturnType<typeof vi.fn>;
+  recordAttempt: ReturnType<typeof vi.fn>;
   reset: ReturnType<typeof vi.fn>;
 } {
   const check = vi.fn<AuthRateLimiter["check"]>(
     (_ip, _scope) => ({ allowed: true, remaining: 10, retryAfterMs: 0 }) as const,
   );
   const recordFailure = vi.fn<AuthRateLimiter["recordFailure"]>((_ip, _scope) => {});
+  const recordAttempt = vi.fn<AuthRateLimiter["recordAttempt"]>((_ip, _scope) => {});
   const reset = vi.fn<AuthRateLimiter["reset"]>((_ip, _scope) => {});
   return {
     check,
     recordFailure,
+    recordAttempt,
     reset,
     size: () => 0,
     prune: () => {},
@@ -648,5 +653,121 @@ describe("trusted-proxy auth", () => {
 
     expect(res.ok).toBe(true);
     expect(res.user).toBe("nick@example.com");
+  });
+});
+
+describe("token strength validation", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("rejects token shorter than 16 chars", () => {
+    expect(() => validateTokenStrength("short", "Test token")).toThrow(
+      /too short.*5 chars.*min 16/,
+    );
+  });
+
+  it("rejects token with low entropy (repeated chars)", () => {
+    // 16 'a' chars → charset size 1 → entropy 0
+    expect(() => validateTokenStrength("aaaaaaaaaaaaaaaa", "Test token")).toThrow(
+      /insufficient entropy/,
+    );
+  });
+
+  it("accepts strong token", () => {
+    // 64 hex chars from openssl rand -hex 32
+    const strong = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2";
+    expect(() => validateTokenStrength(strong, "Test token")).not.toThrow();
+  });
+
+  it("estimateEntropy returns 0 for single-char tokens", () => {
+    expect(estimateEntropy("aaaa")).toBe(0);
+  });
+
+  it("estimateEntropy returns positive value for diverse tokens", () => {
+    expect(estimateEntropy("abcdef1234567890")).toBeGreaterThan(64);
+  });
+
+  it("TIGERPAW_ALLOW_WEAK_AUTH=1 bypasses validation in assertGatewayAuthConfigured", () => {
+    vi.stubEnv("TIGERPAW_ALLOW_WEAK_AUTH", "1");
+    const auth = resolveGatewayAuth({
+      authConfig: { mode: "token", token: "weak" },
+      env: { OPENCLAW_GATEWAY_TOKEN: "weak" } as NodeJS.ProcessEnv,
+    });
+    // Would throw without the env override since "weak" is too short.
+    expect(() => assertGatewayAuthConfigured(auth)).not.toThrow();
+  });
+
+  it("assertGatewayAuthConfigured throws for weak token without override", () => {
+    vi.stubEnv("TIGERPAW_ALLOW_WEAK_AUTH", "");
+    const auth = resolveGatewayAuth({
+      authConfig: { mode: "token", token: "weak" },
+      env: { OPENCLAW_GATEWAY_TOKEN: "weak" } as NodeJS.ProcessEnv,
+    });
+    expect(() => assertGatewayAuthConfigured(auth)).toThrow(/too short/);
+  });
+
+  it("assertGatewayAuthConfigured throws for weak password without override", () => {
+    vi.stubEnv("TIGERPAW_ALLOW_WEAK_AUTH", "");
+    const auth = resolveGatewayAuth({
+      authConfig: { mode: "password", password: "pw" }, // pragma: allowlist secret
+      env: { OPENCLAW_GATEWAY_PASSWORD: "pw" } as NodeJS.ProcessEnv,
+    });
+    expect(() => assertGatewayAuthConfigured(auth)).toThrow(/too short/);
+  });
+});
+
+describe("total-attempt rate limiting", () => {
+  it("blocks when total attempts exceed limit", async () => {
+    const limiter = createLimiterSpy();
+    limiter.check.mockImplementation(() => {
+      return { allowed: false, remaining: 0, retryAfterMs: 0 };
+    });
+
+    const res = await authorizeGatewayConnect({
+      auth: { mode: "token", token: "secret", allowTailscale: false },
+      connectAuth: { token: "secret" },
+      rateLimiter: limiter,
+      clientIp: "10.0.0.50",
+    });
+
+    expect(res.ok).toBe(false);
+    expect(res.rateLimited).toBe(true);
+    expect(limiter.recordAttempt).toHaveBeenCalledWith("10.0.0.50", "shared-secret");
+  });
+
+  it("allows when under total-attempt limit", async () => {
+    const limiter = createLimiterSpy();
+
+    const res = await authorizeGatewayConnect({
+      auth: { mode: "token", token: "secret", allowTailscale: false },
+      connectAuth: { token: "secret" },
+      rateLimiter: limiter,
+      clientIp: "10.0.0.51",
+    });
+
+    expect(res.ok).toBe(true);
+    expect(limiter.recordAttempt).toHaveBeenCalledWith("10.0.0.51", "shared-secret");
+  });
+
+  it("recordAttempt is called before check", async () => {
+    const limiter = createLimiterSpy();
+    const callOrder: string[] = [];
+    limiter.recordAttempt.mockImplementation(() => {
+      callOrder.push("recordAttempt");
+    });
+    limiter.check.mockImplementation(() => {
+      callOrder.push("check");
+      return { allowed: true, remaining: 10, retryAfterMs: 0 };
+    });
+
+    await authorizeGatewayConnect({
+      auth: { mode: "token", token: "secret", allowTailscale: false },
+      connectAuth: { token: "secret" },
+      rateLimiter: limiter,
+      clientIp: "10.0.0.52",
+    });
+
+    expect(callOrder).toEqual(["recordAttempt", "check"]);
   });
 });

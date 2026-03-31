@@ -207,6 +207,84 @@ describe("auth rate limiter", () => {
     expect(limiter.check("").allowed).toBe(false);
   });
 
+  // ---------- total-attempt tracking ----------
+
+  it("blocks when total attempts exceed maxTotalAttempts", () => {
+    limiter = createAuthRateLimiter({
+      maxAttempts: 10,
+      maxTotalAttempts: 3,
+      windowMs: 60_000,
+      lockoutMs: 300_000,
+    });
+    limiter.recordAttempt("10.0.0.50");
+    limiter.recordAttempt("10.0.0.50");
+    limiter.recordAttempt("10.0.0.50");
+    const result = limiter.check("10.0.0.50");
+    expect(result.allowed).toBe(false);
+    expect(result.remaining).toBe(0);
+  });
+
+  it("allows when under total-attempt limit", () => {
+    limiter = createAuthRateLimiter({
+      maxAttempts: 10,
+      maxTotalAttempts: 5,
+      windowMs: 60_000,
+      lockoutMs: 300_000,
+    });
+    limiter.recordAttempt("10.0.0.51");
+    limiter.recordAttempt("10.0.0.51");
+    const result = limiter.check("10.0.0.51");
+    expect(result.allowed).toBe(true);
+  });
+
+  it("total-attempt window expires old entries", () => {
+    vi.useFakeTimers();
+    try {
+      limiter = createAuthRateLimiter({
+        maxAttempts: 10,
+        maxTotalAttempts: 2,
+        windowMs: 5_000,
+        lockoutMs: 300_000,
+      });
+      limiter.recordAttempt("10.0.0.52");
+      limiter.recordAttempt("10.0.0.52");
+      expect(limiter.check("10.0.0.52").allowed).toBe(false);
+
+      vi.advanceTimersByTime(6_000);
+      expect(limiter.check("10.0.0.52").allowed).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("total-attempt exempts loopback addresses", () => {
+    limiter = createAuthRateLimiter({
+      maxAttempts: 10,
+      maxTotalAttempts: 1,
+      windowMs: 60_000,
+      lockoutMs: 300_000,
+    });
+    limiter.recordAttempt("127.0.0.1");
+    limiter.recordAttempt("127.0.0.1");
+    limiter.recordAttempt("127.0.0.1");
+    expect(limiter.check("127.0.0.1").allowed).toBe(true);
+  });
+
+  it("reset clears total-attempt tracking", () => {
+    limiter = createAuthRateLimiter({
+      maxAttempts: 10,
+      maxTotalAttempts: 2,
+      windowMs: 60_000,
+      lockoutMs: 300_000,
+    });
+    limiter.recordAttempt("10.0.0.53");
+    limiter.recordAttempt("10.0.0.53");
+    expect(limiter.check("10.0.0.53").allowed).toBe(false);
+
+    limiter.reset("10.0.0.53");
+    expect(limiter.check("10.0.0.53").allowed).toBe(true);
+  });
+
   // ---------- dispose ----------
 
   it("dispose clears all entries", () => {

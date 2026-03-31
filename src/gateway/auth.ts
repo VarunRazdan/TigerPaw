@@ -291,6 +291,36 @@ export function resolveGatewayAuth(params: {
   };
 }
 
+/**
+ * Estimate the entropy of a token based on its length and the number of
+ * distinct characters it contains.  This is a conservative lower-bound
+ * heuristic (not a full Shannon entropy calculation).
+ */
+export function estimateEntropy(token: string): number {
+  const charsetSize = new Set(token).size;
+  if (charsetSize <= 1) {
+    return 0;
+  }
+  return token.length * Math.log2(charsetSize);
+}
+
+const MIN_TOKEN_LENGTH = 16;
+const MIN_TOKEN_ENTROPY_BITS = 64;
+
+/**
+ * Validate that a token meets minimum strength requirements.
+ * Throws if the token is too short or has insufficient entropy.
+ */
+export function validateTokenStrength(token: string, label: string): void {
+  if (token.length < MIN_TOKEN_LENGTH) {
+    throw new Error(`${label} too short (${token.length} chars, min ${MIN_TOKEN_LENGTH})`);
+  }
+  const entropy = estimateEntropy(token);
+  if (entropy < MIN_TOKEN_ENTROPY_BITS) {
+    throw new Error(`${label} has insufficient entropy. Use: openssl rand -hex 32`);
+  }
+}
+
 export function assertGatewayAuthConfigured(
   auth: ResolvedGatewayAuth,
   rawAuthConfig?: GatewayAuthConfig | null,
@@ -324,6 +354,17 @@ export function assertGatewayAuthConfigured(
       throw new Error(
         "gateway auth mode is trusted-proxy, but trustedProxy.userHeader is empty (set gateway.auth.trustedProxy.userHeader)",
       );
+    }
+  }
+
+  // Token strength validation (skipped when TIGERPAW_ALLOW_WEAK_AUTH=1 for dev/test).
+  const allowWeak = process.env.TIGERPAW_ALLOW_WEAK_AUTH === "1";
+  if (!allowWeak) {
+    if (auth.mode === "token" && auth.token) {
+      validateTokenStrength(auth.token, "Gateway auth token");
+    }
+    if (auth.mode === "password" && auth.password) {
+      validateTokenStrength(auth.password, "Gateway auth password");
     }
   }
 }
@@ -419,6 +460,8 @@ export async function authorizeGatewayConnect(
     req?.socket?.remoteAddress;
   const rateLimitScope = params.rateLimitScope ?? AUTH_RATE_LIMIT_SCOPE_SHARED_SECRET;
   if (limiter) {
+    // Record every auth attempt (pass or fail) for total-attempt tracking.
+    limiter.recordAttempt(ip, rateLimitScope);
     const rlCheck: RateLimitCheckResult = limiter.check(ip, rateLimitScope);
     if (!rlCheck.allowed) {
       return {

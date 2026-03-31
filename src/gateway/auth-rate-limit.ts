@@ -29,6 +29,8 @@ export interface RateLimitConfig {
   windowMs?: number;
   /** Lockout duration in milliseconds after the limit is exceeded.  @default 300_000 (5 min) */
   lockoutMs?: number;
+  /** Maximum total auth attempts (pass or fail) per IP per window before blocking.  @default 30 */
+  maxTotalAttempts?: number;
   /** Exempt loopback (localhost) addresses from rate limiting.  @default true */
   exemptLoopback?: boolean;
   /** Background prune interval in milliseconds; set <= 0 to disable auto-prune.  @default 60_000 */
@@ -61,6 +63,8 @@ export interface AuthRateLimiter {
   check(ip: string | undefined, scope?: string): RateLimitCheckResult;
   /** Record a failed authentication attempt for `ip`. */
   recordFailure(ip: string | undefined, scope?: string): void;
+  /** Record any auth attempt (success or failure) for total-attempt tracking. */
+  recordAttempt(ip: string | undefined, scope?: string): void;
   /** Reset the rate-limit state for `ip` (e.g. after a successful login). */
   reset(ip: string | undefined, scope?: string): void;
   /** Return the current number of tracked IPs (useful for diagnostics). */
@@ -76,6 +80,7 @@ export interface AuthRateLimiter {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_MAX_ATTEMPTS = 10;
+const DEFAULT_MAX_TOTAL_ATTEMPTS = 30;
 const DEFAULT_WINDOW_MS = 60_000; // 1 minute
 const DEFAULT_LOCKOUT_MS = 300_000; // 5 minutes
 const PRUNE_INTERVAL_MS = 60_000; // prune stale entries every minute
@@ -94,12 +99,15 @@ export function normalizeRateLimitClientIp(ip: string | undefined): string {
 
 export function createAuthRateLimiter(config?: RateLimitConfig): AuthRateLimiter {
   const maxAttempts = config?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const maxTotalAttempts = config?.maxTotalAttempts ?? DEFAULT_MAX_TOTAL_ATTEMPTS;
   const windowMs = config?.windowMs ?? DEFAULT_WINDOW_MS;
   const lockoutMs = config?.lockoutMs ?? DEFAULT_LOCKOUT_MS;
   const exemptLoopback = config?.exemptLoopback ?? true;
   const pruneIntervalMs = config?.pruneIntervalMs ?? PRUNE_INTERVAL_MS;
 
   const entries = new Map<string, RateLimitEntry>();
+  /** Separate map tracking ALL auth attempts (pass + fail) per {scope, ip}. */
+  const totalAttempts = new Map<string, number[]>();
 
   // Periodic cleanup to avoid unbounded map growth.
   const pruneTimer = pruneIntervalMs > 0 ? setInterval(() => prune(), pruneIntervalMs) : null;
@@ -138,6 +146,11 @@ export function createAuthRateLimiter(config?: RateLimitConfig): AuthRateLimiter
     entry.attempts = entry.attempts.filter((ts) => ts > cutoff);
   }
 
+  function slideTotalWindow(timestamps: number[], now: number): number[] {
+    const cutoff = now - windowMs;
+    return timestamps.filter((ts) => ts > cutoff);
+  }
+
   function check(rawIp: string | undefined, rawScope?: string): RateLimitCheckResult {
     const { key, ip } = resolveKey(rawIp, rawScope);
     if (isExempt(ip)) {
@@ -145,6 +158,17 @@ export function createAuthRateLimiter(config?: RateLimitConfig): AuthRateLimiter
     }
 
     const now = Date.now();
+
+    // Check total-attempt limit first.
+    const totalTs = totalAttempts.get(key);
+    if (totalTs) {
+      const pruned = slideTotalWindow(totalTs, now);
+      totalAttempts.set(key, pruned);
+      if (pruned.length >= maxTotalAttempts) {
+        return { allowed: false, remaining: 0, retryAfterMs: 0 };
+      }
+    }
+
     const entry = entries.get(key);
 
     if (!entry) {
@@ -198,9 +222,23 @@ export function createAuthRateLimiter(config?: RateLimitConfig): AuthRateLimiter
     }
   }
 
+  function recordAttempt(rawIp: string | undefined, rawScope?: string): void {
+    const { key, ip } = resolveKey(rawIp, rawScope);
+    if (isExempt(ip)) {
+      return;
+    }
+
+    const now = Date.now();
+    const existing = totalAttempts.get(key) ?? [];
+    const pruned = slideTotalWindow(existing, now);
+    pruned.push(now);
+    totalAttempts.set(key, pruned);
+  }
+
   function reset(rawIp: string | undefined, rawScope?: string): void {
     const { key } = resolveKey(rawIp, rawScope);
     entries.delete(key);
+    totalAttempts.delete(key);
   }
 
   function prune(): void {
@@ -215,6 +253,15 @@ export function createAuthRateLimiter(config?: RateLimitConfig): AuthRateLimiter
         entries.delete(key);
       }
     }
+    // Prune stale total-attempt entries.
+    for (const [key, timestamps] of totalAttempts) {
+      const pruned = slideTotalWindow(timestamps, now);
+      if (pruned.length === 0) {
+        totalAttempts.delete(key);
+      } else {
+        totalAttempts.set(key, pruned);
+      }
+    }
   }
 
   function size(): number {
@@ -226,7 +273,8 @@ export function createAuthRateLimiter(config?: RateLimitConfig): AuthRateLimiter
       clearInterval(pruneTimer);
     }
     entries.clear();
+    totalAttempts.clear();
   }
 
-  return { check, recordFailure, reset, size, prune, dispose };
+  return { check, recordFailure, recordAttempt, reset, size, prune, dispose };
 }
