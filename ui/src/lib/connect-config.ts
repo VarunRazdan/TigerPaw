@@ -4,6 +4,8 @@ export type ConnectCredential = {
   envVar?: string;
   help: string;
   sensitive?: boolean; // default true (password input), set false for emails/paths/hosts
+  pattern?: RegExp;
+  patternHint?: string;
 };
 
 export type ConnectInfo = {
@@ -78,6 +80,8 @@ export const TRADING_CONNECT_INFO: Record<string, ConnectInfo> = {
         label: "Ethereum Private Key",
         envVar: "POLYMARKET_PRIVATE_KEY",
         help: "Hex private key for on-chain order signing",
+        pattern: /^(0x)?[0-9a-fA-F]{64}$/,
+        patternHint: "Must be 64 hex characters (optional 0x prefix)",
       },
     ],
     steps: [
@@ -323,6 +327,8 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
         field: "botToken",
         label: "Bot Token",
         help: "Get from @BotFather on Telegram (format: 123456:ABC-xyz)",
+        pattern: /^\d+:[A-Za-z0-9_-]+$/,
+        patternHint: "Must match format 123456:ABC-xyz",
       },
     ],
     steps: [
@@ -344,11 +350,15 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
         field: "botToken",
         label: "Bot Token",
         help: "Starts with xoxb- (from OAuth & Permissions)",
+        pattern: /^xoxb-/,
+        patternHint: "Must start with xoxb-",
       },
       {
         field: "appToken",
         label: "App Token",
         help: "Starts with xapp- (from Basic Information > App-Level Tokens)",
+        pattern: /^xapp-/,
+        patternHint: "Must start with xapp-",
       },
     ],
     steps: [

@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import type { ConnectInfo } from "@/lib/connect-config";
+import type { ConnectInfo, ConnectCredential } from "@/lib/connect-config";
 import { saveConfigPatch } from "@/lib/save-config";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
@@ -14,18 +14,42 @@ type Props = {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error" | "gateway-down";
 
+function validateCredField(cred: ConnectCredential, value: string): string | null {
+  const trimmed = value.trim();
+  if (value.length > 0 && trimmed.length === 0) {
+    return "Value cannot be only whitespace";
+  }
+  if (trimmed.length > 0 && cred.pattern && !cred.pattern.test(trimmed)) {
+    return cred.patternHint ?? "Invalid format";
+  }
+  return null;
+}
+
 export function ConnectDialog({ open, onOpenChange, info }: Props) {
   const { t } = useTranslation("connect");
   const { t: tc } = useTranslation("common");
   const [values, setValues] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
   const [copied, setCopied] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  function updateField(field: string, value: string) {
-    setValues((prev) => ({ ...prev, [field]: value }));
-  }
+  const updateField = useCallback(
+    (field: string, value: string) => {
+      setValues((prev) => ({ ...prev, [field]: value }));
+      const cred = info.credentials.find((c) => c.field === field);
+      if (cred) {
+        setValidationErrors((prev) => ({ ...prev, [field]: validateCredField(cred, value) }));
+      }
+    },
+    [info.credentials],
+  );
+
+  const hasValidationErrors = useMemo(
+    () => Object.values(validationErrors).some((e) => e !== null),
+    [validationErrors],
+  );
 
   function copyToClipboard(text: string, label: string) {
     void navigator.clipboard.writeText(text);
@@ -140,6 +164,9 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
                     value={values[cred.field] ?? ""}
                     onChange={(e) => updateField(cred.field, e.target.value)}
                   />
+                  {validationErrors[cred.field] && (
+                    <span className="text-xs text-red-400">{validationErrors[cred.field]}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -170,7 +197,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           <div className="space-y-2">
             <button
               type="button"
-              disabled={saveStatus === "saving"}
+              disabled={saveStatus === "saving" || hasValidationErrors}
               onClick={handleSaveToConfig}
               className={`w-full text-center text-sm py-2.5 rounded-xl border transition-all duration-200 cursor-pointer font-medium ${
                 saveStatus === "saved"

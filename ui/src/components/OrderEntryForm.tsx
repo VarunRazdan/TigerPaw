@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -16,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 
-const orderSchema = z.object({
+const orderBaseSchema = z.object({
   symbol: z.string().min(1),
   side: z.enum(["buy", "sell"]),
   quantity: z.coerce.number().positive(),
@@ -28,7 +29,35 @@ const orderSchema = z.object({
   takeProfit: z.coerce.number().positive().optional(),
 });
 
-type OrderFormValues = z.infer<typeof orderSchema>;
+const orderSchema = orderBaseSchema.superRefine((data, ctx) => {
+  const needsLimit = data.orderType === "limit" || data.orderType === "stop_limit";
+  const needsStop = data.orderType === "stop" || data.orderType === "stop_limit";
+  const needsTrailing = data.orderType === "trailing_stop";
+
+  if (needsLimit && (data.limitPrice === undefined || data.limitPrice <= 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Limit price required",
+      path: ["limitPrice"],
+    });
+  }
+  if (needsStop && (data.stopPrice === undefined || data.stopPrice <= 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Stop price required",
+      path: ["stopPrice"],
+    });
+  }
+  if (needsTrailing && (data.trailingPercent === undefined || data.trailingPercent <= 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Trailing % required",
+      path: ["trailingPercent"],
+    });
+  }
+});
+
+type OrderFormValues = z.infer<typeof orderBaseSchema>;
 
 type OrderEntryFormProps = {
   extensionId: string;
@@ -150,6 +179,7 @@ export function OrderEntryForm({
     watch,
     formState: { errors },
   } = useForm<OrderFormValues>({
+    resolver: zodResolver(orderSchema),
     defaultValues: {
       symbol: defaultSymbol,
       side: "buy",
@@ -277,6 +307,9 @@ export function OrderEntryForm({
               {...register("limitPrice")}
               className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
             />
+            {errors.limitPrice && (
+              <span className="text-xs text-red-400">{errors.limitPrice.message}</span>
+            )}
           </div>
         )}
         {needsStopPrice && (
@@ -288,6 +321,9 @@ export function OrderEntryForm({
               {...register("stopPrice")}
               className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
             />
+            {errors.stopPrice && (
+              <span className="text-xs text-red-400">{errors.stopPrice.message}</span>
+            )}
           </div>
         )}
         {needsTrailing && (
@@ -300,6 +336,9 @@ export function OrderEntryForm({
               placeholder={t("form.trailingPlaceholder")}
               className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
             />
+            {errors.trailingPercent && (
+              <span className="text-xs text-red-400">{errors.trailingPercent.message}</span>
+            )}
           </div>
         )}
 
