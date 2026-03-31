@@ -83,12 +83,18 @@ export function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-label={t("tradingNotifications")}
+        aria-haspopup="true"
+        aria-expanded={open}
         className="relative p-2 rounded-lg hover:bg-[var(--glass-input-bg)] transition-all duration-200 cursor-pointer"
         title={t("tradingNotifications")}
       >
         <Bell className="w-4 h-4 text-neutral-400" />
         {undismissedCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
+          <span
+            aria-hidden="true"
+            className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center"
+          >
             {undismissedCount > 9 ? "9+" : undismissedCount}
           </span>
         )}

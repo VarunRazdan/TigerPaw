@@ -196,19 +196,28 @@ export function OrderEntryForm({
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         {/* Symbol */}
         <div>
-          <label className="text-xs text-neutral-500 block mb-1">{tc("symbol")}</label>
+          <label htmlFor="order-symbol" className="text-xs text-neutral-500 block mb-1">
+            {tc("symbol")}
+          </label>
           <input
+            id="order-symbol"
             {...register("symbol")}
             placeholder={t("form.symbolPlaceholder")}
             className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
           />
           {errors.symbol && (
-            <span className="text-xs text-red-400">{t("form.symbolRequired")}</span>
+            <span role="alert" className="text-xs text-red-400">
+              {t("form.symbolRequired")}
+            </span>
           )}
         </div>
 
         {/* Side toggle */}
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          role="radiogroup"
+          aria-label={t("orderSide", "Order side")}
+          className="grid grid-cols-2 gap-2"
+        >
           <label
             className={cn(
               "flex items-center justify-center py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors border",
@@ -235,15 +244,20 @@ export function OrderEntryForm({
 
         {/* Quantity */}
         <div>
-          <label className="text-xs text-neutral-500 block mb-1">{t("quantity")}</label>
+          <label htmlFor="order-quantity" className="text-xs text-neutral-500 block mb-1">
+            {t("quantity")}
+          </label>
           <input
+            id="order-quantity"
             type="number"
             step="any"
             {...register("quantity")}
             className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 font-mono focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200"
           />
           {errors.quantity && (
-            <span className="text-xs text-red-400">{t("form.quantityPositive")}</span>
+            <span role="alert" className="text-xs text-red-400">
+              {t("form.quantityPositive")}
+            </span>
           )}
           {notionalUsd > 0 && (
             <div className="text-xs text-neutral-500 mt-0.5 font-mono">
@@ -254,8 +268,11 @@ export function OrderEntryForm({
 
         {/* Order type */}
         <div>
-          <label className="text-xs text-neutral-500 block mb-1">{t("orderType")}</label>
+          <label htmlFor="order-type" className="text-xs text-neutral-500 block mb-1">
+            {t("orderType")}
+          </label>
           <select
+            id="order-type"
             {...register("orderType")}
             className="w-full px-3 py-1.5 rounded-md bg-[var(--glass-input-bg)] border border-[var(--glass-border)] text-sm text-neutral-200 focus:outline-none focus:border-orange-600 hover:border-[var(--glass-hover-strong)] transition-all duration-200 cursor-pointer"
           >
@@ -270,8 +287,11 @@ export function OrderEntryForm({
         {/* Conditional price fields */}
         {needsLimitPrice && (
           <div>
-            <label className="text-xs text-neutral-500 block mb-1">{t("limitPrice")}</label>
+            <label htmlFor="order-limit-price" className="text-xs text-neutral-500 block mb-1">
+              {t("limitPrice")}
+            </label>
             <input
+              id="order-limit-price"
               type="number"
               step="any"
               {...register("limitPrice")}
@@ -281,8 +301,11 @@ export function OrderEntryForm({
         )}
         {needsStopPrice && (
           <div>
-            <label className="text-xs text-neutral-500 block mb-1">{t("stopPrice")}</label>
+            <label htmlFor="order-stop-price" className="text-xs text-neutral-500 block mb-1">
+              {t("stopPrice")}
+            </label>
             <input
+              id="order-stop-price"
               type="number"
               step="any"
               {...register("stopPrice")}
@@ -292,8 +315,11 @@ export function OrderEntryForm({
         )}
         {needsTrailing && (
           <div>
-            <label className="text-xs text-neutral-500 block mb-1">{t("trailingPercent")}</label>
+            <label htmlFor="order-trailing-pct" className="text-xs text-neutral-500 block mb-1">
+              {t("trailingPercent")}
+            </label>
             <input
+              id="order-trailing-pct"
               type="number"
               step="0.1"
               {...register("trailingPercent")}
@@ -315,8 +341,11 @@ export function OrderEntryForm({
         {showAdvanced && (
           <div className="space-y-3 border-t border-[var(--glass-border)] pt-3">
             <div>
-              <label className="text-xs text-neutral-500 block mb-1">{t("stopLoss")}</label>
+              <label htmlFor="order-stop-loss" className="text-xs text-neutral-500 block mb-1">
+                {t("stopLoss")}
+              </label>
               <input
+                id="order-stop-loss"
                 type="number"
                 step="any"
                 {...register("stopLoss")}
@@ -325,8 +354,11 @@ export function OrderEntryForm({
               />
             </div>
             <div>
-              <label className="text-xs text-neutral-500 block mb-1">{t("takeProfit")}</label>
+              <label htmlFor="order-take-profit" className="text-xs text-neutral-500 block mb-1">
+                {t("takeProfit")}
+              </label>
               <input
+                id="order-take-profit"
                 type="number"
                 step="any"
                 {...register("takeProfit")}
@@ -344,6 +376,7 @@ export function OrderEntryForm({
         <button
           type="submit"
           disabled={killSwitchActive || orderState.status === "submitting"}
+          aria-disabled={killSwitchActive || orderState.status === "submitting"}
           className={cn(
             "w-full py-2 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300",
             killSwitchActive || orderState.status === "submitting"

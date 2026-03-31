@@ -61,7 +61,13 @@ export function PositionsPanel() {
       {positions.length > 0 && (
         <div className="mt-3 pt-3 border-t border-[var(--glass-border)]">
           <div className="text-xs text-neutral-500 mb-1">{t("concentration")}</div>
-          <div className="flex gap-0.5 h-3 rounded overflow-hidden bg-[var(--glass-subtle-hover)]">
+          <div
+            role="img"
+            aria-label={positions
+              .map((pos) => `${pos.symbol}: ${pos.percentOfPortfolio.toFixed(1)}%`)
+              .join(", ")}
+            className="flex gap-0.5 h-3 rounded overflow-hidden bg-[var(--glass-subtle-hover)]"
+          >
             {positions.map((pos) => (
               <div
                 key={`${pos.extensionId}-${pos.symbol}`}

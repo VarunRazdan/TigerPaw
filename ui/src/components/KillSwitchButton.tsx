@@ -24,15 +24,16 @@ export function KillSwitchButton() {
     setDialogOpen(false);
   }
 
+  const statusLabel = killSwitchActive
+    ? `${t("killSwitchOn")}: ${killSwitchReason ?? "activated"}`
+    : t("killSwitchOff");
+
   return (
     <>
       <button
         onClick={() => setDialogOpen(true)}
-        title={
-          killSwitchActive
-            ? `${t("killSwitchOn")}: ${killSwitchReason ?? "activated"}`
-            : t("killSwitchOff")
-        }
+        aria-label={statusLabel}
+        title={statusLabel}
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-300 cursor-pointer",
           "border",
@@ -42,6 +43,7 @@ export function KillSwitchButton() {
         )}
       >
         <span
+          aria-hidden="true"
           className={cn("w-2 h-2 rounded-full", killSwitchActive ? "bg-red-400" : "bg-green-400")}
         />
         {killSwitchActive ? t("killSwitchLabel") : t("tradingOk")}

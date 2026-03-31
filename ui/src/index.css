@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* ── Global Focus-Visible ── */
+*:focus-visible {
+  outline: 2px solid rgb(234 88 12); /* orange-600 */
+  outline-offset: 2px;
+}
+
 /*
  * Tigerpaw — Dual Theme System
  * ─────────────────────────────

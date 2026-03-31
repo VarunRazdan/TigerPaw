@@ -249,6 +249,8 @@ function SidebarNav({ collapsed, onToggle }: { collapsed: boolean; onToggle: () 
       <div className="p-2 border-t border-[var(--glass-chrome-border)] shrink-0">
         <button
           onClick={onToggle}
+          aria-expanded={!collapsed}
+          aria-label={t("nav.toggleSidebar", "Toggle sidebar")}
           className={cn(
             "w-full flex items-center py-2 rounded-md bg-[var(--glass-subtle)] border border-[var(--glass-border)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)] hover:border-[var(--glass-border-hover)] cursor-pointer transition-all duration-300 ease-in-out overflow-hidden",
             collapsed ? "justify-center" : "px-3 gap-2",
@@ -280,6 +282,7 @@ function MobileNav() {
     <>
       <button
         onClick={() => setOpen(true)}
+        aria-label={t("nav.openMenu", "Open menu")}
         className="md:hidden p-2 rounded-md text-neutral-400 hover:text-neutral-200 hover:bg-[var(--glass-subtle-hover)] cursor-pointer transition-all duration-200"
       >
         <Menu className="w-5 h-5" />
@@ -349,6 +352,13 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex bg-transparent relative z-[1]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-orange-600 focus:text-white"
+      >
+        {t("nav.skipToContent", "Skip to content")}
+      </a>
+
       {/* Desktop sidebar */}
       <SidebarNav
         collapsed={sidebarCollapsed}
@@ -386,7 +396,7 @@ export function Layout() {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-[1400px] mx-auto">
             <Outlet />
           </div>

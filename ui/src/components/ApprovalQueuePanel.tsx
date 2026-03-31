@@ -63,19 +63,28 @@ function ApprovalCard({
       <div className="flex items-center gap-2 mb-2">
         <button
           onClick={() => onApprove(approval)}
+          aria-label={`${tc("approve")} ${approval.side.toUpperCase()} ${approval.symbol}`}
           className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-green-700 hover:bg-green-600 text-green-100 cursor-pointer transition-all duration-300 hover:shadow-md hover:shadow-green-900/30"
         >
           {tc("approve")}
         </button>
         <button
           onClick={() => onDeny(approval)}
+          aria-label={`${tc("deny")} ${approval.side.toUpperCase()} ${approval.symbol}`}
           className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-red-800 hover:bg-red-700 text-red-100 cursor-pointer transition-all duration-300 hover:shadow-md hover:shadow-red-900/30"
         >
           {tc("deny")}
         </button>
       </div>
       <div className="flex items-center gap-2 text-xs text-neutral-500">
-        <div className="flex-1 h-1 bg-[var(--glass-subtle-hover)] rounded-full overflow-hidden">
+        <div
+          role="progressbar"
+          aria-valuenow={remainingSec}
+          aria-valuemin={0}
+          aria-valuemax={totalSec}
+          aria-label={tc("timeRemaining", "Time remaining")}
+          className="flex-1 h-1 bg-[var(--glass-subtle-hover)] rounded-full overflow-hidden"
+        >
           <div
             className={cn(
               "h-full rounded-full transition-all",
