@@ -15,12 +15,14 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DataModeSelector } from "@/components/DataModeSelector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 import { cn } from "@/lib/utils";
+import { useTradingStore } from "@/stores/trading-store";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -426,10 +428,12 @@ function ConfigureProviderForm({ onDone }: { onDone: () => void }) {
 
 export function ModelsPage() {
   const { t } = useTranslation("models");
+  const demoMode = useTradingStore((s) => s.demoMode);
 
   // --- State ---
-  const [providers, setProviders] = useState<Provider[]>(DEMO_PROVIDERS);
-  const [models, setModels] = useState<Model[]>(DEMO_MODELS);
+  const [providers, setProviders] = useState<Provider[]>(() => (demoMode ? DEMO_PROVIDERS : []));
+  const [models, setModels] = useState<Model[]>(() => (demoMode ? DEMO_MODELS : []));
+  const [isLive, setIsLive] = useState(false);
   const [pullInput, setPullInput] = useState("");
   const [isPulling, setIsPulling] = useState(false);
   const [cloudFallback, setCloudFallback] = useState(false);
@@ -438,7 +442,6 @@ export function ModelsPage() {
   const [newProviderName, setNewProviderName] = useState("");
   const [newProviderUrl, setNewProviderUrl] = useState("");
   const [configuringProvider, setConfiguringProvider] = useState(false);
-  const [, setLiveMode] = useState(false);
 
   // Fetch real config + model catalog from gateway on mount
   useEffect(() => {
@@ -469,7 +472,7 @@ export function ModelsPage() {
               },
             );
             setProviders(realProviders);
-            setLiveMode(true);
+            setIsLive(true);
           }
         }
 
@@ -512,6 +515,14 @@ export function ModelsPage() {
       cancelled = true;
     };
   }, []);
+
+  // React to demoMode toggle (only when no live data loaded)
+  useEffect(() => {
+    if (!isLive) {
+      setProviders(demoMode ? DEMO_PROVIDERS : []);
+      setModels(demoMode ? DEMO_MODELS : []);
+    }
+  }, [demoMode, isLive]);
 
   // Derive default model id
   const defaultModelId = models.find((m) => m.isDefault)?.id ?? models[0]?.id ?? "";
@@ -660,11 +671,14 @@ export function ModelsPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-100">{t("title", "AI Models")}</h1>
-        <p className="text-sm text-neutral-400 mt-1">
-          {t("subtitle", "Manage local LLM providers and model preferences")}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-100">{t("title", "AI Models")}</h1>
+          <p className="text-sm text-neutral-400 mt-1">
+            {t("subtitle", "Manage local LLM providers and model preferences")}
+          </p>
+        </div>
+        <DataModeSelector />
       </div>
 
       {/* ----------------------------------------------------------------- */}
