@@ -27,6 +27,12 @@ export type TradingEventPayload = {
   currentPercent?: number;
   thresholdPercent?: number;
   mode?: string;
+  /** Realized P&L from a closed trade (USD). */
+  realizedPnl?: number;
+  /** Executed fill quantity. */
+  quantity?: number;
+  /** Executed fill price (USD per unit). */
+  executedPrice?: number;
 };
 
 export type TradingEvent = {
