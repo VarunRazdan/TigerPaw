@@ -1,8 +1,40 @@
 import { lazy, useMemo } from "react";
-import { createHashRouter, Navigate, type RouteObject, RouterProvider } from "react-router-dom";
+import {
+  createHashRouter,
+  Navigate,
+  type RouteObject,
+  RouterProvider,
+  useRouteError,
+  isRouteErrorResponse,
+} from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ToastNotifications } from "./components/ToastNotifications";
 import { useAppStore } from "./stores/app-store";
+
+/** Catch-all error element for the router — replaces React Router's ugly default. */
+function RouteErrorFallback() {
+  const error = useRouteError();
+  const is404 = isRouteErrorResponse(error) && error.status === 404;
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center p-8">
+      <div className="glass-panel rounded-2xl p-8 text-center max-w-md">
+        <h1 className="text-4xl font-bold text-orange-500 mb-2">{is404 ? "404" : "Error"}</h1>
+        <p className="text-neutral-400 mb-6">
+          {is404
+            ? "This page doesn't exist. It may have been moved or removed."
+            : "Something went wrong loading this page."}
+        </p>
+        <a
+          href="#/"
+          className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500 transition-colors"
+        >
+          Go to Dashboard
+        </a>
+      </div>
+    </div>
+  );
+}
 
 // Lazy-loaded page components — each gets its own chunk
 const DashboardPage = lazy(() =>
@@ -109,7 +141,12 @@ export function App() {
         {
           path: "/",
           element: <Layout />,
-          children: [...CORE_ROUTES, ...(tradingEnabled ? TRADING_ROUTES : [TRADING_REDIRECT])],
+          errorElement: <RouteErrorFallback />,
+          children: [
+            ...CORE_ROUTES,
+            ...(tradingEnabled ? TRADING_ROUTES : [TRADING_REDIRECT]),
+            { path: "*", element: <Navigate to="/" replace /> },
+          ],
         },
       ]),
     [tradingEnabled],
