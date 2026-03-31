@@ -10,6 +10,11 @@ import {
   getCalendarClient,
   getMeetingClient,
 } from "../integrations/clients/index.js";
+import {
+  validateTradingNumeric,
+  MAX_QUANTITY,
+  MIN_QUANTITY,
+} from "../trading/numeric-bounds.js";
 import type { ExecutionContext } from "./context.js";
 import type { ActionDependencies } from "./types.js";
 
@@ -165,6 +170,9 @@ const trade: ActionExecutor = async (config, ctx, deps) => {
   if (!extensionId || !symbol || quantity <= 0) {
     throw new Error("trade: extensionId, symbol, and quantity > 0 are required");
   }
+
+  // Bounds validation
+  validateTradingNumeric("quantity", quantity, MIN_QUANTITY, MAX_QUANTITY);
 
   deps.log(`Submitting trade: ${side} ${quantity} ${symbol} via ${extensionId}`);
 
