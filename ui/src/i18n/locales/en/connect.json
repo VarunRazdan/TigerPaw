@@ -5,7 +5,7 @@
   "configPreview": "Config Preview",
   "saveToConfig": "Save to Config",
   "saving": "Saving...",
-  "savedSuccess": "Saved to tigerpaw.json!",
+  "savedSuccess": "Config updated successfully!",
   "gatewayDown": "Gateway not reachable — start Tigerpaw first",
   "gatewayDownHint": "Start Tigerpaw first, then try again",
   "copyFallback": "Copy config snippet to clipboard instead",
