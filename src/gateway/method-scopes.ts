@@ -85,6 +85,8 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "talk.config",
     "agents.files.list",
     "agents.files.get",
+    "trading.getState",
+    "trading.getQuote",
   ],
   [WRITE_SCOPE]: [
     "send",
@@ -104,6 +106,9 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "browser.request",
     "push.test",
     "node.pending.enqueue",
+    "trading.killSwitch.toggle",
+    "trading.killSwitch.platform",
+    "trading.recordFill",
   ],
   [ADMIN_SCOPE]: [
     "channels.logout",

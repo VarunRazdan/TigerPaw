@@ -102,6 +102,12 @@ const BASE_METHODS = [
   "chat.history",
   "chat.abort",
   "chat.send",
+  // Trading state
+  "trading.getState",
+  "trading.getQuote",
+  "trading.killSwitch.toggle",
+  "trading.killSwitch.platform",
+  "trading.recordFill",
 ];
 
 export function listGatewayMethods(): string[] {
