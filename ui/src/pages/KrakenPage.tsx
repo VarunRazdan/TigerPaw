@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchCryptoPrices, type CryptoPrice } from "@/lib/coingecko";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
 const DEMO_BALANCES = [
@@ -25,15 +25,15 @@ export function KrakenPage() {
   const [prices, setPrices] = useState<CryptoPrice[]>([]);
 
   useEffect(() => {
-    fetchCryptoPrices().then(setPrices);
-    const interval = setInterval(() => fetchCryptoPrices().then(setPrices), 60_000);
+    void fetchCryptoPrices().then(setPrices);
+    const interval = setInterval(() => void fetchCryptoPrices().then(setPrices), 60_000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <img src="/icons/trading-platforms/kraken.svg" alt="" className="w-6 h-6" />
+        <img src={assetUrl("icons/trading-platforms/kraken.svg")} alt="" className="w-6 h-6" />
         <h1 className="text-xl font-bold text-neutral-100">Kraken</h1>
         <Badge
           className={

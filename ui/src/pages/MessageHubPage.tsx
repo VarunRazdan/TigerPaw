@@ -3,7 +3,7 @@ import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 import { useMessageHubStore, type MessageHubMessage } from "@/stores/message-hub-store";
 
 const CHANNELS = [
@@ -118,7 +118,7 @@ function MessageRow({ message, onClick }: { message: MessageHubMessage; onClick:
 
       {/* Channel icon */}
       <img
-        src={message.channelIcon}
+        src={assetUrl(message.channelIcon)}
         alt={message.channel}
         className="w-5 h-5 shrink-0 mt-0.5 rounded"
       />
