@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { useTradingStore, type PendingApproval } from "@/stores/trading-store";
 
@@ -20,6 +21,7 @@ function ApprovalCard({
   onDeny: (a: PendingApproval) => void;
 }) {
   const { t: tc } = useTranslation("common");
+  const { currency } = useFormatters();
   const [remainingMs, setRemainingMs] = useState(() =>
     Math.max(0, approval.timeoutMs - (Date.now() - approval.createdAt)),
   );
@@ -51,7 +53,7 @@ function ApprovalCard({
       </div>
       <div className="text-xs text-neutral-400 space-y-0.5 mb-3">
         <div>
-          {tc("amount")}: ${approval.notionalUsd.toFixed(2)}
+          {tc("amount")}: {currency(approval.notionalUsd)}
         </div>
         <div>
           {tc("result")}: {approval.riskPercent.toFixed(1)}%

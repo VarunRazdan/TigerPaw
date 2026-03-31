@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 import { StopLossConfig } from "./StopLossConfig";
 
 export function PositionsPanel() {
   const { t } = useTranslation("trading");
+  const { currency } = useFormatters();
   const { positions, limits } = useTradingStore();
 
   return (
@@ -38,7 +40,8 @@ export function PositionsPanel() {
                       pos.unrealizedPnl >= 0 ? "text-green-400" : "text-red-400",
                     )}
                   >
-                    {pos.unrealizedPnl >= 0 ? "+" : ""}${pos.unrealizedPnl.toFixed(2)}
+                    {pos.unrealizedPnl >= 0 ? "+" : ""}
+                    {currency(Math.abs(pos.unrealizedPnl))}
                   </div>
                   <div className="text-xs text-neutral-500">
                     {pos.percentOfPortfolio.toFixed(1)}%

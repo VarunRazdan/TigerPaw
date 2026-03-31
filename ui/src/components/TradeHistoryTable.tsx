@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { useTradingStore, type TradeHistoryEntry } from "@/stores/trading-store";
 
@@ -22,15 +23,16 @@ const APPROVAL_LABELS: Record<string, string> = {
   cancelled: "CANCELLED",
 };
 
-function buildColumns(t: (key: string) => string, tc: (key: string) => string) {
+function buildColumns(
+  t: (key: string) => string,
+  tc: (key: string) => string,
+  fmtDate: (date: Date | string | number, opts?: Intl.DateTimeFormatOptions) => string,
+  fmtCurrency: (value: number, cur?: string) => string,
+) {
   return [
     columnHelper.accessor("timestamp", {
       header: tc("time"),
-      cell: (info) =>
-        new Date(info.getValue()).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+      cell: (info) => fmtDate(info.getValue(), { hour: "2-digit", minute: "2-digit" }),
       sortingFn: "datetime",
     }),
     columnHelper.accessor("approvalType", {
@@ -65,7 +67,7 @@ function buildColumns(t: (key: string) => string, tc: (key: string) => string) {
     }),
     columnHelper.accessor("amount", {
       header: tc("amount"),
-      cell: (info) => <span className="font-mono">${info.getValue().toFixed(2)}</span>,
+      cell: (info) => <span className="font-mono">{fmtCurrency(info.getValue())}</span>,
       meta: { align: "right" },
     }),
     columnHelper.display({
@@ -155,10 +157,14 @@ function exportCsv(data: TradeHistoryEntry[]) {
 export function TradeHistoryTable() {
   const { t } = useTranslation("trading");
   const { t: tc } = useTranslation("common");
+  const { date: fmtDate, currency: fmtCurrency } = useFormatters();
   const tradeHistory = useTradingStore((s) => s.tradeHistory);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const columns = useMemo(() => buildColumns(t, tc), [t, tc]);
+  const columns = useMemo(
+    () => buildColumns(t, tc, fmtDate, fmtCurrency),
+    [t, tc, fmtDate, fmtCurrency],
+  );
 
   const table = useReactTable({
     data: tradeHistory,

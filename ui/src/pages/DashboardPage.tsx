@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useFormatters } from "@/hooks/use-formatters";
 import { fetchCryptoPrices, type CryptoPrice } from "@/lib/coingecko";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
 import { cn } from "@/lib/utils";
@@ -207,6 +208,7 @@ function MarketPrices() {
 export function DashboardPage() {
   const { t } = useTranslation("dashboard");
   const { t: tc } = useTranslation("common");
+  const { currency } = useFormatters();
   const tradingEnabled = useAppStore((s) => s.tradingEnabled);
   const {
     dailyPnlUsd,
@@ -252,13 +254,10 @@ export function DashboardPage() {
       {/* Quick stats — trading stats only when enabled */}
       {tradingEnabled && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            label={t("portfolioValue")}
-            value={`$${currentPortfolioValueUsd.toLocaleString()}`}
-          />
+          <StatCard label={t("portfolioValue")} value={currency(currentPortfolioValueUsd)} />
           <StatCard
             label={t("dailyPnl")}
-            value={`${pnlSign}$${Math.abs(dailyPnlUsd).toFixed(2)}`}
+            value={`${pnlSign}${currency(Math.abs(dailyPnlUsd))}`}
             color={pnlColor}
           />
           <StatCard label={t("tradesToday")} value={String(dailyTradeCount)} />

@@ -10,6 +10,7 @@ import en_notifications from "./locales/en/notifications.json";
 import en_platforms from "./locales/en/platforms.json";
 import en_security from "./locales/en/security.json";
 import en_settings from "./locales/en/settings.json";
+import en_strategies from "./locales/en/strategies.json";
 import en_trading from "./locales/en/trading.json";
 
 export const SUPPORTED_LANGUAGES = [
@@ -38,6 +39,7 @@ const NAMESPACES = [
   "connect",
   "settings",
   "platforms",
+  "strategies",
 ] as const;
 
 // Lazy-load non-English locale bundles
@@ -90,6 +92,7 @@ void i18n
         connect: en_connect,
         settings: en_settings,
         platforms: en_platforms,
+        strategies: en_strategies,
       },
     },
     fallbackLng: "en",

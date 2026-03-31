@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
@@ -114,6 +115,7 @@ function RiskBar({ label, current, limit, unit = "", format }: RiskBarProps) {
 
 export function RiskOverviewPanel() {
   const { t } = useTranslation("trading");
+  const { compact } = useFormatters();
   const dailyPnlUsd = useTradingStore((s) => s.dailyPnlUsd);
   const currentPortfolioValueUsd = useTradingStore((s) => s.currentPortfolioValueUsd);
   const highWaterMarkUsd = useTradingStore((s) => s.highWaterMarkUsd);
@@ -158,7 +160,7 @@ export function RiskOverviewPanel() {
           label={t("spend")}
           current={dailySpendUsd}
           limit={limits.maxDailySpendUsd}
-          format={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0)}`}
+          format={compact}
         />
       </div>
 

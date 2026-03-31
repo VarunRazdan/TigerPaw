@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { useFormatters } from "@/hooks/use-formatters";
 import { useSubmitOrder, type OrderStatus } from "@/hooks/use-submit-order";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
@@ -39,6 +40,7 @@ type OrderEntryFormProps = {
 
 function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
   const { t } = useTranslation("trading");
+  const { currency } = useFormatters();
   const limits = useTradingStore((s) => s.limits);
   const dailySpendUsd = useTradingStore((s) => s.dailySpendUsd);
   const dailyTradeCount = useTradingStore((s) => s.dailyTradeCount);
@@ -54,12 +56,12 @@ function PolicyPreCheck({ notionalUsd }: { notionalUsd: number }) {
     {
       label: t("singleTrade"),
       pass: notionalUsd <= limits.maxSingleTradeUsd,
-      detail: `$${notionalUsd.toFixed(0)} / $${limits.maxSingleTradeUsd}`,
+      detail: `${currency(notionalUsd)} / ${currency(limits.maxSingleTradeUsd)}`,
     },
     {
       label: t("dailySpend"),
       pass: dailySpendUsd + notionalUsd <= limits.maxDailySpendUsd,
-      detail: `$${(dailySpendUsd + notionalUsd).toFixed(0)} / $${limits.maxDailySpendUsd}`,
+      detail: `${currency(dailySpendUsd + notionalUsd)} / ${currency(limits.maxDailySpendUsd)}`,
     },
     {
       label: t("tradesToday"),
@@ -126,6 +128,7 @@ export function OrderEntryForm({
 }: OrderEntryFormProps) {
   const { t } = useTranslation("trading");
   const { t: tc } = useTranslation("common");
+  const { currency } = useFormatters();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<OrderFormValues | null>(null);
@@ -247,7 +250,7 @@ export function OrderEntryForm({
           )}
           {notionalUsd > 0 && (
             <div className="text-xs text-neutral-500 mt-0.5 font-mono">
-              Est. ${notionalUsd.toFixed(2)}
+              Est. {currency(notionalUsd)}
             </div>
           )}
         </div>
@@ -374,7 +377,7 @@ export function OrderEntryForm({
                 <>
                   {pendingOrder.side.toUpperCase()} {pendingOrder.quantity}x {pendingOrder.symbol} (
                   {pendingOrder.orderType}) on {extensionId}
-                  {notionalUsd > 0 && ` — est. $${notionalUsd.toFixed(2)}`}
+                  {notionalUsd > 0 && ` — est. ${currency(notionalUsd)}`}
                 </>
               )}
             </AlertDialogDescription>

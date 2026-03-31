@@ -62,5 +62,7 @@
   "nav.tagline": "Multi-Platform Trading Partner",
   "nav.gatewayConnected": "Gateway connected",
   "nav.gatewayDisconnected": "Gateway disconnected",
-  "to": "to"
+  "to": "to",
+  "enable": "Enable",
+  "disable": "Disable"
 }

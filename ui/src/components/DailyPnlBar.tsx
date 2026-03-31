@@ -1,5 +1,6 @@
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
@@ -44,6 +45,7 @@ function Sparkline({
 
 export function DailyPnlBar() {
   const { t } = useTranslation("trading");
+  const { currency } = useFormatters();
   const dailyPnlUsd = useTradingStore((s) => s.dailyPnlUsd);
   const currentPortfolioValueUsd = useTradingStore((s) => s.currentPortfolioValueUsd);
   const limits = useTradingStore((s) => s.limits);
@@ -80,7 +82,8 @@ export function DailyPnlBar() {
           <div className="hidden lg:flex items-center gap-3 text-xs cursor-pointer">
             <span className="text-neutral-500">{t("dailyPnl")}:</span>
             <span className={cn("font-mono font-semibold", pnlColor)}>
-              {pnlSign}${Math.abs(dailyPnlUsd).toFixed(2)}
+              {pnlSign}
+              {currency(Math.abs(dailyPnlUsd))}
             </span>
             <Sparkline data={sparklineData} />
             <div
@@ -108,7 +111,8 @@ export function DailyPnlBar() {
               <div>
                 {t("dailyPnl")}:{" "}
                 <span className={pnlColor}>
-                  {pnlSign}${Math.abs(dailyPnlUsd).toFixed(2)}
+                  {pnlSign}
+                  {currency(Math.abs(dailyPnlUsd))}
                 </span>
               </div>
               <div>
