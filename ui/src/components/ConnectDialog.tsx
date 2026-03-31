@@ -127,7 +127,7 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
                       <Badge
                         variant="outline"
                         className="text-[10px] cursor-pointer hover:bg-[var(--glass-subtle-hover)] transition-colors"
-                        onClick={() => copyToClipboard(cred.envVar, cred.envVar)}
+                        onClick={() => copyToClipboard(cred.envVar!, cred.envVar!)}
                       >
                         {copied === cred.envVar ? tc("copied") : `$${cred.envVar}`}
                       </Badge>

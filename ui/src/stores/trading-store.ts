@@ -128,10 +128,16 @@ export type TradingState = {
   // P&L history for charts
   pnlHistory: PnlDataPoint[];
 
+  // WebSocket connection state
+  wsConnected: boolean;
+  wsReconnectAttempts: number;
+
   // Demo mode
   demoMode: boolean;
 
   // Actions
+  setWsConnected: (connected: boolean) => void;
+  setWsReconnectAttempts: (attempts: number) => void;
   setKillSwitch: (active: boolean, reason?: string) => void;
   toggleKillSwitch: () => void;
   setKillSwitchMode: (mode: KillSwitchMode) => void;
@@ -555,8 +561,13 @@ export const useTradingStore = create<TradingState>((set) => ({
     { date: "Mar 23", pnl: 178.5 },
   ],
 
+  wsConnected: false,
+  wsReconnectAttempts: 0,
+
   demoMode: true,
 
+  setWsConnected: (connected) => set({ wsConnected: connected }),
+  setWsReconnectAttempts: (attempts) => set({ wsReconnectAttempts: attempts }),
   setKillSwitch: (active, reason) => set({ killSwitchActive: active, killSwitchReason: reason }),
   toggleKillSwitch: () =>
     set((s) => ({

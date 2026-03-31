@@ -13,10 +13,12 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router-dom";
 import { useGatewayConfig } from "@/hooks/use-gateway-config";
+import { useGatewayHealth } from "@/hooks/use-gateway-health";
 import { useTradingEvents } from "@/hooks/use-trading-events";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useThemeStore } from "@/stores/theme-store";
+import { ConnectionStatusBanner } from "./ConnectionStatusBanner";
 import { DailyPnlBar } from "./DailyPnlBar";
 import { KillSwitchButton } from "./KillSwitchButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -336,6 +338,7 @@ export function Layout() {
   const tradingEnabled = useAppStore((s) => s.tradingEnabled);
   useGatewayConfig();
   useTradingEvents();
+  const { checkNow } = useGatewayHealth();
 
   // Apply theme to document root so CSS [data-theme] selectors activate
   useEffect(() => {
@@ -384,6 +387,9 @@ export function Layout() {
             </div>
           </div>
         </header>
+
+        {/* Connection status banner */}
+        <ConnectionStatusBanner onRetry={checkNow} />
 
         {/* Main content */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">

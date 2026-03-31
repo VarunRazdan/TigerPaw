@@ -232,6 +232,8 @@ describe("trading-store", () => {
         connected: true,
         mode: "live" as const,
         label: "TestExchange",
+        type: "crypto" as const,
+        currencyLabel: "USD",
         api: {
           apiVersion: "v1",
           authScheme: "API Key",

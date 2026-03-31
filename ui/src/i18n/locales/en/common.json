@@ -62,5 +62,21 @@
   "nav.tagline": "Multi-Platform Trading Partner",
   "nav.gatewayConnected": "Gateway connected",
   "nav.gatewayDisconnected": "Gateway disconnected",
-  "to": "to"
+  "to": "to",
+  "error.gatewayUnreachable": "Gateway unreachable",
+  "error.gatewayOffline": "Gateway offline",
+  "error.wsDisconnected": "Live connection lost \u2014 reconnecting",
+  "error.wsReconnecting": "Live connection lost \u2014 reconnecting (attempt {{count}})",
+  "error.wsReconnectFailed": "WebSocket reconnect failed after multiple attempts",
+  "error.configLoadFailed": "Could not load gateway config",
+  "error.configParseFailed": "Gateway returned invalid config JSON",
+  "error.dataStale": "Trading data may be stale",
+  "error.dataStaleDescription": "Trading data could not be refreshed after multiple attempts",
+  "error.retryNow": "Retry now",
+  "error.retrying": "Retrying...",
+  "error.networkError": "Network error",
+  "error.timeout": "Request timed out",
+  "error.unexpectedError": "An unexpected error occurred",
+  "error.demoMode": "Demo mode \u2014 data is simulated",
+  "error.connectionRestored": "Connection restored"
 }

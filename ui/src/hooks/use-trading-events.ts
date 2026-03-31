@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNotificationStore, eventSeverity, eventTitle } from "@/stores/notification-store";
+import { useTradingStore } from "@/stores/trading-store";
 
 /**
  * Persistent WebSocket hook that connects to the gateway, completes the
@@ -35,11 +36,16 @@ function nextId(): string {
 const MIN_BACKOFF_MS = 1_000;
 const MAX_BACKOFF_MS = 30_000;
 
+/** After this many consecutive reconnect failures, surface a notification. */
+const RECONNECT_WARN_THRESHOLD = 3;
+
 export function useTradingEvents(): { connected: boolean } {
   const [connected, setConnected] = useState(false);
   const backoffRef = useRef(MIN_BACKOFF_MS);
   const wsRef = useRef<WebSocket | null>(null);
   const mountedRef = useRef(true);
+  const reconnectCountRef = useRef(0);
+  const reconnectWarningFiredRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -69,6 +75,7 @@ export function useTradingEvents(): { connected: boolean } {
       ws.addEventListener("close", () => {
         if (mountedRef.current) {
           setConnected(false);
+          useTradingStore.getState().setWsConnected(false);
           scheduleReconnect();
         }
       });
@@ -117,6 +124,12 @@ export function useTradingEvents(): { connected: boolean } {
             handshakeDone = true;
             if (mountedRef.current) {
               setConnected(true);
+              const ts = useTradingStore.getState();
+              ts.setWsConnected(true);
+              // Reset reconnect tracking on success
+              reconnectCountRef.current = 0;
+              reconnectWarningFiredRef.current = false;
+              ts.setWsReconnectAttempts(0);
             }
           }
           // If auth fails, we'll disconnect — close handler schedules reconnect
@@ -152,6 +165,26 @@ export function useTradingEvents(): { connected: boolean } {
       if (!mountedRef.current) {
         return;
       }
+
+      // Track reconnect attempts
+      reconnectCountRef.current += 1;
+      useTradingStore.getState().setWsReconnectAttempts(reconnectCountRef.current);
+
+      // Surface a notification when reconnects keep failing
+      if (
+        reconnectCountRef.current >= RECONNECT_WARN_THRESHOLD &&
+        !reconnectWarningFiredRef.current
+      ) {
+        reconnectWarningFiredRef.current = true;
+        useNotificationStore.getState().addNotification({
+          type: "system.ws.reconnectFailed",
+          title: "WebSocket reconnecting",
+          description: `Live connection lost. Reconnect attempt ${reconnectCountRef.current} in progress.`,
+          severity: "warning",
+          timestamp: Date.now(),
+        });
+      }
+
       const delay = backoffRef.current;
       backoffRef.current = Math.min(delay * 2, MAX_BACKOFF_MS);
       reconnectTimer = setTimeout(connect, delay);
