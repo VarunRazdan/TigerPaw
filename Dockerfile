@@ -47,6 +47,9 @@ RUN corepack enable
 
 WORKDIR /app
 
+# Prevent pnpm TTY prompts in non-interactive Docker builds
+ENV CI=true
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY ui/package.json ./ui/package.json
 COPY patches ./patches
