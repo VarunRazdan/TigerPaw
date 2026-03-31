@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createSubsystemLogger } from "../logging/subsystem.js";
+import { logSecretAccess } from "./access-log.js";
 
 const log = createSubsystemLogger("secrets/keychain");
 
@@ -264,11 +265,12 @@ export function isKeychainAvailable(): boolean {
 }
 
 /** Store a secret in the OS keychain (or encrypted file fallback). */
-export function storeSecret(id: string, value: string): void {
+export function storeSecret(id: string, value: string, accessor = "keychain"): void {
   const backend = getBackend();
   log.debug(`storing secret "${id}" via ${backend}`);
   try {
     BACKENDS[backend].store(id, value);
+    logSecretAccess({ secretId: id, accessor, operation: "write" });
   } catch (err) {
     log.error(`failed to store secret "${id}": ${String(err)}`);
     throw err;
@@ -279,11 +281,13 @@ export function storeSecret(id: string, value: string): void {
  * Retrieve a secret from the OS keychain (or encrypted file fallback).
  * Never throws -- returns undefined if the secret is not found.
  */
-export function retrieveSecret(id: string): string | undefined {
+export function retrieveSecret(id: string, accessor = "keychain"): string | undefined {
   const backend = getBackend();
   log.debug(`retrieving secret "${id}" via ${backend}`);
   try {
-    return BACKENDS[backend].retrieve(id);
+    const value = BACKENDS[backend].retrieve(id);
+    logSecretAccess({ secretId: id, accessor, operation: "read" });
+    return value;
   } catch (err) {
     log.warn(`failed to retrieve secret "${id}": ${String(err)}`);
     return undefined;
@@ -291,11 +295,12 @@ export function retrieveSecret(id: string): string | undefined {
 }
 
 /** Delete a secret from the OS keychain (or encrypted file fallback). */
-export function deleteSecret(id: string): void {
+export function deleteSecret(id: string, accessor = "keychain"): void {
   const backend = getBackend();
   log.debug(`deleting secret "${id}" via ${backend}`);
   try {
     BACKENDS[backend].delete(id);
+    logSecretAccess({ secretId: id, accessor, operation: "delete" });
   } catch (err) {
     log.error(`failed to delete secret "${id}": ${String(err)}`);
     throw err;
