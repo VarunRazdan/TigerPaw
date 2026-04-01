@@ -34,7 +34,7 @@ export function useGatewayConfig(): void {
         if (result.ok && result.payload?.raw) {
           try {
             const config = JSON.parse(result.payload.raw);
-            const enabled = config?.trading?.enabled === true;
+            const enabled = config?.trading?.enabled !== false;
             setTradingEnabled(enabled);
             if (config?.gateway?.onboardingComplete === true) {
               setOnboardingComplete(true);
