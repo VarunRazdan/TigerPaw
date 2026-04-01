@@ -1,6 +1,6 @@
-# OpenClaw Installer for Windows (PowerShell)
-# Usage: iwr -useb https://openclaw.ai/install.ps1 | iex
-# Or: & ([scriptblock]::Create((iwr -useb https://openclaw.ai/install.ps1))) -NoOnboard
+# Tigerpaw Installer for Windows (PowerShell)
+# Usage: iwr -useb https://tigerpaw.dev/install.ps1 | iex
+# Or: & ([scriptblock]::Create((iwr -useb https://tigerpaw.dev/install.ps1))) -NoOnboard
 
 param(
     [string]$InstallMethod = "npm",
@@ -201,8 +201,8 @@ function Ensure-Git {
 
 function Install-OpenClawNpm {
     param([string]$Version = "latest")
-    
-    Write-Host "Installing OpenClaw (openclaw@$Version)..." -Level info
+
+    Write-Host "Installing Tigerpaw (openclaw@$Version)..." -Level info
     
     try {
         # Use -ExecutionPolicy Bypass to handle restricted execution policy
@@ -217,8 +217,8 @@ function Install-OpenClawNpm {
 
 function Install-OpenClawGit {
     param([string]$RepoDir, [switch]$Update)
-    
-    Write-Host "Installing OpenClaw from git..." -Level info
+
+    Write-Host "Installing Tigerpaw from git..." -Level info
     
     if (!(Test-Path $RepoDir)) {
         Write-Host "  Cloning repository..." -Level info
@@ -253,7 +253,7 @@ function Install-OpenClawGit {
 node "%~dp0..\openclaw\dist\entry.js" %*
 "@ | Out-File -FilePath "$wrapperDir\openclaw.cmd" -Encoding ASCII -Force
     
-    Write-Host "OpenClaw installed" -Level success
+    Write-Host "Tigerpaw installed" -Level success
     return $true
 }
 
@@ -290,7 +290,7 @@ function Main {
         }
         
         if ($DryRun) {
-            Write-Host "[DRY RUN] Would install OpenClaw from git to $GitDir" -Level info
+            Write-Host "[DRY RUN] Would install Tigerpaw from git to $GitDir" -Level info
         } else {
             Install-OpenClawGit -RepoDir $GitDir -Update:(-not $NoGitUpdate)
         }
@@ -301,7 +301,7 @@ function Main {
         }
         
         if ($DryRun) {
-            Write-Host "[DRY RUN] Would install OpenClaw via npm (tag: $Tag)" -Level info
+            Write-Host "[DRY RUN] Would install Tigerpaw via npm (tag: $Tag)" -Level info
         } else {
             if (!(Install-OpenClawNpm -Version $Tag)) {
                 exit 1
@@ -319,7 +319,7 @@ function Main {
     
     if (!$NoOnboard -and !$DryRun) {
         Write-Host ""
-        Write-Host "Run 'openclaw onboard' to complete setup" -Level info
+        Write-Host "Run 'tigerpaw onboard' to complete setup" -Level info
     }
     
     Write-Host ""

@@ -73,7 +73,7 @@ async function runBrowserToggle(
     return;
   }
   const name = status.profile ?? "openclaw";
-  defaultRuntime.log(info(`🦞 browser [${name}] running: ${status.running}`));
+  defaultRuntime.log(info(`🐅 browser [${name}] running: ${status.running}`));
 }
 
 function runBrowserCommand(action: () => Promise<void>) {
