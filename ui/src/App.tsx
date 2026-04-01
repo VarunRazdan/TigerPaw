@@ -97,10 +97,14 @@ const KrakenPage = lazy(() =>
   import("./pages/KrakenPage").then((m) => ({ default: m.KrakenPage })),
 );
 const DydxPage = lazy(() => import("./pages/DydxPage").then((m) => ({ default: m.DydxPage })));
+const StrategiesPage = lazy(() =>
+  import("./pages/StrategiesPage").then((m) => ({ default: m.StrategiesPage })),
+);
 
 const TRADING_ROUTES: RouteObject[] = [
   { path: "trading", element: <TradingPage /> },
   { path: "trading/settings", element: <TradingSettingsPage /> },
+  { path: "trading/strategies", element: <StrategiesPage /> },
   { path: "trading/alpaca", element: <AlpacaPage /> },
   { path: "trading/polymarket", element: <PolymarketPage /> },
   { path: "trading/kalshi", element: <KalshiPage /> },
