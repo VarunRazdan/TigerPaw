@@ -251,8 +251,8 @@ const DEMO_WORKFLOWS: Workflow[] = [
 ];
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
-  workflows: DEMO_WORKFLOWS,
-  demoMode: true,
+  workflows: [],
+  demoMode: false,
   executionHistory: [],
   isExecuting: null,
 
