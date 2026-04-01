@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { lazy, useMemo } from "react";
 import {
   createHashRouter,
@@ -31,6 +32,40 @@ function RouteErrorFallback() {
         >
           Go to Dashboard
         </a>
+      </div>
+    </div>
+  );
+}
+
+/** Per-route error element — keeps user on the current route instead of redirecting. */
+function PageErrorFallback() {
+  const error = useRouteError();
+  const message =
+    error instanceof Error
+      ? error.message
+      : isRouteErrorResponse(error)
+        ? `${error.status} ${error.statusText}`
+        : "An unexpected error occurred";
+
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="rounded-2xl glass-panel p-8 max-w-lg w-full text-center space-y-4">
+        <AlertTriangle className="w-10 h-10 text-orange-600 mx-auto" />
+        <h2 className="text-lg font-semibold text-neutral-100">Something went wrong</h2>
+        <details className="text-sm text-neutral-500">
+          <summary className="cursor-pointer hover:text-neutral-300 transition-colors">
+            Details
+          </summary>
+          <pre className="mt-2 text-left text-xs bg-neutral-900/60 rounded-lg p-3 overflow-auto max-h-40 whitespace-pre-wrap break-words">
+            {message}
+          </pre>
+        </details>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 rounded-xl text-sm font-medium bg-orange-600 text-neutral-100 hover:bg-orange-500 transition-colors cursor-pointer"
+        >
+          Try again
+        </button>
       </div>
     </div>
   );
@@ -101,19 +136,21 @@ const StrategiesPage = lazy(() =>
   import("./pages/StrategiesPage").then((m) => ({ default: m.StrategiesPage })),
 );
 
+const PAGE_ERROR = <PageErrorFallback />;
+
 const TRADING_ROUTES: RouteObject[] = [
-  { path: "trading", element: <TradingPage /> },
-  { path: "trading/settings", element: <TradingSettingsPage /> },
-  { path: "trading/strategies", element: <StrategiesPage /> },
-  { path: "trading/alpaca", element: <AlpacaPage /> },
-  { path: "trading/polymarket", element: <PolymarketPage /> },
-  { path: "trading/kalshi", element: <KalshiPage /> },
-  { path: "trading/manifold", element: <ManifoldPage /> },
-  { path: "trading/coinbase", element: <CoinbasePage /> },
-  { path: "trading/ibkr", element: <IbkrPage /> },
-  { path: "trading/binance", element: <BinancePage /> },
-  { path: "trading/kraken", element: <KrakenPage /> },
-  { path: "trading/dydx", element: <DydxPage /> },
+  { path: "trading", element: <TradingPage />, errorElement: PAGE_ERROR },
+  { path: "trading/settings", element: <TradingSettingsPage />, errorElement: PAGE_ERROR },
+  { path: "trading/strategies", element: <StrategiesPage />, errorElement: PAGE_ERROR },
+  { path: "trading/alpaca", element: <AlpacaPage />, errorElement: PAGE_ERROR },
+  { path: "trading/polymarket", element: <PolymarketPage />, errorElement: PAGE_ERROR },
+  { path: "trading/kalshi", element: <KalshiPage />, errorElement: PAGE_ERROR },
+  { path: "trading/manifold", element: <ManifoldPage />, errorElement: PAGE_ERROR },
+  { path: "trading/coinbase", element: <CoinbasePage />, errorElement: PAGE_ERROR },
+  { path: "trading/ibkr", element: <IbkrPage />, errorElement: PAGE_ERROR },
+  { path: "trading/binance", element: <BinancePage />, errorElement: PAGE_ERROR },
+  { path: "trading/kraken", element: <KrakenPage />, errorElement: PAGE_ERROR },
+  { path: "trading/dydx", element: <DydxPage />, errorElement: PAGE_ERROR },
 ];
 
 const TRADING_REDIRECT: RouteObject = {
@@ -122,18 +159,18 @@ const TRADING_REDIRECT: RouteObject = {
 };
 
 const CORE_ROUTES: RouteObject[] = [
-  { index: true, element: <DashboardPage /> },
-  { path: "message-hub", element: <MessageHubPage /> },
+  { index: true, element: <DashboardPage />, errorElement: PAGE_ERROR },
+  { path: "message-hub", element: <MessageHubPage />, errorElement: PAGE_ERROR },
   { path: "inbox", element: <Navigate to="/message-hub" replace /> },
-  { path: "assistant", element: <AssistantPage /> },
-  { path: "channels", element: <ChannelsPage /> },
-  { path: "security", element: <SecurityPage /> },
-  { path: "config", element: <ConfigPage /> },
-  { path: "workflows", element: <WorkflowsPage /> },
-  { path: "workflows/:id", element: <WorkflowEditorPage /> },
-  { path: "mcp", element: <McpPage /> },
-  { path: "models", element: <ModelsPage /> },
-  { path: "integrations", element: <IntegrationsPage /> },
+  { path: "assistant", element: <AssistantPage />, errorElement: PAGE_ERROR },
+  { path: "channels", element: <ChannelsPage />, errorElement: PAGE_ERROR },
+  { path: "security", element: <SecurityPage />, errorElement: PAGE_ERROR },
+  { path: "config", element: <ConfigPage />, errorElement: PAGE_ERROR },
+  { path: "workflows", element: <WorkflowsPage />, errorElement: PAGE_ERROR },
+  { path: "workflows/:id", element: <WorkflowEditorPage />, errorElement: PAGE_ERROR },
+  { path: "mcp", element: <McpPage />, errorElement: PAGE_ERROR },
+  { path: "models", element: <ModelsPage />, errorElement: PAGE_ERROR },
+  { path: "integrations", element: <IntegrationsPage />, errorElement: PAGE_ERROR },
 ];
 
 export function App() {

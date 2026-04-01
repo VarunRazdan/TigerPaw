@@ -100,12 +100,13 @@ export function validateGatewayPasswordInput(value: unknown): string | undefined
 
 export function printWizardHeader(runtime: RuntimeEnv) {
   const header = [
-    "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
-    "██░▄▄▄░██░▄▄░██░▄▄▄██░▀██░██░▄▄▀██░████░▄▄▀██░███░██",
-    "██░███░██░▀▀░██░▄▄▄██░█░█░██░█████░████░▀▀░██░█░█░██",
-    "██░▀▀▀░██░█████░▀▀▀██░██▄░██░▀▀▄██░▀▀░█░██░██▄▀▄▀▄██",
-    "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
-    "                  🦞 OPENCLAW 🦞                    ",
+    "████████╗██╗ ██████╗ ███████╗██████╗ ██████╗  █████╗ ██╗    ██╗",
+    "╚══██╔══╝██║██╔════╝ ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║    ██║",
+    "   ██║   ██║██║  ███╗█████╗  ██████╔╝██████╔╝███████║██║ █╗ ██║",
+    "   ██║   ██║██║   ██║██╔══╝  ██╔══██╗██╔═══╝ ██╔══██║██║███╗██║",
+    "   ██║   ██║╚██████╔╝███████╗██║  ██║██║     ██║  ██║╚███╔███╔╝",
+    "   ╚═╝   ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ",
+    "                  🐅 TIGERPAW 🐅                    ",
     " ",
   ].join("\n");
   runtime.log(header);
@@ -221,8 +222,8 @@ export function formatControlUiSshHint(params: {
     localUrl,
     authedUrl,
     "Docs:",
-    "https://docs.openclaw.ai/gateway/remote",
-    "https://docs.openclaw.ai/web/control-ui",
+    "https://docs.tigerpaw.dev/gateway/remote",
+    "https://docs.tigerpaw.dev/web/control-ui",
   ]
     .filter(Boolean)
     .join("\n");
