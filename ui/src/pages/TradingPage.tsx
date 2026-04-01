@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { ApprovalQueuePanel } from "@/components/ApprovalQueuePanel";
@@ -11,110 +10,8 @@ import { useTradingData } from "@/hooks/use-trading-data";
 import { cn } from "@/lib/utils";
 import { useTradingStore } from "@/stores/trading-store";
 
-// Seed demo data for visual review — only when demoMode is active
-function useDemoData() {
-  const store = useTradingStore();
-  useEffect(() => {
-    // Only seed when in demo mode and no data yet
-    if (!store.demoMode || store.positions.length > 0) {
-      return;
-    }
-
-    store.updateDailyMetrics({
-      dailyPnlUsd: -47.2,
-      dailySpendUsd: 312.5,
-      dailyTradeCount: 7,
-      consecutiveLosses: 1,
-      currentPortfolioValueUsd: 10_250,
-      highWaterMarkUsd: 10_800,
-    });
-
-    store.setPositions([
-      {
-        symbol: "AAPL",
-        extensionId: "alpaca",
-        quantity: 5,
-        valueUsd: 890,
-        unrealizedPnl: 12.4,
-        percentOfPortfolio: 8.7,
-      },
-      {
-        symbol: "BTC > $100K?",
-        extensionId: "polymarket",
-        quantity: 50,
-        valueUsd: 250,
-        unrealizedPnl: -30,
-        percentOfPortfolio: 2.4,
-      },
-      {
-        symbol: "Fed Rate Cut Mar",
-        extensionId: "kalshi",
-        quantity: 20,
-        valueUsd: 84,
-        unrealizedPnl: -29.6,
-        percentOfPortfolio: 0.8,
-      },
-    ]);
-
-    store.setTradeHistory([
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-        approvalType: "auto_approved",
-        extensionId: "alpaca",
-        symbol: "MSFT",
-        side: "BUY",
-        amount: 824.6,
-        result: "filled",
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 9).toISOString(),
-        approvalType: "auto_approved",
-        extensionId: "alpaca",
-        symbol: "TSLA",
-        side: "SELL",
-        amount: 641.1,
-        result: "filled",
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 22).toISOString(),
-        approvalType: "denied",
-        extensionId: "polymarket",
-        symbol: "BTC > $110K?",
-        side: "BUY",
-        amount: 50,
-        result: "denied",
-        reason: "daily limit 80%+",
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 47).toISOString(),
-        approvalType: "manually_approved",
-        extensionId: "kalshi",
-        symbol: "GDP Q1",
-        side: "BUY",
-        amount: 4.2,
-        result: "filled",
-      },
-    ]);
-
-    store.addPendingApproval({
-      id: "demo-1",
-      extensionId: "alpaca",
-      symbol: "AAPL",
-      side: "buy",
-      quantity: 5,
-      notionalUsd: 890.5,
-      riskPercent: 4.5,
-      mode: "confirm",
-      timeoutMs: 120_000,
-      createdAt: Date.now(),
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-}
-
 export function TradingPage() {
   const { t } = useTranslation("trading");
-  useDemoData();
   useTradingData();
 
   const {
