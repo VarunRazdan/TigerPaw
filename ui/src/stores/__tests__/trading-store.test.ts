@@ -159,19 +159,17 @@ describe("trading-store", () => {
   describe("updatePositionStopLoss", () => {
     it("updates matching symbol", () => {
       // Seed a position first
-      useTradingStore
-        .getState()
-        .setPositions([
-          {
-            symbol: "AAPL",
-            extensionId: "alpaca",
-            quantity: 15,
-            valueUsd: 3285,
-            unrealizedPnl: 67.5,
-            percentOfPortfolio: 6.9,
-            stopLoss: 212,
-          },
-        ]);
+      useTradingStore.getState().setPositions([
+        {
+          symbol: "AAPL",
+          extensionId: "alpaca",
+          quantity: 15,
+          valueUsd: 3285,
+          unrealizedPnl: 67.5,
+          percentOfPortfolio: 6.9,
+          stopLoss: 212,
+        },
+      ]);
       useTradingStore.getState().updatePositionStopLoss("AAPL", 200);
       const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
       expect(pos?.stopLoss).toBe(200);
@@ -204,19 +202,17 @@ describe("trading-store", () => {
     });
 
     it("can clear stop loss with undefined", () => {
-      useTradingStore
-        .getState()
-        .setPositions([
-          {
-            symbol: "AAPL",
-            extensionId: "alpaca",
-            quantity: 15,
-            valueUsd: 3285,
-            unrealizedPnl: 67.5,
-            percentOfPortfolio: 6.9,
-            stopLoss: 212,
-          },
-        ]);
+      useTradingStore.getState().setPositions([
+        {
+          symbol: "AAPL",
+          extensionId: "alpaca",
+          quantity: 15,
+          valueUsd: 3285,
+          unrealizedPnl: 67.5,
+          percentOfPortfolio: 6.9,
+          stopLoss: 212,
+        },
+      ]);
       useTradingStore.getState().updatePositionStopLoss("AAPL", undefined);
       const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
       expect(pos?.stopLoss).toBeUndefined();
@@ -225,18 +221,16 @@ describe("trading-store", () => {
 
   describe("updatePositionTakeProfit", () => {
     it("updates matching symbol", () => {
-      useTradingStore
-        .getState()
-        .setPositions([
-          {
-            symbol: "AAPL",
-            extensionId: "alpaca",
-            quantity: 15,
-            valueUsd: 3285,
-            unrealizedPnl: 67.5,
-            percentOfPortfolio: 6.9,
-          },
-        ]);
+      useTradingStore.getState().setPositions([
+        {
+          symbol: "AAPL",
+          extensionId: "alpaca",
+          quantity: 15,
+          valueUsd: 3285,
+          unrealizedPnl: 67.5,
+          percentOfPortfolio: 6.9,
+        },
+      ]);
       useTradingStore.getState().updatePositionTakeProfit("AAPL", 250);
       const pos = useTradingStore.getState().positions.find((p) => p.symbol === "AAPL");
       expect(pos?.takeProfit).toBe(250);
