@@ -118,7 +118,7 @@ describe("audit-log", () => {
       expect(parsed.prevHash).toBe("0"); // First entry in a fresh chain.
     });
 
-    it("sets file permissions to 0o600", async () => {
+    it.skipIf(process.platform === "win32")("sets file permissions to 0o600", async () => {
       await writeAuditEntry(sampleEntry());
 
       const stat = await fs.stat(auditFile);
