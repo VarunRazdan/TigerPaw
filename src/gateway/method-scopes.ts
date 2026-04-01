@@ -95,6 +95,10 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "integrations.providers",
     "integrations.connections",
     "integrations.connection.get",
+    "strategies.list",
+    "strategies.get",
+    "strategies.executions",
+    "backtest.generate",
   ],
   [WRITE_SCOPE]: [
     "send",
@@ -150,6 +154,12 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "integrations.oauth2.complete",
     "integrations.disconnect",
     "integrations.test",
+    "strategies.save",
+    "strategies.delete",
+    "strategies.toggle",
+    "strategies.execute",
+    "strategies.clearHistory",
+    "backtest.run",
   ],
 };
 
