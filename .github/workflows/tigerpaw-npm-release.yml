@@ -65,6 +65,10 @@ jobs:
         if: steps.check-published.outputs.already_published != 'true'
         run: pnpm build
 
+      - name: Install UI dependencies
+        if: steps.check-published.outputs.already_published != 'true'
+        run: cd ui && pnpm install --frozen-lockfile
+
       - name: Build UI
         if: steps.check-published.outputs.already_published != 'true'
         run: pnpm ui:build
