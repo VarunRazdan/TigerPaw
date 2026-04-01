@@ -4,6 +4,15 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
+/**
+ * On Windows `path.resolve("/test/foo")` prepends the current drive letter
+ * (e.g. `D:\test\foo`), so a straight equality check against the Unix-style
+ * input fails. Strip the optional drive prefix and normalise slashes.
+ */
+function normalizeDirForComparison(p: string): string {
+  return p.replace(/\\/g, "/").replace(/^[A-Za-z]:/, "");
+}
+
 describe("installation verification", () => {
   it("tigerpaw.mjs entry point exists and is executable", () => {
     const entry = path.join(ROOT, "tigerpaw.mjs");
@@ -64,14 +73,14 @@ describe("installation verification", () => {
     const { resolveStateDir } = await import("../src/config/paths.js");
     const env = { TIGERPAW_STATE_DIR: "/test/tigerpaw-state" } as unknown as NodeJS.ProcessEnv;
     const dir = resolveStateDir(env, () => "/home/test");
-    expect(dir).toBe("/test/tigerpaw-state");
+    expect(normalizeDirForComparison(dir)).toBe("/test/tigerpaw-state");
   });
 
   it("config paths fall back to openclaw state dir", async () => {
     const { resolveStateDir } = await import("../src/config/paths.js");
     const env = { OPENCLAW_STATE_DIR: "/test/openclaw-state" } as unknown as NodeJS.ProcessEnv;
     const dir = resolveStateDir(env, () => "/home/test");
-    expect(dir).toBe("/test/openclaw-state");
+    expect(normalizeDirForComparison(dir)).toBe("/test/openclaw-state");
   });
 
   it("plugin manifest loader accepts both tigerpaw.plugin.json and openclaw.plugin.json", async () => {
