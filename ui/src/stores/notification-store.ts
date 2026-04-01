@@ -186,6 +186,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   undismissedCount: () => get().notifications.filter((n) => !n.dismissed).length,
 }));
 
+/** Fire a toast notification for a caught error. */
+export function notifyError(title: string, err: unknown) {
+  useNotificationStore.getState().addNotification({
+    type: "system",
+    title,
+    description: err instanceof Error ? err.message : "An unexpected error occurred",
+    severity: "error",
+    timestamp: Date.now(),
+  });
+}
+
 /** Map a trading event type to notification severity. */
 export function eventSeverity(type: string): NotificationSeverity {
   if (type.includes("approved") || type.includes("filled") || type.includes("deactivated")) {

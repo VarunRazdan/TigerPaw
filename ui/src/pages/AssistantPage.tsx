@@ -26,6 +26,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { invokeToolHttp } from "@/lib/gateway-http";
 import { cn } from "@/lib/utils";
+import { notifyError } from "@/stores/notification-store";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -177,8 +178,9 @@ function TaskListPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Gateway not reachable");
+      notifyError("Failed to load tasks", err);
     } finally {
       setLoading(false);
     }
@@ -208,8 +210,9 @@ function TaskListPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Failed to add task");
+      notifyError("Failed to add task", err);
     } finally {
       setSubmitting(false);
     }
@@ -223,8 +226,9 @@ function TaskListPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Failed to complete task");
+      notifyError("Failed to complete task", err);
     }
   };
 
@@ -236,8 +240,9 @@ function TaskListPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Failed to delete task");
+      notifyError("Failed to delete task", err);
     }
   };
 
@@ -415,8 +420,9 @@ function RemindersPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Gateway not reachable");
+      notifyError("Failed to load reminders", err);
     } finally {
       setLoading(false);
     }
@@ -446,8 +452,9 @@ function RemindersPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Failed to set reminder");
+      notifyError("Failed to set reminder", err);
     } finally {
       setSubmitting(false);
     }
@@ -463,8 +470,9 @@ function RemindersPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Failed to cancel reminder");
+      notifyError("Failed to cancel reminder", err);
     }
   };
 
@@ -601,8 +609,9 @@ function MemorySearchPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Gateway not reachable");
+      notifyError("Failed to search memory", err);
     } finally {
       setLoading(false);
     }
@@ -696,8 +705,9 @@ function BriefingPanel() {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Gateway not reachable");
+      notifyError("Failed to generate daily briefing", err);
     } finally {
       setLoading(false);
     }
@@ -861,8 +871,9 @@ function QuickAddTaskForm({ onDone }: { onDone: () => void }) {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Gateway not reachable");
+      notifyError("Failed to add task", err);
     } finally {
       setSubmitting(false);
     }
@@ -935,8 +946,9 @@ function QuickAddReminderForm({ onDone }: { onDone: () => void }) {
       } else {
         setError(res.error);
       }
-    } catch {
+    } catch (err) {
       setError("Gateway not reachable");
+      notifyError("Failed to set reminder", err);
     } finally {
       setSubmitting(false);
     }
