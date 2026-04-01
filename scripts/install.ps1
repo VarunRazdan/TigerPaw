@@ -34,7 +34,7 @@ function Write-Host {
 
 function Write-Banner {
     Write-Host ""
-    Write-Host "${ACCENT}  🐾 Tigerpaw Installer$NC" -Level info
+    Write-Host "${ACCENT}  🐅 Tigerpaw Installer$NC" -Level info
     Write-Host "${MUTED}  Local-first AI gateway with claws.$NC" -Level info
     Write-Host ""
 }
@@ -323,7 +323,7 @@ function Main {
     }
     
     Write-Host ""
-    Write-Host "🐾 Tigerpaw installed successfully!" -Level success
+    Write-Host "🐅 Tigerpaw installed successfully!" -Level success
 }
 
 Main
