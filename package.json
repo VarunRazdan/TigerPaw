@@ -1,6 +1,6 @@
 {
   "name": "@greatlyrecommended/tigerpaw",
-  "version": "2026.4.2",
+  "version": "2026.4.3",
   "description": "Local-first AI gateway — everything OpenClaw does, plus trading across 9 exchanges, risk controls, a React 19 dashboard, MCP support, and an AI assistant",
   "keywords": [
     "ai",
