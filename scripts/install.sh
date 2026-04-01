@@ -882,7 +882,7 @@ TAGLINES+=("If it's repetitive, I'll automate it; if it's hard, I'll bring jokes
 TAGLINES+=("Because texting yourself reminders is so 2024.")
 TAGLINES+=("WhatsApp, but make it ✨engineering✨.")
 TAGLINES+=("Turning \"I'll reply later\" into \"my bot replied instantly\".")
-TAGLINES+=("The only crab in your contacts you actually want to hear from. 🦞")
+TAGLINES+=("The only tiger in your terminal you actually want to hear from. 🐅")
 TAGLINES+=("Chat automation for people who peaked at IRC.")
 TAGLINES+=("Because Siri wasn't answering at 3AM.")
 TAGLINES+=("IPC, but it's your phone.")
@@ -2351,14 +2351,14 @@ main() {
     if [[ "$is_upgrade" == "true" ]]; then
         local update_messages=(
             "Leveled up! New skills unlocked. You're welcome."
-            "Fresh code, same lobster. Miss me?"
+            "Fresh code, same tiger. Miss me?"
             "Back and better. Did you even notice I was gone?"
             "Update complete. I learned some new tricks while I was out."
             "Upgraded! Now with 23% more sass."
-            "I've evolved. Try to keep up. 🦞"
+            "I've evolved. Try to keep up. 🐅"
             "New version, who dis? Oh right, still me but shinier."
-            "Patched, polished, and ready to pinch. Let's go."
-            "The lobster has molted. Harder shell, sharper claws."
+            "Patched, polished, and ready to pounce. Let's go."
+            "The tiger has shed its coat. Sharper stripes, sharper claws."
             "Update done! Check the changelog or just trust me, it's good."
             "Reborn from the boiling waters of npm. Stronger now."
             "I went away and came back smarter. You should try it sometime."

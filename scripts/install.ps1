@@ -34,8 +34,8 @@ function Write-Host {
 
 function Write-Banner {
     Write-Host ""
-    Write-Host "${ACCENT}  🦞 OpenClaw Installer$NC" -Level info
-    Write-Host "${MUTED}  All your chats, one OpenClaw.$NC" -Level info
+    Write-Host "${ACCENT}  🐾 Tigerpaw Installer$NC" -Level info
+    Write-Host "${MUTED}  Local-first AI gateway with claws.$NC" -Level info
     Write-Host ""
 }
 
@@ -207,7 +207,7 @@ function Install-OpenClawNpm {
     try {
         # Use -ExecutionPolicy Bypass to handle restricted execution policy
         npm install -g openclaw@$Version --no-fund --no-audit 2>&1
-        Write-Host "OpenClaw installed" -Level success
+        Write-Host "Tigerpaw installed" -Level success
         return $true
     } catch {
         Write-Host "npm install failed: $_" -Level error
@@ -323,7 +323,7 @@ function Main {
     }
     
     Write-Host ""
-    Write-Host "🦞 OpenClaw installed successfully!" -Level success
+    Write-Host "🐾 Tigerpaw installed successfully!" -Level success
 }
 
 Main
