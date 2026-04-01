@@ -1,5 +1,9 @@
 {
   "title": "Configuration",
   "subtitle": "Edit tigerpaw.json — secrets are masked",
-  "filePath": "~/.tigerpaw/tigerpaw.json"
+  "filePath": "~/.tigerpaw/tigerpaw.json",
+  "saveSuccess": "Configuration saved successfully",
+  "saveFailed": "Failed to save configuration",
+  "invalidJson": "Invalid JSON — please fix syntax errors before saving",
+  "demoSaveBlocked": "Cannot save in demo mode — start the gateway first"
 }
