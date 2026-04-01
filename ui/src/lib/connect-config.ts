@@ -410,6 +410,7 @@ export const CHANNEL_CONNECT_INFO: Record<string, ConnectInfo> = {
       "Restart Tigerpaw — a QR code will appear in the terminal",
       "Open WhatsApp on your phone > Settings > Linked Devices > Link a Device",
       "Scan the QR code — connection persists after initial pairing",
+      'Tigerpaw now runs as a linked device on your WhatsApp account. It receives all incoming messages. To test, open the chat with your own number ("Message yourself") and send a message — Tigerpaw will pick it up and respond',
     ],
     hasSandbox: false,
   },
