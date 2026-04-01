@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 import { cn } from "@/lib/utils";
+import { notifyError } from "@/stores/notification-store";
 import { useTradingStore } from "@/stores/trading-store";
 
 // ---------------------------------------------------------------------------
@@ -508,8 +509,8 @@ export function ModelsPage() {
           }));
           setModels(catalogModels);
         }
-      } catch {
-        // Gateway offline — keep demo data
+      } catch (err) {
+        notifyError("Failed to load model data", err);
       } finally {
         if (!cancelled) {
           setInitialLoading(false);
@@ -546,10 +547,11 @@ export function ModelsPage() {
       setProviders((prev) =>
         prev.map((p) => (p.name === name ? { ...p, status: resp.ok ? "connected" : "error" } : p)),
       );
-    } catch {
+    } catch (err) {
       setProviders((prev) =>
         prev.map((p) => (p.name === name ? { ...p, status: "disconnected" } : p)),
       );
+      notifyError(`Failed to refresh provider ${name}`, err);
     }
   }
 
@@ -627,8 +629,9 @@ export function ModelsPage() {
           },
         ]);
       }
-    } catch {
+    } catch (err) {
       // Ollama not reachable — add optimistically
+      notifyError("Failed to pull model", err);
       setModels((prev) => [
         ...prev,
         {

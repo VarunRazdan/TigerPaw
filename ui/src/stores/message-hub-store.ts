@@ -207,10 +207,10 @@ const DEMO_MESSAGES: MessageHubMessage[] = [
 let nextId = 200;
 
 export const useMessageHubStore = create<MessageHubState>((set, get) => ({
-  messages: DEMO_MESSAGES,
+  messages: [],
   filter: null,
   searchQuery: "",
-  demoMode: true,
+  demoMode: false,
 
   setDemoMode: (enabled) =>
     set({
