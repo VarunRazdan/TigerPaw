@@ -108,7 +108,8 @@ function formatCompletionSourceLine(
 }
 
 function isCompletionProfileHeader(line: string): boolean {
-  return line.trim() === "# OpenClaw Completion";
+  const trimmed = line.trim();
+  return trimmed === "# Tigerpaw Completion" || trimmed === "# OpenClaw Completion";
 }
 
 function isCompletionProfileLine(line: string, binName: string, cachePath: string | null): boolean {
@@ -155,7 +156,7 @@ function updateCompletionProfile(
   }
 
   const trimmed = filtered.join("\n").trimEnd();
-  const block = `# OpenClaw Completion\n${sourceLine}`;
+  const block = `# Tigerpaw Completion\n${sourceLine}`;
   const next = trimmed ? `${trimmed}\n\n${block}\n` : `${block}\n`;
   return { next, changed: next !== content, hadExisting };
 }
@@ -300,7 +301,7 @@ export function registerCompletionCli(program: Command) {
     });
 }
 
-export async function installCompletion(shell: string, yes: boolean, binName = "openclaw") {
+export async function installCompletion(shell: string, yes: boolean, binName = "tigerpaw") {
   const home = process.env.HOME || os.homedir();
   let profilePath = "";
   let sourceLine = "";

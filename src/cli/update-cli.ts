@@ -44,16 +44,16 @@ export function registerUpdateCli(program: Command) {
     .option("--yes", "Skip confirmation prompts (non-interactive)", false)
     .addHelpText("after", () => {
       const examples = [
-        ["openclaw update", "Update a source checkout (git)"],
-        ["openclaw update --channel beta", "Switch to beta channel (git + npm)"],
-        ["openclaw update --channel dev", "Switch to dev channel (git + npm)"],
-        ["openclaw update --tag beta", "One-off update to a dist-tag or version"],
-        ["openclaw update --dry-run", "Preview actions without changing anything"],
-        ["openclaw update --no-restart", "Update without restarting the service"],
-        ["openclaw update --json", "Output result as JSON"],
-        ["openclaw update --yes", "Non-interactive (accept downgrade prompts)"],
-        ["openclaw update wizard", "Interactive update wizard"],
-        ["openclaw --update", "Shorthand for openclaw update"],
+        ["tigerpaw update", "Update a source checkout (git)"],
+        ["tigerpaw update --channel beta", "Switch to beta channel (git + npm)"],
+        ["tigerpaw update --channel dev", "Switch to dev channel (git + npm)"],
+        ["tigerpaw update --tag beta", "One-off update to a dist-tag or version"],
+        ["tigerpaw update --dry-run", "Preview actions without changing anything"],
+        ["tigerpaw update --no-restart", "Update without restarting the service"],
+        ["tigerpaw update --json", "Output result as JSON"],
+        ["tigerpaw update --yes", "Non-interactive (accept downgrade prompts)"],
+        ["tigerpaw update wizard", "Interactive update wizard"],
+        ["tigerpaw --update", "Shorthand for tigerpaw update"],
       ] as const;
       const fmtExamples = examples
         .map(([cmd, desc]) => `  ${theme.command(cmd)} ${theme.muted(`# ${desc}`)}`)
@@ -65,7 +65,7 @@ ${theme.heading("What this does:")}
 
 ${theme.heading("Switch channels:")}
   - Use --channel stable|beta|dev to persist the update channel in config
-  - Run openclaw update status to see the active channel and source
+  - Run tigerpaw update status to see the active channel and source
   - Use --tag <dist-tag|version> for a one-off npm update without persisting
 
 ${theme.heading("Non-interactive:")}
@@ -129,9 +129,9 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/update", "docs.tigerpaw.dev/cli/u
       "after",
       () =>
         `\n${theme.heading("Examples:")}\n${formatHelpExamples([
-          ["openclaw update status", "Show channel + version status."],
-          ["openclaw update status --json", "JSON output."],
-          ["openclaw update status --timeout 10", "Custom timeout."],
+          ["tigerpaw update status", "Show channel + version status."],
+          ["tigerpaw update status --json", "JSON output."],
+          ["tigerpaw update status --timeout 10", "Custom timeout."],
         ])}\n\n${theme.heading("Notes:")}\n${theme.muted(
           "- Shows current update channel (stable/beta/dev) and source",
         )}\n${theme.muted("- Includes git tag/branch/SHA for source checkouts")}\n\n${theme.muted(

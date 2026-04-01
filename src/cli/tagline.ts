@@ -238,6 +238,7 @@ export function pickTagline(options: TaglineOptions = {}): string {
     return DEFAULT_TAGLINE;
   }
   const env = options.env ?? process.env;
+  // Legacy env var name kept for backward compatibility
   const override = env?.OPENCLAW_TAGLINE_INDEX;
   if (override !== undefined) {
     const parsed = Number.parseInt(override, 10);
