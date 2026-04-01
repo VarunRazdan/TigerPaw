@@ -184,8 +184,8 @@ export function main(argv = process.argv.slice(2)) {
   }
 
   if (!depsInstalled(action === "test" ? "test" : "build")) {
-    // Always install with devDependencies — vite/vitest are devDeps needed for build/test.
-    // NODE_ENV=production with --prod would skip them, breaking the build.
+    // Install ALL deps (including devDependencies like vite, tailwindcss).
+    // Build-time tools are devDependencies but required for the build step.
     runSync(runner.cmd, ["install"]);
   }
 

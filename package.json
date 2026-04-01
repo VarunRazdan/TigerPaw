@@ -469,11 +469,18 @@
       "file-type": "21.3.1",
       "form-data": "2.5.4",
       "minimatch": "10.2.4",
-      "qs": "6.14.2",
-      "node-domexception": "npm:@nolyfill/domexception@^1.0.28",
+      "qs": "6.15.0",
       "@sinclair/typebox": "0.34.48",
       "tar": "7.5.11",
-      "tough-cookie": "4.1.3"
+      "tough-cookie": "4.1.3",
+      "node-domexception": "npm:@nolyfill/domexception@^1.0.28",
+      "es-set-tostringtag": "npm:@nolyfill/es-set-tostringtag@^1.0.44",
+      "function-bind": "npm:@nolyfill/function-bind@^1.0.21",
+      "gopd": "npm:@nolyfill/gopd@^1.0.44",
+      "has-symbols": "npm:@nolyfill/has-symbols@^1.0.21",
+      "has-tostringtag": "npm:@nolyfill/has-tostringtag@^1.0.21",
+      "hasown": "npm:@nolyfill/hasown@^1.0.44",
+      "undici": "7.24.6"
     },
     "onlyBuiltDependencies": [
       "@lydell/node-pty",
