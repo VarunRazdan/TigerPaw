@@ -15,6 +15,7 @@ import {
   Plug,
   Cpu,
   Blocks,
+  FlaskConical,
 } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -89,6 +90,11 @@ function useNavGroups(): NavGroup[] {
           label: t("nav.tradingHub", "Trading Hub"),
           icon: <TrendingUp className="w-4 h-4" />,
           end: true,
+        },
+        {
+          to: "/trading/strategies",
+          label: t("nav.strategies", "Strategies"),
+          icon: <FlaskConical className="w-4 h-4" />,
         },
         {
           to: "/trading/alpaca",

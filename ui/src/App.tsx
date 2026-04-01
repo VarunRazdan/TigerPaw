@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { lazy, useMemo } from "react";
 import {
   createHashRouter,
@@ -7,7 +8,6 @@ import {
   useRouteError,
   isRouteErrorResponse,
 } from "react-router-dom";
-import { AlertTriangle } from "lucide-react";
 import { Layout } from "./components/Layout";
 import { ToastNotifications } from "./components/ToastNotifications";
 import { useAppStore } from "./stores/app-store";
@@ -132,12 +132,16 @@ const KrakenPage = lazy(() =>
   import("./pages/KrakenPage").then((m) => ({ default: m.KrakenPage })),
 );
 const DydxPage = lazy(() => import("./pages/DydxPage").then((m) => ({ default: m.DydxPage })));
+const StrategiesPage = lazy(() =>
+  import("./pages/StrategiesPage").then((m) => ({ default: m.StrategiesPage })),
+);
 
 const PAGE_ERROR = <PageErrorFallback />;
 
 const TRADING_ROUTES: RouteObject[] = [
   { path: "trading", element: <TradingPage />, errorElement: PAGE_ERROR },
   { path: "trading/settings", element: <TradingSettingsPage />, errorElement: PAGE_ERROR },
+  { path: "trading/strategies", element: <StrategiesPage />, errorElement: PAGE_ERROR },
   { path: "trading/alpaca", element: <AlpacaPage />, errorElement: PAGE_ERROR },
   { path: "trading/polymarket", element: <PolymarketPage />, errorElement: PAGE_ERROR },
   { path: "trading/kalshi", element: <KalshiPage />, errorElement: PAGE_ERROR },
