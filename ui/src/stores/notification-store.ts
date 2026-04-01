@@ -111,8 +111,8 @@ const DEMO_NOTIFICATIONS: TradingNotification[] = [
 let nextId = 100;
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
-  notifications: DEMO_NOTIFICATIONS,
-  demoMode: true,
+  notifications: [],
+  demoMode: false,
   browserNotificationsEnabled: false,
   toastsEnabled: true,
   platformFilters: {
