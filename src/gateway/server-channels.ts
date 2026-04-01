@@ -366,7 +366,8 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
   };
 
   const startChannels = async () => {
-    for (const plugin of listChannelPlugins()) {
+    const plugins = listChannelPlugins();
+    for (const plugin of plugins) {
       await startChannel(plugin.id);
     }
   };

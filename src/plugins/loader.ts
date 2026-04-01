@@ -152,6 +152,7 @@ const resolvePluginSdkScopedAliasMap = (): Record<string, string> => {
     });
     if (resolved) {
       aliasMap[`openclaw/plugin-sdk/${subpath}`] = resolved;
+      aliasMap[`tigerpaw/plugin-sdk/${subpath}`] = resolved;
     }
   }
   return aliasMap;
@@ -555,8 +556,16 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
       return jitiLoader;
     }
     const pluginSdkAlias = resolvePluginSdkAlias();
+    // Resolve tigerpaw/trading alias (extensions import this for trading functionality)
+    const tradingAlias = resolvePluginSdkAliasFile({
+      srcFile: "../trading/index.ts",
+      distFile: "../trading/index.js",
+    });
     const aliasMap = {
-      ...(pluginSdkAlias ? { "openclaw/plugin-sdk": pluginSdkAlias } : {}),
+      ...(pluginSdkAlias
+        ? { "openclaw/plugin-sdk": pluginSdkAlias, "tigerpaw/plugin-sdk": pluginSdkAlias }
+        : {}),
+      ...(tradingAlias ? { "tigerpaw/trading": tradingAlias } : {}),
       ...resolvePluginSdkScopedAliasMap(),
     };
     jitiLoader = createJiti(import.meta.url, {

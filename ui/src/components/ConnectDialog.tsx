@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { ConnectInfo } from "@/lib/connect-config";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 import { saveConfigPatch } from "@/lib/save-config";
 import { assetUrl } from "@/lib/utils";
 import { Badge } from "./ui/badge";
@@ -23,6 +24,8 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
   const [showPreview, setShowPreview] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
 
   function updateField(field: string, value: string) {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -36,6 +39,9 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
 
   // For zero-credential channels (WhatsApp, iMessage), generate an enable-only patch
   const isZeroCred = info.credentials.length === 0;
+  // WhatsApp-like channels use web.login.start for QR pairing
+  const isWebLoginChannel =
+    info.configSection === "whatsapp" || info.configSection === "bluebubbles";
 
   const configPatch = useMemo(() => {
     if (isZeroCred) {
@@ -80,6 +86,66 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
     } else {
       setSaveStatus("error");
       setSaveError(result.error);
+    }
+  }
+
+  async function handleWebLogin() {
+    setQrLoading(true);
+    setQrDataUrl(null);
+    setSaveError(null);
+
+    // First ensure the channel is enabled
+    if (configPatch) {
+      const patchResult = await saveConfigPatch(configPatch);
+      if (!patchResult.ok && patchResult.error !== "Gateway not reachable") {
+        // Config patch failed but not because of restart — show error
+        if (!patchResult.error?.includes("restart")) {
+          setSaveError(patchResult.error);
+        }
+      }
+    }
+
+    // Wait a moment for config to be applied
+    await new Promise((r) => setTimeout(r, 1000));
+
+    // Trigger QR login via gateway RPC
+    try {
+      const result = await gatewayRpc<{ qrDataUrl?: string }>(
+        "web.login.start",
+        { timeoutMs: 60000 },
+        { timeoutMs: 65000 },
+      );
+      if (result.ok && result.payload?.qrDataUrl) {
+        setQrDataUrl(result.payload.qrDataUrl);
+        setQrLoading(false);
+
+        // Now wait for the user to scan (web.login.wait blocks until scan completes)
+        const waitResult = await gatewayRpc<{ connected?: boolean; message?: string }>(
+          "web.login.wait",
+          { timeoutMs: 120000 },
+          { timeoutMs: 125000 },
+        );
+        if (waitResult.ok && waitResult.payload?.connected) {
+          setQrDataUrl(null);
+          setSaveStatus("saved");
+          setSaveError(null);
+        } else {
+          setSaveError(
+            waitResult.ok
+              ? (waitResult.payload?.message ?? "Scan timed out")
+              : "error" in waitResult
+                ? waitResult.error
+                : "Pairing failed",
+          );
+        }
+        return;
+      } else if (!result.ok) {
+        setSaveError("error" in result ? result.error : "Failed to start WhatsApp login");
+      }
+    } catch {
+      setSaveError("Failed to connect to gateway for QR code");
+    } finally {
+      setQrLoading(false);
     }
   }
 
@@ -150,6 +216,30 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           </div>
         )}
 
+        {/* QR Code display for web-login channels */}
+        {qrDataUrl && (
+          <div className="flex flex-col items-center gap-3 py-2">
+            <p className="text-xs text-neutral-400">
+              Scan with WhatsApp &gt; Linked Devices &gt; Link a Device
+            </p>
+            <img
+              src={qrDataUrl}
+              alt="WhatsApp QR Code"
+              className="w-64 h-64 rounded-lg border border-[var(--glass-border)]"
+            />
+            <p className="text-[10px] text-neutral-600">
+              QR expires in ~20 seconds. Click below to refresh.
+            </p>
+            <button
+              type="button"
+              onClick={handleWebLogin}
+              className="text-xs text-orange-400 hover:text-orange-300 underline cursor-pointer"
+            >
+              Generate new QR code
+            </button>
+          </div>
+        )}
+
         {/* Config snippet preview */}
         {configSnippet && (
           <div className="space-y-2">
@@ -169,34 +259,58 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           </div>
         )}
 
-        {/* Save to Config — primary action */}
+        {/* Save to Config / QR Login — primary action */}
         {configSnippet && (
           <div className="space-y-2">
-            <button
-              type="button"
-              disabled={saveStatus === "saving"}
-              onClick={handleSaveToConfig}
-              className={`w-full text-center text-sm py-2.5 rounded-xl border transition-all duration-200 cursor-pointer font-medium ${
-                saveStatus === "saved"
-                  ? "bg-green-900/30 border-green-600/40 text-green-400"
-                  : saveStatus === "saving"
+            {isWebLoginChannel ? (
+              <button
+                type="button"
+                disabled={qrLoading}
+                onClick={handleWebLogin}
+                className={`w-full text-center text-sm py-2.5 rounded-xl border transition-all duration-200 cursor-pointer font-medium ${
+                  qrLoading
                     ? "bg-orange-900/10 border-orange-600/20 text-orange-400/50 cursor-wait"
-                    : hasAnyInput || isZeroCred
-                      ? "bg-orange-900/20 border-orange-600/40 text-orange-400 hover:bg-orange-900/30 hover:border-orange-600/60 hover:shadow-md"
-                      : "bg-orange-900/10 border-orange-600/30 text-orange-400/70 hover:bg-orange-900/20 hover:border-orange-600/50 hover:shadow-md"
-              }`}
-            >
-              {saveStatus === "saving"
-                ? t("saving")
-                : saveStatus === "saved"
-                  ? t("savedSuccess")
-                  : isZeroCred
-                    ? t("enable", { defaultValue: "Enable" })
-                    : t("saveToConfig")}
-            </button>
+                    : qrDataUrl
+                      ? "bg-green-900/20 border-green-600/40 text-green-400 hover:bg-green-900/30"
+                      : "bg-orange-900/20 border-orange-600/40 text-orange-400 hover:bg-orange-900/30 hover:border-orange-600/60 hover:shadow-md"
+                }`}
+              >
+                {qrLoading
+                  ? "Connecting..."
+                  : qrDataUrl
+                    ? "Refresh QR Code"
+                    : "Connect & Show QR Code"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={saveStatus === "saving"}
+                onClick={handleSaveToConfig}
+                className={`w-full text-center text-sm py-2.5 rounded-xl border transition-all duration-200 cursor-pointer font-medium ${
+                  saveStatus === "saved"
+                    ? "bg-green-900/30 border-green-600/40 text-green-400"
+                    : saveStatus === "saving"
+                      ? "bg-orange-900/10 border-orange-600/20 text-orange-400/50 cursor-wait"
+                      : hasAnyInput || isZeroCred
+                        ? "bg-orange-900/20 border-orange-600/40 text-orange-400 hover:bg-orange-900/30 hover:border-orange-600/60 hover:shadow-md"
+                        : "bg-orange-900/10 border-orange-600/30 text-orange-400/70 hover:bg-orange-900/20 hover:border-orange-600/50 hover:shadow-md"
+                }`}
+              >
+                {saveStatus === "saving"
+                  ? t("saving")
+                  : saveStatus === "saved"
+                    ? t("savedSuccess")
+                    : isZeroCred
+                      ? t("enable", { defaultValue: "Enable" })
+                      : t("saveToConfig")}
+              </button>
+            )}
 
             {/* Error / gateway-down feedback */}
             {saveStatus === "error" && saveError && (
+              <p className="text-xs text-red-400 text-center">{saveError}</p>
+            )}
+            {saveError && saveStatus !== "error" && (
               <p className="text-xs text-red-400 text-center">{saveError}</p>
             )}
             {saveStatus === "gateway-down" && (
@@ -222,15 +336,17 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           </div>
         )}
 
-        {/* Link to platform */}
-        <a
-          href={info.setupUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-center text-sm text-orange-400 hover:text-orange-300 transition-all duration-200 py-2.5 rounded-xl border border-[var(--glass-border)] hover:border-orange-600/40 hover:bg-[var(--glass-divider)] hover:shadow-md cursor-pointer"
-        >
-          {t("openSetupPage", { platform: info.name })}
-        </a>
+        {/* Link to platform — hide for web-login channels since QR is inline */}
+        {!isWebLoginChannel && (
+          <a
+            href={info.setupUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-center text-sm text-orange-400 hover:text-orange-300 transition-all duration-200 py-2.5 rounded-xl border border-[var(--glass-border)] hover:border-orange-600/40 hover:bg-[var(--glass-divider)] hover:shadow-md cursor-pointer"
+          >
+            {t("openSetupPage", { platform: info.name })}
+          </a>
+        )}
       </DialogContent>
     </Dialog>
   );
