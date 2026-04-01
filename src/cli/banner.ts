@@ -97,18 +97,21 @@ export function formatCliBannerLine(version: string, options: BannerOptions = {}
   return `${line1}\n${line2}`;
 }
 
+// Each letter verified: T-I-G-E-R-P-A-W (8 letters)
 const TIGERPAW_ASCII = [
   "",
-  "  ████████ ██  ██████  ████████ ████████  ██████  ██      ██",
-  "     ██    ██  ██      ██       ██    ██  ██   ██ ██  ██  ██",
-  "     ██    ██  ██  ███ ██████   ████████  ██████  ██ ████ ██",
-  "     ██    ██  ██   ██ ██       ██   ██   ██      ████  ████",
-  "     ██    ██  ██████  ████████ ██    ██  ██      ███    ███",
+  "  █████ █  ████  █████ ████  ████   ███  █     █",
+  "    █   █ █     █     █   █ █   █ █   █ █  █  █",
+  "    █   █ █ ███ ████  ████  ████  █████ █ █ █ █",
+  "    █   █ █   █ █     █ █   █     █   █ ██   ██",
+  "    █   █  ████ █████ █  █  █     █   █ █     █",
   "",
-  "     ╔═══════════════════════════════════════╗",
-  "     ║   🐾  T I G E R P A W  🐅            ║",
-  "     ║   local-first AI trading gateway      ║",
-  "     ╚═══════════════════════════════════════╝",
+  "              ██  ██  ██",
+  "               ██████",
+  "              ████████",
+  "             ██████████",
+  "",
+  "       local-first AI trading gateway",
   "",
 ];
 
@@ -132,21 +135,8 @@ export function formatCliBannerArt(options: BannerOptions = {}): string {
   };
 
   const colored = TIGERPAW_ASCII.map((line) => {
-    if (line.includes("T I G E R P A W")) {
-      return (
-        theme.muted("        ║   ") +
-        theme.accent("🐾  ") +
-        theme.info("T I G E R P A W") +
-        theme.accent("  🐅") +
-        theme.muted("        ║")
-      );
-    }
     if (line.includes("local-first")) {
-      return (
-        theme.muted("        ║   ") +
-        theme.accentDim("local-first AI trading gateway") +
-        theme.muted("  ║")
-      );
+      return "       " + theme.accentDim("local-first AI trading gateway");
     }
     return splitGraphemes(line).map(colorChar).join("");
   });
