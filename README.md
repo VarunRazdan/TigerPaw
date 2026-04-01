@@ -222,11 +222,20 @@ If you find Tigerpaw useful, consider supporting development:
 
 ## Install
 
+**Requires [Node.js 22+](https://nodejs.org/).**
+
 ```bash
+# 1. Install globally via npm
 npm install -g @greatlyrecommended/tigerpaw
+
+# 2. Verify installation
+tigerpaw --version
+
+# 3. Start the gateway + dashboard
+tigerpaw start
 ```
 
-Requires Node.js 22+.
+That's it. `tigerpaw start` creates a config with safe defaults (paper mode, localhost-only, conservative risk tier), starts the gateway, and opens the dashboard at **http://localhost:18789**.
 
 ### From Source
 
@@ -235,23 +244,47 @@ git clone https://github.com/varunrazdan/tigerpaw.git
 cd tigerpaw
 pnpm install
 pnpm build
+node tigerpaw.mjs start
+```
+
+### Docker
+
+```bash
+docker run -d --name tigerpaw \
+  -p 18789:18789 \
+  -e TIGERPAW_GATEWAY_TOKEN=your-secret-token \
+  ghcr.io/varunrazdan/tigerpaw:latest \
+  tigerpaw start --bind lan
+```
+
+### Update to Latest
+
+```bash
+npm update -g @greatlyrecommended/tigerpaw
 ```
 
 ## Quick Start
 
+After installation, the typical workflow is:
+
 ```bash
+# Start gateway + open dashboard
 tigerpaw start
-```
 
-That's it. `tigerpaw start` creates a config with safe defaults (paper mode, localhost, conservative risk tier), starts the gateway, and opens the dashboard at `http://localhost:18789`.
-
-### Manual Setup (Advanced)
-
-```bash
+# Or with manual setup:
 tigerpaw setup                     # Create config + workspace
 tigerpaw gateway run --open        # Start gateway + open browser
-tigerpaw doctor                    # Check system health
+tigerpaw doctor                    # Check system health + security audit
 ```
+
+### First Run
+
+On first launch, an **onboarding wizard** guides you through:
+
+1. **AI provider** — connect OpenAI, Anthropic, Ollama, or another LLM
+2. **Messaging** — connect Discord, Telegram, Slack, Signal, or WhatsApp
+3. **Trading** — connect Alpaca, Coinbase, Binance, or other exchanges
+4. **Demo mode** — start with sample data to explore the dashboard
 
 ## Configuration
 
