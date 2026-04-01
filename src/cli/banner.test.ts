@@ -28,7 +28,7 @@ describe("formatCliBannerLine", () => {
       richTty: false,
     });
 
-    expect(line).toBe("🦞 Tigerpaw 2026.3.7 (abc1234)");
+    expect(line).toBe("🐅 Tigerpaw 2026.3.7 (abc1234)");
   });
 
   it("uses default tagline when cli.banner.taglineMode is default", () => {
@@ -41,7 +41,7 @@ describe("formatCliBannerLine", () => {
       richTty: false,
     });
 
-    expect(line).toBe("🦞 Tigerpaw 2026.3.7 (abc1234) — All your chats, one Tigerpaw.");
+    expect(line).toBe("🐅 Tigerpaw 2026.3.7 (abc1234) — Local-first AI gateway with claws.");
   });
 
   it("prefers explicit tagline mode over config", () => {
@@ -55,6 +55,6 @@ describe("formatCliBannerLine", () => {
       mode: "default",
     });
 
-    expect(line).toBe("🦞 Tigerpaw 2026.3.7 (abc1234) — All your chats, one Tigerpaw.");
+    expect(line).toBe("🐅 Tigerpaw 2026.3.7 (abc1234) — Local-first AI gateway with claws.");
   });
 });

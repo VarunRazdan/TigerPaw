@@ -1,6 +1,6 @@
 {
   "name": "@tigerpaw/ibkr",
-  "version": "2026.3.22",
+  "version": "2026.4.3",
   "private": true,
   "description": "Tigerpaw Interactive Brokers Client Portal API trading extension",
   "type": "module",

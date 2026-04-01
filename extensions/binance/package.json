@@ -1,6 +1,6 @@
 {
   "name": "@tigerpaw/binance",
-  "version": "2026.3.22",
+  "version": "2026.4.3",
   "private": true,
   "description": "Tigerpaw Binance crypto spot trading extension",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@tigerpaw/dydx",
-  "version": "2026.3.22",
+  "version": "2026.4.3",
   "private": true,
   "description": "Tigerpaw dYdX v4 decentralized perpetuals trading extension",
   "type": "module",

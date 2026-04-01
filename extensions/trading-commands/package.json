@@ -1,6 +1,6 @@
 {
   "name": "@tigerpaw/trading-commands",
-  "version": "0.0.1",
+  "version": "2026.4.3",
   "private": true,
   "description": "Unified cross-platform trading tools for messaging channels",
   "type": "module",

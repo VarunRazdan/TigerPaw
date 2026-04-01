@@ -1,6 +1,6 @@
 {
   "name": "@tigerpaw/kraken",
-  "version": "2026.3.22",
+  "version": "2026.4.3",
   "private": true,
   "description": "Tigerpaw Kraken crypto spot and margin trading extension",
   "type": "module",

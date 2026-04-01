@@ -11,6 +11,8 @@ vi.mock("tigerpaw/trading", () => ({
   withPlatformPortfolio: vi.fn(() => ({})),
   withPlatformPositionCount: vi.fn(() => ({ positionCountByPlatform: {}, openPositionCount: 0 })),
   autoActivateIfBreached: vi.fn().mockResolvedValue(false),
+  checkKillSwitch: vi.fn().mockResolvedValue({ active: false }),
+  isOrderAllowedUnderKillSwitch: vi.fn().mockReturnValue(true),
 }));
 
 // Mock config
