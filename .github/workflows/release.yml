@@ -25,12 +25,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Auto-compute CalVer from today's UTC date (YYYY.M.D, no zero-padding)
-          VERSION="$(date -u '+%Y.%-m.%-d')"
+          # Read version from package.json (source of truth)
+          VERSION="$(node -p "require('./package.json').version")"
 
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Auto-computed CalVer: $VERSION"
+          echo "CalVer from package.json: $VERSION"
 
       - name: Check if release already exists
         id: check
