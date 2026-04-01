@@ -16,10 +16,11 @@ import {
   TrendingUp,
   Scale,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useWorkflowStore, type Workflow as WorkflowType } from "@/stores/workflow-store";
@@ -508,10 +509,11 @@ export function WorkflowsPage() {
   const { t } = useTranslation("workflows");
   const { workflows, toggleWorkflow, deleteWorkflow, addWorkflow, fetchWorkflows } =
     useWorkflowStore();
+  const [initialLoading, setInitialLoading] = useState(workflows.length === 0);
 
   // Fetch real workflows from gateway on mount
   useEffect(() => {
-    void fetchWorkflows();
+    void fetchWorkflows().finally(() => setInitialLoading(false));
   }, [fetchWorkflows]);
 
   const handleUseTemplate = (tplId: string) => {
@@ -559,6 +561,10 @@ export function WorkflowsPage() {
   // Separate demo/template workflows from user-created ones
   const demoIds = new Set(["wf-trading-alert", "wf-message-router", "wf-daily-digest"]);
   const customWorkflows = workflows.filter((w) => !demoIds.has(w.id));
+
+  if (initialLoading) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
