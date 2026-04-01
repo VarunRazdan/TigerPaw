@@ -790,7 +790,7 @@ describe("workflows.credentials.get", () => {
     await handlers["workflows.credentials.get"](opts);
 
     const result = (respond.mock.calls[0] as unknown[])[1] as {
-      credential: { fields: Record<string, string> };
+      credential: { id: string; fields: Record<string, string> };
     };
     expect(result.credential.fields.apiKey).toBe("••••••");
     expect(result.credential.fields.token).toBe("••••••");

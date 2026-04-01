@@ -41,7 +41,7 @@ export const strategiesHandlers: GatewayRequestHandlers = {
   "strategies.save": async ({ params, respond }) => {
     try {
       const { saveStrategy } = await import("../../trading/strategies/registry.js");
-      const strategy = await saveStrategy(params);
+      const strategy = await saveStrategy(params as Parameters<typeof saveStrategy>[0]);
       respond(true, { strategy }, undefined);
     } catch (err) {
       respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, String(err)));
@@ -106,43 +106,27 @@ export const strategiesHandlers: GatewayRequestHandlers = {
         return;
       }
 
-      // Build runner dependencies via internal RPC to trading state handlers
-      const { tradingStateHandlers } = await import("./trading-state.js");
       const { buildRunnerDeps } = await import("../../trading/strategies/runner-deps.js");
       const { executeStrategy } = await import("../../trading/strategies/runner.js");
 
-      // Create an internal gatewayRpc that dispatches to co-located handlers
+      // Build runner deps with a stub gateway RPC — the runner calls
+      // trading.getState and trading.recordFill internally.
+      const { loadPolicyState } = await import("../../trading/policy-state.js");
+
       const internalRpc = async (
         method: string,
         rpcParams: Record<string, unknown>,
       ): Promise<{ ok: boolean; payload?: Record<string, unknown>; error?: string }> => {
-        const handler = tradingStateHandlers[method];
-        if (!handler) {
-          return { ok: false, error: `Method not found: ${method}` };
+        if (method === "trading.getState") {
+          const state = await loadPolicyState();
+          return { ok: true, payload: state as unknown as Record<string, unknown> };
         }
-
-        return new Promise((resolve) => {
-          handler({
-            req: {
-              type: "req" as const,
-              id: `internal-${Date.now()}`,
-              method,
-            } as unknown as Parameters<typeof handler>[0]["req"],
-            params: rpcParams,
-            client: null,
-            isWebchatConnect: () => false,
-            respond: (ok, payload, error) => {
-              resolve({
-                ok: ok as boolean,
-                payload: payload as Record<string, unknown> | undefined,
-                error: error
-                  ? ((error as { message?: string }).message ?? String(error))
-                  : undefined,
-              });
-            },
-            context: {} as Record<string, never>,
-          });
-        });
+        if (method === "trading.recordFill") {
+          const { recordTradeFill } = await import("../../trading/realized-pnl.js");
+          const result = await recordTradeFill(rpcParams as Parameters<typeof recordTradeFill>[0]);
+          return { ok: true, payload: result as unknown as Record<string, unknown> };
+        }
+        return { ok: false, error: `Method not found: ${method}` };
       };
 
       const deps = buildRunnerDeps(internalRpc);

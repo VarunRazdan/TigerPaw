@@ -20,6 +20,9 @@ export type TradingEventPayload = {
   symbol?: string;
   side?: "buy" | "sell" | "cancel";
   notionalUsd?: number;
+  quantity?: number;
+  executedPrice?: number;
+  realizedPnl?: number;
   reason?: string;
   failedStep?: string;
   approvalMode?: string;
