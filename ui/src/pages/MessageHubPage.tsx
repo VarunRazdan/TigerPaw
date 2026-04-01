@@ -1,7 +1,8 @@
 import { Search, Inbox, CheckCheck, Mail, MailOpen, Filter, Bell, Shield } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn, assetUrl } from "@/lib/utils";
@@ -176,10 +177,11 @@ export function MessageHubPage() {
     unreadByChannel,
     fetchRecentMessages,
   } = useMessageHubStore();
+  const [initialLoading, setInitialLoading] = useState(messages.length === 0);
 
   // Fetch real messages from gateway on mount
   useEffect(() => {
-    void fetchRecentMessages();
+    void fetchRecentMessages().finally(() => setInitialLoading(false));
   }, [fetchRecentMessages]);
 
   const channelCounts = unreadByChannel();
@@ -224,6 +226,10 @@ export function MessageHubPage() {
   };
 
   const isEmpty = filtered.length === 0;
+
+  if (initialLoading) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

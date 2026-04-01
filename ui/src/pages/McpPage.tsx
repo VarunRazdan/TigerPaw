@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -476,6 +477,7 @@ export function McpPage() {
     demoMode ? DEMO_SERVER_TOOLS : {},
   );
   const [isLive, setIsLive] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!demoMode);
 
   // Connected-servers state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -529,6 +531,10 @@ export function McpPage() {
         }
       } catch {
         // Gateway offline — keep demo data
+      } finally {
+        if (!cancelled) {
+          setInitialLoading(false);
+        }
       }
     }
     void fetchMcpData();
@@ -582,6 +588,10 @@ export function McpPage() {
 
   function handleCopyUrl() {
     navigator.clipboard.writeText(`http://localhost:${port}`).catch(() => {});
+  }
+
+  if (initialLoading) {
+    return <PageSkeleton />;
   }
 
   return (

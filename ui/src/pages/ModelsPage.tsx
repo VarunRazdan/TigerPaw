@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -435,6 +436,7 @@ export function ModelsPage() {
   const [providers, setProviders] = useState<Provider[]>(() => (demoMode ? DEMO_PROVIDERS : []));
   const [models, setModels] = useState<Model[]>(() => (demoMode ? DEMO_MODELS : []));
   const [isLive, setIsLive] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!demoMode);
   const [pullInput, setPullInput] = useState("");
   const [isPulling, setIsPulling] = useState(false);
   const [cloudFallback, setCloudFallback] = useState(false);
@@ -508,8 +510,11 @@ export function ModelsPage() {
           setModels(catalogModels);
         }
       } catch (err) {
-        // Gateway offline — keep demo data
         notifyError("Failed to load model data", err);
+      } finally {
+        if (!cancelled) {
+          setInitialLoading(false);
+        }
       }
     }
     void fetchLiveData();
@@ -671,6 +676,10 @@ export function ModelsPage() {
   // -------------------------------------------------------------------------
   // Render
   // -------------------------------------------------------------------------
+
+  if (initialLoading) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

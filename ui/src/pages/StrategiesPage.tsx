@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { BacktestPanel } from "@/components/BacktestPanel";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { cn } from "@/lib/utils";
 import { useStrategyStore } from "@/stores/strategy-store";
 
@@ -138,6 +139,10 @@ export default function StrategiesPage() {
 
   const selected = strategies.find((s) => s.id === selectedStrategyId);
 
+  if (loading && strategies.length === 0) {
+    return <PageSkeleton />;
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -156,12 +161,7 @@ export default function StrategiesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Strategy list */}
         <div className="lg:col-span-1 space-y-2">
-          {loading && strategies.length === 0 && (
-            <div className="rounded-2xl glass-panel p-8 text-center text-neutral-500 text-sm">
-              Loading...
-            </div>
-          )}
-          {!loading && strategies.length === 0 && (
+          {strategies.length === 0 && (
             <div className="rounded-2xl glass-panel p-8 text-center text-neutral-500 text-sm">
               {t("noStrategies")}
             </div>
