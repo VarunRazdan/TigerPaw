@@ -29,6 +29,7 @@ import type {
   NodeExecutionResult,
   ActionDependencies,
   RetryConfig,
+  ExecutionCallbacks,
 } from "./types.js";
 
 /** Generate a short unique ID for execution runs. */
@@ -114,6 +115,9 @@ function computeMergeState(nodes: WorkflowNode[], edges: WorkflowEdge[]): MergeS
 
 export class WorkflowEngine {
   private deps: ActionDependencies;
+  private currentCallbacks?: ExecutionCallbacks;
+  private currentPinnedData?: Record<string, Record<string, unknown>>;
+  private currentStopAfterNodeId?: string;
 
   constructor(deps: ActionDependencies) {
     this.deps = deps;
@@ -135,7 +139,14 @@ export class WorkflowEngine {
     triggerData?: Record<string, unknown>,
     parentExecutionId?: string,
     depth: number = 0,
+    callbacks?: ExecutionCallbacks,
+    pinnedData?: Record<string, Record<string, unknown>>,
+    stopAfterNodeId?: string,
   ): Promise<WorkflowExecution> {
+    this.currentCallbacks = callbacks;
+    this.currentPinnedData = pinnedData;
+    this.currentStopAfterNodeId = stopAfterNodeId;
+
     if (depth > MAX_SUB_WORKFLOW_DEPTH) {
       return {
         id: execId(),
@@ -165,6 +176,8 @@ export class WorkflowEngine {
       parentExecutionId,
     };
 
+    callbacks?.onExecutionStart?.(execution.id, workflow.id, workflow.name);
+
     const nodeMap = buildNodeMap(workflow.nodes);
     const adjacency = buildAdjacency(workflow.edges);
     const ctx = new ExecutionContext(triggerData);
@@ -188,7 +201,14 @@ export class WorkflowEngine {
         completedAt: Date.now(),
         output: triggerData,
       });
+      callbacks?.onNodeStart?.(execution.id, triggerNodeId, triggerNode.label, "trigger");
+      callbacks?.onNodeComplete?.(execution.id, execution.nodeResults[0]);
       visited.add(triggerNodeId);
+
+      // Store trigger output as items
+      if (triggerData) {
+        ctx.setNodeOutput(triggerNodeId, [{ json: triggerData, sourceNodeId: triggerNodeId }]);
+      }
 
       // Traverse from trigger node
       await this.traverse(
@@ -211,6 +231,10 @@ export class WorkflowEngine {
 
     execution.completedAt = Date.now();
     execution.durationMs = execution.completedAt - execution.startedAt;
+    callbacks?.onExecutionComplete?.(execution.id, execution);
+    this.currentCallbacks = undefined;
+    this.currentPinnedData = undefined;
+    this.currentStopAfterNodeId = undefined;
     return execution;
   }
 
@@ -340,7 +364,7 @@ export class WorkflowEngine {
   ): Promise<void> {
     // Disabled node passthrough: skip execution, continue traversal
     if (node.disabled) {
-      execution.nodeResults.push({
+      const skippedResult: NodeExecutionResult = {
         nodeId: node.id,
         nodeLabel: node.label,
         nodeType: node.type,
@@ -348,7 +372,42 @@ export class WorkflowEngine {
         startedAt: Date.now(),
         completedAt: Date.now(),
         output: { disabled: true },
-      });
+      };
+      execution.nodeResults.push(skippedResult);
+      this.currentCallbacks?.onNodeComplete?.(execution.id, skippedResult);
+      await this.traverse(
+        node.id,
+        nodeMap,
+        adjacency,
+        ctx,
+        execution,
+        visited,
+        depth,
+        undefined,
+        mergeState,
+      );
+      return;
+    }
+
+    // Pinned data: skip execution and use frozen output
+    if (this.currentPinnedData?.[node.id]) {
+      const pinnedOutput = this.currentPinnedData[node.id];
+      const pinnedResult: NodeExecutionResult = {
+        nodeId: node.id,
+        nodeLabel: node.label,
+        nodeType: node.type,
+        status: "success",
+        startedAt: Date.now(),
+        completedAt: Date.now(),
+        output: pinnedOutput,
+        pinned: true,
+      };
+      execution.nodeResults.push(pinnedResult);
+      this.currentCallbacks?.onNodeComplete?.(execution.id, pinnedResult);
+      if (pinnedOutput) {
+        ctx.merge(pinnedOutput);
+        ctx.setNodeOutput(node.id, [{ json: pinnedOutput, sourceNodeId: node.id }]);
+      }
       await this.traverse(
         node.id,
         nodeMap,
@@ -377,8 +436,14 @@ export class WorkflowEngine {
       ctx.set("__branchOutputs", branchOutputs);
     }
 
+    // Capture context snapshot before execution (for input inspection)
+    const inputSnapshot = ctx.toJSON();
+
+    this.currentCallbacks?.onNodeStart?.(execution.id, node.id, node.label, node.type);
     const result = await this.executeWithRetry(node, edge, ctx, depth);
+    result.input = inputSnapshot;
     execution.nodeResults.push(result);
+    this.currentCallbacks?.onNodeComplete?.(execution.id, result);
 
     if (result.status === "error") {
       // Check for error handler node
@@ -459,6 +524,11 @@ export class WorkflowEngine {
     // Merge output into context for downstream nodes
     if (result.output) {
       ctx.merge(result.output);
+    }
+
+    // Stop-after: halt traversal after target node executes
+    if (this.currentStopAfterNodeId && node.id === this.currentStopAfterNodeId) {
+      return;
     }
 
     // Loop nodes: iterate over an array, executing the loop body per item
@@ -577,6 +647,8 @@ export class WorkflowEngine {
       switch (node.type) {
         case "condition": {
           const matched = evaluateCondition(node.subtype, node.config, ctx);
+          const condOutput = { conditionResult: matched };
+          ctx.setNodeOutput(node.id, [{ json: condOutput, sourceNodeId: node.id }]);
 
           // Conditions always succeed — the engine uses conditionResult
           // to decide which edge label ("match" / "no-match") to follow.
@@ -587,12 +659,17 @@ export class WorkflowEngine {
             status: "success",
             startedAt,
             completedAt: Date.now(),
-            output: { conditionResult: matched },
+            output: condOutput,
           };
         }
 
         case "router": {
           const routerResult = evaluateRouter(node.subtype, node.config, ctx);
+          const routerOutput = {
+            selectedOutput: routerResult.selectedOutput,
+            evaluatedValue: routerResult.evaluatedValue,
+          };
+          ctx.setNodeOutput(node.id, [{ json: routerOutput, sourceNodeId: node.id }]);
           return {
             nodeId: node.id,
             nodeLabel: node.label,
@@ -600,10 +677,7 @@ export class WorkflowEngine {
             status: "success",
             startedAt,
             completedAt: Date.now(),
-            output: {
-              selectedOutput: routerResult.selectedOutput,
-              evaluatedValue: routerResult.evaluatedValue,
-            },
+            output: routerOutput,
           };
         }
 
@@ -613,7 +687,8 @@ export class WorkflowEngine {
             return this.executeSubWorkflow(node, ctx, startedAt, depth);
           }
 
-          const output = await executeAction(node.subtype, node.config, ctx, this.deps);
+          const items = await executeAction(node.subtype, node.config, ctx, this.deps);
+          ctx.setNodeOutput(node.id, items);
           return {
             nodeId: node.id,
             nodeLabel: node.label,
@@ -621,12 +696,13 @@ export class WorkflowEngine {
             status: "success",
             startedAt,
             completedAt: Date.now(),
-            output,
+            output: items[0]?.json,
           };
         }
 
         case "transform": {
-          const output = executeTransform(node.subtype, node.config, ctx);
+          const items = executeTransform(node.subtype, node.config, ctx);
+          ctx.setNodeOutput(node.id, items);
           return {
             nodeId: node.id,
             nodeLabel: node.label,
@@ -634,7 +710,7 @@ export class WorkflowEngine {
             status: "success",
             startedAt,
             completedAt: Date.now(),
-            output,
+            output: items[0]?.json,
           };
         }
 
@@ -657,6 +733,10 @@ export class WorkflowEngine {
             // The upstream should handle re-routing; just pass through
           }
 
+          const ehOutput = { errorHandled: true, errorAction, originalError: errorInfo };
+          ctx.setNodeOutput(node.id, [
+            { json: ehOutput as Record<string, unknown>, sourceNodeId: node.id },
+          ]);
           return {
             nodeId: node.id,
             nodeLabel: node.label,
@@ -664,7 +744,7 @@ export class WorkflowEngine {
             status: "success",
             startedAt,
             completedAt: Date.now(),
-            output: { errorHandled: true, errorAction, originalError: errorInfo },
+            output: ehOutput,
           };
         }
 
@@ -891,6 +971,8 @@ export class WorkflowEngine {
       triggerData,
       undefined,
       parentDepth + 1,
+      this.currentCallbacks,
+      this.currentPinnedData,
     );
 
     if (subExecution.status === "failed") {

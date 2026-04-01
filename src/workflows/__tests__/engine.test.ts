@@ -556,7 +556,7 @@ describe("Transforms", () => {
         event: { payload: { symbol: "ETH", price: 3500 } },
       });
       const result = executeTransform("extract_data", { path: "event.payload.symbol" }, ctx);
-      expect(result).toEqual({ extracted: "ETH" });
+      expect(result[0].json).toEqual({ extracted: "ETH" });
     });
 
     it("uses a custom outputKey", () => {
@@ -566,13 +566,13 @@ describe("Transforms", () => {
         { path: "data.value", outputKey: "myValue" },
         ctx,
       );
-      expect(result).toEqual({ myValue: 42 });
+      expect(result[0].json).toEqual({ myValue: 42 });
     });
 
     it("returns undefined for a missing path", () => {
       const ctx = new ExecutionContext({ data: {} });
       const result = executeTransform("extract_data", { path: "data.missing.deep" }, ctx);
-      expect(result).toEqual({ extracted: undefined });
+      expect(result[0].json).toEqual({ extracted: undefined });
     });
 
     it("throws when path is empty", () => {
@@ -598,7 +598,7 @@ describe("Transforms", () => {
         { template: "Buy {{qty}} shares of {{symbol}}" },
         ctx,
       );
-      expect(result).toEqual({ formatted: "Buy 10 shares of AAPL" });
+      expect(result[0].json).toEqual({ formatted: "Buy 10 shares of AAPL" });
     });
 
     it("uses a custom outputKey", () => {
@@ -608,13 +608,13 @@ describe("Transforms", () => {
         { template: "Hello {{name}}", outputKey: "greeting" },
         ctx,
       );
-      expect(result).toEqual({ greeting: "Hello Alice" });
+      expect(result[0].json).toEqual({ greeting: "Hello Alice" });
     });
 
     it("replaces missing keys with empty string", () => {
       const ctx = new ExecutionContext({});
       const result = executeTransform("format_text", { template: "Value: {{missing}}" }, ctx);
-      expect(result).toEqual({ formatted: "Value: " });
+      expect(result[0].json).toEqual({ formatted: "Value: " });
     });
 
     it("throws when template is empty", () => {
@@ -636,13 +636,13 @@ describe("Transforms", () => {
     it("parses a JSON string from context", () => {
       const ctx = new ExecutionContext({ webhookResponse: '{"status":"ok","code":200}' });
       const result = executeTransform("parse_json", {}, ctx);
-      expect(result).toEqual({ parsed: { status: "ok", code: 200 } });
+      expect(result[0].json).toEqual({ parsed: { status: "ok", code: 200 } });
     });
 
     it("returns already-parsed objects as-is", () => {
       const ctx = new ExecutionContext({ webhookResponse: { already: "parsed" } });
       const result = executeTransform("parse_json", {}, ctx);
-      expect(result).toEqual({ parsed: { already: "parsed" } });
+      expect(result[0].json).toEqual({ parsed: { already: "parsed" } });
     });
 
     it("uses custom inputKey and outputKey", () => {
@@ -652,7 +652,7 @@ describe("Transforms", () => {
         { inputKey: "rawData", outputKey: "jsonData" },
         ctx,
       );
-      expect(result).toEqual({ jsonData: { x: 1 } });
+      expect(result[0].json).toEqual({ jsonData: { x: 1 } });
     });
 
     it("throws when inputKey value is missing from context", () => {

@@ -78,9 +78,17 @@ export type NodeExecutionResult = {
   status: "success" | "error" | "skipped" | "retrying";
   startedAt: number;
   completedAt: number;
+  input?: Record<string, unknown>;
   output?: Record<string, unknown>;
   error?: string;
   retryCount?: number;
+  pinned?: boolean;
+};
+
+export type WorkflowItem = {
+  json: Record<string, unknown>;
+  binary?: Record<string, { data: string; mimeType: string; fileName?: string }>;
+  sourceNodeId?: string;
 };
 
 export type WorkflowExecution = {
@@ -103,6 +111,25 @@ type WorkflowState = {
   demoMode: boolean;
   executionHistory: WorkflowExecution[];
   isExecuting: string | null; // workflow ID being executed
+
+  // Data pinning
+  pinnedNodeData: Record<string, Record<string, unknown>>;
+  pinNodeData: (nodeId: string, data: Record<string, unknown>) => void;
+  unpinNodeData: (nodeId: string) => void;
+  clearAllPins: () => void;
+
+  // Debug replay
+  replayExecutionId: string | null;
+  loadExecutionForReplay: (workflowId: string, executionId: string) => Promise<boolean>;
+  reRunFromNode: (workflowId: string, nodeId: string) => Promise<WorkflowExecution | null>;
+  clearReplay: () => void;
+
+  // Execute to node (single-node testing)
+  executeToNode: (
+    workflowId: string,
+    targetNodeId: string,
+    testData?: Record<string, unknown>,
+  ) => Promise<WorkflowExecution | null>;
 
   setDemoMode: (enabled: boolean) => void;
   fetchWorkflows: () => Promise<void>;
@@ -255,6 +282,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   demoMode: false,
   executionHistory: [],
   isExecuting: null,
+  pinnedNodeData: {},
+  replayExecutionId: null,
 
   setDemoMode: (enabled) =>
     set({
@@ -318,11 +347,13 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   getWorkflow: (id) => get().workflows.find((w) => w.id === id),
 
   executeWorkflow: async (id, testData) => {
+    const pinnedData = get().pinnedNodeData;
     set({ isExecuting: id });
     try {
       const result = await gatewayRpc<{ execution?: WorkflowExecution }>("workflows.execute", {
         id,
         testData,
+        pinnedData: Object.keys(pinnedData).length > 0 ? pinnedData : undefined,
       });
       set({ isExecuting: null });
       if (result.ok && result.payload?.execution) {
@@ -456,6 +487,139 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       return result.ok;
     } catch {
       return false;
+    }
+  },
+
+  pinNodeData: (nodeId, data) => {
+    set((s) => ({
+      pinnedNodeData: { ...s.pinnedNodeData, [nodeId]: data },
+    }));
+  },
+
+  unpinNodeData: (nodeId) => {
+    set((s) => {
+      const { [nodeId]: _, ...rest } = s.pinnedNodeData;
+      return { pinnedNodeData: rest };
+    });
+  },
+
+  clearAllPins: () => {
+    set({ pinnedNodeData: {} });
+  },
+
+  loadExecutionForReplay: async (workflowId, executionId) => {
+    try {
+      const result = await gatewayRpc<{ execution?: WorkflowExecution }>("workflows.execution", {
+        workflowId,
+        executionId,
+      });
+      if (!result.ok || !result.payload?.execution) {
+        return false;
+      }
+      const execution = result.payload.execution;
+
+      // Pin all node outputs from the execution
+      const pinned: Record<string, Record<string, unknown>> = {};
+      for (const nodeResult of execution.nodeResults) {
+        if (nodeResult.output && nodeResult.status === "success") {
+          pinned[nodeResult.nodeId] = nodeResult.output;
+        }
+      }
+
+      set({
+        pinnedNodeData: pinned,
+        replayExecutionId: executionId,
+        executionHistory: [
+          execution,
+          ...get().executionHistory.filter((e) => e.id !== executionId),
+        ].slice(0, 50),
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  reRunFromNode: async (workflowId, nodeId) => {
+    // Unpin target node + all downstream nodes, then execute
+    // For simplicity, we unpin just the target node — downstream nodes will re-execute
+    // because the engine traverses forward from the target
+    const currentPins = { ...get().pinnedNodeData };
+    delete currentPins[nodeId];
+    set({ pinnedNodeData: currentPins });
+
+    // Use executeToNode to run up to the target, then continue
+    // Actually, for re-run-from-node, we want to run the FULL workflow
+    // with everything before the target pinned and the target + downstream unpinned
+    set({ isExecuting: workflowId });
+    try {
+      const pinnedData = get().pinnedNodeData;
+      const result = await gatewayRpc<{ execution?: WorkflowExecution }>("workflows.execute", {
+        id: workflowId,
+        pinnedData: Object.keys(pinnedData).length > 0 ? pinnedData : undefined,
+      });
+      set({ isExecuting: null });
+      if (result.ok && result.payload?.execution) {
+        const execution = result.payload.execution;
+        set((s) => ({
+          executionHistory: [execution, ...s.executionHistory].slice(0, 50),
+          workflows: s.workflows.map((w) =>
+            w.id === workflowId
+              ? {
+                  ...w,
+                  lastRunAt: new Date(execution.startedAt).toISOString(),
+                  runCount: w.runCount + 1,
+                }
+              : w,
+          ),
+        }));
+        return execution;
+      }
+      return null;
+    } catch {
+      set({ isExecuting: null });
+      return null;
+    }
+  },
+
+  clearReplay: () => {
+    set({ replayExecutionId: null, pinnedNodeData: {} });
+  },
+
+  executeToNode: async (workflowId, targetNodeId, testData) => {
+    const pinnedData = get().pinnedNodeData;
+    set({ isExecuting: workflowId });
+    try {
+      const result = await gatewayRpc<{ execution?: WorkflowExecution }>(
+        "workflows.executeToNode",
+        {
+          id: workflowId,
+          targetNodeId,
+          testData,
+          pinnedData: Object.keys(pinnedData).length > 0 ? pinnedData : undefined,
+        },
+      );
+      set({ isExecuting: null });
+      if (result.ok && result.payload?.execution) {
+        const execution = result.payload.execution;
+        set((s) => ({
+          executionHistory: [execution, ...s.executionHistory].slice(0, 50),
+          workflows: s.workflows.map((w) =>
+            w.id === workflowId
+              ? {
+                  ...w,
+                  lastRunAt: new Date(execution.startedAt).toISOString(),
+                  runCount: w.runCount + 1,
+                }
+              : w,
+          ),
+        }));
+        return execution;
+      }
+      return null;
+    } catch {
+      set({ isExecuting: null });
+      return null;
     }
   },
 

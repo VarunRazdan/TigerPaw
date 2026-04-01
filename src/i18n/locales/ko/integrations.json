@@ -1,0 +1,92 @@
+{
+  "sdk": {
+    "http": {
+      "name": "HTTP \uc694\uccad",
+      "description": "\ud398\uc774\uc9c0\ub124\uc774\uc158, \uc7ac\uc2dc\ub3c4 \ubc0f \uc778\uc99d \ub3c4\uc6b0\ubbf8\ub97c \uc9c0\uc6d0\ud558\ub294 HTTP \uc694\uccad \uc218\ud589",
+      "actions": {
+        "request": "HTTP \uc694\uccad"
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "\uba54\uc2dc\uc9c0 \ubcf4\ub0b4\uae30, \uac8c\uc2dc\ubb3c\uc5d0 \ubc18\uc751\ud558\uae30, \ucc44\ub110 \ubaa8\ub2c8\ud130\ub9c1",
+      "actions": {
+        "send_message": "\uba54\uc2dc\uc9c0 \ubcf4\ub0b4\uae30",
+        "post_to_channel": "\ucc44\ub110\uc5d0 \uac8c\uc2dc",
+        "add_reaction": "\ubc18\uc751 \ucd94\uac00"
+      },
+      "triggers": {
+        "new_message": "\uc0c8 \uba54\uc2dc\uc9c0"
+      }
+    },
+    "google_sheets": {
+      "name": "Google Sheets",
+      "description": "Google Sheets\uc5d0\uc11c \ud589 \uc77d\uae30, \uc4f0\uae30 \ubc0f \ucd94\uac00",
+      "actions": {
+        "read_rows": "\ud589 \uc77d\uae30",
+        "write_rows": "\ud589 \uc4f0\uae30",
+        "append_row": "\ud589 \ucd94\uac00"
+      },
+      "triggers": {
+        "row_added": "\ud589 \ucd94\uac00\ub428"
+      }
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "\uc774\uc288 \uc0dd\uc131, \ud480 \ub9ac\ud018\uc2a4\ud2b8 \ub313\uae00 \uc791\uc131 \ubc0f \uc6f9\ud6c5 \uc218\uc2e0",
+      "actions": {
+        "create_issue": "\uc774\uc288 \uc0dd\uc131",
+        "comment_on_issue": "\uc774\uc288\uc5d0 \ub313\uae00 \uc791\uc131",
+        "comment_on_pr": "\ud480 \ub9ac\ud018\uc2a4\ud2b8\uc5d0 \ub313\uae00 \uc791\uc131"
+      },
+      "triggers": {
+        "push": "\ud478\uc2dc \uc774\ubca4\ud2b8",
+        "pull_request": "\ud480 \ub9ac\ud018\uc2a4\ud2b8 \uc774\ubca4\ud2b8",
+        "issue": "\uc774\uc288 \uc774\ubca4\ud2b8"
+      }
+    },
+    "openai": {
+      "name": "OpenAI",
+      "description": "GPT \ubaa8\ub378\ub85c \ud14d\uc2a4\ud2b8 \uc0dd\uc131 \ubc0f \uc784\ubca0\ub529 \uc0dd\uc131",
+      "actions": {
+        "chat_completion": "\ucc44\ud305 \uc644\uc131",
+        "embeddings": "\uc784\ubca0\ub529 \uc0dd\uc131"
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "description": "Claude \ubaa8\ub378\ub85c \ud14d\uc2a4\ud2b8 \uc0dd\uc131",
+      "actions": {
+        "chat_completion": "\ucc44\ud305 \uc644\uc131"
+      }
+    }
+  },
+  "categories": {
+    "utility": "\uc720\ud2f8\ub9ac\ud2f0",
+    "communication": "\ucee4\ubba4\ub2c8\ucf00\uc774\uc158",
+    "productivity": "\uc0dd\uc0b0\uc131",
+    "development": "\uac1c\ubc1c",
+    "ai": "AI \ubc0f \uba38\uc2e0\ub7ec\ub2dd"
+  },
+  "fields": {
+    "url": "URL",
+    "method": "HTTP \uba54\uc11c\ub4dc",
+    "channel": "\ucc44\ub110",
+    "message": "\uba54\uc2dc\uc9c0",
+    "spreadsheetId": "\uc2a4\ud504\ub808\ub4dc\uc2dc\ud2b8 ID",
+    "range": "\ubc94\uc704",
+    "owner": "\uc800\uc7a5\uc18c \uc18c\uc720\uc790",
+    "repo": "\uc800\uc7a5\uc18c",
+    "model": "\ubaa8\ub378",
+    "prompt": "\ud504\ub86c\ud504\ud2b8",
+    "apiKey": "API \ud0a4",
+    "webhookPath": "\uc6f9\ud6c5 \uacbd\ub85c",
+    "webhookSecret": "\uc6f9\ud6c5 \uc2dc\ud06c\ub9bf"
+  },
+  "errors": {
+    "rateLimit": "{{integration}}\uc758 \uc694\uccad \ud69f\uc218 \uc81c\ud55c \ucd08\uacfc",
+    "authFailed": "{{integration}} \uc778\uc99d \uc2e4\ud328",
+    "noConnection": "{{integration}}\uc758 \uc5f0\uacb0\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
+    "invalidInput": "\uc798\ubabb\ub41c \uc785\ub825: {{details}}"
+  }
+}

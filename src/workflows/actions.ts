@@ -11,14 +11,21 @@ import {
   getCalendarClient,
   getMeetingClient,
 } from "../integrations/clients/index.js";
+import { createSdkActionExecutor } from "../integrations/sdk/action-bridge.js";
+import { listIntegrations } from "../integrations/sdk/registry.js";
 import type { ExecutionContext } from "./context.js";
-import type { ActionDependencies } from "./types.js";
+import type { ActionDependencies, WorkflowItem } from "./types.js";
+
+/** Wrap a legacy Record output as a single WorkflowItem. */
+function wrapOutput(output: Record<string, unknown>, sourceNodeId?: string): WorkflowItem[] {
+  return [{ json: output, sourceNodeId }];
+}
 
 type ActionExecutor = (
   config: Record<string, unknown>,
   ctx: ExecutionContext,
   deps: ActionDependencies,
-) => Promise<Record<string, unknown>>;
+) => Promise<WorkflowItem[]>;
 
 // ── Send Message ──────────────────────────────────────────────────
 
@@ -45,11 +52,11 @@ const sendMessage: ActionExecutor = async (config, ctx, deps) => {
     throw new Error(`send_message failed: ${result.error ?? "unknown error"}`);
   }
 
-  return {
+  return wrapOutput({
     messageSent: true,
     messageId: (result.payload as Record<string, unknown>)?.messageId,
     channel,
-  };
+  });
 };
 
 // ── Call Webhook ──────────────────────────────────────────────────
@@ -97,10 +104,10 @@ const callWebhook: ActionExecutor = async (config, ctx, deps) => {
     throw new Error(`call_webhook: ${response.status} ${response.statusText}`);
   }
 
-  return {
+  return wrapOutput({
     webhookStatus: response.status,
     webhookResponse: responseData,
-  };
+  });
 };
 
 // ── Run LLM Task ─────────────────────────────────────────────────
@@ -127,10 +134,10 @@ const runLlmTask: ActionExecutor = async (config, ctx, deps) => {
   }
 
   const payload = result.payload;
-  return {
+  return wrapOutput({
     llmResponse: payload?.response ?? payload?.text ?? "",
     llmModel: payload?.model ?? model ?? "default",
-  };
+  });
 };
 
 // ── Kill Switch ──────────────────────────────────────────────────
@@ -143,15 +150,15 @@ const killswitch: ActionExecutor = async (config, _ctx, deps) => {
   if (mode === "activate") {
     deps.log(`Activating kill switch: ${reason}`);
     await deps.killSwitch.activate(reason, "workflow", switchMode);
-    return { killSwitchActive: true, reason };
+    return wrapOutput({ killSwitchActive: true, reason });
   } else if (mode === "deactivate") {
     deps.log("Deactivating kill switch");
     await deps.killSwitch.deactivate("workflow");
-    return { killSwitchActive: false };
+    return wrapOutput({ killSwitchActive: false });
   }
 
   const status = await deps.killSwitch.check();
-  return { killSwitchActive: status.active, reason: status.reason };
+  return wrapOutput({ killSwitchActive: status.active, reason: status.reason });
 };
 
 // ── Trade (submit order intent) ──────────────────────────────────
@@ -184,11 +191,11 @@ const trade: ActionExecutor = async (config, ctx, deps) => {
   }
 
   const payload = result.payload;
-  return {
+  return wrapOutput({
     tradeSubmitted: true,
     orderId: payload?.orderId,
     outcome: payload?.outcome ?? "submitted",
-  };
+  });
 };
 
 // ── Send Email ────────────────────────────────────────────────────
@@ -225,7 +232,7 @@ const sendEmail: ActionExecutor = async (config, ctx, deps) => {
   const client = await getEmailClient();
   const result = await client.sendMessage({ to, subject, body, cc });
 
-  return { emailSent: true, emailId: result.id, recipients: to };
+  return wrapOutput({ emailSent: true, emailId: result.id, recipients: to });
 };
 
 // ── Create Calendar Event ─────────────────────────────────────────
@@ -264,12 +271,12 @@ const createCalendarEvent: ActionExecutor = async (config, ctx, deps) => {
     addMeetingLink: config.addMeetingLink === true,
   });
 
-  return {
+  return wrapOutput({
     eventCreated: true,
     eventId: event.id,
     eventTitle: event.title,
     meetingLink: event.meetingLink,
-  };
+  });
 };
 
 // ── Schedule Meeting ──────────────────────────────────────────────
@@ -298,12 +305,12 @@ const scheduleMeeting: ActionExecutor = async (config, ctx, deps) => {
   const client = await getMeetingClient();
   const meeting = await client.createMeeting({ topic, startTime, duration, attendees });
 
-  return {
+  return wrapOutput({
     meetingScheduled: true,
     meetingId: meeting.id,
     joinUrl: meeting.joinUrl,
     provider: meeting.provider,
-  };
+  });
 };
 
 // ── Registry ──────────────────────────────────────────────────────
@@ -328,15 +335,27 @@ export async function executeAction(
   config: Record<string, unknown>,
   ctx: ExecutionContext,
   deps: ActionDependencies,
-): Promise<Record<string, unknown>> {
+): Promise<WorkflowItem[]> {
   const executor = executors[subtype];
-  if (!executor) {
-    throw new Error(`Unknown action subtype: ${subtype}`);
+  if (executor) {
+    return executor(config, ctx, deps);
   }
-  return executor(config, ctx, deps);
+
+  // SDK fallback: "integrationId.actionName" format (e.g. "slack.send_message")
+  const dotIndex = subtype.indexOf(".");
+  if (dotIndex > 0) {
+    const integrationId = subtype.slice(0, dotIndex);
+    const sdkExecutor = createSdkActionExecutor(integrationId, subtype);
+    if (sdkExecutor) {
+      return sdkExecutor(config, ctx, deps);
+    }
+  }
+
+  throw new Error(`Unknown action subtype: ${subtype}`);
 }
 
 /** List all supported action subtypes. */
 export function supportedActions(): string[] {
-  return Object.keys(executors);
+  const sdkActions = listIntegrations().flatMap((i) => i.actions.map((a) => a.name));
+  return [...Object.keys(executors), ...sdkActions];
 }

@@ -8,7 +8,13 @@
 
 // ── Node config shapes (per subtype) ──────────────────────────────
 
-export type TriggerSubtype = "cron" | "trading.event" | "message.received" | "webhook" | "manual";
+export type TriggerSubtype =
+  | "cron"
+  | "trading.event"
+  | "message.received"
+  | "webhook"
+  | "manual"
+  | (string & {});
 export type ConditionSubtype =
   | "contains_keyword"
   | "sender_matches"
@@ -24,7 +30,8 @@ export type ActionSubtype =
   | "run_workflow"
   | "send_email"
   | "create_calendar_event"
-  | "schedule_meeting";
+  | "schedule_meeting"
+  | (string & {});
 export type TransformSubtype = "extract_data" | "format_text" | "parse_json" | "merge";
 export type RouterSubtype = "if_else" | "switch" | "loop";
 
@@ -76,6 +83,24 @@ export type WorkflowEdge = {
   label?: string; // "match" / "no-match" / "error" for conditions/error handlers
 };
 
+// ── Items / array data model ─────────────────────────────────────
+
+export type WorkflowItem = {
+  /** The JSON payload for this item. */
+  json: Record<string, unknown>;
+  /** Optional binary attachments keyed by name. */
+  binary?: Record<string, { data: string; mimeType: string; fileName?: string }>;
+  /** The node that produced this item. */
+  sourceNodeId?: string;
+};
+
+export type NodeOutputSchema = {
+  /** Property definitions for the node's output. */
+  properties: Record<string, { type: string; description?: string }>;
+  /** Whether the output is an array of items. */
+  isArray?: boolean;
+};
+
 export type Workflow = {
   id: string;
   name: string;
@@ -102,10 +127,14 @@ export type NodeExecutionResult = {
   status: NodeExecutionStatus;
   startedAt: number;
   completedAt: number;
+  /** Context snapshot BEFORE this node executed (for input inspection). */
+  input?: Record<string, unknown>;
   output?: Record<string, unknown>;
   error?: string;
   /** Number of retries attempted before success or final failure. */
   retryCount?: number;
+  /** Whether this result used pinned data instead of live execution. */
+  pinned?: boolean;
 };
 
 export type WorkflowExecutionStatus = "running" | "completed" | "failed" | "cancelled";
@@ -124,6 +153,24 @@ export type WorkflowExecution = {
   error?: string;
   /** If this execution was a sub-workflow, the parent execution ID. */
   parentExecutionId?: string;
+};
+
+// ── Execution callbacks (for real-time monitoring) ───────────────
+
+export type ExecutionCallbacks = {
+  /** Called when a node starts executing. */
+  onNodeStart?: (
+    executionId: string,
+    nodeId: string,
+    nodeLabel: string,
+    nodeType: WorkflowNodeType,
+  ) => void;
+  /** Called when a node finishes executing (success, error, or skipped). */
+  onNodeComplete?: (executionId: string, result: NodeExecutionResult) => void;
+  /** Called when the entire execution starts. */
+  onExecutionStart?: (executionId: string, workflowId: string, workflowName: string) => void;
+  /** Called when the entire execution finishes. */
+  onExecutionComplete?: (executionId: string, execution: WorkflowExecution) => void;
 };
 
 // ── Dependencies injected into action executors ───────────────────

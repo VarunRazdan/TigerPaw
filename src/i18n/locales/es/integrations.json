@@ -1,0 +1,92 @@
+{
+  "sdk": {
+    "http": {
+      "name": "Solicitud HTTP",
+      "description": "Realizar solicitudes HTTP con paginaci\u00f3n, reintentos y ayudas de autenticaci\u00f3n",
+      "actions": {
+        "request": "Solicitud HTTP"
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Enviar mensajes, reaccionar a publicaciones y monitorear canales",
+      "actions": {
+        "send_message": "Enviar mensaje",
+        "post_to_channel": "Publicar en canal",
+        "add_reaction": "A\u00f1adir reacci\u00f3n"
+      },
+      "triggers": {
+        "new_message": "Nuevo mensaje"
+      }
+    },
+    "google_sheets": {
+      "name": "Google Sheets",
+      "description": "Leer, escribir y a\u00f1adir filas en Google Sheets",
+      "actions": {
+        "read_rows": "Leer filas",
+        "write_rows": "Escribir filas",
+        "append_row": "A\u00f1adir fila"
+      },
+      "triggers": {
+        "row_added": "Fila a\u00f1adida"
+      }
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "Crear issues, comentar en pull requests y recibir webhooks",
+      "actions": {
+        "create_issue": "Crear issue",
+        "comment_on_issue": "Comentar en issue",
+        "comment_on_pr": "Comentar en pull request"
+      },
+      "triggers": {
+        "push": "Evento de push",
+        "pull_request": "Evento de pull request",
+        "issue": "Evento de issue"
+      }
+    },
+    "openai": {
+      "name": "OpenAI",
+      "description": "Generar texto con modelos GPT y crear embeddings",
+      "actions": {
+        "chat_completion": "Completar chat",
+        "embeddings": "Crear embeddings"
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "description": "Generar texto con modelos Claude",
+      "actions": {
+        "chat_completion": "Completar chat"
+      }
+    }
+  },
+  "categories": {
+    "utility": "Utilidad",
+    "communication": "Comunicaci\u00f3n",
+    "productivity": "Productividad",
+    "development": "Desarrollo",
+    "ai": "IA y Aprendizaje Autom\u00e1tico"
+  },
+  "fields": {
+    "url": "URL",
+    "method": "M\u00e9todo HTTP",
+    "channel": "Canal",
+    "message": "Mensaje",
+    "spreadsheetId": "ID de hoja de c\u00e1lculo",
+    "range": "Rango",
+    "owner": "Propietario del repositorio",
+    "repo": "Repositorio",
+    "model": "Modelo",
+    "prompt": "Indicaci\u00f3n",
+    "apiKey": "Clave de API",
+    "webhookPath": "Ruta del webhook",
+    "webhookSecret": "Secreto del webhook"
+  },
+  "errors": {
+    "rateLimit": "L\u00edmite de solicitudes excedido para {{integration}}",
+    "authFailed": "Autenticaci\u00f3n fallida para {{integration}}",
+    "noConnection": "No se encontr\u00f3 conexi\u00f3n para {{integration}}",
+    "invalidInput": "Entrada inv\u00e1lida: {{details}}"
+  }
+}

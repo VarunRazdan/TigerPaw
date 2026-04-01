@@ -6,6 +6,7 @@
  */
 
 import { ensureFreshTokens, exchangeOAuthCode, startOAuthFlow } from "./oauth2.js";
+import { listIntegrations } from "./sdk/registry.js";
 import {
   deleteIntegrationConnection,
   findConnectionByProvider,
@@ -14,9 +15,12 @@ import {
   saveIntegrationConnection,
   updateIntegrationTokens,
 } from "./token-store.js";
+// Register all SDK providers on first import
+import "./sdk/providers/index.js";
 import type {
   IntegrationConnection,
   IntegrationConnectionFull,
+  IntegrationProviderDefinition,
   IntegrationProviderId,
 } from "./types.js";
 import { INTEGRATION_PROVIDERS } from "./types.js";
@@ -30,8 +34,28 @@ export class IntegrationService {
 
   // ── Provider listing ─────────────────────────────────────────
 
-  listProviders() {
-    return INTEGRATION_PROVIDERS;
+  listProviders(): IntegrationProviderDefinition[] {
+    const sdkProviders: IntegrationProviderDefinition[] = listIntegrations().map((def) => ({
+      id: def.id as IntegrationProviderId,
+      name: def.name,
+      category: def.category,
+      icon: def.icon,
+      description: def.description,
+      authType: def.auth.type,
+      capabilities: [...def.actions.map((a) => a.name), ...def.triggers.map((t) => t.name)],
+      ...(def.auth.type === "oauth2"
+        ? {
+            oauth2Config: {
+              authorizationUrl: def.auth.authorizationUrl,
+              tokenUrl: def.auth.tokenUrl,
+              scopes: def.auth.scopes,
+              clientIdEnvVar: def.auth.clientIdEnvVar,
+              clientSecretEnvVar: def.auth.clientSecretEnvVar,
+            },
+          }
+        : {}),
+    }));
+    return [...INTEGRATION_PROVIDERS, ...sdkProviders];
   }
 
   // ── Connection management ────────────────────────────────────

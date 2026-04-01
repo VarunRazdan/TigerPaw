@@ -1,0 +1,92 @@
+{
+  "sdk": {
+    "http": {
+      "name": "HTTP-Anfrage",
+      "description": "HTTP-Anfragen mit Paginierung, Wiederholungsversuchen und Authentifizierungshilfen durchf\u00fchren",
+      "actions": {
+        "request": "HTTP-Anfrage"
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Nachrichten senden, auf Beitr\u00e4ge reagieren und Kan\u00e4le \u00fcberwachen",
+      "actions": {
+        "send_message": "Nachricht senden",
+        "post_to_channel": "In Kanal posten",
+        "add_reaction": "Reaktion hinzuf\u00fcgen"
+      },
+      "triggers": {
+        "new_message": "Neue Nachricht"
+      }
+    },
+    "google_sheets": {
+      "name": "Google Sheets",
+      "description": "Zeilen in Google Sheets lesen, schreiben und anh\u00e4ngen",
+      "actions": {
+        "read_rows": "Zeilen lesen",
+        "write_rows": "Zeilen schreiben",
+        "append_row": "Zeile anh\u00e4ngen"
+      },
+      "triggers": {
+        "row_added": "Zeile hinzugef\u00fcgt"
+      }
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "Issues erstellen, Pull Requests kommentieren und Webhooks empfangen",
+      "actions": {
+        "create_issue": "Issue erstellen",
+        "comment_on_issue": "Issue kommentieren",
+        "comment_on_pr": "Pull Request kommentieren"
+      },
+      "triggers": {
+        "push": "Push-Ereignis",
+        "pull_request": "Pull-Request-Ereignis",
+        "issue": "Issue-Ereignis"
+      }
+    },
+    "openai": {
+      "name": "OpenAI",
+      "description": "Text mit GPT-Modellen generieren und Einbettungen erstellen",
+      "actions": {
+        "chat_completion": "Chat-Vervollst\u00e4ndigung",
+        "embeddings": "Einbettungen erstellen"
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "description": "Text mit Claude-Modellen generieren",
+      "actions": {
+        "chat_completion": "Chat-Vervollst\u00e4ndigung"
+      }
+    }
+  },
+  "categories": {
+    "utility": "Dienstprogramm",
+    "communication": "Kommunikation",
+    "productivity": "Produktivit\u00e4t",
+    "development": "Entwicklung",
+    "ai": "KI & Maschinelles Lernen"
+  },
+  "fields": {
+    "url": "URL",
+    "method": "HTTP-Methode",
+    "channel": "Kanal",
+    "message": "Nachricht",
+    "spreadsheetId": "Tabellen-ID",
+    "range": "Bereich",
+    "owner": "Repository-Besitzer",
+    "repo": "Repository",
+    "model": "Modell",
+    "prompt": "Eingabeaufforderung",
+    "apiKey": "API-Schl\u00fcssel",
+    "webhookPath": "Webhook-Pfad",
+    "webhookSecret": "Webhook-Geheimnis"
+  },
+  "errors": {
+    "rateLimit": "Ratenlimit f\u00fcr {{integration}} \u00fcberschritten",
+    "authFailed": "Authentifizierung f\u00fcr {{integration}} fehlgeschlagen",
+    "noConnection": "Keine Verbindung f\u00fcr {{integration}} gefunden",
+    "invalidInput": "Ung\u00fcltige Eingabe: {{details}}"
+  }
+}

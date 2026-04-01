@@ -16,7 +16,7 @@ type TranslationBundle = Record<string, string>;
 type NamespaceBundle = Record<string, TranslationBundle>;
 
 const loadedLocales = new Map<string, NamespaceBundle>();
-const NAMESPACES = ["extensions", "policy"] as const;
+const NAMESPACES = ["extensions", "policy", "integrations"] as const;
 
 /**
  * Resolve the locales directory. When running from source (`src/i18n/`),

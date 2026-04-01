@@ -6,6 +6,7 @@
  */
 
 import { getIntegrationService } from "../../integrations/index.js";
+import { getIntegration, listIntegrations } from "../../integrations/sdk/registry.js";
 import type { IntegrationProviderId } from "../../integrations/types.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
 import type { GatewayRequestHandlers } from "./types.js";
@@ -121,6 +122,39 @@ export const integrationsHandlers: GatewayRequestHandlers = {
     const service = getIntegrationService();
     const removed = await service.disconnect(id);
     respond(true, { removed }, undefined);
+  },
+
+  // ── SDK integration schemas (for UI dynamic rendering) ──────
+
+  "integrations.actionSchemas": ({ params, respond }) => {
+    const integrationId = params.integrationId as string | undefined;
+    const integrations = integrationId
+      ? [getIntegration(integrationId)].filter(Boolean)
+      : listIntegrations();
+
+    const schemas = integrations.map((def) => ({
+      id: def!.id,
+      name: def!.name,
+      category: def!.category,
+      icon: def!.icon,
+      actions: def!.actions.map((a) => ({
+        name: a.name,
+        displayName: a.displayName,
+        description: a.description,
+        inputSchema: a.inputSchema,
+        outputSchema: a.outputSchema,
+      })),
+      triggers: def!.triggers.map((t) => ({
+        name: t.name,
+        displayName: t.displayName,
+        description: t.description,
+        type: t.type,
+        inputSchema: t.inputSchema,
+        outputSchema: t.outputSchema,
+      })),
+    }));
+
+    respond(true, { integrations: schemas }, undefined);
   },
 
   // ── Health check ─────────────────────────────────────────────

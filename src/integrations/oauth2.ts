@@ -8,7 +8,13 @@
  */
 
 import crypto from "node:crypto";
-import type { IntegrationConnectionFull, IntegrationProviderId, OAuth2TokenSet } from "./types.js";
+import { getIntegration } from "./sdk/registry.js";
+import type {
+  IntegrationConnectionFull,
+  IntegrationProviderDefinition,
+  IntegrationProviderId,
+  OAuth2TokenSet,
+} from "./types.js";
 import { getProviderDefinition } from "./types.js";
 
 // ── Pending OAuth flows (in-memory, short-lived) ─────────────────
@@ -45,7 +51,7 @@ export function startOAuthFlow(
 ): StartOAuthResult | { error: string } {
   cleanStalePendingFlows();
 
-  const provider = getProviderDefinition(providerId);
+  const provider = resolveProviderWithSdk(providerId);
   if (!provider?.oauth2Config) {
     return { error: `No OAuth2 config for provider: ${providerId}` };
   }
@@ -96,7 +102,7 @@ export async function exchangeOAuthCode(
   }
   pendingFlows.delete(state);
 
-  const provider = getProviderDefinition(flow.providerId);
+  const provider = resolveProviderWithSdk(flow.providerId);
   if (!provider?.oauth2Config) {
     return { error: `No OAuth2 config for provider: ${flow.providerId}` };
   }
@@ -158,7 +164,7 @@ export async function refreshTokens(
   providerId: IntegrationProviderId,
   refreshToken: string,
 ): Promise<OAuth2TokenSet | { error: string }> {
-  const provider = getProviderDefinition(providerId);
+  const provider = resolveProviderWithSdk(providerId);
   if (!provider?.oauth2Config) {
     return { error: `No OAuth2 config for provider: ${providerId}` };
   }
@@ -209,6 +215,38 @@ export async function ensureFreshTokens(
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
+
+/** Resolve a provider definition, falling back to SDK registry for OAuth2 providers. */
+function resolveProviderWithSdk(
+  providerId: IntegrationProviderId,
+): IntegrationProviderDefinition | undefined {
+  const provider = getProviderDefinition(providerId);
+  if (provider?.oauth2Config) {
+    return provider;
+  }
+
+  const sdkDef = getIntegration(providerId);
+  if (sdkDef && sdkDef.auth.type === "oauth2") {
+    const sdkAuth = sdkDef.auth;
+    return {
+      id: sdkDef.id as IntegrationProviderId,
+      name: sdkDef.name,
+      category: sdkDef.category,
+      icon: sdkDef.icon,
+      description: sdkDef.description,
+      authType: "oauth2",
+      capabilities: sdkDef.actions.map((a) => a.name),
+      oauth2Config: {
+        authorizationUrl: sdkAuth.authorizationUrl,
+        tokenUrl: sdkAuth.tokenUrl,
+        scopes: sdkAuth.scopes,
+        clientIdEnvVar: sdkAuth.clientIdEnvVar,
+        clientSecretEnvVar: sdkAuth.clientSecretEnvVar,
+      },
+    };
+  }
+  return provider;
+}
 
 async function fetchAccountEmail(
   providerId: IntegrationProviderId,

@@ -20,6 +20,13 @@ import type { DatabaseSync } from "node:sqlite";
 import type { WorkflowExecution } from "../workflows/types.js";
 import { getDatabase, isDatabaseAvailable } from "./database.js";
 
+export type ExecutionFilter = {
+  status?: string; // "completed" | "failed" | "running" | "cancelled"
+  dateFrom?: number; // epoch ms — filter startedAt >= dateFrom
+  dateTo?: number; // epoch ms — filter startedAt <= dateTo
+  triggeredBy?: string; // trigger node ID or "manual"
+};
+
 const LEGACY_DIR = join(homedir(), ".tigerpaw", "workflow-runs");
 const MAX_RUNS = 100;
 
@@ -54,19 +61,41 @@ function dbListExecutions(
   db: DatabaseSync,
   workflowId: string,
   opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
 ): { executions: WorkflowExecution[]; total: number } {
+  const conditions = ["workflow_id = ?"];
+  const params: (string | number)[] = [workflowId];
+
+  if (filters?.status) {
+    conditions.push("status = ?");
+    params.push(filters.status);
+  }
+  if (filters?.dateFrom != null) {
+    conditions.push("started_at >= ?");
+    params.push(filters.dateFrom);
+  }
+  if (filters?.dateTo != null) {
+    conditions.push("started_at <= ?");
+    params.push(filters.dateTo);
+  }
+  if (filters?.triggeredBy) {
+    conditions.push("triggered_by = ?");
+    params.push(filters.triggeredBy);
+  }
+
+  const where = conditions.join(" AND ");
   const countRow = db
-    .prepare("SELECT COUNT(*) as cnt FROM workflow_executions WHERE workflow_id = ?")
-    .get(workflowId) as { cnt: number };
+    .prepare(`SELECT COUNT(*) as cnt FROM workflow_executions WHERE ${where}`)
+    .get(...params) as { cnt: number };
 
   const limit = opts?.limit ?? 20;
   const offset = opts?.offset ?? 0;
 
   const rows = db
     .prepare(
-      "SELECT * FROM workflow_executions WHERE workflow_id = ? ORDER BY started_at DESC LIMIT ? OFFSET ?",
+      `SELECT * FROM workflow_executions WHERE ${where} ORDER BY started_at DESC LIMIT ? OFFSET ?`,
     )
-    .all(workflowId, limit, offset) as Array<Record<string, unknown>>;
+    .all(...params, limit, offset) as Array<Record<string, unknown>>;
 
   return { executions: rows.map(rowToExecution), total: countRow.cnt };
 }
@@ -85,17 +114,39 @@ function dbGetExecution(
 function dbListAllExecutions(
   db: DatabaseSync,
   opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
 ): { executions: WorkflowExecution[]; total: number } {
-  const countRow = db.prepare("SELECT COUNT(*) as cnt FROM workflow_executions").get() as {
-    cnt: number;
-  };
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (filters?.status) {
+    conditions.push("status = ?");
+    params.push(filters.status);
+  }
+  if (filters?.dateFrom != null) {
+    conditions.push("started_at >= ?");
+    params.push(filters.dateFrom);
+  }
+  if (filters?.dateTo != null) {
+    conditions.push("started_at <= ?");
+    params.push(filters.dateTo);
+  }
+  if (filters?.triggeredBy) {
+    conditions.push("triggered_by = ?");
+    params.push(filters.triggeredBy);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const countRow = db
+    .prepare(`SELECT COUNT(*) as cnt FROM workflow_executions ${where}`)
+    .get(...params) as { cnt: number };
 
   const limit = opts?.limit ?? 20;
   const offset = opts?.offset ?? 0;
 
   const rows = db
-    .prepare("SELECT * FROM workflow_executions ORDER BY started_at DESC LIMIT ? OFFSET ?")
-    .all(limit, offset) as Array<Record<string, unknown>>;
+    .prepare(`SELECT * FROM workflow_executions ${where} ORDER BY started_at DESC LIMIT ? OFFSET ?`)
+    .all(...params, limit, offset) as Array<Record<string, unknown>>;
 
   return { executions: rows.map(rowToExecution), total: countRow.cnt };
 }
@@ -149,9 +200,29 @@ function legacySaveExecution(execution: WorkflowExecution): void {
   legacyPruneRuns(dir);
 }
 
+function legacyMatchesFilter(exec: WorkflowExecution, filters?: ExecutionFilter): boolean {
+  if (!filters) {
+    return true;
+  }
+  if (filters.status && exec.status !== filters.status) {
+    return false;
+  }
+  if (filters.dateFrom != null && exec.startedAt < filters.dateFrom) {
+    return false;
+  }
+  if (filters.dateTo != null && exec.startedAt > filters.dateTo) {
+    return false;
+  }
+  if (filters.triggeredBy && exec.triggeredBy !== filters.triggeredBy) {
+    return false;
+  }
+  return true;
+}
+
 function legacyListExecutions(
   workflowId: string,
   opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
 ): { executions: WorkflowExecution[]; total: number } {
   const dir = legacyRunDir(workflowId);
   if (!existsSync(dir)) {
@@ -163,20 +234,24 @@ function legacyListExecutions(
     .map((f) => ({ name: f, mtime: statSync(join(dir, f)).mtimeMs }))
     .toSorted((a, b) => b.mtime - a.mtime);
 
-  const total = files.length;
-  const limit = opts?.limit ?? 20;
-  const offset = opts?.offset ?? 0;
-  const slice = files.slice(offset, offset + limit);
-
-  const executions: WorkflowExecution[] = [];
-  for (const file of slice) {
+  // Read all files and apply filters
+  const allExecutions: WorkflowExecution[] = [];
+  for (const file of files) {
     try {
-      executions.push(JSON.parse(readFileSync(join(dir, file.name), "utf-8")));
+      const exec: WorkflowExecution = JSON.parse(readFileSync(join(dir, file.name), "utf-8"));
+      if (legacyMatchesFilter(exec, filters)) {
+        allExecutions.push(exec);
+      }
     } catch {
       /* skip corrupt */
     }
   }
-  return { executions, total };
+
+  const total = allExecutions.length;
+  const limit = opts?.limit ?? 20;
+  const offset = opts?.offset ?? 0;
+
+  return { executions: allExecutions.slice(offset, offset + limit), total };
 }
 
 function legacyGetExecution(workflowId: string, executionId: string): WorkflowExecution | null {
@@ -191,7 +266,10 @@ function legacyGetExecution(workflowId: string, executionId: string): WorkflowEx
   }
 }
 
-function legacyListAllExecutions(opts?: { limit?: number; offset?: number }): {
+function legacyListAllExecutions(
+  opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
+): {
   executions: WorkflowExecution[];
   total: number;
 } {
@@ -208,7 +286,10 @@ function legacyListAllExecutions(opts?: { limit?: number; offset?: number }): {
       try {
         const filePath = join(dir, file);
         const stat = statSync(filePath);
-        all.push({ execution: JSON.parse(readFileSync(filePath, "utf-8")), mtime: stat.mtimeMs });
+        const exec: WorkflowExecution = JSON.parse(readFileSync(filePath, "utf-8"));
+        if (legacyMatchesFilter(exec, filters)) {
+          all.push({ execution: exec, mtime: stat.mtimeMs });
+        }
       } catch {
         /* skip */
       }
@@ -267,11 +348,12 @@ export function dalSaveExecution(execution: WorkflowExecution): void {
 export function dalListExecutions(
   workflowId: string,
   opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
 ): { executions: WorkflowExecution[]; total: number } {
   if (isDatabaseAvailable()) {
-    return dbListExecutions(getDatabase(), workflowId, opts);
+    return dbListExecutions(getDatabase(), workflowId, opts, filters);
   }
-  return legacyListExecutions(workflowId, opts);
+  return legacyListExecutions(workflowId, opts, filters);
 }
 
 export function dalGetExecution(workflowId: string, executionId: string): WorkflowExecution | null {
@@ -281,14 +363,17 @@ export function dalGetExecution(workflowId: string, executionId: string): Workfl
   return legacyGetExecution(workflowId, executionId);
 }
 
-export function dalListAllExecutions(opts?: { limit?: number; offset?: number }): {
+export function dalListAllExecutions(
+  opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
+): {
   executions: WorkflowExecution[];
   total: number;
 } {
   if (isDatabaseAvailable()) {
-    return dbListAllExecutions(getDatabase(), opts);
+    return dbListAllExecutions(getDatabase(), opts, filters);
   }
-  return legacyListAllExecutions(opts);
+  return legacyListAllExecutions(opts, filters);
 }
 
 export function dalClearHistory(workflowId: string): void {

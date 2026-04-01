@@ -11,6 +11,7 @@ import {
   dalListAllExecutions,
   dalClearHistory,
 } from "../dal/workflow-history.js";
+import type { ExecutionFilter } from "../dal/workflow-history.js";
 import type { WorkflowExecution } from "./types.js";
 
 /** Save an execution result. */
@@ -22,8 +23,9 @@ export function saveExecution(execution: WorkflowExecution): void {
 export function listExecutions(
   workflowId: string,
   opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
 ): { executions: WorkflowExecution[]; total: number } {
-  return dalListExecutions(workflowId, opts);
+  return dalListExecutions(workflowId, opts, filters);
 }
 
 /** Get a specific execution by ID. */
@@ -32,14 +34,19 @@ export function getExecution(workflowId: string, executionId: string): WorkflowE
 }
 
 /** List all executions across all workflows (for global history). */
-export function listAllExecutions(opts?: { limit?: number; offset?: number }): {
+export function listAllExecutions(
+  opts?: { limit?: number; offset?: number },
+  filters?: ExecutionFilter,
+): {
   executions: WorkflowExecution[];
   total: number;
 } {
-  return dalListAllExecutions(opts);
+  return dalListAllExecutions(opts, filters);
 }
 
 /** Delete all execution history for a workflow. */
 export function clearHistory(workflowId: string): void {
   dalClearHistory(workflowId);
 }
+
+export type { ExecutionFilter } from "../dal/workflow-history.js";

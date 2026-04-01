@@ -7,7 +7,7 @@
 
 // ── Provider identifiers ─────────────────────────────────────────
 
-export type IntegrationCategory = "email" | "calendar" | "meeting";
+export type IntegrationCategory = "email" | "calendar" | "meeting" | (string & {});
 
 export type IntegrationProviderId =
   | "gmail"
@@ -16,7 +16,8 @@ export type IntegrationProviderId =
   | "outlook_calendar"
   | "zoom"
   | "google_meet"
-  | "ms_teams_meetings";
+  | "ms_teams_meetings"
+  | (string & {});
 
 // ── OAuth2 tokens ────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ export type IntegrationProviderDefinition = {
   category: IntegrationCategory;
   icon: string; // filename in /icons/integrations/
   description: string;
-  authType: "oauth2" | "api_key";
+  authType: "oauth2" | "api_key" | "bearer_token" | "basic_auth" | "none";
   oauth2Config?: OAuth2ProviderConfig;
   capabilities: string[];
 };

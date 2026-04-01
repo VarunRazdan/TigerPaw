@@ -1,0 +1,92 @@
+{
+  "sdk": {
+    "http": {
+      "name": "Requ\u00eate HTTP",
+      "description": "Effectuer des requ\u00eates HTTP avec pagination, nouvelles tentatives et aides \u00e0 l'authentification",
+      "actions": {
+        "request": "Requ\u00eate HTTP"
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Envoyer des messages, r\u00e9agir aux publications et surveiller les canaux",
+      "actions": {
+        "send_message": "Envoyer un message",
+        "post_to_channel": "Publier dans un canal",
+        "add_reaction": "Ajouter une r\u00e9action"
+      },
+      "triggers": {
+        "new_message": "Nouveau message"
+      }
+    },
+    "google_sheets": {
+      "name": "Google Sheets",
+      "description": "Lire, \u00e9crire et ajouter des lignes dans Google Sheets",
+      "actions": {
+        "read_rows": "Lire les lignes",
+        "write_rows": "\u00c9crire les lignes",
+        "append_row": "Ajouter une ligne"
+      },
+      "triggers": {
+        "row_added": "Ligne ajout\u00e9e"
+      }
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "Cr\u00e9er des issues, commenter des pull requests et recevoir des webhooks",
+      "actions": {
+        "create_issue": "Cr\u00e9er une issue",
+        "comment_on_issue": "Commenter une issue",
+        "comment_on_pr": "Commenter une pull request"
+      },
+      "triggers": {
+        "push": "\u00c9v\u00e9nement push",
+        "pull_request": "\u00c9v\u00e9nement pull request",
+        "issue": "\u00c9v\u00e9nement issue"
+      }
+    },
+    "openai": {
+      "name": "OpenAI",
+      "description": "G\u00e9n\u00e9rer du texte avec les mod\u00e8les GPT et cr\u00e9er des embeddings",
+      "actions": {
+        "chat_completion": "Compl\u00e9tion de chat",
+        "embeddings": "Cr\u00e9er des embeddings"
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "description": "G\u00e9n\u00e9rer du texte avec les mod\u00e8les Claude",
+      "actions": {
+        "chat_completion": "Compl\u00e9tion de chat"
+      }
+    }
+  },
+  "categories": {
+    "utility": "Utilitaire",
+    "communication": "Communication",
+    "productivity": "Productivit\u00e9",
+    "development": "D\u00e9veloppement",
+    "ai": "IA et Apprentissage Automatique"
+  },
+  "fields": {
+    "url": "URL",
+    "method": "M\u00e9thode HTTP",
+    "channel": "Canal",
+    "message": "Message",
+    "spreadsheetId": "ID de la feuille de calcul",
+    "range": "Plage",
+    "owner": "Propri\u00e9taire du d\u00e9p\u00f4t",
+    "repo": "D\u00e9p\u00f4t",
+    "model": "Mod\u00e8le",
+    "prompt": "Invite",
+    "apiKey": "Cl\u00e9 API",
+    "webhookPath": "Chemin du webhook",
+    "webhookSecret": "Secret du webhook"
+  },
+  "errors": {
+    "rateLimit": "Limite de requ\u00eates d\u00e9pass\u00e9e pour {{integration}}",
+    "authFailed": "\u00c9chec de l'authentification pour {{integration}}",
+    "noConnection": "Aucune connexion trouv\u00e9e pour {{integration}}",
+    "invalidInput": "Entr\u00e9e invalide : {{details}}"
+  }
+}

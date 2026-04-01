@@ -14,6 +14,8 @@
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { CronService } from "../cron/service.js";
+import { getTrigger } from "../integrations/sdk/registry.js";
+import { registerSdkTrigger } from "../integrations/sdk/trigger-bridge.js";
 import { onTradingEvent } from "../trading/event-emitter.js";
 import type { TradingEvent } from "../trading/events.js";
 import type { Workflow, WorkflowNode } from "./types.js";
@@ -183,12 +185,20 @@ export class TriggerManager {
 
     counter.count += 1;
 
-    this.onTrigger(reg.workflow, reg.node, {
-      triggerType: "webhook",
-      path,
-      body,
-      receivedAt: new Date().toISOString(),
-    });
+    // Check for SDK parse function on the registration
+    const sdkOnTrigger = (reg as Record<string, unknown>).__sdkOnTrigger as
+      | ((data: Record<string, unknown>) => void)
+      | undefined;
+    if (sdkOnTrigger) {
+      sdkOnTrigger({ body, headers: headers ?? {}, path });
+    } else {
+      this.onTrigger(reg.workflow, reg.node, {
+        triggerType: "webhook",
+        path,
+        body,
+        receivedAt: new Date().toISOString(),
+      });
+    }
     return true;
   }
 
@@ -210,8 +220,65 @@ export class TriggerManager {
       case "manual":
         // Manual triggers are fired on-demand, no registration needed
         return null;
-      default:
+      default: {
+        // SDK fallback: check for registered SDK trigger
+        const dotIdx = node.subtype.indexOf(".");
+        if (dotIdx > 0) {
+          const integrationId = node.subtype.slice(0, dotIdx);
+          const triggerDef = getTrigger(integrationId, node.subtype);
+          if (triggerDef) {
+            const result = registerSdkTrigger(workflow, node, triggerDef, this.onTrigger, (msg) =>
+              console.error(`[TriggerManager] ${msg}`),
+            );
+
+            if (result && result.webhookPath && result.webhookSecret) {
+              // SDK webhook trigger: register in the webhooks map so
+              // handleWebhook() can find it (goes through HMAC verification).
+              const parseFn = result.webhookParse;
+              this.webhooks.set(result.webhookPath, {
+                workflowId: workflow.id,
+                nodeId: node.id,
+                path: result.webhookPath,
+                secret: result.webhookSecret,
+                workflow,
+                node,
+              });
+
+              // If the SDK trigger has a custom parse function, wrap onTrigger
+              // to apply it before firing. Override the webhook registration's
+              // handling by intercepting in handleWebhook().
+              if (parseFn) {
+                const originalNode = node;
+                const originalWorkflow = workflow;
+                const originalOnTrigger = this.onTrigger;
+
+                // Monkey-patch: store parseFn on the registration so
+                // handleWebhook() can detect and apply it.
+                const reg = this.webhooks.get(result.webhookPath)!;
+                (reg as Record<string, unknown>).__sdkParseFn = parseFn;
+                (reg as Record<string, unknown>).__sdkOnTrigger = (
+                  data: Record<string, unknown>,
+                ) => {
+                  const items = parseFn(
+                    (data.body ?? data) as Record<string, unknown>,
+                    (data.headers ?? {}) as Record<string, string>,
+                  );
+                  for (const item of items) {
+                    originalOnTrigger(originalWorkflow, originalNode, {
+                      triggerType: result.type,
+                      ...item,
+                      receivedAt: new Date().toISOString(),
+                    });
+                  }
+                };
+              }
+            }
+
+            return result;
+          }
+        }
         return null;
+      }
     }
   }
 

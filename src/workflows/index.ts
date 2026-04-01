@@ -25,8 +25,14 @@ import {
   listAllExecutions,
   clearHistory,
 } from "./history.js";
+import type { ExecutionFilter } from "./history.js";
 import { TriggerManager } from "./triggers.js";
-import type { Workflow, WorkflowExecution, ActionDependencies } from "./types.js";
+import type {
+  Workflow,
+  WorkflowExecution,
+  ActionDependencies,
+  ExecutionCallbacks,
+} from "./types.js";
 import { saveVersion } from "./versioning.js";
 
 export class WorkflowService {
@@ -123,6 +129,8 @@ export class WorkflowService {
   async executeManually(
     workflowId: string,
     testData?: Record<string, unknown>,
+    callbacks?: ExecutionCallbacks,
+    pinnedData?: Record<string, Record<string, unknown>>,
   ): Promise<WorkflowExecution> {
     const workflow = this.loadWorkflow(workflowId);
     if (!workflow) {
@@ -137,10 +145,58 @@ export class WorkflowService {
       throw new Error("Workflow has no nodes");
     }
 
-    const execution = await this.engine.execute(workflow, triggerNodeId, {
-      triggerType: "manual",
-      ...testData,
-    });
+    const execution = await this.engine.execute(
+      workflow,
+      triggerNodeId,
+      {
+        triggerType: "manual",
+        ...testData,
+      },
+      undefined,
+      0,
+      callbacks,
+      pinnedData,
+    );
+
+    saveExecution(execution);
+    this.updateWorkflowRunStats(workflowId, execution);
+
+    return execution;
+  }
+
+  /**
+   * Execute a workflow up to (and including) a specific target node.
+   * Only the predecessor chain + target are executed.
+   */
+  async executeToNode(
+    workflowId: string,
+    targetNodeId: string,
+    testData?: Record<string, unknown>,
+    callbacks?: ExecutionCallbacks,
+    pinnedData?: Record<string, Record<string, unknown>>,
+  ): Promise<WorkflowExecution> {
+    const workflow = this.loadWorkflow(workflowId);
+    if (!workflow) {
+      throw new Error(`Workflow "${workflowId}" not found`);
+    }
+
+    const triggerNode = workflow.nodes.find((n) => n.type === "trigger");
+    const triggerNodeId = triggerNode?.id ?? workflow.nodes[0]?.id;
+
+    if (!triggerNodeId) {
+      throw new Error("Workflow has no nodes");
+    }
+
+    const execution = await this.engine.execute(
+      workflow,
+      triggerNodeId,
+      { triggerType: "manual", ...testData },
+      undefined,
+      0,
+      callbacks,
+      pinnedData,
+      targetNodeId, // stopAfterNodeId
+    );
 
     saveExecution(execution);
     this.updateWorkflowRunStats(workflowId, execution);
@@ -168,13 +224,17 @@ export class WorkflowService {
   }
 
   /** Get execution history for a workflow. */
-  getHistory(workflowId: string, opts?: { limit?: number; offset?: number }) {
-    return listExecutions(workflowId, opts);
+  getHistory(
+    workflowId: string,
+    opts?: { limit?: number; offset?: number },
+    filters?: ExecutionFilter,
+  ) {
+    return listExecutions(workflowId, opts, filters);
   }
 
   /** Get global execution history across all workflows. */
-  getGlobalHistory(opts?: { limit?: number; offset?: number }) {
-    return listAllExecutions(opts);
+  getGlobalHistory(opts?: { limit?: number; offset?: number }, filters?: ExecutionFilter) {
+    return listAllExecutions(opts, filters);
   }
 
   /** Get a specific execution. */
@@ -218,11 +278,19 @@ export class WorkflowService {
     workflow: Workflow,
     triggerNodeId: string,
     triggerData: Record<string, unknown>,
+    callbacks?: ExecutionCallbacks,
   ): Promise<void> {
     this.log(`Trigger fired for workflow "${workflow.name}" (${workflow.id})`);
 
     try {
-      const execution = await this.engine.execute(workflow, triggerNodeId, triggerData);
+      const execution = await this.engine.execute(
+        workflow,
+        triggerNodeId,
+        triggerData,
+        undefined,
+        0,
+        callbacks,
+      );
       saveExecution(execution);
       this.updateWorkflowRunStats(workflow.id, execution);
 

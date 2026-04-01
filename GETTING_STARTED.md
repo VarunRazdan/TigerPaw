@@ -17,7 +17,8 @@ Tigerpaw is everything [OpenClaw](https://github.com/openclaw/openclaw) does -- 
 - Local-first by default -- gateway binds to localhost, data stays on your machine
 - AI assistant (Jarvis) -- tasks, reminders, daily briefings, and knowledge retrieval
 - Message Hub -- unified inbox across all messaging channels with search, filtering, and date grouping
-- Visual workflow builder for event-driven automation (trading events, cron schedules, message routing)
+- Visual workflow builder for event-driven automation with expression engine (35 functions), data mapping autocomplete, per-node testing, data pinning, and debug replay
+- Integration SDK with 6 built-in providers (HTTP Request, Slack, Google Sheets, GitHub, OpenAI, Anthropic) -- extensible framework for adding more
 - MCP protocol support -- connect external tool servers and expose Tigerpaw tools to other AI agents
 - Local LLM support (Ollama, LM Studio) with auto-detection and cloud fallback
 - i18n in 10 languages (English, Spanish, French, German, Japanese, Korean, Chinese Simplified + Traditional, Portuguese, Arabic)
@@ -627,9 +628,36 @@ The **Workflows** page lets you build event-driven automations with a visual dra
 **Node types**:
 
 - **Triggers** -- Message received, cron schedule, trading event, webhook, manual
-- **Conditions** -- Keyword match, sender filter, time window, channel filter
-- **Actions** -- Send message, invoke tool, call webhook, run LLM task
-- **Transforms** -- Format data, extract fields, aggregate
+- **Conditions** -- Keyword match, sender filter, time window, channel filter, expression
+- **Actions** -- Send message, call webhook, run LLM task, trade, send email, calendar event, schedule meeting, plus any SDK integration action (Slack, GitHub, Google Sheets, OpenAI, Anthropic, HTTP)
+- **Transforms** -- Extract data, format text, parse JSON, merge
+- **Flow Control** -- If/else, switch, loop
+- **Error Handlers** -- Log error, notify on error
+
+**Expression engine**: Use `{{expression}}` in any template field. Type `{{` to open autocomplete with upstream node outputs. Supports 35 built-in functions:
+
+- String: `uppercase()`, `lowercase()`, `trim()`, `replace()`, `split()`, `length()`
+- Array: `join()`, `first()`, `last()`, `contains()`, `count()`
+- Math: `round()`, `min()`, `max()`, `abs()`
+- Logic: `if()`, `isEmpty()`, `coalesce()`
+- Date: `now()`, `formatDate()`
+
+**Execution UX**: Right-click a node to test it in isolation. Pin node outputs to iterate quickly. Load a failed execution for step-by-step replay. Real-time canvas overlays show node progress as workflows execute.
+
+### Integration SDK
+
+The workflow engine includes an extensible **Integration SDK** for adding new service providers. 6 built-in integrations are available:
+
+| Integration   | Auth          | Capabilities                                                          |
+| ------------- | ------------- | --------------------------------------------------------------------- |
+| HTTP Request  | Per-request   | Generic HTTP with retry, auth helpers, response parsing               |
+| Slack         | OAuth2        | Send messages, post to channels, add reactions, poll for new messages |
+| Google Sheets | OAuth2        | Read rows, write rows, append row, detect new rows                    |
+| GitHub        | API Key (PAT) | Create issues, comment on issues/PRs, push/PR/issue webhooks          |
+| OpenAI        | API Key       | Chat completions (GPT-4o), embeddings                                 |
+| Anthropic     | API Key       | Chat completions (Claude)                                             |
+
+SDK integrations appear automatically in the workflow editor palette. Their config fields are generated from JSON Schema definitions. To add a custom integration, create a provider file in `src/integrations/sdk/providers/` following the `IntegrationDefinition` pattern.
 
 ### MCP Integration
 

@@ -1,0 +1,92 @@
+{
+  "sdk": {
+    "http": {
+      "name": "Requisi\u00e7\u00e3o HTTP",
+      "description": "Fazer requisi\u00e7\u00f5es HTTP com pagina\u00e7\u00e3o, tentativas e aux\u00edlios de autentica\u00e7\u00e3o",
+      "actions": {
+        "request": "Requisi\u00e7\u00e3o HTTP"
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Enviar mensagens, reagir a publica\u00e7\u00f5es e monitorar canais",
+      "actions": {
+        "send_message": "Enviar mensagem",
+        "post_to_channel": "Publicar no canal",
+        "add_reaction": "Adicionar rea\u00e7\u00e3o"
+      },
+      "triggers": {
+        "new_message": "Nova mensagem"
+      }
+    },
+    "google_sheets": {
+      "name": "Google Sheets",
+      "description": "Ler, escrever e adicionar linhas no Google Sheets",
+      "actions": {
+        "read_rows": "Ler linhas",
+        "write_rows": "Escrever linhas",
+        "append_row": "Adicionar linha"
+      },
+      "triggers": {
+        "row_added": "Linha adicionada"
+      }
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "Criar issues, comentar em pull requests e receber webhooks",
+      "actions": {
+        "create_issue": "Criar issue",
+        "comment_on_issue": "Comentar em issue",
+        "comment_on_pr": "Comentar em pull request"
+      },
+      "triggers": {
+        "push": "Evento de push",
+        "pull_request": "Evento de pull request",
+        "issue": "Evento de issue"
+      }
+    },
+    "openai": {
+      "name": "OpenAI",
+      "description": "Gerar texto com modelos GPT e criar embeddings",
+      "actions": {
+        "chat_completion": "Conclus\u00e3o de chat",
+        "embeddings": "Criar embeddings"
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "description": "Gerar texto com modelos Claude",
+      "actions": {
+        "chat_completion": "Conclus\u00e3o de chat"
+      }
+    }
+  },
+  "categories": {
+    "utility": "Utilit\u00e1rio",
+    "communication": "Comunica\u00e7\u00e3o",
+    "productivity": "Produtividade",
+    "development": "Desenvolvimento",
+    "ai": "IA e Aprendizado de M\u00e1quina"
+  },
+  "fields": {
+    "url": "URL",
+    "method": "M\u00e9todo HTTP",
+    "channel": "Canal",
+    "message": "Mensagem",
+    "spreadsheetId": "ID da planilha",
+    "range": "Intervalo",
+    "owner": "Propriet\u00e1rio do reposit\u00f3rio",
+    "repo": "Reposit\u00f3rio",
+    "model": "Modelo",
+    "prompt": "Prompt",
+    "apiKey": "Chave de API",
+    "webhookPath": "Caminho do webhook",
+    "webhookSecret": "Segredo do webhook"
+  },
+  "errors": {
+    "rateLimit": "Limite de requisi\u00e7\u00f5es excedido para {{integration}}",
+    "authFailed": "Falha na autentica\u00e7\u00e3o para {{integration}}",
+    "noConnection": "Nenhuma conex\u00e3o encontrada para {{integration}}",
+    "invalidInput": "Entrada inv\u00e1lida: {{details}}"
+  }
+}

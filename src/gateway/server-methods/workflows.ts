@@ -13,8 +13,10 @@ import {
   deleteCredential,
   testVault,
 } from "../../workflows/credentials.js";
+import type { ExecutionFilter } from "../../workflows/history.js";
 import { getWorkflowService } from "../../workflows/index.js";
-import type { StoredCredential, Workflow } from "../../workflows/types.js";
+import { getAllStaticSchemas } from "../../workflows/schemas.js";
+import type { StoredCredential, Workflow, ExecutionCallbacks } from "../../workflows/types.js";
 import {
   listVersions,
   getVersion,
@@ -159,7 +161,7 @@ export const workflowsHandlers: GatewayRequestHandlers = {
 
   // ── Execution ─────────────────────────────────────────────────
 
-  "workflows.execute": async ({ params, respond }) => {
+  "workflows.execute": async ({ params, respond, context }) => {
     const id = params.id as string | undefined;
     if (!id) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "id is required"));
@@ -167,7 +169,121 @@ export const workflowsHandlers: GatewayRequestHandlers = {
     }
     try {
       const testData = params.testData as Record<string, unknown> | undefined;
-      const execution = await getWorkflowService().executeManually(id, testData);
+      const pinnedData = params.pinnedData as Record<string, Record<string, unknown>> | undefined;
+
+      // Build callbacks that broadcast real-time events to connected clients
+      const callbacks: ExecutionCallbacks = {
+        onNodeStart: (executionId, nodeId, nodeLabel, nodeType) => {
+          context.broadcast?.("workflow.node.start", {
+            executionId,
+            nodeId,
+            nodeLabel,
+            nodeType,
+          });
+        },
+        onNodeComplete: (executionId, result) => {
+          context.broadcast?.("workflow.node.complete", {
+            executionId,
+            nodeId: result.nodeId,
+            nodeLabel: result.nodeLabel,
+            nodeType: result.nodeType,
+            status: result.status,
+            durationMs: result.completedAt - result.startedAt,
+            error: result.error,
+          });
+        },
+        onExecutionStart: (executionId, workflowId, workflowName) => {
+          context.broadcast?.("workflow.execution.start", {
+            executionId,
+            workflowId,
+            workflowName,
+          });
+        },
+        onExecutionComplete: (executionId, execution) => {
+          context.broadcast?.("workflow.execution.complete", {
+            executionId,
+            workflowId: execution.workflowId,
+            status: execution.status,
+            durationMs: execution.durationMs,
+            nodeCount: execution.nodeResults.length,
+          });
+        },
+      };
+
+      const execution = await getWorkflowService().executeManually(
+        id,
+        testData,
+        callbacks,
+        pinnedData,
+      );
+      respond(true, { execution }, undefined);
+    } catch (err) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.UNAVAILABLE,
+          err instanceof Error ? err.message : String(err as string),
+        ),
+      );
+    }
+  },
+
+  "workflows.executeToNode": async ({ params, respond, context }) => {
+    const id = params.id as string | undefined;
+    const targetNodeId = params.targetNodeId as string | undefined;
+    if (!id || !targetNodeId) {
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.INVALID_REQUEST, "id and targetNodeId are required"),
+      );
+      return;
+    }
+    try {
+      const testData = params.testData as Record<string, unknown> | undefined;
+      const pinnedData = params.pinnedData as Record<string, Record<string, unknown>> | undefined;
+
+      const callbacks: ExecutionCallbacks = {
+        onNodeStart: (executionId, nodeId, nodeLabel, nodeType) => {
+          context.broadcast?.("workflow.node.start", { executionId, nodeId, nodeLabel, nodeType });
+        },
+        onNodeComplete: (executionId, result) => {
+          context.broadcast?.("workflow.node.complete", {
+            executionId,
+            nodeId: result.nodeId,
+            nodeLabel: result.nodeLabel,
+            nodeType: result.nodeType,
+            status: result.status,
+            durationMs: result.completedAt - result.startedAt,
+            error: result.error,
+          });
+        },
+        onExecutionStart: (executionId, workflowId, workflowName) => {
+          context.broadcast?.("workflow.execution.start", {
+            executionId,
+            workflowId,
+            workflowName,
+          });
+        },
+        onExecutionComplete: (executionId, execution) => {
+          context.broadcast?.("workflow.execution.complete", {
+            executionId,
+            workflowId: execution.workflowId,
+            status: execution.status,
+            durationMs: execution.durationMs,
+            nodeCount: execution.nodeResults.length,
+          });
+        },
+      };
+
+      const execution = await getWorkflowService().executeToNode(
+        id,
+        targetNodeId,
+        testData,
+        callbacks,
+        pinnedData,
+      );
       respond(true, { execution }, undefined);
     } catch (err) {
       respond(
@@ -188,10 +304,26 @@ export const workflowsHandlers: GatewayRequestHandlers = {
     const limit = params.limit as number | undefined;
     const offset = params.offset as number | undefined;
 
+    // Extract filter params
+    const filters: Partial<ExecutionFilter> = {};
+    if (params.status) {
+      filters.status = params.status as string;
+    }
+    if (params.dateFrom != null) {
+      filters.dateFrom = params.dateFrom as number;
+    }
+    if (params.dateTo != null) {
+      filters.dateTo = params.dateTo as number;
+    }
+    if (params.triggeredBy) {
+      filters.triggeredBy = params.triggeredBy as string;
+    }
+    const hasFilters = Object.keys(filters).length > 0 ? (filters as ExecutionFilter) : undefined;
+
     try {
       const result = workflowId
-        ? getWorkflowService().getHistory(workflowId, { limit, offset })
-        : getWorkflowService().getGlobalHistory({ limit, offset });
+        ? getWorkflowService().getHistory(workflowId, { limit, offset }, hasFilters)
+        : getWorkflowService().getGlobalHistory({ limit, offset }, hasFilters);
       respond(true, result, undefined);
     } catch (err) {
       respond(
@@ -630,6 +762,13 @@ export const workflowsHandlers: GatewayRequestHandlers = {
         ),
       );
     }
+  },
+
+  // ── Schema registry ─────────────────────────────────────────
+
+  "workflows.schemas": ({ respond }) => {
+    const schemas = getAllStaticSchemas();
+    respond(true, { schemas }, undefined);
   },
 
   "workflows.webhooks.list": async ({ respond }) => {

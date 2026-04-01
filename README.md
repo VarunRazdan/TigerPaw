@@ -5,7 +5,7 @@
 <h1 align="center">Tigerpaw</h1>
 
 <p align="center">
-  Everything OpenClaw does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder, MCP protocol support, local LLM integration, and i18n in 10 languages. Local-first by default.
+  Everything OpenClaw does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder with expression engine and data mapping, an Integration SDK (Slack, GitHub, Google Sheets, OpenAI, Anthropic), MCP protocol support, local LLM integration, and i18n in 10 languages. Local-first by default.
 </p>
 
 <p align="center">
@@ -77,7 +77,9 @@
 - **Local-First by Default** -- Gateway binds to localhost; API keys and data never leave your machine
 - **AI Assistant (Jarvis)** -- Task management, reminders, daily briefings, and knowledge retrieval
 - **Message Hub** -- Unified inbox across all agent channels with search, filtering, and date grouping
-- **Visual Workflow Builder** -- Drag-and-drop event-driven automation (trading events, cron schedules, message routing)
+- **Visual Workflow Builder** -- Drag-and-drop event-driven automation (trading events, cron schedules, message routing) with per-node input/output inspection, real-time execution monitoring, single-node testing, data pinning, and debug replay
+- **Expression Engine & Data Mapping** -- 35 built-in functions (string, array, math, date, logic), `{{expression}}` templates with autocomplete, and visual upstream node output mapping
+- **Integration SDK** -- Extensible framework for adding new integrations. 6 built-in providers (HTTP Request, Slack, Google Sheets, GitHub, OpenAI, Anthropic) with standardized auth, schema-driven UI, and rate limiting
 - **MCP Protocol Support** -- Connect external tool servers (stdio + SSE) and expose Tigerpaw tools to external AI agents
 - **Local LLM Support** -- Ollama and LM Studio with auto-detection, model management, and cloud fallback
 - **i18n in 10 Languages** -- English, Spanish, French, German, Japanese, Korean, Chinese (Simplified + Traditional), Portuguese, Arabic

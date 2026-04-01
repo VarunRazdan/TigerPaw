@@ -18,6 +18,18 @@ Docs: https://github.com/varunrazdan/tigerpaw
 
 ### Changes
 
+- Workflow Engine: add items/array data model with per-node WorkflowItem outputs, backward-compatible with existing flat context
+- Workflow Engine: add recursive-descent expression parser with 35 built-in functions (string, array, math, date, logic, type), safety limits (50 depth, 1MB strings, 100K ops)
+- Workflow Engine: add per-node input/output inspection, real-time execution monitoring via WebSocket, single-node testing (executeToNode), data pinning, debug replay, and run filtering
+- Workflow Engine: add output schema registry with static schemas for all node types and runtime schema inference from execution items
+- Workflow UI: add ExpressionInput component with `{{` autocomplete for upstream node outputs and 25 built-in function hints
+- Workflow UI: add NodeDataInspector for viewing per-node execution input/output with JSON tree view
+- Integration SDK: add extensible integration framework at `src/integrations/sdk/` with IntegrationDefinition type, registry, auth bridge (OAuth2 + API key), action bridge, trigger bridge, UI schema converter, and validation
+- Integration SDK: widen ActionSubtype/TriggerSubtype/IntegrationCategory/IntegrationProviderId to accept SDK-registered subtypes
+- Integration SDK: add 6 built-in providers -- HTTP Request, Slack, Google Sheets, GitHub, OpenAI, Anthropic
+- Integration SDK: add `integrations.actionSchemas` and `workflows.schemas` gateway RPC methods
+- Integration SDK: add i18n translations for all 6 providers across 10 languages
+
 ### Fixes
 
 - Cron/proactive delivery: keep isolated direct cron sends out of the write-ahead resend queue so transient-send retries do not replay duplicate proactive messages after restart. (#40646) Thanks @openperf and @vincentkoc.

@@ -1,0 +1,92 @@
+{
+  "sdk": {
+    "http": {
+      "name": "HTTP Request",
+      "description": "Make HTTP requests with pagination, retry, and auth helpers",
+      "actions": {
+        "request": "HTTP Request"
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Send messages, react to posts, and monitor channels",
+      "actions": {
+        "send_message": "Send Message",
+        "post_to_channel": "Post to Channel",
+        "add_reaction": "Add Reaction"
+      },
+      "triggers": {
+        "new_message": "New Message"
+      }
+    },
+    "google_sheets": {
+      "name": "Google Sheets",
+      "description": "Read, write, and append rows in Google Sheets",
+      "actions": {
+        "read_rows": "Read Rows",
+        "write_rows": "Write Rows",
+        "append_row": "Append Row"
+      },
+      "triggers": {
+        "row_added": "Row Added"
+      }
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "Create issues, comment on PRs, and receive webhooks",
+      "actions": {
+        "create_issue": "Create Issue",
+        "comment_on_issue": "Comment on Issue",
+        "comment_on_pr": "Comment on Pull Request"
+      },
+      "triggers": {
+        "push": "Push Event",
+        "pull_request": "Pull Request Event",
+        "issue": "Issue Event"
+      }
+    },
+    "openai": {
+      "name": "OpenAI",
+      "description": "Generate text with GPT models and create embeddings",
+      "actions": {
+        "chat_completion": "Chat Completion",
+        "embeddings": "Create Embeddings"
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "description": "Generate text with Claude models",
+      "actions": {
+        "chat_completion": "Chat Completion"
+      }
+    }
+  },
+  "categories": {
+    "utility": "Utility",
+    "communication": "Communication",
+    "productivity": "Productivity",
+    "development": "Development",
+    "ai": "AI & Machine Learning"
+  },
+  "fields": {
+    "url": "URL",
+    "method": "HTTP Method",
+    "channel": "Channel",
+    "message": "Message",
+    "spreadsheetId": "Spreadsheet ID",
+    "range": "Range",
+    "owner": "Repository Owner",
+    "repo": "Repository",
+    "model": "Model",
+    "prompt": "Prompt",
+    "apiKey": "API Key",
+    "webhookPath": "Webhook Path",
+    "webhookSecret": "Webhook Secret"
+  },
+  "errors": {
+    "rateLimit": "Rate limit exceeded for {{integration}}",
+    "authFailed": "Authentication failed for {{integration}}",
+    "noConnection": "No connection found for {{integration}}",
+    "invalidInput": "Invalid input: {{details}}"
+  }
+}

@@ -46,9 +46,16 @@ import {
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
+import { ExpressionInput } from "@/components/ExpressionInput";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 import { cn } from "@/lib/utils";
+import {
+  getUpstreamNodes,
+  buildExpressionTokens,
+  type ExpressionToken,
+} from "@/lib/workflow-schema";
 import {
   useWorkflowStore,
   type WorkflowNode,
@@ -57,6 +64,7 @@ import {
   type RetryConfig,
   type WorkflowVersionMeta,
   type StoredCredentialMeta,
+  type WorkflowEdge as StoreEdge,
 } from "@/stores/workflow-store";
 
 // ---------------------------------------------------------------------------
@@ -360,7 +368,7 @@ function toFlowEdges(
 // Palette sidebar
 // ---------------------------------------------------------------------------
 
-function PaletteSidebar() {
+function PaletteSidebar({ extraGroups }: { extraGroups?: PaletteGroup[] }) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
 
@@ -373,16 +381,23 @@ function PaletteSidebar() {
 
   const lowerSearch = search.toLowerCase();
 
+  const allPaletteGroups = useMemo(
+    () => [...PALETTE_GROUPS, ...(extraGroups ?? [])],
+    [extraGroups],
+  );
+
   const filteredGroups = search
-    ? PALETTE_GROUPS.map((g) => ({
-        ...g,
-        items: g.items.filter(
-          (i) =>
-            i.label.toLowerCase().includes(lowerSearch) ||
-            i.subtype.toLowerCase().includes(lowerSearch),
-        ),
-      })).filter((g) => g.items.length > 0)
-    : PALETTE_GROUPS;
+    ? allPaletteGroups
+        .map((g) => ({
+          ...g,
+          items: g.items.filter(
+            (i: PaletteItem) =>
+              i.label.toLowerCase().includes(lowerSearch) ||
+              i.subtype.toLowerCase().includes(lowerSearch),
+          ),
+        }))
+        .filter((g) => g.items.length > 0)
+    : allPaletteGroups;
 
   return (
     <aside className="w-[180px] shrink-0 border-r border-[var(--glass-chrome-border)] bg-[var(--glass-sidebar)] overflow-y-auto">
@@ -622,10 +637,35 @@ const NODE_CONFIG_FIELDS: Record<
 // Node Property Inspector
 // ---------------------------------------------------------------------------
 
+/** Fields where expression autocomplete should NOT appear (closed-set or structural). */
+const EXPRESSION_DISABLED_FIELDS = new Set([
+  "expression", // cron expression — not a template
+  "operator",
+  "mode",
+  "method",
+  "side",
+  "orderType",
+  "switchMode",
+  "caseSensitive",
+  "action",
+  "fallback",
+  "timezone",
+  "maxIterations",
+  "itemVariable",
+  "indexVariable",
+  "arrayPath",
+  "outputKey",
+  "inputKey",
+  "workflowId",
+  "extensionId",
+]);
+
 function NodePropertyInspector({
   node,
   allNodes,
+  allEdges,
   credentials,
+  sdkFields,
   onUpdate,
   onDuplicate,
   onDelete,
@@ -633,15 +673,32 @@ function NodePropertyInspector({
 }: {
   node: WorkflowNode;
   allNodes: WorkflowNode[];
+  allEdges: StoreEdge[];
   credentials: StoredCredentialMeta[];
+  sdkFields: Record<
+    string,
+    Array<{
+      key: string;
+      label: string;
+      type: "text" | "number" | "select" | "textarea";
+      options?: string[];
+      placeholder?: string;
+    }>
+  >;
   onUpdate: (updated: WorkflowNode) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation("workflows");
-  const fields = NODE_CONFIG_FIELDS[node.subtype] ?? [];
+  const fields = NODE_CONFIG_FIELDS[node.subtype] ?? sdkFields[node.subtype] ?? [];
   const colors = NODE_COLORS[node.type] ?? NODE_COLORS.action;
+
+  // Compute upstream expression tokens for autocomplete
+  const expressionTokens: ExpressionToken[] = useMemo(() => {
+    const upstream = getUpstreamNodes(node.id, allNodes, allEdges);
+    return buildExpressionTokens(upstream);
+  }, [node.id, allNodes, allEdges]);
 
   const updateConfig = (key: string, value: unknown) => {
     onUpdate({ ...node, config: { ...node.config, [key]: value } });
@@ -699,47 +756,57 @@ function NodePropertyInspector({
         </div>
 
         {/* Config fields */}
-        {fields.map((field) => (
-          <div key={field.key}>
-            <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">
-              {field.label}
-            </label>
-            {field.type === "textarea" ? (
-              <textarea
-                value={(node.config[field.key] as string | undefined) ?? ""}
-                onChange={(e) => updateConfig(field.key, e.target.value)}
-                placeholder={field.placeholder}
-                rows={3}
-                className="w-full mt-1 px-2 py-1.5 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300 placeholder:text-neutral-700 resize-none focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-              />
-            ) : field.type === "select" ? (
-              <select
-                value={(node.config[field.key] as string | undefined) ?? field.options?.[0] ?? ""}
-                onChange={(e) => updateConfig(field.key, e.target.value)}
-                className="w-full mt-1 h-7 px-2 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-              >
-                {field.options?.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <Input
-                type={field.type}
-                value={(node.config[field.key] as string | undefined) ?? ""}
-                onChange={(e) =>
-                  updateConfig(
-                    field.key,
-                    field.type === "number" ? Number(e.target.value) : e.target.value,
-                  )
-                }
-                placeholder={field.placeholder}
-                className="h-7 text-xs mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)]"
-              />
-            )}
-          </div>
-        ))}
+        {fields.map((field) => {
+          const useAutocomplete =
+            !EXPRESSION_DISABLED_FIELDS.has(field.key) &&
+            field.type !== "select" &&
+            field.type !== "number";
+
+          return (
+            <div key={field.key}>
+              <label className="text-[10px] text-neutral-600 uppercase tracking-wider font-semibold">
+                {field.label}
+              </label>
+              {field.type === "select" ? (
+                <select
+                  value={(node.config[field.key] as string | undefined) ?? field.options?.[0] ?? ""}
+                  onChange={(e) => updateConfig(field.key, e.target.value)}
+                  className="w-full mt-1 h-7 px-2 text-xs rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] text-neutral-300 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                >
+                  {field.options?.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              ) : useAutocomplete ? (
+                <ExpressionInput
+                  value={(node.config[field.key] as string | undefined) ?? ""}
+                  onChange={(v) => updateConfig(field.key, v)}
+                  tokens={expressionTokens}
+                  placeholder={field.placeholder}
+                  multiline={field.type === "textarea"}
+                />
+              ) : field.type === "number" ? (
+                <Input
+                  type="number"
+                  value={(node.config[field.key] as string | undefined) ?? ""}
+                  onChange={(e) => updateConfig(field.key, Number(e.target.value))}
+                  placeholder={field.placeholder}
+                  className="h-7 text-xs mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)]"
+                />
+              ) : (
+                <Input
+                  type="text"
+                  value={(node.config[field.key] as string | undefined) ?? ""}
+                  onChange={(e) => updateConfig(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="h-7 text-xs mt-1 bg-[var(--glass-bg)] border-[var(--glass-border)]"
+                />
+              )}
+            </div>
+          );
+        })}
 
         {/* Error handler assignment (for action/transform nodes) */}
         {(node.type === "action" || node.type === "transform") && errorHandlerNodes.length > 0 && (
@@ -1201,6 +1268,19 @@ export function WorkflowEditorPage() {
   const [showCredentials, setShowCredentials] = useState(false);
   const [versions, setVersions] = useState<WorkflowVersionMeta[]>([]);
   const [credentialsList, setCredentialsList] = useState<StoredCredentialMeta[]>([]);
+  const [sdkPaletteGroups, setSdkPaletteGroups] = useState<PaletteGroup[]>([]);
+  const [sdkConfigFields, setSdkConfigFields] = useState<
+    Record<
+      string,
+      Array<{
+        key: string;
+        label: string;
+        type: "text" | "number" | "select" | "textarea";
+        options?: string[];
+        placeholder?: string;
+      }>
+    >
+  >({});
   const [isDirty, setIsDirty] = useState(false);
   const testing = isExecuting === id;
 
@@ -1238,6 +1318,116 @@ export function WorkflowEditorPage() {
   useEffect(() => {
     void fetchCredentials().then(setCredentialsList);
   }, [fetchCredentials]);
+
+  // Fetch SDK integration schemas for dynamic palette + config fields
+  useEffect(() => {
+    void (async () => {
+      try {
+        const result = await gatewayRpc<{
+          integrations: Array<{
+            id: string;
+            name: string;
+            category: string;
+            icon: string;
+            actions: Array<{
+              name: string;
+              displayName: string;
+              inputSchema: {
+                type: "object";
+                properties: Record<
+                  string,
+                  {
+                    type: string;
+                    description?: string;
+                    enum?: unknown[];
+                    required?: boolean;
+                    format?: string;
+                  }
+                >;
+              };
+            }>;
+            triggers: Array<{
+              name: string;
+              displayName: string;
+              type: string;
+              inputSchema: {
+                type: "object";
+                properties: Record<
+                  string,
+                  {
+                    type: string;
+                    description?: string;
+                    enum?: unknown[];
+                    required?: boolean;
+                    format?: string;
+                  }
+                >;
+              };
+            }>;
+          }>;
+        }>("integrations.actionSchemas", {});
+
+        if (!result.ok || !result.payload?.integrations) {
+          return;
+        }
+
+        const groups: PaletteGroup[] = [];
+        const fields: typeof sdkConfigFields = {};
+
+        for (const integ of result.payload.integrations) {
+          const items: PaletteItem[] = [];
+          for (const action of integ.actions) {
+            items.push({ subtype: action.name, label: action.displayName, nodeType: "action" });
+            // Convert inputSchema to config fields
+            const cfgFields: Array<{
+              key: string;
+              label: string;
+              type: "text" | "number" | "select" | "textarea";
+              options?: string[];
+              placeholder?: string;
+            }> = [];
+            for (const [key, prop] of Object.entries(action.inputSchema?.properties ?? {})) {
+              const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+              if (prop.enum?.length) {
+                cfgFields.push({
+                  key,
+                  label,
+                  type: "select",
+                  options: prop.enum.map(String),
+                  placeholder: prop.description,
+                });
+              } else if (prop.type === "number" || prop.type === "integer") {
+                cfgFields.push({ key, label, type: "number", placeholder: prop.description });
+              } else if (
+                prop.format === "textarea" ||
+                /body|message|content|template|prompt/i.test(key)
+              ) {
+                cfgFields.push({ key, label, type: "textarea", placeholder: prop.description });
+              } else {
+                cfgFields.push({ key, label, type: "text", placeholder: prop.description });
+              }
+            }
+            fields[action.name] = cfgFields;
+          }
+          for (const trigger of integ.triggers) {
+            items.push({ subtype: trigger.name, label: trigger.displayName, nodeType: "trigger" });
+          }
+          if (items.length > 0) {
+            groups.push({
+              title: integ.name,
+              icon: <Zap className="w-3.5 h-3.5" />,
+              color: "text-orange-400",
+              items,
+            });
+          }
+        }
+        setSdkPaletteGroups(groups);
+        setSdkConfigFields(fields);
+      } catch {
+        // SDK schemas are optional — don't block the editor
+      }
+    })();
+  }, []);
 
   // Track dirty state on any node/edge change after initial load
   useEffect(() => {
@@ -1433,6 +1623,16 @@ export function WorkflowEditorPage() {
   }, [selectedNodeId, nodes]);
 
   const allWfNodes = useMemo(() => nodes.map((n) => n.data as WorkflowNode), [nodes]);
+  const allWfEdges: StoreEdge[] = useMemo(
+    () =>
+      edges.map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        label: e.label as string | undefined,
+      })),
+    [edges],
+  );
 
   const handleNodeSelect = useCallback((_: unknown, node: Node) => {
     setSelectedNodeId(node.id);
@@ -1540,7 +1740,7 @@ export function WorkflowEditorPage() {
   return (
     <div className="flex h-[calc(100vh-3.5rem)] -m-4 md:-m-6">
       {/* Palette sidebar */}
-      <PaletteSidebar />
+      <PaletteSidebar extraGroups={sdkPaletteGroups} />
 
       {/* Canvas area */}
       <div className="flex-1 flex flex-col min-w-0 relative">
@@ -1834,7 +2034,9 @@ export function WorkflowEditorPage() {
         <NodePropertyInspector
           node={selectedNode}
           allNodes={allWfNodes}
+          allEdges={allWfEdges}
           credentials={credentialsList}
+          sdkFields={sdkConfigFields}
           onUpdate={handleNodeUpdate}
           onDuplicate={handleNodeDuplicate}
           onDelete={handleNodeDelete}
