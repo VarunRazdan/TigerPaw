@@ -31,6 +31,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { NotificationBell } from "./TradingNotificationToast";
 import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 function PlatformIcon({ name, className }: { name: string; className?: string }) {
   return <img src={assetUrl(`icons/trading-platforms/${name}.svg`)} alt="" className={className} />;
@@ -528,7 +529,7 @@ export function Layout() {
   const theme = useThemeStore((s) => s.theme);
   const tradingEnabled = useAppStore((s) => s.tradingEnabled);
   useGatewayConfig();
-  useTradingEvents();
+  const { connected } = useTradingEvents();
 
   // Apply theme to document root so CSS [data-theme] selectors activate
   useEffect(() => {
@@ -569,6 +570,32 @@ export function Layout() {
             {/* Right side: Notifications + Kill Switch + PnL */}
             <div className="ml-auto rtl:ml-0 rtl:mr-auto flex items-center gap-4">
               {tradingEnabled && <DailyPnlBar />}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 cursor-default">
+                      <span
+                        className={cn(
+                          "block w-2 h-2 rounded-full shrink-0",
+                          connected
+                            ? "bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.5)]"
+                            : "bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.5)] animate-pulse",
+                        )}
+                      />
+                      {!connected && (
+                        <span className="text-xs text-amber-400 font-medium hidden sm:inline">
+                          Offline
+                        </span>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {connected
+                      ? "Gateway connected"
+                      : "Gateway unreachable \u2014 showing cached data"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <div className="flex items-center gap-1.5">
                 <LanguageSwitcher />
                 <NotificationBell />
