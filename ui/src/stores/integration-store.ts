@@ -158,9 +158,9 @@ const DEMO_CONNECTIONS: IntegrationConnection[] = [
 ];
 
 export const useIntegrationStore = create<IntegrationState>((set, get) => ({
-  providers: DEMO_PROVIDERS,
-  connections: DEMO_CONNECTIONS,
-  demoMode: true,
+  providers: [],
+  connections: [],
+  demoMode: false,
   connectingProvider: null,
 
   setDemoMode: (enabled) =>
