@@ -67,12 +67,7 @@ jobs:
 
       - name: Build UI
         if: steps.check-published.outputs.already_published != 'true'
-        env:
-          NODE_ENV: development
-        run: |
-          cd ui
-          pnpm install --dev
-          npx vite build
+        run: pnpm --filter tigerpaw-control-ui run build
 
       - name: Setup npm auth
         if: steps.check-published.outputs.already_published != 'true'
