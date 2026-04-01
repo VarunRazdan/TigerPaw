@@ -81,10 +81,11 @@ jobs:
           set -euo pipefail
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
 
+          # Skip prepack since we already built above
           if [[ "$PACKAGE_VERSION" == *-beta.* ]]; then
-            npm publish --access public --tag beta --provenance
+            npm publish --access public --tag beta --provenance --ignore-scripts
           else
-            npm publish --access public --provenance
+            npm publish --access public --provenance --ignore-scripts
           fi
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
