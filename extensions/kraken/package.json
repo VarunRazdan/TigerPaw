@@ -5,7 +5,7 @@
   "description": "Tigerpaw Kraken crypto spot and margin trading extension",
   "type": "module",
   "dependencies": {
-    "zod": "^3.24.0"
+    "zod": "^4.3.6"
   },
   "tigerpaw": {
     "extensions": [
