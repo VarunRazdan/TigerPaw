@@ -1,6 +1,6 @@
 # Tigerpaw - Getting Started Guide
 
-Tigerpaw is everything [OpenClaw](https://github.com/openclaw/openclaw) does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder, MCP protocol support, local LLM integration, and i18n in 10 languages. Whether you're building AI-powered messaging bots, trading bots, or both, Tigerpaw does it all from one install.
+Tigerpaw is everything [OpenClaw](https://github.com/openclaw/openclaw) does -- 20+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder, MCP protocol support, local LLM integration, and i18n in 10 languages. Whether you're building AI-powered messaging bots, trading bots, or both, Tigerpaw does it all from one install.
 
 ---
 
@@ -8,7 +8,7 @@ Tigerpaw is everything [OpenClaw](https://github.com/openclaw/openclaw) does -- 
 
 **For everyone (even if you don't trade):**
 
-- 40+ messaging channel integrations (Telegram, Discord, Slack, Signal, iMessage, WhatsApp, Matrix, MS Teams, IRC, Line, Nostr, Google Chat, and more)
+- 20+ messaging channel integrations (Telegram, Discord, Slack, Signal, iMessage, WhatsApp, Matrix, MS Teams, IRC, Line, Nostr, Google Chat, and more)
 - Modern React 19 dashboard -- replaces OpenClaw's older Lit/Web Components UI
 - Gateway security hardening -- CORS allowlisting, per-IP rate limiting, request size enforcement, credential rotation tracking
 - Zero-config start -- `tigerpaw start` creates config, starts the gateway, opens the dashboard

@@ -5,7 +5,7 @@
 <h1 align="center">Tigerpaw</h1>
 
 <p align="center">
-  Everything OpenClaw does -- 40+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder with expression engine and data mapping, an Integration SDK (Slack, GitHub, Google Sheets, OpenAI, Anthropic), MCP protocol support, local LLM integration, and i18n in 10 languages. Local-first by default.
+  Everything OpenClaw does -- 20+ messaging channels, AI agent runtime, plugin system -- plus a trading engine, security hardening, a modern React 19 dashboard, and real-time notifications. Now with an AI assistant, visual workflow builder with expression engine and data mapping, an Integration SDK (Slack, GitHub, Google Sheets, OpenAI, Anthropic), MCP protocol support, local LLM integration, and i18n in 10 languages. Local-first by default.
 </p>
 
 <p align="center">
@@ -63,7 +63,7 @@ node tigerpaw.mjs start
 <p align="center">
   <img src=".github/screenshots/channels.png" alt="Channels" width="720" />
   <br />
-  <em>Agent Channels - Connect WhatsApp, Telegram, Discord, Slack, Signal, and 30+ more</em>
+  <em>Agent Channels - Connect WhatsApp, Telegram, Discord, Slack, Signal, and 20+ more</em>
 </p>
 
 <p align="center">
@@ -223,7 +223,7 @@ These aren't optional add-ons -- they're built into the core. **Every order goes
 
 ### Why Tigerpaw instead of OpenClaw?
 
-Tigerpaw is a strict superset of [OpenClaw](https://github.com/openclaw/openclaw). Every feature OpenClaw has -- 40+ messaging channels, agent runtime, plugin system -- is included in Tigerpaw. On top of that, Tigerpaw adds:
+Tigerpaw is a strict superset of [OpenClaw](https://github.com/openclaw/openclaw). Every feature OpenClaw has -- 20+ messaging channels, agent runtime, plugin system -- is included in Tigerpaw. On top of that, Tigerpaw adds:
 
 - A modern React 19 dashboard (OpenClaw uses older Lit/Web Components)
 - Gateway security hardening (CORS, rate limiting, request size enforcement, credential rotation)
