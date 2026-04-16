@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
 import { Button } from "@/components/ui/button";
+import { useAssistantName } from "@/hooks/use-assistant-name";
 import {
   AI_PROVIDERS,
   AI_PROVIDER_MAP,
@@ -252,6 +253,7 @@ function ModelTable({
 export function ModelsPage() {
   const { t } = useTranslation("models");
   const { t: tOnb } = useTranslation("onboarding");
+  const agentName = useAssistantName();
   const demoMode = useTradingStore((s) => s.demoMode);
 
   // --- State ---
@@ -794,10 +796,7 @@ export function ModelsPage() {
                     </Button>
                   </div>
                   <p className="text-[11px] text-neutral-500">
-                    {t(
-                      "defaultModelDesc",
-                      "The model used for Jarvis, workflows, and all AI features",
-                    )}
+                    {t("defaultModelDesc", { agentName })}
                   </p>
                   <ModelTable
                     models={displayModels}

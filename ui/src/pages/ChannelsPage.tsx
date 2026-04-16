@@ -128,7 +128,9 @@ export function ChannelsPage() {
         </button>
         {showHowItWorks && (
           <div className="px-4 pb-4 space-y-3 border-t border-neutral-800/40">
-            <p className="text-xs text-neutral-400 mt-3 leading-relaxed">{t("howItWorksBody")}</p>
+            <p className="text-xs text-neutral-400 mt-3 leading-relaxed">
+              {t("howItWorksBody", { agentName })}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="flex items-start gap-2">
                 <MessageSquare className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />
@@ -136,7 +138,9 @@ export function ChannelsPage() {
               </div>
               <div className="flex items-start gap-2">
                 <Cpu className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />
-                <span className="text-[11px] text-neutral-500">{t("howItWorksBullet2")}</span>
+                <span className="text-[11px] text-neutral-500">
+                  {t("howItWorksBullet2", { agentName })}
+                </span>
               </div>
               <div className="flex items-start gap-2">
                 <Bell className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />

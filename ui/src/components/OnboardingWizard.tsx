@@ -1290,7 +1290,9 @@ export function OnboardingWizard() {
                   {t(`${currentStepId}.title`)}
                 </h3>
               </div>
-              <p className="text-xs text-neutral-500 mb-4">{t(`${currentStepId}.description`)}</p>
+              <p className="text-xs text-neutral-500 mb-4">
+                {t(`${currentStepId}.description`, { agentName: "Jarvis" })}
+              </p>
             </>
           ) : (
             <>
