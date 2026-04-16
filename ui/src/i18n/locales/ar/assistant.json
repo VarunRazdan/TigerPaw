@@ -1,6 +1,6 @@
 {
   "title": "المساعد الشخصي",
-  "jarvis": "Jarvis",
+  "jarvis": "{{agentName}}",
   "dailyBriefing": "الملخص اليومي",
   "generateBriefing": "إنشاء الملخص",
   "lastGenerated": "آخر إنشاء",

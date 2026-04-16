@@ -45,10 +45,15 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
 
   const configPatch = useMemo(() => {
     if (isZeroCred) {
-      return { channels: { [info.configSection]: { enabled: true } } };
+      const base: Record<string, unknown> = { enabled: true };
+      if (info.configSection === "whatsapp") {
+        // WhatsApp uses personal account — restrict to self-chat only by default
+        base.dmPolicy = "allowlist";
+      }
+      return { channels: { [info.configSection]: base } };
     }
 
-    const obj: Record<string, string> = {};
+    const obj: Record<string, unknown> = { dmPolicy: "open", allowFrom: ["*"] };
     for (const cred of info.credentials) {
       const val = values[cred.field]?.trim();
       obj[cred.field] = val || (cred.envVar ? `\${${cred.envVar}}` : "");
@@ -89,34 +94,57 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
     }
   }
 
+  const [channelEnabled, setChannelEnabled] = useState(false);
+
   async function handleWebLogin() {
     setQrLoading(true);
     setQrDataUrl(null);
     setSaveError(null);
 
-    // First ensure the channel is enabled
-    if (configPatch) {
+    // Enable the channel first so the plugin loads (bundled plugins require
+    // channels.<id>.enabled=true in config). Only send config.patch on the
+    // first attempt — subsequent calls (QR refresh) skip it to avoid
+    // triggering an unnecessary gateway restart.
+    if (configPatch && !channelEnabled) {
       const patchResult = await saveConfigPatch(configPatch);
-      if (!patchResult.ok && patchResult.error !== "Gateway not reachable") {
-        // Config patch failed but not because of restart — show error
-        if (!patchResult.error?.includes("restart")) {
-          setSaveError(patchResult.error);
-        }
+      if (patchResult.ok) {
+        setChannelEnabled(true);
       }
     }
 
-    // Wait a moment for config to be applied
-    await new Promise((r) => setTimeout(r, 1000));
+    // Wait for gateway to be available. If config.patch triggered a restart
+    // (first enable), retry until the gateway comes back.
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY_MS = 3000;
+    let qrResult: { ok: boolean; payload?: { qrDataUrl?: string }; error?: string } | null = null;
 
-    // Trigger QR login via gateway RPC
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      }
+      try {
+        qrResult = await gatewayRpc<{ qrDataUrl?: string }>(
+          "web.login.start",
+          { timeoutMs: 60000, force: true },
+          { timeoutMs: 65000 },
+        );
+        if (qrResult.ok) {
+          break; // Got a response (success or provider error)
+        }
+        // Provider not available yet (gateway still restarting) — retry
+        if (qrResult.error?.includes("not available")) {
+          continue;
+        }
+        break; // Other error — don't retry
+      } catch {
+        // WebSocket not connected yet — retry
+        continue;
+      }
+    }
+
     try {
-      const result = await gatewayRpc<{ qrDataUrl?: string }>(
-        "web.login.start",
-        { timeoutMs: 60000 },
-        { timeoutMs: 65000 },
-      );
-      if (result.ok && result.payload?.qrDataUrl) {
-        setQrDataUrl(result.payload.qrDataUrl);
+      if (qrResult?.ok && qrResult.payload?.qrDataUrl) {
+        setQrDataUrl(qrResult.payload.qrDataUrl);
         setQrLoading(false);
 
         // Now wait for the user to scan (web.login.wait blocks until scan completes)
@@ -139,8 +167,12 @@ export function ConnectDialog({ open, onOpenChange, info }: Props) {
           );
         }
         return;
-      } else if (!result.ok) {
-        setSaveError("error" in result ? result.error : "Failed to start WhatsApp login");
+      } else {
+        const errorMsg =
+          qrResult && !qrResult.ok
+            ? (qrResult.error ?? "Failed to start WhatsApp login")
+            : "No QR code received. The gateway may still be restarting — try again.";
+        setSaveError(errorMsg);
       }
     } catch {
       setSaveError("Failed to connect to gateway for QR code");

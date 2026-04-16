@@ -15,19 +15,26 @@ export type AssistantConfig = {
   };
 };
 
-export const ASSISTANT_NAME = "Jarvis";
+let personaName = "Jarvis";
+
+export function setPersonaName(name: string): void {
+  personaName = name;
+}
 
 export function getPersonaGreeting(): string {
   return "Good day.";
 }
 
 export function getPersonaSignoff(): string {
-  return "— Jarvis";
+  return `— ${personaName}`;
 }
 
 export function getPersonaName(): string {
-  return "Jarvis";
+  return personaName;
 }
+
+/** @deprecated Use getPersonaName() instead */
+export const ASSISTANT_NAME = "Jarvis";
 
 export const assistantConfigSchema = {
   parse(value: unknown): AssistantConfig {

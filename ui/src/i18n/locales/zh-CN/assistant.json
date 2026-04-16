@@ -1,6 +1,6 @@
 {
   "title": "个人助理",
-  "jarvis": "Jarvis",
+  "jarvis": "{{agentName}}",
   "dailyBriefing": "每日简报",
   "generateBriefing": "生成简报",
   "lastGenerated": "上次生成",

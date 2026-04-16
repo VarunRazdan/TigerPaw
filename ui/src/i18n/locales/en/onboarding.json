@@ -17,7 +17,7 @@
 
   "ai": {
     "title": "Configure Your AI",
-    "description": "AI powers all of Tigerpaw — the assistant (Jarvis), workflows, trading commands, analysis, and smart features. Choose one or more providers.",
+    "description": "AI powers all of Tigerpaw — the assistant ({{agentName}}), workflows, trading commands, analysis, and smart features. Choose one or more providers.",
     "anthropic": "Anthropic (Claude)",
     "anthropicDesc": "Paid API — requires API key",
     "openai": "OpenAI (GPT)",
@@ -56,7 +56,7 @@
 
   "messaging": {
     "title": "Set Up an Agent Channel",
-    "description": "Agent channels let you talk to Jarvis from your favorite chat app. Connect a platform below — Tigerpaw creates a lightweight agent that relays messages between you and Jarvis. You message the agent, Jarvis responds. All processing stays on your machine.",
+    "description": "Agent channels let you talk to {{agentName}} from your favorite chat app. Connect a platform below — Tigerpaw creates a lightweight agent that relays messages between you and {{agentName}}. You message the agent, {{agentName}} responds. All processing stays on your machine.",
     "clickToConnect": "Click a channel to configure it. Each platform has its own setup guide.",
     "securityNote": "Your token is stored locally on this device.",
     "slackAppTokenPlaceholder": "App-level token (xapp-...)",
@@ -83,7 +83,7 @@
     "summaryTitle": "Configuration Summary",
     "configured": "Configured",
     "notConfigured": "Not configured",
-    "meetJarvis": "Meet Jarvis, your AI assistant",
+    "meetAgent": "Meet {{agentName}}, your AI assistant",
     "exploreChannels": "Explore your agent channels",
     "tradingDashboard": "View your trading dashboard",
     "whatYouCanDo": "What you can do",
@@ -93,8 +93,8 @@
   },
 
   "examples": {
-    "chatJarvis": "Chat with Jarvis",
-    "chatJarvisDesc": "Ask your AI assistant anything — questions, tasks, or conversations",
+    "chatAgent": "Chat with {{agentName}}",
+    "chatAgentDesc": "Ask your AI assistant anything — questions, tasks, or conversations",
     "dailyBriefing": "Set up a daily briefing",
     "dailyBriefingDesc": "Morning summary of portfolio, markets, and channel activity",
     "createWorkflow": "Create a workflow",

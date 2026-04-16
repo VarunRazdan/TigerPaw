@@ -53,6 +53,7 @@
   "nav.trading": "Negociação",
   "nav.tradingHub": "Hub de Negociação",
   "nav.settings": "Configurações",
+  "nav.tradeSettings": "Config. de trading",
   "nav.system": "Sistema",
   "nav.channels": "Canais de Agente",
   "nav.security": "Segurança",
@@ -67,5 +68,6 @@
   "nav.gatewayDisconnected": "Gateway desconectado",
   "nav.mcp": "MCP",
   "nav.models": "Modelos",
+  "nav.aiProvider": "Provedor de IA",
   "to": "até"
 }

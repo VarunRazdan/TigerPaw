@@ -1,6 +1,6 @@
 {
   "title": "パーソナルアシスタント",
-  "jarvis": "Jarvis",
+  "jarvis": "{{agentName}}",
   "dailyBriefing": "デイリーブリーフィング",
   "generateBriefing": "ブリーフィングを生成",
   "lastGenerated": "最終生成",

@@ -2,6 +2,76 @@
 
 Docs: https://github.com/varunrazdan/tigerpaw
 
+## 2026.4.16
+
+### Identity System
+
+- User identity: users can set their own display name via `!name <name>` in WhatsApp
+- Agent identity: configurable agent name (default "Jarvis") via `!agent <name>`, Settings page, or onboarding wizard
+- Per-user agent name overrides: each user can rename the agent for their own conversations
+- `!whoami` command shows current identity info (phone masked for non-owners)
+- User profiles stored at `~/.tigerpaw/user-profiles.json` with atomic writes and 0o600 permissions
+- System prompt now includes agent name and user display name for personalized conversations
+- Message prefix supports per-user agent name overrides in direct messages
+
+### AI Provider Management
+
+- New shared `ai-providers.ts` module: single source of truth for 11 provider definitions
+- Rewritten AI Provider page (ModelsPage): configure any provider, set preferred model, test connections
+- `buildAiConfigPatch()` correctly sets `api` field (fixes latent bug with `type` field)
+- Updated model catalog: Claude Opus/Sonnet 4.6, Grok 4, Llama 4 Scout, Mistral Large 3
+
+### Onboarding & Settings
+
+- New Settings page: gateway port/auth, assistant name, thinking/typing modes, restart, danger zone
+- Onboarding wizard refactored to use shared ai-providers module
+- `finishOnboarding` now uses correct `saveConfigPatch()` (was silently failing AJV validation)
+- Dirty-tracking on Settings page prevents race conditions with config load
+
+### WhatsApp Reliability
+
+- Echo detection fix: `onTextWillSend` callback registered before `msg.reply()` (prevents bot self-reply)
+- Echo detection on media fallback path: missing registration added
+- Sleep/wake system: `!sleep`/`!wake` commands with in-memory cached state (no disk I/O per message)
+- Non-owner `!sleep`/`!wake` messages now fall through to AI instead of being swallowed
+- Channel retry guard: case-insensitive logged-out detection
+- Stale auth cleanup on force-relink
+
+### Config & Gateway
+
+- `config.patch` hot-reload: uses `buildGatewayReloadPlan` to avoid unnecessary restarts
+- Removed `gateway.restart` calls from hot-reloadable config paths (model changes no longer kill WhatsApp)
+- `onboarding.reset` ordering fix: credentials wiped before config write
+- `onboarding.reset` now clears user profiles, stale model references, and sleep state
+- Error messages sanitized to prevent filesystem path leakage
+- Gateway method scopes: all new methods properly classified
+
+### i18n
+
+- Replaced 20+ hardcoded "Jarvis" references across 10 locales with `{{agentName}}` interpolation
+- Portuguese gender article handling (removed gendered articles before interpolated names)
+- Renamed i18n keys: `meetJarvis`/`chatJarvis` to `meetAgent`/`chatAgent`
+
+### Security
+
+- Prompt injection defense: `sanitizeForPromptLiteral()` applied to all user-controlled names in system prompt
+- `!agent` owner path: same 50-char validation as non-owner path
+- `!whoami` phone masking for non-owners
+- File permissions: `0o600` on sleep-state.json and user-profiles.json
+- `onboarding.reset` now fully cleans up user profiles and stale config
+
+### Fixes
+
+- Strategy store: fixed `BacktestResult` type (added `dataSource`/`dataCached`/`dataWarning`)
+- Strategy store: fixed `unknown ?? []` type narrowing with explicit casts
+- `StrategiesPage`: fixed lazy import (default export, not named)
+- `gateway-rpc.ts`: restored `tigerpaw-control-ui` client ID (was accidentally reverted)
+- `ports.test.ts`: updated assertion for Tigerpaw branding
+- UI store tests: fixed demo mode initialization (message-hub, notification, workflow stores)
+- Save-config tests: updated for two-step hash-based flow
+- Toast notifications: instantly clear when switching from demo to live mode
+- Outbound message prefix: `messages.messagePrefix` config now correctly applied to replies
+
 ## Unreleased
 
 ### Security

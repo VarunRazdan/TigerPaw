@@ -24,6 +24,30 @@ function isAnthropicMessagesModel(model: Model<Api>): model is Model<"anthropic-
   return model.api === "anthropic-messages";
 }
 
+function isGoogleGenerativeAiModel(model: Model<Api>): model is Model<"google-generative-ai"> {
+  return model.api === "google-generative-ai";
+}
+
+/**
+ * pi-ai's Google provider sets `apiVersion = ""` when a custom `baseUrl` is
+ * provided, assuming the version path is already included.  If the user
+ * configures just the bare domain (e.g. "https://generativelanguage.googleapis.com")
+ * the resulting URL omits `/v1beta`, causing a 404.
+ *
+ * Append `/v1beta` when the path is empty or just `/`.
+ */
+function normalizeGoogleBaseUrl(baseUrl: string): string {
+  try {
+    const url = new URL(baseUrl);
+    if (url.pathname === "/" || url.pathname === "") {
+      return baseUrl.replace(/\/+$/, "") + "/v1beta";
+    }
+  } catch {
+    // Not a valid URL — return as-is.
+  }
+  return baseUrl;
+}
+
 /**
  * pi-ai constructs the Anthropic API endpoint as `${baseUrl}/v1/messages`.
  * If a user configures `baseUrl` with a trailing `/v1` (e.g. the previously
@@ -45,6 +69,15 @@ export function normalizeModelCompat(model: Model<Api>): Model<Api> {
     const normalised = normalizeAnthropicBaseUrl(baseUrl);
     if (normalised !== baseUrl) {
       return { ...model, baseUrl: normalised } as Model<"anthropic-messages">;
+    }
+  }
+
+  // Normalise google-generative-ai baseUrl: append /v1beta when only the bare
+  // domain is configured.  pi-ai sets apiVersion="" when baseUrl is present.
+  if (isGoogleGenerativeAiModel(model) && baseUrl) {
+    const normalised = normalizeGoogleBaseUrl(baseUrl);
+    if (normalised !== baseUrl) {
+      return { ...model, baseUrl: normalised } as Model<"google-generative-ai">;
     }
   }
 

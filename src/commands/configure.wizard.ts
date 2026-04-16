@@ -309,7 +309,7 @@ export async function runConfigureWizard(
 ) {
   try {
     printWizardHeader(runtime);
-    intro(opts.command === "update" ? "OpenClaw update wizard" : "OpenClaw configure");
+    intro(opts.command === "update" ? "Tigerpaw update wizard" : "Tigerpaw configure");
     const prompter = createClackPrompter();
 
     const snapshot = await readConfigFileSnapshot();

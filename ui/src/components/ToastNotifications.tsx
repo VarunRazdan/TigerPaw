@@ -290,9 +290,11 @@ function ToastItem({
 export function ToastNotifications() {
   const notifications = useNotificationStore((s) => s.notifications);
   const toastsEnabled = useNotificationStore((s) => s.toastsEnabled);
+  const demoMode = useNotificationStore((s) => s.demoMode);
   const [toasts, setToasts] = useState<TradingNotification[]>([]);
   const [snapEffects, setSnapEffects] = useState<SnapEffect[]>([]);
   const seenIds = useRef(new Set<string>());
+  const prevDemoMode = useRef(demoMode);
 
   // Seed seen IDs with initial notifications (demo data) so they don't all toast on mount
   useEffect(() => {
@@ -302,6 +304,16 @@ export function ToastNotifications() {
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // When switching away from demo mode, instantly clear all toasts and effects
+  useEffect(() => {
+    if (prevDemoMode.current && !demoMode) {
+      setToasts([]);
+      setSnapEffects([]);
+      seenIds.current.clear();
+    }
+    prevDemoMode.current = demoMode;
+  }, [demoMode]);
 
   // Watch for NEW notifications added after mount
   useEffect(() => {

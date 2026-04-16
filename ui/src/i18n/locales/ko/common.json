@@ -53,6 +53,7 @@
   "nav.trading": "거래",
   "nav.tradingHub": "거래 허브",
   "nav.settings": "설정",
+  "nav.tradeSettings": "거래 설정",
   "nav.system": "시스템",
   "nav.channels": "에이전트 채널",
   "nav.security": "보안",
@@ -67,5 +68,6 @@
   "nav.gatewayDisconnected": "게이트웨이 연결 해제됨",
   "nav.mcp": "MCP",
   "nav.models": "모델",
+  "nav.aiProvider": "AI 제공자",
   "to": "~"
 }

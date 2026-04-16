@@ -28,126 +28,24 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { PlatformIcon } from "@/components/PlatformIcon";
-import { useOnboarding, type StepId, type ProviderTestStatus } from "@/hooks/use-onboarding";
+import {
+  useOnboarding,
+  type StepId,
+  type ProviderTestStatus,
+  type ProviderState,
+} from "@/hooks/use-onboarding";
+import { AI_PROVIDERS } from "@/lib/ai-providers";
 import { CHANNEL_CONNECT_INFO, TRADING_CONNECT_INFO } from "@/lib/connect-config";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 import { MODELS_CATALOG, formatTokens, formatPrice } from "@/lib/models-catalog";
 import { cn, assetUrl } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useTradingStore } from "@/stores/trading-store";
-
-// ── AI Provider definitions ──────────────────────────────────────
-
-type AiProvider = {
-  id: string;
-  key: string;
-  local?: boolean;
-  pricingUrl: string;
-  pricing: string;
-  models: string;
-  fields: { name: string; i18nKey: string; type: "password" | "text" }[];
-};
-
-const AI_PROVIDERS: AiProvider[] = [
-  {
-    id: "anthropic",
-    key: "anthropic",
-    pricingUrl: "https://www.anthropic.com/pricing",
-    pricing: "$3-15 / 1M tokens",
-    models: "Claude Opus, Sonnet, Haiku",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "openai",
-    key: "openai",
-    pricingUrl: "https://openai.com/api/pricing/",
-    pricing: "$0.15-60 / 1M tokens",
-    models: "GPT-4.1, o3, o4-mini",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "google",
-    key: "google",
-    pricingUrl: "https://ai.google.dev/pricing",
-    pricing: "Free tier + $1.25-10 / 1M tokens",
-    models: "Gemini 2.5 Pro, Flash",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "deepseek",
-    key: "deepseek",
-    pricingUrl: "https://platform.deepseek.com/api_keys",
-    pricing: "$0.14-2.19 / 1M tokens",
-    models: "DeepSeek-V3, R1",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "groq",
-    key: "groq",
-    pricingUrl: "https://groq.com/pricing/",
-    pricing: "Free tier + $0.04-6 / 1M tokens",
-    models: "Llama 3.3 70B, Mixtral, Gemma 2",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "mistral",
-    key: "mistral",
-    pricingUrl: "https://mistral.ai/products/pricing",
-    pricing: "$0.25-10 / 1M tokens",
-    models: "Mistral Large, Medium, Small",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "xai",
-    key: "xai",
-    pricingUrl: "https://docs.x.ai/docs/models",
-    pricing: "$2-10 / 1M tokens",
-    models: "Grok 3, Grok 3 Mini",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "perplexity",
-    key: "perplexity",
-    pricingUrl: "https://docs.perplexity.ai/guides/pricing",
-    pricing: "$1-5 / 1M tokens",
-    models: "Sonar Pro, Sonar, Sonar Reasoning",
-    fields: [{ name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" }],
-  },
-  {
-    id: "ollama",
-    key: "ollama",
-    local: true,
-    pricingUrl: "https://ollama.com/",
-    pricing: "Free — runs locally",
-    models: "Llama 3, Mistral, Qwen, Phi",
-    fields: [{ name: "baseUrl", i18nKey: "ai.baseUrlPlaceholder", type: "text" }],
-  },
-  {
-    id: "lmstudio",
-    key: "lmstudio",
-    local: true,
-    pricingUrl: "https://lmstudio.ai/",
-    pricing: "Free — runs locally",
-    models: "Any GGUF model",
-    fields: [{ name: "baseUrl", i18nKey: "ai.baseUrlPlaceholder", type: "text" }],
-  },
-  {
-    id: "custom",
-    key: "custom",
-    pricingUrl: "",
-    pricing: "Any OpenAI-compatible API",
-    models: "Bring your own provider",
-    fields: [
-      { name: "baseUrl", i18nKey: "ai.customBaseUrlPlaceholder", type: "text" },
-      { name: "apiKey", i18nKey: "ai.apiKeyPlaceholder", type: "password" },
-    ],
-  },
-];
 
 // ── Channel definitions (from connect-config) ────────────────────
 
@@ -255,12 +153,20 @@ function ModelsPanel({
   providerId,
   canRefresh,
   credentials,
+  selectedModel,
+  onSelectModel,
+  showSaveModel,
+  onSaveModel,
 }: {
   providerId: string;
   canRefresh: boolean;
   credentials: Record<string, string>;
+  selectedModel: string | null;
+  onSelectModel: (modelId: string) => void;
+  showSaveModel?: boolean;
+  onSaveModel?: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(selectedModel !== null);
   const [liveModels, setLiveModels] = useState<{ id: string; name: string }[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -299,11 +205,8 @@ function ModelsPanel({
       >
         <span className="flex items-center gap-1.5">
           <Zap className="w-3 h-3" />
-          {displayModels.length} models available
+          Select Model ({displayModels.length})
           {isLive && <span className="text-green-500 text-[9px]">(live)</span>}
-          {!isLive && (
-            <span className="text-neutral-600 text-[9px]">(catalog {catalog.lastUpdated})</span>
-          )}
         </span>
         {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
       </button>
@@ -333,9 +236,14 @@ function ModelsPanel({
           )}
 
           {/* Model table */}
-          <div className="space-y-0.5 max-h-[160px] overflow-y-auto">
+          <div
+            className="space-y-0.5 max-h-[160px] overflow-y-auto"
+            role="radiogroup"
+            aria-label="Model selection"
+          >
             {/* Header */}
-            <div className="grid grid-cols-[1fr_60px_60px_60px] gap-1 text-[9px] text-neutral-600 uppercase tracking-wider pb-1 border-b border-neutral-800/40">
+            <div className="grid grid-cols-[20px_1fr_60px_60px_60px] gap-1 text-[9px] text-neutral-600 uppercase tracking-wider pb-1 border-b border-neutral-800/40 px-1.5">
+              <span></span>
               <span>Model</span>
               <span className="text-right">Context</span>
               <span className="text-right">Input</span>
@@ -343,17 +251,48 @@ function ModelsPanel({
             </div>
             {displayModels.map((m) => {
               const catalogModel = staticModels.find((s) => s.id === m.id);
+              const isSelected = selectedModel === m.id;
 
               return (
                 <div
                   key={m.id}
-                  className="grid grid-cols-[1fr_60px_60px_60px] gap-1 text-[10px] py-0.5"
+                  role="radio"
+                  aria-checked={isSelected}
+                  tabIndex={0}
+                  onClick={() => onSelectModel(m.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelectModel(m.id);
+                    }
+                  }}
+                  className={cn(
+                    "grid grid-cols-[20px_1fr_60px_60px_60px] gap-1 text-[10px] py-1 px-1.5 rounded-lg cursor-pointer transition-colors",
+                    isSelected
+                      ? "bg-orange-900/20 border border-orange-700/40"
+                      : "hover:bg-neutral-800/50 border border-transparent",
+                  )}
                 >
+                  <div className="flex items-center justify-center">
+                    <div
+                      className={cn(
+                        "w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center",
+                        isSelected ? "border-orange-500" : "border-neutral-600",
+                      )}
+                    >
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />}
+                    </div>
+                  </div>
                   <span className="text-neutral-300 truncate flex items-center gap-1">
                     {m.name}
                     {catalogModel?.reasoning && (
                       <span className="text-[8px] px-1 py-0 rounded bg-purple-900/30 text-purple-400">
                         R
+                      </span>
+                    )}
+                    {catalogModel?.deprecated && (
+                      <span className="text-[8px] px-1 py-0 rounded bg-red-900/30 text-red-400">
+                        deprecated
                       </span>
                     )}
                   </span>
@@ -373,6 +312,21 @@ function ModelsPanel({
           <p className="text-[9px] text-neutral-600 mt-1.5">
             Prices per 1M tokens. R = reasoning model.
           </p>
+          {showSaveModel && onSaveModel && (
+            <button
+              type="button"
+              onClick={onSaveModel}
+              className="flex items-center gap-1.5 px-3 py-1.5 mt-2 rounded-lg text-xs font-medium bg-orange-600 hover:bg-orange-500 text-white transition-all cursor-pointer w-fit"
+            >
+              <Star className="w-3 h-3" />
+              Save & Reload
+            </button>
+          )}
+          {!showSaveModel && selectedModel && (
+            <p className="text-[9px] text-green-500 mt-1.5">
+              Model saved and reloading — new messages will use this model.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -390,26 +344,56 @@ function AiProviderStep({
   onSelect,
   onSetCredential,
   onTest,
+  onSaveCredentials,
   onSetPreferred,
+  onSelectModel,
 }: {
   aiStep: ReturnType<typeof useOnboarding>["aiStep"];
-  providerStates: Record<string, { saved: boolean; testStatus: string }>;
+  providerStates: Record<string, ProviderState>;
   preferredProvider: string | null;
   detectedProviders: Record<string, boolean>;
   isDetecting: boolean;
   onSelect: (id: string) => void;
   onSetCredential: (field: string, value: string) => void;
   onTest: () => void;
+  onSaveCredentials: (id: string) => void;
   onSetPreferred: (id: string) => void;
+  onSelectModel: (providerId: string, modelId: string) => void;
 }) {
   const { t } = useTranslation("onboarding");
 
+  // Find the currently active/preferred provider for the banner
+  const activeProvider = preferredProvider
+    ? AI_PROVIDERS.find((p) => p.id === preferredProvider)
+    : null;
+  const activeConfigured = activeProvider && providerStates[activeProvider.id]?.saved;
+
   return (
     <div className="space-y-2 max-h-[calc(100vh-360px)] overflow-y-auto pr-1">
+      {activeConfigured && activeProvider && (
+        <div className="rounded-xl border border-green-600/40 bg-green-950/15 p-3 mb-2 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0 overflow-hidden">
+            <img
+              src={assetUrl(`icons/ai-providers/${activeProvider.id}.svg`)}
+              alt={activeProvider.id}
+              className="w-4 h-4"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-medium text-green-300 flex items-center gap-1.5">
+              <span className="text-amber-400">★</span>
+              {t(`ai.${activeProvider.key}`)} — Active
+            </div>
+            <div className="text-[11px] text-neutral-500">
+              Test a different provider and click "Save and Set" to switch
+            </div>
+          </div>
+        </div>
+      )}
       {AI_PROVIDERS.map((p) => {
         const isExpanded = aiStep.selectedProvider === p.id;
         const provState = providerStates[p.id];
-        const isConfigured = provState?.saved;
+        const isConfigured = provState?.saved || provState?.testStatus === "success";
         const isPreferred = preferredProvider === p.id;
         const isDetected = p.local && detectedProviders[p.id];
 
@@ -508,7 +492,19 @@ function AiProviderStep({
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
+                {isConfigured && !isPreferred && !provState?.saved && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSaveCredentials(p.id);
+                    }}
+                    className="text-[10px] px-2.5 py-1 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-neutral-200 font-medium transition-colors cursor-pointer"
+                  >
+                    Save
+                  </button>
+                )}
                 {isConfigured && !isPreferred && (
                   <button
                     type="button"
@@ -516,22 +512,39 @@ function AiProviderStep({
                       e.stopPropagation();
                       onSetPreferred(p.id);
                     }}
-                    className="text-neutral-600 hover:text-amber-400 transition-colors cursor-pointer p-0.5"
-                    title="Set as preferred"
+                    className="text-[10px] px-2.5 py-1 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-medium transition-colors cursor-pointer"
                   >
-                    <Star className="w-3.5 h-3.5" />
+                    Save and Set
                   </button>
                 )}
                 {isPreferred && isConfigured && (
-                  <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  <span className="text-[10px] px-2.5 py-1 rounded-lg bg-green-900/40 text-green-400 font-medium flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-current" /> Active
+                  </span>
                 )}
-                {isConfigured && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+                {isConfigured && !isPreferred && (
+                  <CheckCircle2 className="w-4 h-4 text-green-400" />
+                )}
               </div>
             </button>
 
             {/* Credential form */}
             {isExpanded && (
               <div className="mt-2 ml-12 space-y-2.5 animate-in slide-in-from-top-2 duration-200">
+                {/* Model selection — above credentials */}
+                <ModelsPanel
+                  providerId={p.id}
+                  canRefresh={aiStep.testStatus === "success"}
+                  credentials={aiStep.credentials}
+                  selectedModel={provState?.selectedModel ?? null}
+                  onSelectModel={(modelId) => onSelectModel(p.id, modelId)}
+                  showSaveModel={
+                    isPreferred &&
+                    !!provState?.selectedModel &&
+                    provState.selectedModel !== (provState.savedModelId ?? null)
+                  }
+                  onSaveModel={() => onSetPreferred(p.id)}
+                />
                 {p.fields.map((field) =>
                   field.type === "password" ? (
                     <PasswordInput
@@ -593,12 +606,27 @@ function AiProviderStep({
                     detail={aiStep.testDetail}
                     error={aiStep.testError}
                   />
+                  {aiStep.testStatus === "success" && !isPreferred && !provState?.saved && (
+                    <button
+                      type="button"
+                      onClick={() => onSaveCredentials(p.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-neutral-200 transition-all cursor-pointer"
+                    >
+                      <Check className="w-3 h-3" />
+                      Save
+                    </button>
+                  )}
+                  {aiStep.testStatus === "success" && !isPreferred && (
+                    <button
+                      type="button"
+                      onClick={() => onSetPreferred(p.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-600 hover:bg-orange-500 text-white transition-all cursor-pointer"
+                    >
+                      <Star className="w-3 h-3" />
+                      Save and Set
+                    </button>
+                  )}
                 </div>
-                <ModelsPanel
-                  providerId={p.id}
-                  canRefresh={aiStep.testStatus === "success"}
-                  credentials={aiStep.credentials}
-                />
               </div>
             )}
           </div>
@@ -613,10 +641,63 @@ function AiProviderStep({
 function ChannelsGridStep() {
   const { t } = useTranslation("onboarding");
   const channelStatuses = useAppStore((s) => s.channelStatuses);
+  const setChannelStatuses = useAppStore((s) => s.setChannelStatuses);
   const [connectIcon, setConnectIcon] = useState<string | null>(null);
   const connectInfo = connectIcon ? CHANNEL_CONNECT_INFO[connectIcon] : null;
 
-  const connectedSet = new Set(channelStatuses?.filter((c) => c.connected).map((c) => c.id) ?? []);
+  // Re-fetch channel statuses when this step mounts (gateway may have restarted)
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const res = await gatewayRpc<{
+          channelStatus?: Array<{
+            id: string;
+            label: string;
+            enabled: boolean;
+            connected: boolean;
+          }>;
+        }>("config.get", {});
+        if (!cancelled && res.ok && res.payload?.channelStatus) {
+          setChannelStatuses(res.payload.channelStatus);
+        }
+      } catch {
+        /* gateway may still be restarting */
+      }
+      // Retry once after 3s in case gateway was still coming up
+      if (!cancelled) {
+        setTimeout(async () => {
+          if (cancelled) {
+            return;
+          }
+          try {
+            const res = await gatewayRpc<{
+              channelStatus?: Array<{
+                id: string;
+                label: string;
+                enabled: boolean;
+                connected: boolean;
+              }>;
+            }>("config.get", {});
+            if (!cancelled && res.ok && res.payload?.channelStatus) {
+              setChannelStatuses(res.payload.channelStatus);
+            }
+          } catch {
+            /* ignore */
+          }
+        }, 3000);
+      }
+    }
+    void refresh();
+    return () => {
+      cancelled = true;
+    };
+  }, [setChannelStatuses]);
+
+  // Show as configured if enabled OR connected (enabled = config saved, connected = runtime active)
+  const connectedSet = new Set(
+    channelStatuses?.filter((c) => c.enabled || c.connected).map((c) => c.id) ?? [],
+  );
 
   return (
     <>
@@ -631,22 +712,30 @@ function ChannelsGridStep() {
               type="button"
               onClick={() => setConnectIcon(id)}
               className={cn(
-                "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200 cursor-pointer",
+                "relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200 cursor-pointer",
                 isConnected
                   ? "border-green-600/40 bg-green-950/15"
                   : "border-neutral-700/50 bg-neutral-900/30 hover:border-neutral-600 hover:bg-neutral-800/30",
               )}
             >
-              <div className="relative">
-                <img
-                  src={assetUrl(`icons/messaging-channels/${id}.svg`)}
-                  alt={info.name}
-                  className="w-7 h-7"
-                />
-                {isConnected && (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-green-400 absolute -top-1 -right-1" />
-                )}
-              </div>
+              {isConnected && (
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-400 absolute top-1.5 right-1.5" />
+              )}
+              <img
+                src={assetUrl(`icons/messaging-channels/${id}.svg`)}
+                alt={info.name}
+                className="w-7 h-7 shrink-0"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  const retries = Number(img.dataset.retries || 0);
+                  if (retries < 3) {
+                    img.dataset.retries = String(retries + 1);
+                    setTimeout(() => {
+                      img.src = assetUrl(`icons/messaging-channels/${id}.svg`);
+                    }, 2000);
+                  }
+                }}
+              />
               <span
                 className={cn(
                   "text-[11px] font-medium text-center leading-tight",
@@ -666,6 +755,42 @@ function ChannelsGridStep() {
           onOpenChange={(open) => {
             if (!open) {
               setConnectIcon(null);
+              // Re-fetch channel statuses after dialog closes (gateway may have restarted)
+              setTimeout(async () => {
+                try {
+                  const res = await gatewayRpc<{
+                    channelStatus?: Array<{
+                      id: string;
+                      label: string;
+                      enabled: boolean;
+                      connected: boolean;
+                    }>;
+                  }>("config.get", {});
+                  if (res.ok && res.payload?.channelStatus) {
+                    setChannelStatuses(res.payload.channelStatus);
+                  }
+                } catch {
+                  /* gateway still restarting */
+                }
+                // Retry after gateway restart settles
+                setTimeout(async () => {
+                  try {
+                    const res = await gatewayRpc<{
+                      channelStatus?: Array<{
+                        id: string;
+                        label: string;
+                        enabled: boolean;
+                        connected: boolean;
+                      }>;
+                    }>("config.get", {});
+                    if (res.ok && res.payload?.channelStatus) {
+                      setChannelStatuses(res.payload.channelStatus);
+                    }
+                  } catch {
+                    /* ignore */
+                  }
+                }, 4000);
+              }, 1000);
             }
           }}
           info={connectInfo}
@@ -755,8 +880,8 @@ type UseCaseExample = {
 const USE_CASES: UseCaseExample[] = [
   {
     icon: <Bot className="w-5 h-5" />,
-    titleKey: "examples.chatJarvis",
-    descKey: "examples.chatJarvisDesc",
+    titleKey: "examples.chatAgent",
+    descKey: "examples.chatAgentDesc",
     href: "/assistant",
     requires: "ai",
   },
@@ -919,10 +1044,10 @@ function CompletionStep({
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-medium leading-tight text-neutral-200">
-                    {t(uc.titleKey)}
+                    {t(uc.titleKey, { agentName: "Jarvis" })}
                   </div>
                   <div className="text-[10px] text-neutral-500 leading-tight mt-0.5">
-                    {t(uc.descKey)}
+                    {t(uc.descKey, { agentName: "Jarvis" })}
                   </div>
                 </div>
                 {!isAvailable && (
@@ -1038,13 +1163,27 @@ export function OnboardingWizard() {
     selectAiProvider,
     setAiCredential,
     testAiConnection,
+    saveCredentials,
     setPreferred,
+    setSelectedModel,
     nextStep,
     prevStep,
     finishOnboarding,
   } = useOnboarding();
 
   const isComplete = currentStepId === "complete";
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+
+  // Detect unsaved credentials: user entered an API key but didn't click Save or Save and Set
+  // Don't warn if the provider is already saved or if test succeeded and was saved
+  const selectedProv = aiStep.selectedProvider;
+  const selectedState = selectedProv ? providerStates[selectedProv] : null;
+  const hasUnsaved =
+    currentStepId === "ai" &&
+    selectedProv &&
+    Object.values(aiStep.credentials).some((v) => v?.trim()) &&
+    !selectedState?.saved &&
+    selectedProv !== preferredProvider;
 
   // Can advance with "Next" (not skip)?
   const canAdvance =
@@ -1059,13 +1198,19 @@ export function OnboardingWizard() {
       return;
     }
     setShowSkipWarning(false);
+    setShowUnsavedWarning(false);
     nextStep();
   }, [currentStepId, anyAiConfigured, nextStep]);
 
   const handleNext = useCallback(() => {
+    if (hasUnsaved) {
+      setShowUnsavedWarning(true);
+      return;
+    }
     setShowSkipWarning(false);
+    setShowUnsavedWarning(false);
     nextStep();
-  }, [nextStep]);
+  }, [nextStep, hasUnsaved]);
 
   const handleBack = useCallback(() => {
     setShowSkipWarning(false);
@@ -1074,6 +1219,23 @@ export function OnboardingWizard() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Preload channel + platform icons so they're cached for Steps 2/3 */}
+      <div className="hidden" aria-hidden="true">
+        {CHANNEL_IDS.map((id) => (
+          <img
+            key={`preload-ch-${id}`}
+            src={assetUrl(`icons/messaging-channels/${id}.svg`)}
+            alt=""
+          />
+        ))}
+        {PLATFORM_IDS.map((id) => (
+          <img
+            key={`preload-pl-${id}`}
+            src={assetUrl(`icons/trading-platforms/${id}.svg`)}
+            alt=""
+          />
+        ))}
+      </div>
       {/* Blurred backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
@@ -1153,7 +1315,9 @@ export function OnboardingWizard() {
                   onSelect={selectAiProvider}
                   onSetCredential={setAiCredential}
                   onTest={testAiConnection}
+                  onSaveCredentials={saveCredentials}
                   onSetPreferred={setPreferred}
+                  onSelectModel={setSelectedModel}
                 />
                 {showSkipWarning && (
                   <SkipAiWarning
@@ -1163,6 +1327,32 @@ export function OnboardingWizard() {
                       nextStep();
                     }}
                   />
+                )}
+                {showUnsavedWarning && (
+                  <div className="mt-3 rounded-xl border border-amber-700/40 bg-amber-950/20 p-3 space-y-2">
+                    <p className="text-xs text-amber-400">
+                      You have unsaved changes. Are you sure you want to continue?
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowUnsavedWarning(false)}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition-all cursor-pointer"
+                      >
+                        Go Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowUnsavedWarning(false);
+                          nextStep();
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-700 hover:bg-amber-600 text-white transition-all cursor-pointer"
+                      >
+                        Continue Without Saving
+                      </button>
+                    </div>
+                  </div>
                 )}
               </>
             )}

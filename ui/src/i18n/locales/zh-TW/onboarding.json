@@ -56,7 +56,7 @@
 
   "messaging": {
     "title": "設定代理頻道",
-    "description": "代理頻道讓您可以從喜愛的聊天應用程式與 Jarvis 對話。在下方連接一個平台 — Tigerpaw 會建立一個輕量級代理，在您和 Jarvis 之間轉發訊息。您向代理發送訊息，Jarvis 進行回應。所有處理都在您的本機上完成。",
+    "description": "代理頻道讓您可以從喜愛的聊天應用程式與 {{agentName}} 對話。在下方連接一個平台 — Tigerpaw 會建立一個輕量級代理，在您和 {{agentName}} 之間轉發訊息。您向代理發送訊息，{{agentName}} 進行回應。所有處理都在您的本機上完成。",
     "clickToConnect": "點擊頻道進行設定。每個平台都有自己的設定指南。",
     "securityNote": "您的權杖儲存在此裝置本地。",
     "slackAppTokenPlaceholder": "應用程式級權杖 (xapp-...)",
@@ -83,7 +83,7 @@
     "summaryTitle": "設定摘要",
     "configured": "已設定",
     "notConfigured": "未設定",
-    "meetJarvis": "認識 Jarvis，您的 AI 助手",
+    "meetAgent": "認識 {{agentName}}，您的 AI 助手",
     "exploreChannels": "探索您的頻道",
     "tradingDashboard": "查看您的交易儀表板",
     "whatYouCanDo": "您可以做什麼",
@@ -93,8 +93,8 @@
   },
 
   "examples": {
-    "chatJarvis": "與 Jarvis 聊天",
-    "chatJarvisDesc": "向您的 AI 助手提問任何事 — 問題、任務或對話",
+    "chatAgent": "與 {{agentName}} 聊天",
+    "chatAgentDesc": "向您的 AI 助手提問任何事 — 問題、任務或對話",
     "dailyBriefing": "設定每日簡報",
     "dailyBriefingDesc": "投資組合、市場和頻道活動的早間摘要",
     "createWorkflow": "建立工作流程",

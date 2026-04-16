@@ -56,7 +56,7 @@
 
   "messaging": {
     "title": "エージェントチャネルを設定",
-    "description": "エージェントチャネルを使うと、お気に入りのチャットアプリからJarvisと会話できます。下のプラットフォームを接続してください — Tigerpawがあなたとの間でメッセージを中継する軽量エージェントを作成します。エージェントにメッセージを送ると、Jarvisが応答します。すべての処理はお使いのマシン上で行われます。",
+    "description": "エージェントチャネルを使うと、お気に入りのチャットアプリから{{agentName}}と会話できます。下のプラットフォームを接続してください — Tigerpawがあなたとの間でメッセージを中継する軽量エージェントを作成します。エージェントにメッセージを送ると、{{agentName}}が応答します。すべての処理はお使いのマシン上で行われます。",
     "clickToConnect": "チャネルをクリックして設定します。各プラットフォームには独自のセットアップガイドがあります。",
     "securityNote": "トークンはこのデバイスにローカル保存されます。",
     "slackAppTokenPlaceholder": "アプリレベルトークン（xapp-...）",
@@ -83,7 +83,7 @@
     "summaryTitle": "設定サマリー",
     "configured": "設定済み",
     "notConfigured": "未設定",
-    "meetJarvis": "AIアシスタントのJarvisに会いましょう",
+    "meetAgent": "AIアシスタントの{{agentName}}に会いましょう",
     "exploreChannels": "チャネルを探索する",
     "tradingDashboard": "トレーディングダッシュボードを表示",
     "whatYouCanDo": "できること",
@@ -93,8 +93,8 @@
   },
 
   "examples": {
-    "chatJarvis": "Jarvisとチャット",
-    "chatJarvisDesc": "AIアシスタントに何でも聞けます — 質問、タスク、会話",
+    "chatAgent": "{{agentName}}とチャット",
+    "chatAgentDesc": "AIアシスタントに何でも聞けます — 質問、タスク、会話",
     "dailyBriefing": "デイリーブリーフィングを設定",
     "dailyBriefingDesc": "ポートフォリオ、市場、チャネル活動の朝のサマリー",
     "createWorkflow": "ワークフローを作成",

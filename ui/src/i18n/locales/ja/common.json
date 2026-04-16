@@ -53,6 +53,7 @@
   "nav.trading": "取引",
   "nav.tradingHub": "取引ハブ",
   "nav.settings": "設定",
+  "nav.tradeSettings": "取引設定",
   "nav.system": "システム",
   "nav.channels": "エージェントチャネル",
   "nav.security": "セキュリティ",
@@ -67,5 +68,6 @@
   "nav.gatewayDisconnected": "ゲートウェイ未接続",
   "nav.mcp": "MCP",
   "nav.models": "モデル",
+  "nav.aiProvider": "AIプロバイダー",
   "to": "〜"
 }

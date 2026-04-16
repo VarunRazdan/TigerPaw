@@ -39,6 +39,10 @@ export async function deliverWebReply(params: {
   connectionId?: string;
   skipLog?: boolean;
   tableMode?: MarkdownTableMode;
+  /** Called before each text chunk is sent so the caller can pre-register it for echo detection. */
+  onTextWillSend?: (text: string) => void;
+  /** Prefix prepended to the first outbound text chunk (e.g. "TP: "). */
+  outboundPrefix?: string;
 }) {
   const { replyResult, msg, maxMediaBytes, textLimit, replyLogger, connectionId, skipLog } = params;
   const replyStarted = Date.now();
@@ -51,7 +55,15 @@ export async function deliverWebReply(params: {
   const convertedText = markdownToWhatsApp(
     convertMarkdownTables(replyResult.text || "", tableMode),
   );
-  const textChunks = chunkMarkdownTextWithMode(convertedText, textLimit, chunkMode);
+  const rawChunks = chunkMarkdownTextWithMode(convertedText, textLimit, chunkMode);
+
+  // Apply outbound prefix (e.g. "TP: ") from config so users can distinguish bot replies
+  const outboundPrefix = params.outboundPrefix ?? "";
+  const textChunks =
+    outboundPrefix && rawChunks.length > 0
+      ? [outboundPrefix + rawChunks[0], ...rawChunks.slice(1)]
+      : rawChunks;
+
   const mediaList = replyResult.mediaUrls?.length
     ? replyResult.mediaUrls
     : replyResult.mediaUrl
@@ -85,6 +97,7 @@ export async function deliverWebReply(params: {
   if (mediaList.length === 0 && textChunks.length) {
     const totalChunks = textChunks.length;
     for (const [index, chunk] of textChunks.entries()) {
+      params.onTextWillSend?.(chunk);
       const chunkStarted = Date.now();
       await sendWithRetry(() => msg.reply(chunk), "text");
       if (!skipLog) {
@@ -116,6 +129,9 @@ export async function deliverWebReply(params: {
   // Media (with optional caption on first item)
   for (const [index, mediaUrl] of mediaList.entries()) {
     const caption = index === 0 ? remainingText.shift() || undefined : undefined;
+    if (caption) {
+      params.onTextWillSend?.(caption);
+    }
     try {
       const media = await loadWebMedia(mediaUrl, {
         maxBytes: maxMediaBytes,
@@ -199,6 +215,7 @@ export async function deliverWebReply(params: {
         const fallbackText = fallbackTextParts.join("\n");
         if (fallbackText) {
           whatsappOutboundLog.warn(`Media skipped; sent text-only to ${msg.from}`);
+          params.onTextWillSend?.(fallbackText);
           await msg.reply(fallbackText);
         }
       }
@@ -207,6 +224,7 @@ export async function deliverWebReply(params: {
 
   // Remaining text chunks after media
   for (const chunk of remainingText) {
+    params.onTextWillSend?.(chunk);
     await msg.reply(chunk);
   }
 }

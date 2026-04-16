@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import fsSync from "node:fs";
 import {
+  Browsers,
   DisconnectReason,
   fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
   makeWASocket,
   useMultiFileAuthState,
@@ -12,7 +14,6 @@ import { formatCliCommand } from "../cli/command-format.js";
 import { danger, success } from "../globals.js";
 import { getChildLogger, toPinoLikeLogger } from "../logging.js";
 import { ensureDir, resolveUserPath } from "../utils.js";
-import { VERSION } from "../version.js";
 import {
   maybeRestoreCredsFromBackup,
   readCredsJsonRaw,
@@ -104,7 +105,16 @@ export async function createWaSocket(
   const sessionLogger = getChildLogger({ module: "web-session" });
   maybeRestoreCredsFromBackup(authDir);
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
-  const { version } = await fetchLatestBaileysVersion();
+  // Prefer WhatsApp's own service worker version (most up-to-date).
+  // Fall back to the Baileys GitHub-hosted version if WhatsApp blocks the fetch.
+  let version: [number, number, number];
+  try {
+    const waWeb = await fetchLatestWaWebVersion({});
+    version = waWeb.version as [number, number, number];
+  } catch {
+    const baileys = await fetchLatestBaileysVersion();
+    version = baileys.version as [number, number, number];
+  }
   const sock = makeWASocket({
     auth: {
       creds: state.creds,
@@ -113,7 +123,7 @@ export async function createWaSocket(
     version,
     logger,
     printQRInTerminal: false,
-    browser: ["openclaw", "cli", VERSION],
+    browser: Browsers.macOS("Safari"),
     syncFullHistory: false,
     markOnlineOnConnect: false,
   });
@@ -186,6 +196,10 @@ export async function waitForWaConnection(sock: ReturnType<typeof makeWASocket>)
 export function getStatusCode(err: unknown) {
   return (
     (err as { output?: { statusCode?: number } })?.output?.statusCode ??
+    // Baileys wraps Boom errors inside lastDisconnect: { error: BoomError, date }.
+    // waitForWaConnection rejects with the lastDisconnect object, so we must
+    // unwrap .error to reach the actual status code (e.g. 515 restartRequired).
+    (err as { error?: { output?: { statusCode?: number } } })?.error?.output?.statusCode ??
     (err as { status?: number })?.status
   );
 }

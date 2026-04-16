@@ -75,7 +75,7 @@
 - **Docker Multi-Arch Images** -- amd64 + arm64 with rootless Podman/systemd support
 - **Plugin Permission Manifests** -- Declarative permission model for extensions (network, trading, filesystem, secrets) with security audit via `tigerpaw doctor`
 - **Local-First by Default** -- Gateway binds to localhost; API keys and data never leave your machine
-- **AI Assistant (Jarvis)** -- Task management, reminders, daily briefings, and knowledge retrieval
+- **AI Assistant (Jarvis by default)** -- Task management, reminders, daily briefings, and knowledge retrieval. Configurable identity: rename via Settings, onboarding wizard, or WhatsApp commands (`!name`, `!agent`, `!whoami`)
 - **Message Hub** -- Unified inbox across all agent channels with search, filtering, and date grouping
 - **Visual Workflow Builder** -- Drag-and-drop event-driven automation (trading events, cron schedules, message routing) with per-node input/output inspection, real-time execution monitoring, single-node testing, data pinning, and debug replay
 - **Expression Engine & Data Mapping** -- 35 built-in functions (string, array, math, date, logic), `{{expression}}` templates with autocomplete, and visual upstream node output mapping

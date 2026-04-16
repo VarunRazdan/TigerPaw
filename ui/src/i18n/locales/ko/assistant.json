@@ -1,6 +1,6 @@
 {
   "title": "개인 어시스턴트",
-  "jarvis": "Jarvis",
+  "jarvis": "{{agentName}}",
   "dailyBriefing": "일일 브리핑",
   "generateBriefing": "브리핑 생성",
   "lastGenerated": "마지막 생성",

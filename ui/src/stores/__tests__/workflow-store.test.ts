@@ -1,11 +1,14 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { useWorkflowStore, type Workflow } from "../workflow-store";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const initialState = useWorkflowStore.getState();
+vi.mock("@/lib/gateway-rpc", () => ({
+  gatewayRpc: vi.fn().mockResolvedValue({ ok: true, payload: {} }),
+}));
+
+import { useWorkflowStore, type Workflow } from "../workflow-store";
 
 describe("workflow-store", () => {
   beforeEach(() => {
-    useWorkflowStore.setState(initialState, true);
+    useWorkflowStore.getState().setDemoMode(true);
   });
 
   it("initial state loads 3 demo workflows", () => {

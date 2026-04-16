@@ -32,7 +32,7 @@ import {
 } from "../../infra/restart-sentinel.js";
 import { scheduleGatewaySigusr1Restart } from "../../infra/restart.js";
 import { loadOpenClawPlugins } from "../../plugins/loader.js";
-import { diffConfigPaths } from "../config-reload.js";
+import { buildGatewayReloadPlan, diffConfigPaths } from "../config-reload.js";
 import {
   formatControlPlaneActor,
   resolveControlPlaneActor,
@@ -277,7 +277,14 @@ function loadSchemaWithPlugins(): ConfigSchemaResponse {
 }
 
 export const configHandlers: GatewayRequestHandlers = {
-  "config.get": async ({ params, respond }) => {
+  "gateway.restart": async ({ respond }) => {
+    const result = scheduleGatewaySigusr1Restart({
+      reason: "gateway.restart (user-initiated)",
+      delayMs: 1000,
+    });
+    respond(true, { ...result, ok: true }, undefined);
+  },
+  "config.get": async ({ params, respond, context }) => {
     if (!assertValidParams(params, validateConfigGetParams, "config.get", respond)) {
       return;
     }
@@ -285,19 +292,22 @@ export const configHandlers: GatewayRequestHandlers = {
     const schema = loadSchemaWithPlugins();
     const redacted = redactConfigSnapshot(snapshot, schema.uiHints);
 
-    // Build channel status from installed plugins + config state
+    // Build channel status from installed plugins + config + runtime state
     const channelPlugins = listChannelPlugins();
+    const runtime = context.getRuntimeSnapshot();
     const channelStatus = channelPlugins.map((entry) => {
       const channelCfg = snapshot.config?.channels?.[entry.id] as
         | Record<string, unknown>
         | undefined;
       const hasConfig = channelCfg !== undefined && Object.keys(channelCfg).length > 0;
       const enabled = hasConfig && channelCfg?.enabled !== false;
+      const runtimeAccount = runtime.channels[entry.id];
+      const connected = enabled && runtimeAccount?.connected === true;
       return {
         id: entry.id,
         label: entry.meta.label,
         enabled,
-        connected: enabled,
+        connected,
       };
     });
 
@@ -441,35 +451,74 @@ export const configHandlers: GatewayRequestHandlers = {
     }
     const changedPaths = diffConfigPaths(snapshot.config, validated.config);
     const actor = resolveControlPlaneActor(client);
+
+    // No-op patch: nothing semantically changed. Skip both the file write
+    // and the SIGUSR1 restart to avoid unnecessary config churn and file
+    // watcher triggers (writeConfigFile updates meta.lastTouchedAt which
+    // changes the file hash even when the config payload is identical).
+    if (changedPaths.length === 0) {
+      context?.logGateway?.info(
+        `config.patch no-op (no changed paths) ${formatControlPlaneActor(actor)} — skipping write and restart`,
+      );
+      respond(
+        true,
+        {
+          ok: true,
+          path: createConfigIO().configPath,
+          config: redactConfigObject(validated.config, schemaPatch.uiHints),
+          restart: null,
+          sentinel: null,
+        },
+        undefined,
+      );
+      return;
+    }
+
+    // Check if the changes are fully hot-reloadable (no gateway restart needed).
+    // The file watcher will detect the write and apply hot reload automatically.
+    // Only schedule SIGUSR1 when the reload plan requires a full restart.
+    const reloadPlan = buildGatewayReloadPlan(changedPaths);
+    const needsRestart = reloadPlan.restartGateway;
+
     context?.logGateway?.info(
-      `config.patch write ${formatControlPlaneActor(actor)} changedPaths=${summarizeChangedPaths(changedPaths)} restartReason=config.patch`,
+      `config.patch write ${formatControlPlaneActor(actor)} changedPaths=${summarizeChangedPaths(changedPaths)} needsRestart=${needsRestart}`,
     );
     await writeConfigFile(validated.config, writeOptions);
 
     const { sessionKey, note, restartDelayMs, deliveryContext, threadId } =
       resolveConfigRestartRequest(params);
-    const payload = buildConfigRestartSentinelPayload({
-      kind: "config-patch",
-      mode: "config.patch",
-      sessionKey,
-      deliveryContext,
-      threadId,
-      note,
-    });
-    const sentinelPath = await tryWriteRestartSentinelPayload(payload);
-    const restart = scheduleGatewaySigusr1Restart({
-      delayMs: restartDelayMs,
-      reason: "config.patch",
-      audit: {
-        actor: actor.actor,
-        deviceId: actor.deviceId,
-        clientIp: actor.clientIp,
-        changedPaths,
-      },
-    });
-    if (restart.coalesced) {
-      context?.logGateway?.warn(
-        `config.patch restart coalesced ${formatControlPlaneActor(actor)} delayMs=${restart.delayMs}`,
+
+    let restart: ReturnType<typeof scheduleGatewaySigusr1Restart> | null = null;
+    let sentinelPath: string | null = null;
+
+    if (needsRestart) {
+      const payload = buildConfigRestartSentinelPayload({
+        kind: "config-patch",
+        mode: "config.patch",
+        sessionKey,
+        deliveryContext,
+        threadId,
+        note,
+      });
+      sentinelPath = await tryWriteRestartSentinelPayload(payload);
+      restart = scheduleGatewaySigusr1Restart({
+        delayMs: restartDelayMs,
+        reason: "config.patch",
+        audit: {
+          actor: actor.actor,
+          deviceId: actor.deviceId,
+          clientIp: actor.clientIp,
+          changedPaths,
+        },
+      });
+      if (restart.coalesced) {
+        context?.logGateway?.warn(
+          `config.patch restart coalesced ${formatControlPlaneActor(actor)} delayMs=${restart.delayMs}`,
+        );
+      }
+    } else {
+      context?.logGateway?.info(
+        `config.patch hot-reloadable — skipping SIGUSR1 restart (${reloadPlan.hotReasons.join(", ")})`,
       );
     }
     respond(
@@ -479,10 +528,7 @@ export const configHandlers: GatewayRequestHandlers = {
         path: createConfigIO().configPath,
         config: redactConfigObject(validated.config, schemaPatch.uiHints),
         restart,
-        sentinel: {
-          path: sentinelPath,
-          payload,
-        },
+        sentinel: sentinelPath ? { path: sentinelPath } : null,
       },
       undefined,
     );

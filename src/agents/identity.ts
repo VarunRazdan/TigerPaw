@@ -48,8 +48,9 @@ export function resolveAckReaction(
 export function resolveIdentityNamePrefix(
   cfg: OpenClawConfig,
   agentId: string,
+  userAgentNameOverride?: string,
 ): string | undefined {
-  const name = resolveAgentIdentity(cfg, agentId)?.name?.trim();
+  const name = userAgentNameOverride?.trim() || resolveAgentIdentity(cfg, agentId)?.name?.trim();
   if (!name) {
     return undefined;
   }
@@ -64,7 +65,12 @@ export function resolveIdentityName(cfg: OpenClawConfig, agentId: string): strin
 export function resolveMessagePrefix(
   cfg: OpenClawConfig,
   agentId: string,
-  opts?: { configured?: string; hasAllowFrom?: boolean; fallback?: string },
+  opts?: {
+    configured?: string;
+    hasAllowFrom?: boolean;
+    fallback?: string;
+    userAgentNameOverride?: string;
+  },
 ): string {
   const configured = opts?.configured ?? cfg.messages?.messagePrefix;
   if (configured !== undefined) {
@@ -76,7 +82,11 @@ export function resolveMessagePrefix(
     return "";
   }
 
-  return resolveIdentityNamePrefix(cfg, agentId) ?? opts?.fallback ?? "[openclaw]";
+  return (
+    resolveIdentityNamePrefix(cfg, agentId, opts?.userAgentNameOverride) ??
+    opts?.fallback ??
+    "[openclaw]"
+  );
 }
 
 /** Helper to extract a channel config value by dynamic key. */

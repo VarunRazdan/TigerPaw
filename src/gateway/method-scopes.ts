@@ -162,6 +162,14 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "strategies.execute",
     "strategies.clearHistory",
     "backtest.run",
+    "gateway.restart",
+    "onboarding.test",
+    "onboarding.models",
+    "onboarding.reset",
+    "workflows.executeToNode",
+    "mcp.servers.list",
+    "mcp.tools.list",
+    "messages.recent",
   ],
 };
 

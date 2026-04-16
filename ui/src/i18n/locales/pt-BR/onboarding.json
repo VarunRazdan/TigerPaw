@@ -56,7 +56,7 @@
 
   "messaging": {
     "title": "Configurar um Canal de Agente",
-    "description": "Os canais de agente permitem que você converse com o Jarvis pelo seu app de chat favorito. Conecte uma plataforma abaixo — o Tigerpaw cria um agente leve que retransmite mensagens entre você e o Jarvis. Você envia uma mensagem ao agente, o Jarvis responde. Todo o processamento permanece na sua máquina.",
+    "description": "Os canais de agente permitem que você converse com {{agentName}} pelo seu app de chat favorito. Conecte uma plataforma abaixo — o Tigerpaw cria um agente leve que retransmite mensagens entre você e {{agentName}}. Você envia uma mensagem ao agente, {{agentName}} responde. Todo o processamento permanece na sua máquina.",
     "clickToConnect": "Clique em um canal para configurá-lo. Cada plataforma tem seu próprio guia de configuração.",
     "securityNote": "Seu token é armazenado localmente neste dispositivo.",
     "slackAppTokenPlaceholder": "Token de nível de app (xapp-...)",
@@ -83,7 +83,7 @@
     "summaryTitle": "Resumo da configuração",
     "configured": "Configurado",
     "notConfigured": "Não configurado",
-    "meetJarvis": "Conheça o Jarvis, seu assistente de IA",
+    "meetAgent": "Conheça {{agentName}}, seu assistente de IA",
     "exploreChannels": "Explore seus canais",
     "tradingDashboard": "Ver seu painel de trading",
     "whatYouCanDo": "O que você pode fazer",
@@ -93,8 +93,8 @@
   },
 
   "examples": {
-    "chatJarvis": "Conversar com Jarvis",
-    "chatJarvisDesc": "Pergunte qualquer coisa à sua assistente de IA — perguntas, tarefas ou conversas",
+    "chatAgent": "Conversar com {{agentName}}",
+    "chatAgentDesc": "Pergunte qualquer coisa à sua assistente de IA — perguntas, tarefas ou conversas",
     "dailyBriefing": "Configurar briefing diário",
     "dailyBriefingDesc": "Resumo matinal do portfólio, mercados e atividade dos canais",
     "createWorkflow": "Criar um workflow",

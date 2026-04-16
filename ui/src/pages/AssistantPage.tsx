@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAssistantName } from "@/hooks/use-assistant-name";
 import { invokeToolHttp } from "@/lib/gateway-http";
 import { cn } from "@/lib/utils";
 import { notifyError } from "@/stores/notification-store";
@@ -60,7 +61,6 @@ interface MemoryResult {
 // Constants
 // ---------------------------------------------------------------------------
 
-const ASSISTANT_NAME = "Jarvis";
 const ASSISTANT_COLOR = "text-blue-400";
 
 const PRIORITY_STYLES: Record<Priority, string> = {
@@ -759,6 +759,7 @@ function BriefingPanel() {
 
 export function AssistantPage() {
   const { t } = useTranslation("assistant");
+  const agentName = useAssistantName();
   const [briefingLoading, setBriefingLoading] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [showAddReminder, setShowAddReminder] = useState(false);
@@ -783,7 +784,9 @@ export function AssistantPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-neutral-100">{t("title", "Personal Assistant")}</h1>
+          <h1 className="text-xl font-bold text-neutral-100">
+            {t("title", { agentName, defaultValue: "{{agentName}} — AI Assistant" })}
+          </h1>
           <p className="text-xs text-neutral-500 mt-0.5">
             {t("subtitle", "Tasks, reminders, memory, and daily briefings")}
           </p>
@@ -791,7 +794,7 @@ export function AssistantPage() {
 
         <div className={cn("flex items-center gap-2 rounded-xl glass-panel px-3 py-2")}>
           <User className={cn("w-4 h-4", ASSISTANT_COLOR)} />
-          <span className={cn("text-sm font-medium", ASSISTANT_COLOR)}>{ASSISTANT_NAME}</span>
+          <span className={cn("text-sm font-medium", ASSISTANT_COLOR)}>{agentName}</span>
         </div>
       </div>
 

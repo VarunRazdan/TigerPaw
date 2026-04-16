@@ -53,6 +53,7 @@
   "nav.trading": "Handel",
   "nav.tradingHub": "Handelszentrale",
   "nav.settings": "Einstellungen",
+  "nav.tradeSettings": "Handelseinstellungen",
   "nav.system": "System",
   "nav.channels": "Agent-Kanäle",
   "nav.security": "Sicherheit",
@@ -67,5 +68,6 @@
   "nav.workflows": "Workflows",
   "nav.mcp": "MCP",
   "nav.models": "Modelle",
+  "nav.aiProvider": "KI-Anbieter",
   "to": "bis"
 }

@@ -1,4 +1,4 @@
-import { Power } from "lucide-react";
+import { Power, RotateCcw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
@@ -20,8 +20,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { fetchCryptoPrices, type CryptoPrice } from "@/lib/coingecko";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
+import { useNotificationStore } from "@/stores/notification-store";
 import { useTradingStore } from "@/stores/trading-store";
 
 function StatCard({
@@ -206,15 +208,87 @@ function MarketPrices() {
   );
 }
 
+function ResetConfigSection() {
+  const { t } = useTranslation("dashboard");
+  const [showDialog, setShowDialog] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetClick = () => {
+    useNotificationStore.getState().addNotification({
+      type: "system",
+      title: t("resetConfig"),
+      description: t("resetConfigDesc"),
+      severity: "warning",
+      timestamp: Date.now(),
+    });
+    setShowDialog(true);
+  };
+
+  const handleConfirm = async () => {
+    setResetting(true);
+    try {
+      await gatewayRpc("onboarding.reset", {});
+      localStorage.removeItem("tigerpaw-onboarding-complete");
+      useAppStore.getState().setOnboardingComplete(false);
+      useAppStore.getState().setChannelStatuses([]);
+    } catch {
+      useNotificationStore.getState().addNotification({
+        type: "system",
+        title: t("resetConfig"),
+        description: "Reset failed. Please try again.",
+        severity: "error",
+        timestamp: Date.now(),
+      });
+    } finally {
+      setResetting(false);
+      setShowDialog(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex justify-end">
+        <button
+          onClick={handleResetClick}
+          className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-red-400 transition-colors"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          {t("resetConfig")}
+        </button>
+      </div>
+
+      <AlertDialog open={showDialog} onOpenChange={(open) => !resetting && setShowDialog(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("resetConfigTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("resetConfigDesc")}</AlertDialogDescription>
+            <div className="mt-2 rounded-md bg-red-950/50 border border-red-900 p-3 text-xs text-red-300">
+              {t("resetConfigWarning")}
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resetting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirm}
+              disabled={resetting}
+              className="bg-red-700 hover:bg-red-600 text-white"
+            >
+              {resetting ? t("resetConfigResetting") : t("resetConfigConfirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
 export function DashboardPage() {
   const { t } = useTranslation("dashboard");
   const tradingEnabled = useAppStore((s) => s.tradingEnabled);
   const onboardingComplete = useAppStore((s) => s.onboardingComplete);
   const configLoaded = useAppStore((s) => s.configLoaded);
-  const channelStatuses = useAppStore((s) => s.channelStatuses);
 
-  const showOnboarding =
-    configLoaded && !onboardingComplete && !channelStatuses?.some((c) => c.connected);
+  const showOnboarding = configLoaded && !onboardingComplete;
 
   const {
     dailyPnlUsd,
@@ -323,6 +397,9 @@ export function DashboardPage() {
           <p className="text-xs text-neutral-500 mt-1">{t("securityDesc")}</p>
         </NavLink>
       </div>
+
+      {/* Reset Config */}
+      <ResetConfigSection />
 
       {/* Extensions status — trading only */}
       {tradingEnabled && <ExtensionsGrid platforms={platforms} />}

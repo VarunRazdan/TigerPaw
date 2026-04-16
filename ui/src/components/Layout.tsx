@@ -13,7 +13,7 @@ import {
   Inbox,
   Workflow,
   Plug,
-  Cpu,
+  Sparkles,
   Blocks,
   FlaskConical,
 } from "lucide-react";
@@ -144,7 +144,7 @@ function useNavGroups(): NavGroup[] {
         },
         {
           to: "/trading/settings",
-          label: t("nav.settings", "Settings"),
+          label: t("nav.tradeSettings", "Trade Settings"),
           icon: <Settings className="w-4 h-4" />,
         },
       ],
@@ -170,6 +170,11 @@ function useNavGroups(): NavGroup[] {
     collapsible: true,
     items: [
       {
+        to: "/settings",
+        label: t("nav.settings", "Settings"),
+        icon: <Settings className="w-4 h-4" />,
+      },
+      {
         to: "/channels",
         label: t("nav.channels", "Agent Channels"),
         icon: <MessageSquare className="w-4 h-4" />,
@@ -191,9 +196,9 @@ function useNavGroups(): NavGroup[] {
         icon: <Plug className="w-4 h-4" />,
       },
       {
-        to: "/models",
-        label: t("nav.models", "Models"),
-        icon: <Cpu className="w-4 h-4" />,
+        to: "/ai-provider",
+        label: t("nav.aiProvider", "AI Provider"),
+        icon: <Sparkles className="w-4 h-4" />,
       },
     ],
   });

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { buildAiConfigPatch } from "@/lib/ai-providers";
 import { gatewayRpc } from "@/lib/gateway-rpc";
+import { MODELS_CATALOG } from "@/lib/models-catalog";
 import { saveConfigPatch } from "@/lib/save-config";
 import { useAppStore } from "@/stores/app-store";
 import { useIntegrationStore } from "@/stores/integration-store";
@@ -18,6 +20,9 @@ export type ProviderState = {
   testDetail: string | null;
   testError: string | null;
   saved: boolean;
+  selectedModel: string | null;
+  /** Model ID loaded from config — used to detect unsaved model changes */
+  savedModelId: string | null;
 };
 
 /** Legacy compat — the wizard component still references this type */
@@ -32,111 +37,9 @@ function emptyProviderState(): ProviderState {
     testDetail: null,
     testError: null,
     saved: false,
+    selectedModel: null,
+    savedModelId: null,
   };
-}
-
-type ConfigPatch = Record<string, unknown>;
-
-function buildAiConfigPatch(provider: string, creds: Record<string, string>): ConfigPatch {
-  switch (provider) {
-    case "anthropic":
-      return {
-        models: { providers: { anthropic: { type: "anthropic-messages", apiKey: creds.apiKey } } },
-      };
-    case "openai":
-      return {
-        models: { providers: { openai: { type: "openai-completions", apiKey: creds.apiKey } } },
-      };
-    case "google":
-      return {
-        models: { providers: { google: { type: "google-generative-ai", apiKey: creds.apiKey } } },
-      };
-    case "deepseek":
-      return {
-        models: {
-          providers: {
-            deepseek: {
-              type: "openai-completions",
-              baseUrl: "https://api.deepseek.com",
-              apiKey: creds.apiKey,
-            },
-          },
-        },
-      };
-    case "groq":
-      return {
-        models: {
-          providers: {
-            groq: {
-              type: "openai-completions",
-              baseUrl: "https://api.groq.com/openai",
-              apiKey: creds.apiKey,
-            },
-          },
-        },
-      };
-    case "mistral":
-      return {
-        models: {
-          providers: {
-            mistral: {
-              type: "openai-completions",
-              baseUrl: "https://api.mistral.ai",
-              apiKey: creds.apiKey,
-            },
-          },
-        },
-      };
-    case "xai":
-      return {
-        models: {
-          providers: {
-            xai: { type: "openai-completions", baseUrl: "https://api.x.ai", apiKey: creds.apiKey },
-          },
-        },
-      };
-    case "perplexity":
-      return {
-        models: {
-          providers: {
-            perplexity: {
-              type: "openai-completions",
-              baseUrl: "https://api.perplexity.ai",
-              apiKey: creds.apiKey,
-            },
-          },
-        },
-      };
-    case "ollama":
-      return {
-        models: {
-          providers: {
-            ollama: { type: "ollama", baseUrl: creds.baseUrl || "http://localhost:11434" },
-          },
-        },
-      };
-    case "lmstudio":
-      return {
-        models: {
-          providers: {
-            lmstudio: {
-              type: "openai-completions",
-              baseUrl: creds.baseUrl || "http://localhost:1234",
-            },
-          },
-        },
-      };
-    case "custom":
-      return {
-        models: {
-          providers: {
-            custom: { type: "openai-completions", baseUrl: creds.baseUrl, apiKey: creds.apiKey },
-          },
-        },
-      };
-    default:
-      return {};
-  }
 }
 
 export function useOnboarding() {
@@ -242,13 +145,33 @@ export function useOnboarding() {
 
     async function checkExisting() {
       try {
-        const result = await gatewayRpc<{ raw?: string }>("config.get", {});
-        if (cancelled || !result.ok || !result.payload?.raw) {
+        const result = await gatewayRpc<{
+          raw?: string;
+          config?: {
+            models?: { providers?: Record<string, unknown> };
+            agents?: { defaults?: { model?: unknown } };
+          };
+        }>("config.get", {});
+        if (cancelled || !result.ok) {
           return;
         }
 
-        const config = JSON.parse(result.payload.raw) as Record<string, unknown>;
-        const providers = (config.models as Record<string, unknown>)?.providers;
+        // Try config object first (always available), then fall back to raw JSON
+        let providers: Record<string, unknown> | undefined;
+        let defaultModel: unknown;
+        if (result.payload?.config) {
+          providers = result.payload.config.models?.providers;
+          defaultModel = result.payload.config.agents?.defaults?.model;
+        } else if (result.payload?.raw) {
+          const parsed = JSON.parse(result.payload.raw) as Record<string, unknown>;
+          providers = (parsed.models as Record<string, unknown>)?.providers as
+            | Record<string, unknown>
+            | undefined;
+          defaultModel = (parsed.agents as Record<string, unknown>)?.defaults;
+          if (defaultModel && typeof defaultModel === "object") {
+            defaultModel = (defaultModel as Record<string, unknown>).model;
+          }
+        }
         if (providers && typeof providers === "object") {
           const ids = Object.keys(providers);
           if (ids.length > 0) {
@@ -262,7 +185,36 @@ export function useOnboarding() {
               };
             }
             setProviderStates((prev) => ({ ...prev, ...states }));
-            setPreferredProvider((prev) => prev ?? ids[0]);
+
+            // Determine preferred from agents.defaults.model: { primary: "provider/model" } or "provider/model"
+            let preferred: string | null = null;
+            let modelStr: string | null = null;
+            if (typeof defaultModel === "string") {
+              modelStr = defaultModel;
+            } else if (defaultModel && typeof defaultModel === "object") {
+              const obj = defaultModel as Record<string, unknown>;
+              modelStr = typeof obj.primary === "string" ? obj.primary : null;
+            }
+            let currentModelId: string | null = null;
+            if (modelStr && modelStr.includes("/")) {
+              preferred = modelStr.split("/")[0];
+              currentModelId = modelStr.split("/").slice(1).join("/");
+            }
+            setPreferredProvider((prev) => prev ?? preferred ?? ids[0]);
+            // Pre-load the current model into the preferred provider's state
+            if (preferred && currentModelId) {
+              setProviderStates((prev) => ({
+                ...prev,
+                [preferred]: {
+                  ...(prev[preferred] ?? emptyProviderState()),
+                  saved: true,
+                  testStatus: "success" as const,
+                  testDetail: "Previously configured",
+                  selectedModel: currentModelId,
+                  savedModelId: currentModelId,
+                },
+              }));
+            }
           }
         }
       } catch {
@@ -332,12 +284,11 @@ export function useOnboarding() {
       }
 
       if (result.ok && result.payload?.ok) {
-        // Save config for this provider
-        const patch = buildAiConfigPatch(id, creds);
-        if (Object.keys(patch).length > 0) {
-          void saveConfigPatch(patch);
-        }
-
+        // Don't save to config here — just mark as tested.
+        // Credentials are stored in memory. The "Save and Set" button
+        // will persist everything in one atomic config.patch call.
+        const catalogModels = MODELS_CATALOG[id]?.models?.filter((m) => !m.deprecated);
+        const autoSelected = catalogModels?.[0]?.id ?? null;
         setProviderStates((prev) => ({
           ...prev,
           [id]: {
@@ -345,12 +296,10 @@ export function useOnboarding() {
             credentials: creds,
             testStatus: "success",
             testDetail: result.payload.detail ?? "Connected",
-            saved: true,
+            saved: false, // not saved to config yet — user must click "Save and Set"
+            selectedModel: prev[id]?.selectedModel ?? autoSelected,
           },
         }));
-
-        // Auto-set as preferred if first
-        setPreferredProvider((prev) => prev ?? id);
       } else {
         const errorMsg = result.ok
           ? (result.payload.error ?? "Connection failed")
@@ -383,8 +332,64 @@ export function useOnboarding() {
     }
   }, [activeProvider, providerStates]);
 
-  const setPreferred = useCallback((id: string) => {
+  const setSelectedModel = useCallback((providerId: string, modelId: string) => {
+    setProviderStates((prev) => ({
+      ...prev,
+      [providerId]: { ...(prev[providerId] ?? emptyProviderState()), selectedModel: modelId },
+    }));
+  }, []);
+
+  // Save credentials only (no active provider change)
+  const saveCredentials = useCallback(
+    async (id: string) => {
+      const state = providerStates[id];
+      const creds = state?.credentials ?? {};
+      const patch = buildAiConfigPatch(id, creds);
+      if (Object.keys(patch).length > 0) {
+        const result = await saveConfigPatch(patch);
+        if (result.ok) {
+          setProviderStates((prev) => ({
+            ...prev,
+            [id]: { ...(prev[id] ?? emptyProviderState()), saved: true },
+          }));
+        }
+      }
+    },
+    [providerStates],
+  );
+
+  // Save credentials AND set as active provider
+  // Read state via ref to avoid stale closure — providerStates may have changed
+  // between when the callback was memoized and when it's called (e.g., user
+  // selects a model then immediately clicks Save).
+  const providerStatesRef = useRef(providerStates);
+  providerStatesRef.current = providerStates;
+
+  const setPreferred = useCallback(async (id: string) => {
     setPreferredProvider(id);
+    const state = providerStatesRef.current[id];
+    const creds = state?.credentials ?? {};
+    const credPatch = buildAiConfigPatch(id, creds);
+    const catalogModels = MODELS_CATALOG[id]?.models?.filter((m) => !m.deprecated);
+    const selectedModelId = state?.selectedModel || catalogModels?.[0]?.id;
+    const modelPatch = selectedModelId
+      ? { agents: { defaults: { model: { primary: `${id}/${selectedModelId}`, fallbacks: [] } } } }
+      : {};
+    const combinedPatch = { ...credPatch, ...modelPatch };
+    if (Object.keys(combinedPatch).length > 0) {
+      const result = await saveConfigPatch(combinedPatch);
+      if (result.ok) {
+        setProviderStates((prev) => ({
+          ...prev,
+          [id]: {
+            ...(prev[id] ?? emptyProviderState()),
+            saved: true,
+            savedModelId: selectedModelId ?? null,
+          },
+        }));
+        // No restart needed — model config is hot-reloadable via config file watcher
+      }
+    }
   }, []);
 
   const nextStep = useCallback(() => {
@@ -405,9 +410,7 @@ export function useOnboarding() {
       useIntegrationStore.getState().setDemoMode(withDemoData);
 
       setOnboardingComplete(true);
-      void gatewayRpc("config.patch", {
-        patch: { gateway: { onboardingComplete: true } },
-      });
+      void saveConfigPatch({ gateway: { onboardingComplete: true } });
     },
     [setOnboardingComplete, setDemoMode],
   );
@@ -439,7 +442,9 @@ export function useOnboarding() {
     selectAiProvider,
     setAiCredential,
     testAiConnection,
+    saveCredentials,
     setPreferred,
+    setSelectedModel,
     nextStep,
     prevStep,
     finishOnboarding,

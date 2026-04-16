@@ -17,5 +17,11 @@
   "killSwitchActiveDesc": "All trading is halted. Go to Trading Hub to resume.",
   "disconnectTitle": "Disconnect {{platform}}?",
   "disconnectDesc": "This will stop all trading on this platform. Open positions will not be automatically closed. You can reconnect at any time.",
-  "disconnectLabel": "Disconnect {{platform}}"
+  "disconnectLabel": "Disconnect {{platform}}",
+  "resetConfig": "Reset Config",
+  "resetConfigTitle": "Reset Configuration?",
+  "resetConfigDesc": "This will clear all API keys, disconnect all channels, and erase stored credentials. You'll return to the setup wizard to reconfigure everything.",
+  "resetConfigWarning": "This action cannot be undone. All provider keys, WhatsApp sessions, and channel settings will be permanently removed.",
+  "resetConfigConfirm": "Reset Config",
+  "resetConfigResetting": "Resetting..."
 }

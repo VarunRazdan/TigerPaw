@@ -53,6 +53,7 @@
   "nav.trading": "التداول",
   "nav.tradingHub": "مركز التداول",
   "nav.settings": "الإعدادات",
+  "nav.tradeSettings": "إعدادات التداول",
   "nav.system": "النظام",
   "nav.channels": "قنوات الوكيل",
   "nav.security": "الأمان",
@@ -67,5 +68,6 @@
   "nav.gatewayDisconnected": "البوابة غير متصلة",
   "nav.mcp": "MCP",
   "nav.models": "النماذج",
+  "nav.aiProvider": "مزود الذكاء الاصطناعي",
   "to": "إلى"
 }

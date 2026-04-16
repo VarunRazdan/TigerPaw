@@ -93,6 +93,9 @@ export type BacktestResult = {
   strategyId: string;
   completedAt: string;
   durationMs: number;
+  dataSource?: string;
+  dataCached?: boolean;
+  dataWarning?: string;
   metrics: BacktestMetrics;
   trades: BacktestTrade[];
   equityCurve: EquityPoint[];
@@ -276,7 +279,10 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
     try {
       const res = await gatewayRpc("strategies.list", {});
       if (res.ok) {
-        set({ strategies: (res.payload as Record<string, unknown>).strategies ?? [] });
+        set({
+          strategies: ((res.payload as Record<string, unknown>).strategies ??
+            []) as StrategyDefinition[],
+        });
       }
     } catch (err) {
       set({ error: String(err) });
@@ -297,7 +303,10 @@ export const useStrategyStore = create<StrategyState>((set, get) => ({
     try {
       const res = await gatewayRpc("strategies.executions", { strategyId });
       if (res.ok) {
-        set({ executions: (res.payload as Record<string, unknown>).executions ?? [] });
+        set({
+          executions: ((res.payload as Record<string, unknown>).executions ??
+            []) as StrategyExecution[],
+        });
       }
     } catch {
       // silent

@@ -1,11 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useMessageHubStore } from "../message-hub-store";
 
-const initialState = useMessageHubStore.getState();
-
 describe("message-hub-store", () => {
   beforeEach(() => {
-    useMessageHubStore.setState(initialState, true);
+    useMessageHubStore.getState().setDemoMode(true);
   });
 
   it("initial state loads 14 demo messages", () => {

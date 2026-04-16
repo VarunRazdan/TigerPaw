@@ -1,6 +1,6 @@
 {
   "title": "Assistant personnel",
-  "jarvis": "Jarvis",
+  "jarvis": "{{agentName}}",
   "dailyBriefing": "Briefing quotidien",
   "generateBriefing": "Générer le briefing",
   "lastGenerated": "Dernière génération",

@@ -53,6 +53,7 @@
   "nav.trading": "交易",
   "nav.tradingHub": "交易中心",
   "nav.settings": "设置",
+  "nav.tradeSettings": "交易设置",
   "nav.system": "系统",
   "nav.channels": "代理频道",
   "nav.security": "安全",
@@ -66,6 +67,7 @@
   "nav.workflows": "工作流",
   "nav.mcp": "MCP",
   "nav.models": "模型",
+  "nav.aiProvider": "AI 供应商",
   "nav.gatewayDisconnected": "网关已断开",
   "to": "至"
 }

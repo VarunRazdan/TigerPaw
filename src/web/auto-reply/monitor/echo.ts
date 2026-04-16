@@ -33,10 +33,9 @@ export function createEchoTracker(params: {
   };
 
   const rememberText: EchoTracker["rememberText"] = (text, opts) => {
-    if (!text) {
-      return;
+    if (text) {
+      recentlySent.add(text);
     }
-    recentlySent.add(text);
     if (opts.combinedBody && opts.combinedBodySessionKey) {
       recentlySent.add(
         buildCombinedKey({
@@ -45,9 +44,13 @@ export function createEchoTracker(params: {
         }),
       );
     }
+    if (!text && !(opts.combinedBody && opts.combinedBodySessionKey)) {
+      return;
+    }
     if (opts.logVerboseMessage) {
+      const label = text ?? opts.combinedBody ?? "";
       params.logVerbose?.(
-        `Added to echo detection set (size now: ${recentlySent.size}): ${text.substring(0, 50)}...`,
+        `Added to echo detection set (size now: ${recentlySent.size}): ${label.substring(0, 50)}...`,
       );
     }
     trim();

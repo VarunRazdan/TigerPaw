@@ -408,6 +408,12 @@ export async function processMessage(params: {
           // web UI only; sending them here leaks chain-of-thought to end users.
           return;
         }
+        // Pre-register inbound combined body key so duplicate arrivals are caught.
+        params.rememberSentText(undefined, {
+          combinedBody,
+          combinedBodySessionKey: params.route.sessionKey,
+          logVerboseMessage: shouldLogVerbose(),
+        });
         await deliverWebReply({
           replyResult: payload,
           msg: params.msg,
@@ -419,14 +425,15 @@ export async function processMessage(params: {
           connectionId: params.connectionId,
           skipLog: false,
           tableMode,
+          outboundPrefix: params.cfg.messages?.messagePrefix ?? "",
+          // Pre-register each post-conversion chunk for echo detection before
+          // it is sent, so the tracker already contains the text when the echo
+          // arrives back from the WhatsApp socket.
+          onTextWillSend: (text) => {
+            params.rememberSentText(text, {});
+          },
         });
         didSendReply = true;
-        const shouldLog = payload.text ? true : undefined;
-        params.rememberSentText(payload.text, {
-          combinedBody,
-          combinedBodySessionKey: params.route.sessionKey,
-          logVerboseMessage: shouldLog,
-        });
         const fromDisplay =
           params.msg.chatType === "group" ? conversationId : (params.msg.from ?? "unknown");
         const hasMedia = Boolean(payload.mediaUrl || payload.mediaUrls?.length);

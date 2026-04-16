@@ -7,11 +7,9 @@ vi.mock("@/i18n", () => ({
 
 const { useNotificationStore, eventSeverity, eventTitle } = await import("../notification-store");
 
-const initialState = useNotificationStore.getState();
-
 describe("notification-store", () => {
   beforeEach(() => {
-    useNotificationStore.setState(initialState, true);
+    useNotificationStore.getState().setDemoMode(true);
   });
 
   it("initial state loads 8 demo notifications", () => {

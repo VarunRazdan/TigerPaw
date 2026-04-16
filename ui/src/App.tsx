@@ -103,6 +103,9 @@ const ModelsPage = lazy(() =>
 const IntegrationsPage = lazy(() =>
   import("./pages/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })),
 );
+const SettingsPage = lazy(() =>
+  import("./pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
+);
 const TradingPage = lazy(() =>
   import("./pages/TradingPage").then((m) => ({ default: m.TradingPage })),
 );
@@ -132,9 +135,7 @@ const KrakenPage = lazy(() =>
   import("./pages/KrakenPage").then((m) => ({ default: m.KrakenPage })),
 );
 const DydxPage = lazy(() => import("./pages/DydxPage").then((m) => ({ default: m.DydxPage })));
-const StrategiesPage = lazy(() =>
-  import("./pages/StrategiesPage").then((m) => ({ default: m.StrategiesPage })),
-);
+const StrategiesPage = lazy(() => import("./pages/StrategiesPage"));
 
 const PAGE_ERROR = <PageErrorFallback />;
 
@@ -165,11 +166,13 @@ const CORE_ROUTES: RouteObject[] = [
   { path: "assistant", element: <AssistantPage />, errorElement: PAGE_ERROR },
   { path: "channels", element: <ChannelsPage />, errorElement: PAGE_ERROR },
   { path: "security", element: <SecurityPage />, errorElement: PAGE_ERROR },
+  { path: "settings", element: <SettingsPage />, errorElement: PAGE_ERROR },
   { path: "config", element: <ConfigPage />, errorElement: PAGE_ERROR },
   { path: "workflows", element: <WorkflowsPage />, errorElement: PAGE_ERROR },
   { path: "workflows/:id", element: <WorkflowEditorPage />, errorElement: PAGE_ERROR },
   { path: "mcp", element: <McpPage />, errorElement: PAGE_ERROR },
-  { path: "models", element: <ModelsPage />, errorElement: PAGE_ERROR },
+  { path: "ai-provider", element: <ModelsPage />, errorElement: PAGE_ERROR },
+  { path: "models", element: <Navigate to="/ai-provider" replace /> },
   { path: "integrations", element: <IntegrationsPage />, errorElement: PAGE_ERROR },
 ];
 

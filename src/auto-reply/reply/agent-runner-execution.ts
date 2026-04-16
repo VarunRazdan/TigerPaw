@@ -11,6 +11,12 @@ import {
   isContextOverflowError,
   isBillingErrorMessage,
   isLikelyContextOverflowError,
+  isModelNotFoundErrorMessage,
+  isAuthErrorMessage,
+  isAuthPermanentErrorMessage,
+  isRateLimitErrorMessage,
+  isOverloadedErrorMessage,
+  isTimeoutErrorMessage,
   isTransientHttpError,
   sanitizeUserFacingText,
 } from "../../agents/pi-embedded-helpers.js";
@@ -609,17 +615,31 @@ export async function runAgentTurnWithFallback(params: {
       }
 
       defaultRuntime.error(`Embedded agent failed before reply: ${message}`);
-      const safeMessage = isTransientHttp
-        ? sanitizeUserFacingText(message, { errorContext: true })
-        : message;
-      const trimmedMessage = safeMessage.replace(/\.\s*$/, "");
+      const isModelNotFound = isModelNotFoundErrorMessage(message);
+      const isAuthPermanent = isAuthPermanentErrorMessage(message);
+      const isAuth = !isAuthPermanent && isAuthErrorMessage(message);
+      const isRateLimit = isRateLimitErrorMessage(message);
+      const isOverloaded = isOverloadedErrorMessage(message);
+      const isTimeout = isTimeoutErrorMessage(message);
       const fallbackText = isBilling
         ? BILLING_ERROR_USER_MESSAGE
         : isContextOverflow
           ? "⚠️ Context overflow — prompt too large for this model. Try a shorter message or a larger-context model."
           : isRoleOrderingError
             ? "⚠️ Message ordering conflict - please try again. If this persists, use /new to start a fresh session."
-            : `⚠️ Agent failed before reply: ${trimmedMessage}.\nLogs: openclaw logs --follow`;
+            : isModelNotFound
+              ? "⚠️ The AI model is no longer available. Please switch to a newer model in the dashboard."
+              : isAuthPermanent
+                ? "⚠️ Your API key is invalid or expired. Please update it in the dashboard."
+                : isAuth
+                  ? "⚠️ Authentication with the AI provider failed. Please check your API key in the dashboard."
+                  : isRateLimit
+                    ? "⚠️ Too many messages sent. Please wait a moment and try again."
+                    : isOverloaded
+                      ? "⚠️ The AI service is temporarily busy. Try again in a moment, or switch to a different model in the dashboard."
+                      : isTimeout
+                        ? "⚠️ The AI service didn't respond in time. Please try again."
+                        : "⚠️ Something went wrong. Please try again later.";
 
       return {
         kind: "final",

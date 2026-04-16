@@ -1,3 +1,9 @@
+import fs from "node:fs/promises";
+import { readConfigFileSnapshotForWrite, writeConfigFile } from "../../config/config.js";
+import { resolveOAuthDir } from "../../config/paths.js";
+import { writeRestartSentinel } from "../../infra/restart-sentinel.js";
+import { scheduleGatewaySigusr1Restart } from "../../infra/restart.js";
+import { clearAllProfiles } from "../../user-profiles/store.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
 import type { GatewayRequestHandlers } from "./types.js";
 
@@ -515,6 +521,53 @@ export const onboardingHandlers: GatewayRequestHandlers = {
             ? "Service not reachable"
             : String(err);
       respond(true, { ok: false, error: message }, undefined);
+    }
+  },
+
+  "onboarding.reset": async ({ respond }) => {
+    try {
+      // 1. Read current config
+      const { snapshot, writeOptions } = await readConfigFileSnapshotForWrite();
+      const cfg = { ...snapshot.config };
+
+      // 2. Wipe credentials FIRST (WhatsApp auth, OAuth tokens, etc.)
+      const oauthDir = resolveOAuthDir();
+      await fs.rm(oauthDir, { recursive: true, force: true });
+
+      // 3. Clear user profiles and sleep state
+      clearAllProfiles();
+
+      // 4. Reset onboarding flag, clear providers, channels, and stale model reference
+      cfg.gateway = { ...cfg.gateway, onboardingComplete: false } as typeof cfg.gateway;
+      if (cfg.models) {
+        delete cfg.models.providers;
+      }
+      if (cfg.agents?.defaults?.model) {
+        delete cfg.agents.defaults.model;
+      }
+      delete cfg.channels;
+
+      // 4. Write updated config
+      await writeConfigFile(cfg, writeOptions);
+
+      // 5. Schedule gateway restart to pick up clean state
+      await writeRestartSentinel({
+        kind: "restart",
+        status: "ok",
+        ts: Date.now(),
+        message: "Configuration reset via onboarding.reset",
+      });
+      scheduleGatewaySigusr1Restart({
+        delayMs: 2000,
+        reason: "onboarding.reset",
+      });
+
+      respond(true, { ok: true }, undefined);
+    } catch (err: unknown) {
+      const rawMessage = err instanceof Error ? err.message : String(err);
+      // Don't leak filesystem paths to the client
+      const safeMessage = rawMessage.includes("/") ? "internal error" : rawMessage;
+      respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, `Reset failed: ${safeMessage}`));
     }
   },
 

@@ -15,6 +15,8 @@ export type CatalogModel = {
   maxOutput: number;
   pricing: { input: number; output: number };
   reasoning?: boolean;
+  /** Model is deprecated — still selectable but shows a warning badge */
+  deprecated?: boolean;
 };
 
 export type ProviderCatalog = {
@@ -24,14 +26,14 @@ export type ProviderCatalog = {
 
 export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
   anthropic: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-04-07",
     models: [
       {
         id: "claude-opus-4-6",
         name: "Claude Opus 4.6",
         contextWindow: 200_000,
         maxOutput: 32_000,
-        pricing: { input: 15, output: 75 },
+        pricing: { input: 5, output: 25 },
         reasoning: true,
       },
       {
@@ -47,7 +49,7 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
         name: "Claude Haiku 4.5",
         contextWindow: 200_000,
         maxOutput: 8_192,
-        pricing: { input: 0.8, output: 4 },
+        pricing: { input: 1, output: 5 },
       },
       {
         id: "claude-sonnet-4-5",
@@ -146,7 +148,7 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
   },
 
   google: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-04-07",
     models: [
       {
         id: "gemini-2.5-pro",
@@ -165,11 +167,35 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
         reasoning: true,
       },
       {
+        id: "gemini-2.5-flash-lite",
+        name: "Gemini 2.5 Flash Lite",
+        contextWindow: 1_048_576,
+        maxOutput: 65_536,
+        pricing: { input: 0.1, output: 0.4 },
+      },
+      {
+        id: "gemini-3.1-pro-preview",
+        name: "Gemini 3.1 Pro Preview",
+        contextWindow: 1_048_576,
+        maxOutput: 65_536,
+        pricing: { input: 2, output: 12 },
+        reasoning: true,
+      },
+      {
+        id: "gemini-3-flash-preview",
+        name: "Gemini 3 Flash Preview",
+        contextWindow: 1_048_576,
+        maxOutput: 65_536,
+        pricing: { input: 0.5, output: 3 },
+        reasoning: true,
+      },
+      {
         id: "gemini-2.0-flash",
         name: "Gemini 2.0 Flash",
         contextWindow: 1_048_576,
         maxOutput: 8_192,
         pricing: { input: 0.1, output: 0.4 },
+        deprecated: true,
       },
       {
         id: "gemini-2.0-flash-lite",
@@ -177,24 +203,25 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
         contextWindow: 1_048_576,
         maxOutput: 8_192,
         pricing: { input: 0.075, output: 0.3 },
+        deprecated: true,
       },
     ],
   },
 
   deepseek: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-04-07",
     models: [
       {
         id: "deepseek-chat",
         name: "DeepSeek-V3",
-        contextWindow: 65_536,
+        contextWindow: 164_000,
         maxOutput: 8_192,
-        pricing: { input: 0.27, output: 1.1 },
+        pricing: { input: 0.14, output: 0.28 },
       },
       {
         id: "deepseek-reasoner",
         name: "DeepSeek-R1",
-        contextWindow: 65_536,
+        contextWindow: 164_000,
         maxOutput: 8_192,
         pricing: { input: 0.55, output: 2.19 },
         reasoning: true,
@@ -203,8 +230,15 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
   },
 
   groq: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-04-07",
     models: [
+      {
+        id: "llama-4-scout-17b-16e-instruct",
+        name: "Llama 4 Scout",
+        contextWindow: 131_072,
+        maxOutput: 8_192,
+        pricing: { input: 0.11, output: 0.34 },
+      },
       {
         id: "llama-3.3-70b-versatile",
         name: "Llama 3.3 70B",
@@ -220,18 +254,19 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
         pricing: { input: 0.05, output: 0.08 },
       },
       {
+        id: "qwen-qwq-32b",
+        name: "Qwen QwQ 32B",
+        contextWindow: 131_072,
+        maxOutput: 16_384,
+        pricing: { input: 0.29, output: 0.59 },
+        reasoning: true,
+      },
+      {
         id: "gemma2-9b-it",
         name: "Gemma 2 9B",
         contextWindow: 8_192,
         maxOutput: 8_192,
         pricing: { input: 0.2, output: 0.2 },
-      },
-      {
-        id: "mixtral-8x7b-32768",
-        name: "Mixtral 8x7B",
-        contextWindow: 32_768,
-        maxOutput: 32_768,
-        pricing: { input: 0.24, output: 0.24 },
       },
       {
         id: "deepseek-r1-distill-llama-70b",
@@ -245,28 +280,28 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
   },
 
   mistral: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-04-07",
     models: [
       {
         id: "mistral-large-latest",
-        name: "Mistral Large",
-        contextWindow: 128_000,
+        name: "Mistral Large 3",
+        contextWindow: 262_000,
         maxOutput: 8_192,
-        pricing: { input: 2, output: 6 },
+        pricing: { input: 0.5, output: 1.5 },
       },
       {
         id: "mistral-medium-latest",
         name: "Mistral Medium",
-        contextWindow: 128_000,
+        contextWindow: 131_000,
         maxOutput: 8_192,
-        pricing: { input: 1, output: 3 },
+        pricing: { input: 0.4, output: 2 },
       },
       {
         id: "mistral-small-latest",
-        name: "Mistral Small",
-        contextWindow: 128_000,
+        name: "Mistral Small 4",
+        contextWindow: 256_000,
         maxOutput: 8_192,
-        pricing: { input: 0.25, output: 0.75 },
+        pricing: { input: 0.15, output: 0.6 },
       },
       {
         id: "codestral-latest",
@@ -280,14 +315,29 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
         name: "Mistral Nemo",
         contextWindow: 128_000,
         maxOutput: 8_192,
-        pricing: { input: 0.15, output: 0.15 },
+        pricing: { input: 0.02, output: 0.02 },
       },
     ],
   },
 
   xai: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-04-07",
     models: [
+      {
+        id: "grok-4",
+        name: "Grok 4",
+        contextWindow: 256_000,
+        maxOutput: 16_384,
+        pricing: { input: 3, output: 15 },
+        reasoning: true,
+      },
+      {
+        id: "grok-4-fast",
+        name: "Grok 4 Fast",
+        contextWindow: 256_000,
+        maxOutput: 16_384,
+        pricing: { input: 0.2, output: 0.5 },
+      },
       {
         id: "grok-3",
         name: "Grok 3",
@@ -303,32 +353,25 @@ export const MODELS_CATALOG: Record<string, ProviderCatalog> = {
         pricing: { input: 0.3, output: 0.5 },
         reasoning: true,
       },
-      {
-        id: "grok-2",
-        name: "Grok 2",
-        contextWindow: 131_072,
-        maxOutput: 8_192,
-        pricing: { input: 2, output: 10 },
-      },
     ],
   },
 
   perplexity: {
-    lastUpdated: "2026-03-27",
+    lastUpdated: "2026-04-07",
     models: [
       {
         id: "sonar-pro",
         name: "Sonar Pro",
         contextWindow: 200_000,
         maxOutput: 8_192,
-        pricing: { input: 3, output: 15 },
+        pricing: { input: 2, output: 8 },
       },
       {
         id: "sonar",
         name: "Sonar",
         contextWindow: 128_000,
         maxOutput: 8_192,
-        pricing: { input: 1, output: 5 },
+        pricing: { input: 1, output: 1 },
       },
       {
         id: "sonar-reasoning-pro",

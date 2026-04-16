@@ -13,6 +13,7 @@ describe("saveConfigPatch", () => {
   beforeEach(() => {
     mockGatewayRpc.mockReset();
   });
+
   it("returns ok:true when get + patch both succeed", async () => {
     mockGatewayRpc
       .mockResolvedValueOnce({ ok: true, payload: { hash: "abc123" } })

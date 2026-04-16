@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
+import fs from "node:fs/promises";
 import { DisconnectReason } from "@whiskeysockets/baileys";
 import { loadConfig } from "../config/config.js";
 import { danger, info, success } from "../globals.js";
 import { logInfo } from "../logger.js";
 import { defaultRuntime, type RuntimeEnv } from "../runtime.js";
+import { resolveUserPath } from "../utils.js";
 import { resolveWhatsAppAccount } from "./accounts.js";
 import { renderQrPngBase64 } from "./qr-image.js";
 import {
@@ -122,19 +124,36 @@ export async function startWebLoginWithQr(
   if (hasWeb && !opts.force) {
     const who = selfId.e164 ?? selfId.jid ?? "unknown";
     return {
-      message: `WhatsApp is already linked (${who}). Say “relink” if you want a fresh QR.`,
+      message: `WhatsApp is already linked (${who}). Say "relink" if you want a fresh QR.`,
     };
   }
 
-  const existing = activeLogins.get(account.accountId);
-  if (existing && isLoginFresh(existing) && existing.qrDataUrl) {
-    return {
-      qrDataUrl: existing.qrDataUrl,
-      message: "QR already active. Scan it in WhatsApp → Linked Devices.",
-    };
+  // When force=true, skip cached QR and always generate a fresh one.
+  // Stale auth state from a failed pairing causes Baileys to attempt
+  // reconnection instead of generating a new QR code.
+  if (!opts.force) {
+    const existing = activeLogins.get(account.accountId);
+    if (existing && isLoginFresh(existing) && existing.qrDataUrl) {
+      return {
+        qrDataUrl: existing.qrDataUrl,
+        message: "QR already active. Scan it in WhatsApp → Linked Devices.",
+      };
+    }
   }
 
   await resetActiveLogin(account.accountId);
+
+  // Clear stale auth state so Baileys starts fresh and generates a QR
+  // instead of trying to reconnect with partial/invalid credentials.
+  if (opts.force && hasWeb) {
+    const resolvedAuthDir = resolveUserPath(account.authDir);
+    try {
+      await fs.rm(resolvedAuthDir, { recursive: true, force: true });
+      runtime.log(info("Cleared stale WhatsApp auth state for fresh QR."));
+    } catch {
+      // best-effort
+    }
+  }
 
   let resolveQr: ((qr: string) => void) | null = null;
   let rejectQr: ((err: Error) => void) | null = null;
@@ -243,7 +262,7 @@ export async function waitForWebLogin(
     if (remaining <= 0) {
       return {
         connected: false,
-        message: "Still waiting for the QR scan. Let me know when you’ve scanned it.",
+        message: "Still waiting for the QR scan. Let me know when you've scanned it.",
       };
     }
     const timeout = new Promise<"timeout">((resolve) =>
@@ -254,7 +273,7 @@ export async function waitForWebLogin(
     if (result === "timeout") {
       return {
         connected: false,
-        message: "Still waiting for the QR scan. Let me know when you’ve scanned it.",
+        message: "Still waiting for the QR scan. Let me know when you've scanned it.",
       };
     }
 
@@ -278,7 +297,7 @@ export async function waitForWebLogin(
         }
       }
       const message = `WhatsApp login failed: ${login.error}`;
-      await resetActiveLogin(account.accountId, message);
+      await resetActiveLogin(account.accountId);
       runtime.log(danger(message));
       return { connected: false, message };
     }

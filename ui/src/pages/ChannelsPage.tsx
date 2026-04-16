@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAssistantName } from "@/hooks/use-assistant-name";
 import { CHANNEL_CONNECT_INFO } from "@/lib/connect-config";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 import { assetUrl } from "@/lib/utils";
@@ -49,6 +50,7 @@ const CHANNELS_DEFAULT = CHANNELS.map((ch) => ({ ...ch, status: "not configured"
 export function ChannelsPage() {
   const { t } = useTranslation("channels");
   const { t: tc } = useTranslation("common");
+  const agentName = useAssistantName();
   const demoMode = useTradingStore((s) => s.demoMode);
   const liveStatuses = useAppStore((s) => s.channelStatuses);
   const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({});
@@ -64,9 +66,9 @@ export function ChannelsPage() {
   // Derive channels from live data + local disconnect overrides + demo fallback
   const channels = useMemo(() => {
     const liveMap = liveStatuses ? new Map(liveStatuses.map((s) => [s.id, s])) : null;
-    // In live mode without gateway data, show all as "not configured"
-    // In demo mode without gateway data, show hardcoded demo statuses
-    const baseChannels = !liveMap && !demoMode ? CHANNELS_DEFAULT : CHANNELS;
+    // Demo mode without gateway data: show hardcoded demo statuses
+    // Everything else (live mode, or demo with gateway data): start from "not configured"
+    const baseChannels = demoMode && !liveMap ? CHANNELS : CHANNELS_DEFAULT;
     return baseChannels.map((ch) => {
       if (localOverrides[ch.icon]) {
         return { ...ch, status: localOverrides[ch.icon] };
@@ -105,7 +107,7 @@ export function ChannelsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-neutral-100">{t("title")}</h1>
-          <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle")}</p>
+          <p className="text-xs text-neutral-500 mt-0.5">{t("subtitle", { agentName })}</p>
         </div>
         <DataModeSelector />
       </div>

@@ -252,6 +252,20 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
             if (manuallyStopped.has(rKey)) {
               return;
             }
+            // Don't retry if the channel exited because the session is logged out (401).
+            const snapshot = getRuntime(channelId, id);
+            const disconnect = snapshot?.lastDisconnect;
+            const lastErr = snapshot?.lastError ?? "";
+            const isLoggedOut =
+              (typeof disconnect === "object" && disconnect?.loggedOut) ||
+              lastErr.includes("401") ||
+              lastErr.toLowerCase().includes("logged out");
+            if (isLoggedOut) {
+              log.warn?.(
+                `[${id}] session logged out — not retrying (run channels login to relink)`,
+              );
+              return;
+            }
             const attempt = (restartAttempts.get(rKey) ?? 0) + 1;
             restartAttempts.set(rKey, attempt);
             if (attempt > MAX_RESTART_ATTEMPTS) {

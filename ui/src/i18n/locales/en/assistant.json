@@ -1,5 +1,5 @@
 {
-  "title": "Jarvis — AI Assistant",
+  "title": "{{agentName}} — AI Assistant",
   "dailyBriefing": "Daily Briefing",
   "generateBriefing": "Generate Briefing",
   "lastGenerated": "Last generated",

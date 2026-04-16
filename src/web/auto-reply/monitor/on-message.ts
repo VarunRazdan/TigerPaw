@@ -1,9 +1,17 @@
 import type { getReplyFromConfig } from "../../../auto-reply/reply.js";
 import type { MsgContext } from "../../../auto-reply/templating.js";
 import { loadConfig } from "../../../config/config.js";
+import { readConfigFileSnapshotForWrite, writeConfigFile } from "../../../config/io.js";
 import { logVerbose } from "../../../globals.js";
 import { resolveAgentRoute } from "../../../routing/resolve-route.js";
 import { buildGroupHistoryKey } from "../../../routing/session-key.js";
+import {
+  buildCompositeKey,
+  resolveUserDisplayName,
+  resolveAgentNameForUser,
+  setUserDisplayName,
+  setUserAgentName,
+} from "../../../user-profiles/store.js";
 import { normalizeE164 } from "../../../utils.js";
 import type { MentionConfig } from "../mentions.js";
 import type { WebInboundMsg } from "../types.js";
@@ -14,6 +22,7 @@ import { applyGroupGating } from "./group-gating.js";
 import { updateLastRouteInBackground } from "./last-route.js";
 import { resolvePeerId } from "./peer.js";
 import { processMessage } from "./process-message.js";
+import { isSleeping, setSleepState } from "./sleep-state.js";
 
 export function createWebOnMessageHandler(params: {
   cfg: ReturnType<typeof loadConfig>;
@@ -92,6 +101,156 @@ export function createWebOnMessageHandler(params: {
     if (params.echoTracker.has(msg.body)) {
       logVerbose("Skipping auto-reply: detected echo (message matches recently sent text)");
       params.echoTracker.forget(msg.body);
+      return;
+    }
+
+    // Sleep/wake commands — only the account owner (fromMe) can toggle
+    const bodyLower = (msg.body ?? "").trim().toLowerCase();
+    if ((bodyLower === "!sleep" || bodyLower === "!wake") && msg.fromMe) {
+      if (bodyLower === "!sleep") {
+        if (isSleeping()) {
+          params.echoTracker.rememberText("Already sleeping. Send !wake to wake me up.", {});
+          await msg.reply("Already sleeping. Send !wake to wake me up.");
+        } else {
+          setSleepState(true, msg.senderE164 ?? msg.from);
+          params.echoTracker.rememberText("Going to sleep. Send !wake to wake me up.", {});
+          await msg.reply("Going to sleep. Send !wake to wake me up.");
+        }
+      } else {
+        if (!isSleeping()) {
+          params.echoTracker.rememberText("Already awake!", {});
+          await msg.reply("Already awake!");
+        } else {
+          setSleepState(false, msg.senderE164 ?? msg.from);
+          params.echoTracker.rememberText("I'm awake!", {});
+          await msg.reply("I'm awake!");
+        }
+      }
+      return;
+    }
+
+    // !name — anyone can set their own display name
+    if (bodyLower === "!name" || bodyLower.startsWith("!name ")) {
+      const rawName = bodyLower.startsWith("!name ") ? msg.body.slice(6).trim() : "";
+      if (!rawName) {
+        const usage = "Usage: !name <your preferred name>";
+        params.echoTracker.rememberText(usage, {});
+        await msg.reply(usage);
+        return;
+      }
+      const compositeKey = buildCompositeKey(
+        "whatsapp",
+        msg.senderJid ?? msg.senderE164 ?? msg.from,
+        msg.senderE164,
+      );
+      const validated = setUserDisplayName(compositeKey, rawName);
+      if (!validated) {
+        const fail = "Name must be 1-50 characters.";
+        params.echoTracker.rememberText(fail, {});
+        await msg.reply(fail);
+      } else {
+        const ok = `Got it! I'll call you ${validated} from now on. This takes effect in your next conversation.`;
+        params.echoTracker.rememberText(ok, {});
+        await msg.reply(ok);
+      }
+      return;
+    }
+
+    // !whoami — anyone can check their identity
+    if (bodyLower === "!whoami") {
+      const compositeKey = buildCompositeKey(
+        "whatsapp",
+        msg.senderJid ?? msg.senderE164 ?? msg.from,
+        msg.senderE164,
+      );
+      const displayName = resolveUserDisplayName(compositeKey, msg.senderName);
+      const agentName = resolveAgentNameForUser(compositeKey, "Jarvis");
+      // Only show full phone to owner; mask for others
+      const rawPhone = msg.senderE164 ?? "N/A";
+      const phone = msg.fromMe
+        ? rawPhone
+        : rawPhone !== "N/A"
+          ? rawPhone.slice(0, 4) + "***" + rawPhone.slice(-3)
+          : "N/A";
+      const info = `You are: ${displayName}\nPhone: ${phone}\nAgent: ${agentName}`;
+      params.echoTracker.rememberText(info, {});
+      await msg.reply(info);
+      return;
+    }
+
+    // !agent — change agent name (owner: global, non-owner: per-user)
+    if (bodyLower === "!agent" || bodyLower.startsWith("!agent ")) {
+      const rawName = bodyLower.startsWith("!agent ") ? msg.body.slice(7).trim() : "";
+      const compositeKey = buildCompositeKey(
+        "whatsapp",
+        msg.senderJid ?? msg.senderE164 ?? msg.from,
+        msg.senderE164,
+      );
+
+      if (!rawName) {
+        // Show current agent name
+        const currentName = resolveAgentNameForUser(compositeKey, "Jarvis");
+        const show = `Current agent name: ${currentName}`;
+        params.echoTracker.rememberText(show, {});
+        await msg.reply(show);
+        return;
+      }
+
+      // Validate name (same rules for owner and non-owner)
+      // eslint-disable-next-line no-control-regex -- intentionally stripping control characters from user input
+      const validated = rawName
+        .replace(/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\ufeff]/g, "")
+        .trim();
+      if (!validated || validated.length > 50) {
+        const err = "Agent name must be 1-50 characters.";
+        params.echoTracker.rememberText(err, {});
+        await msg.reply(err);
+        return;
+      }
+
+      if (msg.fromMe) {
+        // Owner: update global agent name in config
+        try {
+          const { snapshot, writeOptions } = await readConfigFileSnapshotForWrite();
+          const cfg = snapshot.config;
+          const updated = {
+            ...cfg,
+            ui: {
+              ...cfg.ui,
+              assistant: {
+                ...cfg.ui?.assistant,
+                name: validated,
+              },
+            },
+          };
+          await writeConfigFile(updated, writeOptions);
+          const ok = `Agent name updated globally to ${validated}.`;
+          params.echoTracker.rememberText(ok, {});
+          await msg.reply(ok);
+        } catch {
+          const fail = "Failed to update agent name in config.";
+          params.echoTracker.rememberText(fail, {});
+          await msg.reply(fail);
+        }
+      } else {
+        // Non-owner: per-user override
+        const validated = setUserAgentName(compositeKey, rawName);
+        if (!validated) {
+          const fail = "Name must be 1-50 characters.";
+          params.echoTracker.rememberText(fail, {});
+          await msg.reply(fail);
+        } else {
+          const ok = `I'll go by ${validated} in our conversations.`;
+          params.echoTracker.rememberText(ok, {});
+          await msg.reply(ok);
+        }
+      }
+      return;
+    }
+
+    // If sleeping, silently ignore all messages
+    if (isSleeping()) {
+      logVerbose("Skipping message: bot is sleeping");
       return;
     }
 

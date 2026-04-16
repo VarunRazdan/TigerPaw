@@ -910,6 +910,11 @@ export function isModelNotFoundErrorMessage(raw: string): boolean {
     return true;
   }
 
+  // Google Gemini: "This model models/X is no longer available"
+  if (lower.includes("is no longer available") && lower.includes("model")) {
+    return true;
+  }
+
   return false;
 }
 

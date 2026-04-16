@@ -168,9 +168,13 @@ export const __testing = {
 function buildCacheKey(params: {
   workspaceDir?: string;
   plugins: NormalizedPluginsConfig;
+  channelsConfig?: unknown;
 }): string {
   const workspaceKey = params.workspaceDir ? resolveUserPath(params.workspaceDir) : "";
-  return `${workspaceKey}::${JSON.stringify(params.plugins)}`;
+  // Include channels config in the key so enabling/disabling a channel
+  // (which affects bundled plugin enable state) busts the cache.
+  const channelsKey = params.channelsConfig ? JSON.stringify(params.channelsConfig) : "";
+  return `${workspaceKey}::${JSON.stringify(params.plugins)}::${channelsKey}`;
 }
 
 function validatePluginConfig(params: {
@@ -469,6 +473,7 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
   const cacheKey = buildCacheKey({
     workspaceDir: options.workspaceDir,
     plugins: normalized,
+    channelsConfig: cfg.channels,
   });
   const cacheEnabled = options.cache !== false;
   if (cacheEnabled) {
