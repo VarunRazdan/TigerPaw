@@ -17,13 +17,91 @@
 
 ---
 
+## Install
+
+**Requires [Node.js 22+](https://nodejs.org/).**
+
+```bash
+npm install -g @greatlyrecommended/tigerpaw
+tigerpaw start
+```
+
+That's it. Config auto-generates, the gateway starts, and a dashboard opens at **http://localhost:18789**. An onboarding wizard walks you through connecting your AI provider and messaging channels.
+
+<details>
+<summary>Other install methods (Docker, from source)</summary>
+
+**Docker:**
+
+```bash
+docker run -d --name tigerpaw \
+  -p 18789:18789 \
+  ghcr.io/varunrazdan/tigerpaw:latest \
+  tigerpaw start --bind lan
+```
+
+**From source:**
+
+```bash
+git clone https://github.com/varunrazdan/tigerpaw.git
+cd tigerpaw
+pnpm install
+pnpm build
+node tigerpaw.mjs start
+```
+
+</details>
+
+## Screenshots
+
+<p align="center">
+  <img src=".github/screenshots/dashboard.png" alt="Dashboard" width="720" />
+  <br />
+  <em>Dashboard - Portfolio overview, daily P&L chart, and extension status</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/channels.png" alt="Channels" width="720" />
+  <br />
+  <em>Agent Channels - Connect WhatsApp, Telegram, Discord, Slack, Signal, and 30+ more</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/trading-hub.png" alt="Trading Hub" width="720" />
+  <br />
+  <em>Trading Hub - Live positions, risk gauges, approval queue, and trade history</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/trading-settings.png" alt="Trading Settings" width="720" />
+  <br />
+  <em>Risk Settings - Risk tier selection, approval mode, and configurable limits</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/security.png" alt="Security Dashboard" width="720" />
+  <br />
+  <em>Security - Audit findings, credential status, and extension permissions</em>
+</p>
+
+<p align="center">
+  <img src=".github/screenshots/config.png" alt="Configuration" width="720" />
+  <br />
+  <em>Configuration - JSON config editor with live validation</em>
+</p>
+
+## Support
+
+If you find Tigerpaw useful, consider supporting development:
+
+<a href="https://buymeacoffee.com/CrimesAnatomy"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
+
+---
+
 ## Table of Contents
 
 - [Features](#features)
 - [Why Tigerpaw?](#why-tigerpaw)
-- [Support](#support)
-- [Screenshots](#screenshots)
-- [Install](#install)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
   - [Environment Variables](#environment-variables)
@@ -173,97 +251,6 @@ If you're choosing between them, Tigerpaw gives you everything OpenClaw has, plu
 
 > _"The best risk management is the kind you can't turn off."_
 > -- Tigerpaw's kill switch auto-activates when limits are breached. You can't accidentally trade through a drawdown.
-
-## Support
-
-If you find Tigerpaw useful, consider supporting development:
-
-<a href="https://buymeacoffee.com/CrimesAnatomy"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
-
-<p align="center">
-  <a href="https://buymeacoffee.com/CrimesAnatomy"><img src=".github/buy-me-a-coffee-qr.png" alt="Donate QR Code" width="200" /></a>
-</p>
-
-## Screenshots
-
-<p align="center">
-  <img src=".github/screenshots/trading-hub.png" alt="Trading Hub" width="720" />
-  <br />
-  <em>Trading Hub — Live positions, risk gauges, approval queue, and trade history</em>
-</p>
-
-<p align="center">
-  <img src=".github/screenshots/dashboard.png" alt="Dashboard" width="720" />
-  <br />
-  <em>Dashboard — Portfolio overview, daily P&L chart, and extension status</em>
-</p>
-
-<p align="center">
-  <img src=".github/screenshots/trading-settings.png" alt="Trading Settings" width="720" />
-  <br />
-  <em>Risk Settings — Risk tier selection, approval mode, and configurable limits</em>
-</p>
-
-<p align="center">
-  <img src=".github/screenshots/channels.png" alt="Channels" width="720" />
-  <br />
-  <em>Agent Channels — Talk to Jarvis from Discord, Telegram, Slack, Signal, and 20+ more platforms</em>
-</p>
-
-<p align="center">
-  <img src=".github/screenshots/config.png" alt="Configuration" width="720" />
-  <br />
-  <em>Configuration — JSON config editor with live validation</em>
-</p>
-
-<p align="center">
-  <img src=".github/screenshots/security.png" alt="Security Dashboard" width="720" />
-  <br />
-  <em>Security — Audit findings, credential status, and extension permissions</em>
-</p>
-
-## Install
-
-**Requires [Node.js 22+](https://nodejs.org/).**
-
-```bash
-# 1. Install globally via npm
-npm install -g @greatlyrecommended/tigerpaw
-
-# 2. Verify installation
-tigerpaw --version
-
-# 3. Start the gateway + dashboard
-tigerpaw start
-```
-
-That's it. `tigerpaw start` creates a config with safe defaults (paper mode, localhost-only, conservative risk tier), starts the gateway, and opens the dashboard at **http://localhost:18789**.
-
-### From Source
-
-```bash
-git clone https://github.com/varunrazdan/tigerpaw.git
-cd tigerpaw
-pnpm install
-pnpm build
-node tigerpaw.mjs start
-```
-
-### Docker
-
-```bash
-docker run -d --name tigerpaw \
-  -p 18789:18789 \
-  -e TIGERPAW_GATEWAY_TOKEN=your-secret-token \
-  ghcr.io/varunrazdan/tigerpaw:latest \
-  tigerpaw start --bind lan
-```
-
-### Update to Latest
-
-```bash
-npm update -g @greatlyrecommended/tigerpaw
-```
 
 ## Quick Start
 
