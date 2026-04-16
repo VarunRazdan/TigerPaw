@@ -12,7 +12,6 @@ import {
   Bot,
   Inbox,
   Workflow,
-  Plug,
   Sparkles,
   Blocks,
   FlaskConical,
@@ -103,46 +102,6 @@ function useNavGroups(): NavGroup[] {
           icon: <PlatformIcon name="alpaca" className="w-4 h-4" />,
         },
         {
-          to: "/trading/polymarket",
-          label: "Polymarket",
-          icon: <PlatformIcon name="polymarket" className="w-4 h-4" />,
-        },
-        {
-          to: "/trading/kalshi",
-          label: "Kalshi",
-          icon: <PlatformIcon name="kalshi" className="w-4 h-4" />,
-        },
-        {
-          to: "/trading/manifold",
-          label: "Manifold",
-          icon: <PlatformIcon name="manifold" className="w-4 h-4" />,
-        },
-        {
-          to: "/trading/coinbase",
-          label: "Coinbase",
-          icon: <PlatformIcon name="coinbase" className="w-4 h-4" />,
-        },
-        {
-          to: "/trading/ibkr",
-          label: "IBKR",
-          icon: <PlatformIcon name="interactive-brokers" className="w-4 h-4" />,
-        },
-        {
-          to: "/trading/binance",
-          label: "Binance",
-          icon: <PlatformIcon name="binance" className="w-4 h-4" />,
-        },
-        {
-          to: "/trading/kraken",
-          label: "Kraken",
-          icon: <PlatformIcon name="kraken" className="w-4 h-4" />,
-        },
-        {
-          to: "/trading/dydx",
-          label: "dYdX",
-          icon: <PlatformIcon name="dydx" className="w-4 h-4" />,
-        },
-        {
           to: "/trading/settings",
           label: t("nav.tradeSettings", "Trade Settings"),
           icon: <Settings className="w-4 h-4" />,
@@ -189,11 +148,6 @@ function useNavGroups(): NavGroup[] {
         to: "/workflows",
         label: t("nav.workflows", "Workflows"),
         icon: <Workflow className="w-4 h-4" />,
-      },
-      {
-        to: "/mcp",
-        label: t("nav.mcp", "MCP"),
-        icon: <Plug className="w-4 h-4" />,
       },
       {
         to: "/ai-provider",

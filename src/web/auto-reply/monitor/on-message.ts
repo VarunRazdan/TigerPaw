@@ -11,6 +11,7 @@ import {
   resolveAgentNameForUser,
   setUserDisplayName,
   setUserAgentName,
+  validateName,
 } from "../../../user-profiles/store.js";
 import { normalizeE164 } from "../../../utils.js";
 import type { MentionConfig } from "../mentions.js";
@@ -197,11 +198,8 @@ export function createWebOnMessageHandler(params: {
       }
 
       // Validate name (same rules for owner and non-owner)
-      // eslint-disable-next-line no-control-regex -- intentionally stripping control characters from user input
-      const validated = rawName
-        .replace(/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\ufeff]/g, "")
-        .trim();
-      if (!validated || validated.length > 50) {
+      const validated = validateName(rawName);
+      if (!validated) {
         const err = "Agent name must be 1-50 characters.";
         params.echoTracker.rememberText(err, {});
         await msg.reply(err);

@@ -1,8 +1,8 @@
 import { Loader2, RotateCcw, Settings, ExternalLink, AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import { DataModeSelector } from "@/components/DataModeSelector";
+import { Link, useNavigate } from "react-router-dom";
+import { syncAllDemoMode, DataModeSelector } from "@/components/DataModeSelector";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,7 @@ import { saveConfigPatch } from "@/lib/save-config";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { notifyError } from "@/stores/notification-store";
+import { useThemeStore, THEMES, type ThemeId } from "@/stores/theme-store";
 import { useTradingStore } from "@/stores/trading-store";
 
 // ---------------------------------------------------------------------------
@@ -37,6 +38,396 @@ const DEMO_DEFAULTS = {
 const THINKING_OPTIONS = ["off", "minimal", "low", "medium", "high", "adaptive"] as const;
 const TYPING_OPTIONS = ["never", "instant", "thinking", "message"] as const;
 const AUTH_OPTIONS = ["none", "token", "password"] as const;
+
+// ---------------------------------------------------------------------------
+// Shared sections (moved from TradingSettingsPage)
+// ---------------------------------------------------------------------------
+
+function SetupWizardSection() {
+  const { t: ts } = useTranslation("settings");
+  const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
+  const navigate = useNavigate();
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-1">{ts("setupWizard")}</h3>
+      <p className="text-xs text-neutral-500 mb-3">{ts("setupWizardDesc")}</p>
+      <button
+        type="button"
+        onClick={() => {
+          setOnboardingComplete(false);
+          void navigate("/");
+        }}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition-all cursor-pointer"
+      >
+        <RotateCcw className="w-3 h-3" />
+        {ts("rerunWizard")}
+      </button>
+    </div>
+  );
+}
+
+function ThemeSelector() {
+  const { t: ts } = useTranslation("settings");
+  const { theme, setTheme } = useThemeStore();
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-3">{ts("appearance")}</h3>
+      <div className="grid grid-cols-2 gap-3">
+        {(Object.entries(THEMES) as [ThemeId, (typeof THEMES)[ThemeId]][]).map(([id, _info]) => (
+          <button
+            key={id}
+            onClick={() => setTheme(id)}
+            className={cn(
+              "rounded-xl border p-4 text-left transition-all duration-300 cursor-pointer group",
+              theme === id
+                ? "border-orange-600 bg-orange-950/30 shadow-lg shadow-orange-900/20"
+                : "border-[var(--glass-border)] bg-[var(--glass-subtle)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-subtle-hover)]",
+            )}
+          >
+            {/* Color preview strip */}
+            <div
+              className="h-2 rounded-full mb-3 transition-all duration-300"
+              style={{
+                background:
+                  id === "tiger-gold"
+                    ? "linear-gradient(90deg, #d4850a, #e8a020, #f5c842, #8b4513)"
+                    : "linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6, #475569)",
+              }}
+            />
+            <div className="text-sm font-semibold text-neutral-200">
+              {ts(id === "tiger-gold" ? "tigerGold" : "midnightSteel")}
+            </div>
+            <div className="text-[11px] text-neutral-500 mt-0.5">
+              {ts(id === "tiger-gold" ? "tigerGoldDesc" : "midnightSteelDesc")}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SettingsDataModeSelector() {
+  const { t: ts } = useTranslation("settings");
+  const demoMode = useTradingStore((s) => s.demoMode);
+  const [confirmLive, setConfirmLive] = useState(false);
+
+  function handleSelect(mode: "demo" | "live") {
+    if (mode === "demo" && !demoMode) {
+      syncAllDemoMode(true);
+    } else if (mode === "live" && demoMode) {
+      setConfirmLive(true);
+    }
+  }
+
+  return (
+    <>
+      <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+        <h3 className="text-sm font-semibold text-neutral-300 mb-1">{ts("dataSource")}</h3>
+        <p className="text-[11px] text-neutral-500 mb-3">
+          {demoMode ? ts("demoModeDesc") : ts("liveModeDesc")}
+        </p>
+
+        {/* Segmented control */}
+        <div className="flex rounded-lg border border-[var(--glass-border)] overflow-hidden">
+          <button
+            onClick={() => handleSelect("demo")}
+            className={cn(
+              "flex-1 py-2 text-sm font-semibold transition-all duration-200 cursor-pointer",
+              demoMode
+                ? "bg-amber-600/80 text-white"
+                : "bg-[var(--glass-subtle)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)]",
+            )}
+          >
+            {ts("demoLabel")}
+          </button>
+          <button
+            onClick={() => handleSelect("live")}
+            className={cn(
+              "flex-1 py-2 text-sm font-semibold transition-all duration-200 cursor-pointer border-l border-[var(--glass-border)]",
+              !demoMode
+                ? "bg-green-600/80 text-white"
+                : "bg-[var(--glass-subtle)] text-neutral-500 hover:text-neutral-300 hover:bg-[var(--glass-subtle-hover)]",
+            )}
+          >
+            {ts("liveLabel")}
+          </button>
+        </div>
+      </div>
+
+      <AlertDialog open={confirmLive} onOpenChange={setConfirmLive}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{ts("switchToLiveTitle")}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-neutral-400">
+                <p>{ts("switchToLiveDesc")}</p>
+                <p>{ts("startInstructions")}</p>
+                <code className="block rounded-lg bg-[var(--glass-input-bg)] border border-[var(--glass-border)] px-3 py-2 text-xs font-mono text-neutral-300">
+                  tigerpaw start
+                </code>
+                <p className="text-xs text-neutral-500">{ts("serverNotRunningNote")}</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{ts("stayOnDemo")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-green-700 hover:bg-green-600 text-white"
+              onClick={() => {
+                syncAllDemoMode(false);
+                setConfirmLive(false);
+              }}
+            >
+              {ts("switchToLive")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+type RemoteAccessMode = "local" | "tailscale" | "cloudflare";
+
+function RemoteAccessSection() {
+  const { t: ts } = useTranslation("settings");
+  const [mode, setMode] = useState<RemoteAccessMode>("local");
+  const [tunnelUrl, setTunnelUrl] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const configPatch = useMemo(() => {
+    if (mode === "local") {
+      return { gateway: { bind: "loopback", tailscale: { mode: "off" } } };
+    }
+    if (mode === "tailscale") {
+      return {
+        gateway: {
+          bind: "tailnet",
+          tailscale: { mode: "serve" },
+          auth: { mode: "token" },
+        },
+      };
+    }
+    // cloudflare
+    const patch: Record<string, unknown> = {
+      gateway: {
+        bind: "loopback",
+        tailscale: { mode: "off" },
+        auth: { mode: "token" },
+      },
+    };
+    if (tunnelUrl.trim()) {
+      (patch.gateway as Record<string, unknown>).controlUi = {
+        allowedOrigins: [tunnelUrl.trim()],
+      };
+    }
+    return patch;
+  }, [mode, tunnelUrl]);
+
+  async function handleSave() {
+    setSaveStatus("saving");
+    setSaveError(null);
+    const result = await saveConfigPatch(configPatch);
+    if (result.ok) {
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 4000);
+    } else {
+      setSaveStatus("error");
+      setSaveError(result.error);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
+      <h3 className="text-sm font-semibold text-neutral-300 mb-1">{ts("remoteAccess")}</h3>
+      <p className="text-[11px] text-neutral-500 mb-3">{ts("remoteAccessDesc")}</p>
+
+      <div className="space-y-2">
+        {/* Local Only */}
+        <label
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-300",
+            mode === "local"
+              ? "border-orange-600 bg-orange-950/20"
+              : "border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-divider)]",
+          )}
+        >
+          <input
+            type="radio"
+            name="remoteAccess"
+            checked={mode === "local"}
+            onChange={() => setMode("local")}
+            className="mt-0.5 accent-orange-500"
+          />
+          <div>
+            <div className="text-sm font-medium text-neutral-200">
+              {ts("localOnly")}{" "}
+              <span className="text-[10px] text-green-400 font-normal ml-1">
+                {ts("mostSecure")}
+              </span>
+            </div>
+            <div className="text-xs text-neutral-500">{ts("localOnlyDesc")}</div>
+          </div>
+        </label>
+
+        {/* Tailscale */}
+        <label
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-300",
+            mode === "tailscale"
+              ? "border-orange-600 bg-orange-950/20"
+              : "border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-divider)]",
+          )}
+        >
+          <input
+            type="radio"
+            name="remoteAccess"
+            checked={mode === "tailscale"}
+            onChange={() => setMode("tailscale")}
+            className="mt-0.5 accent-orange-500"
+          />
+          <div>
+            <div className="text-sm font-medium text-neutral-200">
+              {ts("tailscale")}{" "}
+              <span className="text-[10px] text-blue-400 font-normal ml-1">
+                {ts("e2eEncrypted")}
+              </span>
+            </div>
+            <div className="text-xs text-neutral-500">{ts("tailscaleAccessDesc")}</div>
+          </div>
+        </label>
+
+        {/* Cloudflare Tunnel */}
+        <label
+          className={cn(
+            "flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all duration-300",
+            mode === "cloudflare"
+              ? "border-orange-600 bg-orange-950/20"
+              : "border-[var(--glass-border)] hover:border-[var(--glass-border-hover-strong)] hover:bg-[var(--glass-divider)]",
+          )}
+        >
+          <input
+            type="radio"
+            name="remoteAccess"
+            checked={mode === "cloudflare"}
+            onChange={() => setMode("cloudflare")}
+            className="mt-0.5 accent-orange-500"
+          />
+          <div>
+            <div className="text-sm font-medium text-neutral-200">
+              {ts("cloudflare")}{" "}
+              <span className="text-[10px] text-amber-400 font-normal ml-1">
+                {ts("easiestSetup")}
+              </span>
+            </div>
+            <div className="text-xs text-neutral-500">{ts("cloudflareAccessDesc")}</div>
+          </div>
+        </label>
+      </div>
+
+      {/* Security warning for non-local modes */}
+      {mode !== "local" && (
+        <div className="mt-3 rounded-xl border border-amber-800/50 bg-amber-950/20 p-3 text-xs">
+          <div className="font-semibold text-amber-400 mb-2">{ts("staysOnMachine")}</div>
+          <ul className="space-y-1 text-neutral-400 mb-3">
+            <li className="flex items-center gap-1.5">
+              <span className="text-green-400">✓</span> {ts("apiKeysLocal")}
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-green-400">✓</span> {ts("auditLogsLocal")}
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-green-400">✓</span> {ts("orderExecLocal")}
+            </li>
+          </ul>
+          <div className="font-semibold text-amber-400 mb-2">{ts("remotelyViewable")}</div>
+          <ul className="space-y-1 text-neutral-400">
+            <li className="flex items-center gap-1.5">
+              <span className="text-amber-400">→</span> {ts("dashboardRemote")}
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-amber-400">→</span> {ts("killSwitchRemote")}
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="text-amber-400">→</span> {ts("approvalQueueRemote")}
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {/* Tailscale-specific instructions */}
+      {mode === "tailscale" && (
+        <div className="mt-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-input-bg)] p-3 text-xs space-y-2">
+          <div className="font-medium text-neutral-300">{ts("setup")}</div>
+          <ol className="space-y-1.5 text-neutral-400 list-decimal list-inside">
+            <li>{ts("tailscaleStep1")}</li>
+            <li>{ts("tailscaleStep2")}</li>
+            <li>{ts("tailscaleStep3")}</li>
+            <li>{ts("tailscaleStep4")}</li>
+          </ol>
+          <p className="text-[10px] text-neutral-500 mt-2">{ts("tailscaleNote")}</p>
+        </div>
+      )}
+
+      {/* Cloudflare-specific instructions */}
+      {mode === "cloudflare" && (
+        <div className="mt-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-input-bg)] p-3 text-xs space-y-2">
+          <div className="font-medium text-neutral-300">{ts("setup")}</div>
+          <ol className="space-y-1.5 text-neutral-400 list-decimal list-inside">
+            <li>{ts("cloudflareSetupStep1")}</li>
+            <li>{ts("cloudflareSetupStep2")}</li>
+            <li>{ts("cloudflareSetupStep3")}</li>
+          </ol>
+          <div className="mt-2">
+            <label className="text-[10px] text-neutral-500 block mb-1">{ts("tunnelUrl")}</label>
+            <input
+              type="text"
+              value={tunnelUrl}
+              onChange={(e) => setTunnelUrl(e.target.value)}
+              placeholder="https://your-tunnel.cfargotunnel.com"
+              className="w-full bg-[var(--glass-input-bg)] border border-[var(--glass-border)] rounded px-2 py-1.5 text-xs text-neutral-200 placeholder:text-neutral-600 focus:border-orange-500 focus:outline-none"
+            />
+          </div>
+          <p className="text-[10px] text-amber-500 mt-1">{ts("cloudflareWarning")}</p>
+        </div>
+      )}
+
+      {/* Save button */}
+      {mode !== "local" && (
+        <div className="mt-3">
+          <button
+            onClick={handleSave}
+            disabled={saveStatus === "saving" || (mode === "cloudflare" && !tunnelUrl.trim())}
+            className={cn(
+              "px-4 py-2 rounded-md text-sm font-semibold cursor-pointer transition-all duration-300",
+              saveStatus === "saved"
+                ? "bg-green-700 text-white"
+                : "bg-orange-600 hover:bg-orange-500 text-white hover:shadow-lg hover:shadow-orange-900/30",
+              (saveStatus === "saving" || (mode === "cloudflare" && !tunnelUrl.trim())) &&
+                "opacity-50 cursor-not-allowed",
+            )}
+          >
+            {saveStatus === "saving"
+              ? ts("saving")
+              : saveStatus === "saved"
+                ? ts("savedRestart")
+                : ts("saveRestart")}
+          </button>
+          {saveStatus === "error" && saveError && (
+            <p className="text-xs text-red-400 mt-1.5">{saveError}</p>
+          )}
+          {saveStatus === "error" && !saveError && (
+            <p className="text-xs text-red-400 mt-1.5">{ts("gatewayNotReachable")}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Main page
@@ -407,6 +798,18 @@ export function SettingsPage() {
         </div>
       </div>
 
+      {/* Setup Wizard */}
+      <SetupWizardSection />
+
+      {/* Appearance */}
+      <ThemeSelector />
+
+      {/* Data Source */}
+      <SettingsDataModeSelector />
+
+      {/* Remote Dashboard Access */}
+      <RemoteAccessSection />
+
       {/* Save Bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <Button onClick={handleSave} disabled={disabled || saving} className="px-6">
@@ -428,30 +831,6 @@ export function SettingsPage() {
           <ExternalLink className="w-3 h-3" />
           {t("general.advancedConfig", "Advanced: Edit Raw Config")}
         </Link>
-      </div>
-
-      {/* Setup Wizard */}
-      <div className="rounded-2xl glass-panel p-4 transition-all duration-300">
-        <h3 className="text-sm font-semibold text-neutral-300 mb-1">
-          {t("general.setupWizard", "Setup Wizard")}
-        </h3>
-        <p className="text-[11px] text-neutral-500 mb-3">
-          {t(
-            "general.setupWizardDesc",
-            "Re-run the setup wizard to change your AI provider, add messaging channels, or reconfigure trading platforms",
-          )}
-        </p>
-        <Button
-          size="sm"
-          className="text-xs"
-          onClick={() => {
-            useAppStore.getState().setOnboardingComplete(false);
-            window.location.href = "/#/";
-          }}
-        >
-          <RotateCcw className="w-3 h-3 mr-1.5" />
-          {t("general.rerunWizard", "Rerun Setup Wizard")}
-        </Button>
       </div>
 
       {/* Danger Zone */}

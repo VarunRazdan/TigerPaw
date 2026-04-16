@@ -16,6 +16,7 @@ import en_onboarding from "./locales/en/onboarding.json";
 import en_platforms from "./locales/en/platforms.json";
 import en_security from "./locales/en/security.json";
 import en_settings from "./locales/en/settings.json";
+import en_strategies from "./locales/en/strategies.json";
 import en_trading from "./locales/en/trading.json";
 import en_workflows from "./locales/en/workflows.json";
 
@@ -52,6 +53,7 @@ const NAMESPACES = [
   "models",
   "onboarding",
   "integrations",
+  "strategies",
 ] as const;
 
 // Lazy-load non-English locale bundles
@@ -111,6 +113,7 @@ void i18n
         models: en_models,
         onboarding: en_onboarding,
         integrations: en_integrations,
+        strategies: en_strategies,
       },
     },
     fallbackLng: "en",

@@ -63,7 +63,7 @@ export function buildCompositeKey(
 // eslint-disable-next-line no-control-regex -- intentionally stripping control characters from user input
 const CONTROL_CHAR_RE = /[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\ufeff]/g;
 
-function validateName(raw: string): string | null {
+export function validateName(raw: string): string | null {
   const cleaned = raw.replace(CONTROL_CHAR_RE, "").trim();
   if (cleaned.length === 0 || cleaned.length > MAX_NAME_LENGTH) {
     return null;

@@ -176,11 +176,14 @@ function TaskListPanel() {
       if (res.ok) {
         setTasks(res.result);
       } else {
-        setError(res.error);
+        setError(
+          res.error?.includes("not available")
+            ? "Start the gateway to use the assistant"
+            : res.error,
+        );
       }
-    } catch (err) {
-      setError("Gateway not reachable");
-      notifyError("Failed to load tasks", err);
+    } catch {
+      setError("Start the gateway to use the assistant");
     } finally {
       setLoading(false);
     }
@@ -418,11 +421,14 @@ function RemindersPanel() {
       if (res.ok) {
         setReminders(res.result);
       } else {
-        setError(res.error);
+        setError(
+          res.error?.includes("not available")
+            ? "Start the gateway to use the assistant"
+            : res.error,
+        );
       }
-    } catch (err) {
-      setError("Gateway not reachable");
-      notifyError("Failed to load reminders", err);
+    } catch {
+      setError("Start the gateway to use the assistant");
     } finally {
       setLoading(false);
     }
@@ -610,7 +616,7 @@ function MemorySearchPanel() {
         setError(res.error);
       }
     } catch (err) {
-      setError("Gateway not reachable");
+      setError("Start the gateway to use the assistant");
       notifyError("Failed to search memory", err);
     } finally {
       setLoading(false);
@@ -706,7 +712,7 @@ function BriefingPanel() {
         setError(res.error);
       }
     } catch (err) {
-      setError("Gateway not reachable");
+      setError("Start the gateway to use the assistant");
       notifyError("Failed to generate daily briefing", err);
     } finally {
       setLoading(false);
@@ -875,7 +881,7 @@ function QuickAddTaskForm({ onDone }: { onDone: () => void }) {
         setError(res.error);
       }
     } catch (err) {
-      setError("Gateway not reachable");
+      setError("Start the gateway to use the assistant");
       notifyError("Failed to add task", err);
     } finally {
       setSubmitting(false);
@@ -950,7 +956,7 @@ function QuickAddReminderForm({ onDone }: { onDone: () => void }) {
         setError(res.error);
       }
     } catch (err) {
-      setError("Gateway not reachable");
+      setError("Start the gateway to use the assistant");
       notifyError("Failed to set reminder", err);
     } finally {
       setSubmitting(false);
