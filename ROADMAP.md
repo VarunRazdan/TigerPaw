@@ -1,5 +1,47 @@
 # Tigerpaw Feature Roadmap
 
+## Next Up
+
+### Intelligent Model Routing
+
+Auto-switch between AI providers based on intent:
+
+- Simple questions -> Ollama (free, fast, private)
+- Web search needed -> Perplexity
+- Complex reasoning -> Claude or GPT
+- User configurable routing rules from the UI
+
+### Pairing UX Improvement
+
+Current: new users receive a confusing technical pairing message with a code.
+Planned:
+
+- Send pairing notification privately to the owner (not to the sender)
+- Include the sender's name and phone number in the notification
+- Show the sender a friendly message: "Hi! I'm not set up to chat with you yet. The owner has been notified."
+
+### SSRF Protection
+
+Add URL validation for custom/ollama/lmstudio provider base URLs:
+
+- Validate scheme (http/https only)
+- Block private IP ranges for custom providers
+- Allow localhost only for ollama/lmstudio
+
+### Exchange Integrations (Beyond Alpaca)
+
+Complete live trading backends for Polymarket, Coinbase, Binance, Kraken, dYdX, Interactive Brokers, Kalshi, Manifold. Currently these show demo data in the UI. Alpaca is the only fully live integration.
+
+### System Prompt Per-User Threading
+
+Wire agentName and senderDisplayName through the primary agent runner path so the identity system is fully active during all conversations.
+
+### OpenClaw Legacy Path Cleanup
+
+Rename remaining openclaw references in log paths, canvas mount, launchd service name, and security audit messages.
+
+---
+
 ## Completed Features
 
 ### F1: README Positioning
