@@ -25,7 +25,7 @@ import type {
 import type { ModelsConfig } from "./types.models.js";
 import type { NodeHostConfig } from "./types.node-host.js";
 import type { PluginsConfig } from "./types.plugins.js";
-import type { SecretsConfig } from "./types.secrets.js";
+import type { SecretInput, SecretsConfig } from "./types.secrets.js";
 import type { SkillsConfig } from "./types.skills.js";
 import type { ToolsConfig } from "./types.tools.js";
 
@@ -142,6 +142,14 @@ export type OpenClawConfig = {
     memoryIntegration?: {
       enabled?: boolean;
       autoSummarize?: boolean;
+    };
+  };
+  /** OAuth app credentials for email/calendar/meeting integrations. */
+  integrations?: {
+    oauth?: {
+      google?: { clientId?: SecretInput; clientSecret?: SecretInput };
+      microsoft?: { clientId?: SecretInput; clientSecret?: SecretInput };
+      zoom?: { clientId?: SecretInput; clientSecret?: SecretInput };
     };
   };
 };

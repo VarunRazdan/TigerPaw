@@ -25,6 +25,7 @@ import {
   ChevronUp,
   Zap,
   Star,
+  Plug,
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ConnectDialog } from "@/components/ConnectDialog";
+import { OAuthSetupDialog } from "@/components/OAuthSetupDialog";
 import { PlatformIcon } from "@/components/PlatformIcon";
 import {
   useOnboarding,
@@ -55,7 +57,7 @@ const CHANNEL_IDS = Object.keys(CHANNEL_CONNECT_INFO);
 
 const PLATFORM_IDS = Object.keys(TRADING_CONNECT_INFO);
 
-const STEP_IDS: StepId[] = ["ai", "messaging", "trading", "complete"];
+const STEP_IDS: StepId[] = ["ai", "messaging", "integrations", "trading", "complete"];
 
 // ── Shared sub-components ────────────────────────────────────────
 
@@ -800,7 +802,112 @@ function ChannelsGridStep() {
   );
 }
 
-// ── Step 3: Trading Platforms Grid ───────────────────────────────
+// ── Step 3: Integrations Grid ────────────────────────────────────
+
+const INTEGRATION_GROUPS = [
+  {
+    id: "google" as const,
+    label: "Google",
+    sublabel: "Gmail, Google Calendar, Google Meet",
+    icons: ["integrations/gmail", "integrations/google-calendar", "integrations/google-meet"],
+  },
+  {
+    id: "microsoft" as const,
+    label: "Microsoft",
+    sublabel: "Outlook, Outlook Calendar, MS Teams",
+    icons: ["integrations/outlook", "integrations/ms-teams"],
+  },
+  {
+    id: "zoom" as const,
+    label: "Zoom",
+    sublabel: "Zoom Meetings",
+    icons: ["integrations/zoom"],
+  },
+];
+
+function IntegrationsGridStep() {
+  const { t } = useTranslation("onboarding");
+  const [setupGroup, setSetupGroup] = useState<"google" | "microsoft" | "zoom" | null>(null);
+  const [configuredGroups, setConfiguredGroups] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    gatewayRpc<{
+      status: Record<string, { configured: boolean }>;
+    }>("integrations.oauth.status", {})
+      .then((res) => {
+        if (res.ok && res.payload?.status) {
+          const configured = new Set<string>();
+          for (const [group, s] of Object.entries(res.payload.status)) {
+            if (s.configured) {
+              configured.add(group);
+            }
+          }
+          setConfiguredGroups(configured);
+        }
+      })
+      .catch(() => {});
+  }, [setupGroup]); // Re-fetch after dialog closes
+
+  return (
+    <>
+      <div className="grid grid-cols-3 gap-3">
+        {INTEGRATION_GROUPS.map((group) => {
+          const isConfigured = configuredGroups.has(group.id);
+          return (
+            <button
+              key={group.id}
+              type="button"
+              onClick={() => setSetupGroup(group.id)}
+              className={cn(
+                "rounded-xl glass-panel-interactive p-4 flex flex-col items-center gap-2 text-center cursor-pointer",
+                "hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-300",
+                isConfigured && "border-green-600/40",
+              )}
+            >
+              <div className="flex items-center justify-center gap-1.5">
+                {group.icons.map((icon) => (
+                  <img
+                    key={icon}
+                    src={assetUrl(`icons/${icon}.svg`)}
+                    alt=""
+                    className="w-7 h-7 invert brightness-200"
+                  />
+                ))}
+              </div>
+              <span className="text-sm font-semibold text-neutral-100">{group.label}</span>
+              <span className="text-[10px] text-neutral-500 leading-snug">{group.sublabel}</span>
+              {isConfigured ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-900/50 text-green-400 border border-green-800/50">
+                  {t("integrations.configured", "Configured")}
+                </span>
+              ) : (
+                <span className="text-[10px] text-orange-400">
+                  {t("integrations.clickToSetup", "Click to set up")}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-neutral-600 mt-2 text-center">
+        {t(
+          "integrations.skipNote",
+          "Requires OAuth app credentials from Google, Microsoft, or Zoom.",
+        )}
+      </p>
+      {setupGroup && (
+        <OAuthSetupDialog
+          open={!!setupGroup}
+          onOpenChange={(open) => !open && setSetupGroup(null)}
+          group={setupGroup}
+          onSaved={() => setSetupGroup(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Step 4: Trading Platforms Grid ───────────────────────────────
 
 function TradingGridStep() {
   const { t } = useTranslation("onboarding");
@@ -1140,6 +1247,7 @@ function SkipAiWarning({ onGoBack, onSkip }: { onGoBack: () => void; onSkip: () 
 const STEP_ICONS: Record<string, React.ReactNode> = {
   ai: <Sparkles className="w-5 h-5" />,
   messaging: <MessageSquare className="w-5 h-5" />,
+  integrations: <Plug className="w-5 h-5" />,
   trading: <TrendingUp className="w-5 h-5" />,
   complete: <CheckCircle2 className="w-5 h-5" />,
 };
@@ -1190,6 +1298,7 @@ export function OnboardingWizard() {
     isComplete ||
     (currentStepId === "ai" && anyAiConfigured) ||
     (currentStepId === "messaging" && channelsConnected > 0) ||
+    currentStepId === "integrations" ||
     (currentStepId === "trading" && platformsConnected > 0);
 
   const handleSkip = useCallback(() => {
@@ -1359,6 +1468,7 @@ export function OnboardingWizard() {
               </>
             )}
             {currentStepId === "messaging" && <ChannelsGridStep />}
+            {currentStepId === "integrations" && <IntegrationsGridStep />}
             {currentStepId === "trading" && <TradingGridStep />}
             {currentStepId === "complete" && (
               <CompletionStep

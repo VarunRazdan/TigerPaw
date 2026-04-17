@@ -217,6 +217,7 @@ export async function monitorWebInbox(options: {
       connectedAtMs,
       sock: { sendMessage: (jid, content) => sock.sendMessage(jid, content) },
       remoteJid,
+      selfJid,
     });
     if (!access.allowed) {
       return null;

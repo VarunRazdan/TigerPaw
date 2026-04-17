@@ -63,6 +63,14 @@
     "agentUsername": "Agent: {{name}}"
   },
 
+  "integrations": {
+    "title": "Integrations",
+    "description": "Connect email, calendar, and meeting services. Optional — you can set this up later from the Integrations page.",
+    "clickToSetup": "Click to set up",
+    "configured": "Configured",
+    "skipNote": "Requires OAuth app credentials from Google, Microsoft, or Zoom."
+  },
+
   "trading": {
     "title": "Connect a Trading Platform",
     "description": "Optional — link an exchange or broker to enable trading features, portfolio tracking, and risk controls.",

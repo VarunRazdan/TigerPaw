@@ -12,7 +12,7 @@ import { useWorkflowStore } from "@/stores/workflow-store";
 
 export type ProviderTestStatus = "idle" | "testing" | "success" | "error";
 
-export type StepId = "ai" | "messaging" | "trading" | "complete";
+export type StepId = "ai" | "messaging" | "integrations" | "trading" | "complete";
 
 export type ProviderState = {
   credentials: Record<string, string>;
@@ -393,7 +393,7 @@ export function useOnboarding() {
   }, []);
 
   const nextStep = useCallback(() => {
-    setStepIndex((i) => Math.min(i + 1, 3));
+    setStepIndex((i) => Math.min(i + 1, 4));
   }, []);
 
   const prevStep = useCallback(() => {
@@ -415,7 +415,7 @@ export function useOnboarding() {
     [setOnboardingComplete, setDemoMode],
   );
 
-  const STEP_IDS: StepId[] = ["ai", "messaging", "trading", "complete"];
+  const STEP_IDS: StepId[] = ["ai", "messaging", "integrations", "trading", "complete"];
   const currentStepId = STEP_IDS[stepIndex];
 
   // Build an aiStep-like object for the active provider (backward compat with wizard component)

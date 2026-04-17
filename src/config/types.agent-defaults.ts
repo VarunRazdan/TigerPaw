@@ -284,6 +284,20 @@ export type AgentDefaultsConfig = {
   };
   /** Optional sandbox settings for non-main sessions. */
   sandbox?: AgentSandboxConfig;
+  /** Intent-based model routing. Routes messages to different providers based on detected intent. */
+  routing?: {
+    /** Enable intent-based routing (default: false). */
+    enabled?: boolean;
+    /** Routing rules mapping intents to provider/model pairs. First matching rule wins. */
+    rules?: Array<{
+      /** Intent category to match. */
+      intent: "search" | "reasoning" | "code" | "creative";
+      /** Provider to route to (e.g., "perplexity", "anthropic"). */
+      provider: string;
+      /** Model ID to use (e.g., "sonar-pro", "claude-opus-4-6"). */
+      model: string;
+    }>;
+  };
 };
 
 export type AgentCompactionMode = "default" | "safeguard";

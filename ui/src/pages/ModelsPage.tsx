@@ -2,6 +2,7 @@ import { Check, Loader2, RefreshCw, Sparkles, Star, X, Zap } from "lucide-react"
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { ModelRouting } from "@/components/ModelRouting";
 import { Button } from "@/components/ui/button";
 import { useAssistantName } from "@/hooks/use-assistant-name";
 import {
@@ -834,6 +835,9 @@ export function ModelsPage() {
             </div>
           );
         })()}
+
+      {/* Model Routing */}
+      <ModelRouting demoMode={demoMode} />
     </div>
   );
 }

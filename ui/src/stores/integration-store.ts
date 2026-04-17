@@ -36,7 +36,9 @@ type IntegrationState = {
   setDemoMode: (enabled: boolean) => void;
   fetchProviders: () => Promise<void>;
   fetchConnections: () => Promise<void>;
-  startOAuth: (providerId: string) => Promise<{ authUrl: string; state: string } | null>;
+  startOAuth: (
+    providerId: string,
+  ) => Promise<{ authUrl: string; state: string } | { error: string }>;
   completeOAuth: (state: string, code: string) => Promise<IntegrationConnection | null>;
   disconnect: (connectionId: string) => Promise<boolean>;
   testConnection: (connectionId: string) => Promise<{ ok: boolean; error?: string }>;
@@ -212,10 +214,10 @@ export const useIntegrationStore = create<IntegrationState>((set, get) => ({
         };
       }
       set({ connectingProvider: null });
-      return null;
+      return { error: result.ok ? "Missing auth URL" : result.error || "Authorization failed" };
     } catch {
       set({ connectingProvider: null });
-      return null;
+      return { error: "Gateway not reachable" };
     }
   },
 

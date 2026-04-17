@@ -2,24 +2,6 @@
 
 ## Next Up
 
-### Intelligent Model Routing
-
-Auto-switch between AI providers based on intent:
-
-- Simple questions -> Ollama (free, fast, private)
-- Web search needed -> Perplexity
-- Complex reasoning -> Claude or GPT
-- User configurable routing rules from the UI
-
-### Pairing UX Improvement
-
-Current: new users receive a confusing technical pairing message with a code.
-Planned:
-
-- Send pairing notification privately to the owner (not to the sender)
-- Include the sender's name and phone number in the notification
-- Show the sender a friendly message: "Hi! I'm not set up to chat with you yet. The owner has been notified."
-
 ### SSRF Protection
 
 Add URL validation for custom/ollama/lmstudio provider base URLs:
@@ -43,6 +25,18 @@ Rename remaining openclaw references in log paths, canvas mount, launchd service
 ---
 
 ## Completed Features
+
+### Intelligent Model Routing
+
+Auto-switch between AI providers based on detected intent (search, code, reasoning, creative). Regex-based classifier, zero LLM overhead. User-configurable routing rules from the Models page UI.
+
+### Pairing UX Improvement
+
+Sender sees a friendly "Tigerpaw: Hi! I'm not set up to chat with you yet." message. Owner receives a private WhatsApp notification with the sender's name, phone, and approval command. Rate-limited to prevent flooding.
+
+### Integration Credential Setup UI
+
+OAuth credentials for Gmail, Google Calendar, Outlook, Zoom, and other integrations can now be configured from the UI. Setup dialog with step-by-step instructions, credential fields, and one-click "Save & Connect". Added as Step 3 in the onboarding wizard. Credentials stored in config (env vars still supported as fallback).
 
 ### F1: README Positioning
 

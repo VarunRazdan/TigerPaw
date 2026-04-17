@@ -67,6 +67,58 @@ describe("checkInboundAccessControl pairing grace", () => {
   });
 });
 
+describe("checkInboundAccessControl owner notification", () => {
+  it("sends friendly message to sender and notification to owner when selfJid provided", async () => {
+    const result = await checkInboundAccessControl({
+      accountId: "default",
+      from: "+15550001111",
+      selfE164: "+15550009999",
+      senderE164: "+15550001111",
+      group: false,
+      pushName: "Alice",
+      isFromMe: false,
+      sock: { sendMessage: sendMessageMock },
+      remoteJid: "15550001111@s.whatsapp.net",
+      selfJid: "15550009999:12@s.whatsapp.net",
+    });
+
+    expect(result.allowed).toBe(false);
+    expect(sendMessageMock).toHaveBeenCalledTimes(2);
+    // First call: friendly reply to sender (no pairing code, with Tigerpaw prefix)
+    const senderCall = sendMessageMock.mock.calls[0] as [string, { text: string }];
+    expect(senderCall[0]).toBe("15550001111@s.whatsapp.net");
+    expect(senderCall[1].text).toMatch(/^Tigerpaw:/);
+    expect(senderCall[1].text).toContain("not set up to chat");
+    expect(senderCall[1].text).not.toContain("Pairing code");
+    // Second call: owner notification to self (device suffix stripped, with pairing code)
+    const ownerCall = sendMessageMock.mock.calls[1] as [string, { text: string }];
+    expect(ownerCall[0]).toBe("15550009999@s.whatsapp.net");
+    expect(ownerCall[1].text).toContain("Pairing code:");
+    expect(ownerCall[1].text).toContain("Alice");
+    expect(ownerCall[1].text).toContain("pairing approve");
+  });
+
+  it("sends only friendly message when selfJid is null", async () => {
+    const result = await checkInboundAccessControl({
+      accountId: "default",
+      from: "+15550001111",
+      selfE164: "+15550009999",
+      senderE164: "+15550001111",
+      group: false,
+      pushName: "Bob",
+      isFromMe: false,
+      sock: { sendMessage: sendMessageMock },
+      remoteJid: "15550001111@s.whatsapp.net",
+      selfJid: null,
+    });
+
+    expect(result.allowed).toBe(false);
+    expect(sendMessageMock).toHaveBeenCalledTimes(1);
+    const senderCall = sendMessageMock.mock.calls[0] as [string, { text: string }];
+    expect(senderCall[1].text).toContain("not set up to chat");
+  });
+});
+
 describe("WhatsApp dmPolicy precedence", () => {
   it("uses account-level dmPolicy instead of channel-level (#8736)", async () => {
     // Channel-level says "pairing" but the account-level says "allowlist".

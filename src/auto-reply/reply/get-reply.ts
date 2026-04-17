@@ -4,6 +4,8 @@ import {
   resolveSessionAgentId,
   resolveAgentSkillsFilter,
 } from "../../agents/agent-scope.js";
+import { classifyMessageIntent } from "../../agents/intent-classifier.js";
+import { resolveIntentRoute } from "../../agents/model-routing.js";
 import { resolveModelRefFromString } from "../../agents/model-selection.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
 import { DEFAULT_AGENT_WORKSPACE_DIR, ensureAgentWorkspace } from "../../agents/workspace.js";
@@ -82,6 +84,26 @@ export async function getReplyFromConfig(
   });
   let provider = defaultProvider;
   let model = defaultModel;
+
+  // --- Intent-based model routing ---
+  // Classify the message intent and route to a specialized provider if configured.
+  // All downstream overrides (heartbeat, channel, session, directive) take priority.
+  const routingConfig = agentCfg?.routing;
+  if (routingConfig?.enabled && ctx.Body?.trim()) {
+    const classification = classifyMessageIntent(ctx.Body.trim());
+    if (classification.intent !== "general") {
+      const routeResult = resolveIntentRoute({
+        intent: classification.intent,
+        cfg,
+        routingConfig,
+      });
+      if (routeResult.routed) {
+        provider = routeResult.ref.provider;
+        model = routeResult.ref.model;
+      }
+    }
+  }
+
   let hasResolvedHeartbeatModelOverride = false;
   if (opts?.isHeartbeat) {
     // Prefer the resolved per-agent heartbeat model passed from the heartbeat runner,

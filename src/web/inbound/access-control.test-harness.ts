@@ -5,6 +5,7 @@ type AsyncMock<TArgs extends unknown[] = unknown[], TResult = unknown> = {
   mockReset: () => AsyncMock<TArgs, TResult>;
   mockResolvedValue: (value: TResult) => AsyncMock<TArgs, TResult>;
   mockResolvedValueOnce: (value: TResult) => AsyncMock<TArgs, TResult>;
+  mock: { calls: TArgs[] };
 };
 
 export const sendMessageMock = vi.fn() as AsyncMock;

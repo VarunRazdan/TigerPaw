@@ -2,6 +2,45 @@
 
 Docs: https://github.com/varunrazdan/tigerpaw
 
+## 2026.4.18
+
+### Intelligent Model Routing
+
+- Intent-based auto-routing: messages are classified (search, code, reasoning, creative, general) and routed to the best AI provider
+- Regex-based classifier with zero LLM overhead (no API calls for classification)
+- Configurable routing rules from the AI Provider page: map intents to providers
+- Smart default: all manual overrides (/model, channel, session) take priority over routing
+- Input length capped at 2000 chars with bounded regex quantifiers (ReDoS protection)
+
+### Pairing UX Improvement
+
+- Sender now sees a friendly "Tigerpaw: Hi! I'm not set up to chat with you yet." instead of a confusing technical message
+- Owner receives a private WhatsApp notification (in "Message Yourself") with the sender's name, phone, and approval command
+- Repeat messages from the same sender still get the friendly reply (no more silence)
+- Owner notifications rate-limited (max 10 per 5 minutes) to prevent flooding
+- Echo prevention prevents the bot from responding to its own notification
+
+### Integration Credential Setup UI
+
+- New OAuth setup dialog: step-by-step instructions for Google, Microsoft, and Zoom OAuth apps
+- Credential input fields (Client ID, Client Secret) save directly to config
+- "Save & Connect" flow: save credentials then immediately start OAuth popup
+- New "Integrations" step (step 3) in the onboarding wizard with service icons
+- Backend reads credentials from config first, falls back to env vars (backward compatible)
+- Proper error messages: "Missing OAuth credentials for google" instead of generic "Authorization failed"
+- New RPC method: `integrations.oauth.status` for credential status checking
+
+### Security Fixes
+
+- ReDoS protection: intent classifier input capped at 2000 chars, unbounded `.*` replaced with `.{0,N}`
+- Echo prevention Set capped at 100 entries to prevent memory leaks
+- JID device suffix regex tightened from `/:\d+/` to `/:\d+@/`
+- OAuth Client ID NOT marked sensitive (semi-public), only Client Secret is redacted
+
+### Branding
+
+- "OpenClaw" references updated to "Tigerpaw" in pairing approval messages
+
 ## 2026.4.16
 
 ### Identity System

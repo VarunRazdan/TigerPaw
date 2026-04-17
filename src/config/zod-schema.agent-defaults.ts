@@ -190,6 +190,28 @@ export const AgentDefaultsSchema = z
       .strict()
       .optional(),
     sandbox: AgentSandboxSchema,
+    routing: z
+      .object({
+        enabled: z.boolean().optional(),
+        rules: z
+          .array(
+            z
+              .object({
+                intent: z.union([
+                  z.literal("search"),
+                  z.literal("reasoning"),
+                  z.literal("code"),
+                  z.literal("creative"),
+                ]),
+                provider: z.string(),
+                model: z.string(),
+              })
+              .strict(),
+          )
+          .optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .optional();

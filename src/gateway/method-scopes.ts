@@ -156,6 +156,7 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "integrations.oauth2.complete",
     "integrations.disconnect",
     "integrations.test",
+    "integrations.oauth.status",
     "strategies.save",
     "strategies.delete",
     "strategies.toggle",

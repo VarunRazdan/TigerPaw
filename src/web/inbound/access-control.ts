@@ -5,7 +5,16 @@ import {
   warnMissingProviderGroupPolicyFallbackOnce,
 } from "../../config/runtime-group-policy.js";
 import { logVerbose } from "../../globals.js";
+import {
+  canSendOwnerNotification,
+  recordOwnerNotification,
+  rememberOwnerNotification,
+} from "../../pairing/owner-notification-echo.js";
 import { issuePairingChallenge } from "../../pairing/pairing-challenge.js";
+import {
+  buildOwnerPairingNotification,
+  buildSenderFriendlyReply,
+} from "../../pairing/pairing-messages.js";
 import { upsertChannelPairingRequest } from "../../pairing/pairing-store.js";
 import {
   readStoreAllowFromForDmPolicy,
@@ -53,6 +62,7 @@ export async function checkInboundAccessControl(params: {
     sendMessage: (jid: string, content: { text: string }) => Promise<unknown>;
   };
   remoteJid: string;
+  selfJid?: string | null;
 }): Promise<InboundAccessControlResult> {
   const cfg = loadConfig();
   const account = resolveWhatsAppAccount({
@@ -183,6 +193,8 @@ export async function checkInboundAccessControl(params: {
               accountId: account.accountId,
               meta,
             }),
+          buildReplyText: () => buildSenderFriendlyReply(),
+          replyOnDuplicate: true,
           onCreated: () => {
             logVerbose(
               `whatsapp pairing request sender=${candidate} name=${params.pushName ?? "unknown"}`,
@@ -191,6 +203,22 @@ export async function checkInboundAccessControl(params: {
           sendPairingReply: async (text) => {
             await params.sock.sendMessage(params.remoteJid, { text });
           },
+          sendOwnerNotification:
+            params.selfJid && canSendOwnerNotification()
+              ? async ({ code }) => {
+                  const text = buildOwnerPairingNotification({
+                    channel: "whatsapp",
+                    senderName: (params.pushName ?? "").trim() || undefined,
+                    senderId: candidate,
+                    code,
+                  });
+                  // Strip device suffix (e.g. "15551234567:12@s.whatsapp.net" -> "15551234567@s.whatsapp.net")
+                  const bareJid = params.selfJid!.replace(/:\d+@/, "@");
+                  rememberOwnerNotification(text);
+                  recordOwnerNotification();
+                  await params.sock.sendMessage(bareJid, { text });
+                }
+              : undefined,
           onReplyError: (err) => {
             logVerbose(`whatsapp pairing reply failed for ${candidate}: ${String(err)}`);
           },

@@ -141,6 +141,7 @@ const BASE_METHODS = [
   "integrations.oauth2.complete",
   "integrations.disconnect",
   "integrations.test",
+  "integrations.oauth.status",
 ];
 
 export function listGatewayMethods(): string[] {

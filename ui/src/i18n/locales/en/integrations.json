@@ -49,5 +49,16 @@
   "disconnectTitle": "Disconnect {{provider}}?",
   "disconnectDescription": "This will revoke access and remove stored tokens. You can reconnect later.",
   "oauthHintTitle": "OAuth Setup",
-  "oauthHintBody": "Integrations use OAuth2 for secure access. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, and ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET in your environment to enable connections."
+  "oauthHintBody": "Integrations use OAuth2 for secure access. Configure credentials in the setup dialog or set environment variables.",
+  "setup.title": "Set up {{provider}} OAuth",
+  "setup.unlocks": "Unlocks: {{services}}",
+  "setup.clientId": "Client ID",
+  "setup.clientSecret": "Client Secret",
+  "setup.saveConnect": "Save & Connect",
+  "setup.saved": "Credentials saved",
+  "setup.errorSave": "Failed to save credentials",
+  "setup.instructions": "Setup Instructions",
+  "setup.consoleLink": "Open {{provider}}",
+  "setup.redirectUri": "Redirect URI (add this to your OAuth app)",
+  "setup.securityNote": "Credentials are stored locally and never sent to third parties."
 }

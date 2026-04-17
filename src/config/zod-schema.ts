@@ -875,6 +875,37 @@ export const OpenClawSchema = z
       })
       .strict()
       .optional(),
+    integrations: z
+      .object({
+        oauth: z
+          .object({
+            google: z
+              .object({
+                clientId: SecretInputSchema.optional(),
+                clientSecret: SecretInputSchema.optional().register(sensitive),
+              })
+              .strict()
+              .optional(),
+            microsoft: z
+              .object({
+                clientId: SecretInputSchema.optional(),
+                clientSecret: SecretInputSchema.optional().register(sensitive),
+              })
+              .strict()
+              .optional(),
+            zoom: z
+              .object({
+                clientId: SecretInputSchema.optional(),
+                clientSecret: SecretInputSchema.optional().register(sensitive),
+              })
+              .strict()
+              .optional(),
+          })
+          .strict()
+          .optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .superRefine((cfg, ctx) => {

@@ -8,6 +8,7 @@
  */
 
 import crypto from "node:crypto";
+import { loadConfig } from "../config/io.js";
 import { getIntegration } from "./sdk/registry.js";
 import type {
   IntegrationConnectionFull,
@@ -38,6 +39,48 @@ function cleanStalePendingFlows(): void {
   }
 }
 
+// ── Credential resolution (config → env fallback) ───────────────
+
+type OAuthGroup = "google" | "microsoft" | "zoom";
+
+const ENV_TO_GROUP: Record<string, OAuthGroup> = {
+  GOOGLE_CLIENT_ID: "google",
+  GOOGLE_CLIENT_SECRET: "google",
+  MICROSOFT_CLIENT_ID: "microsoft",
+  MICROSOFT_CLIENT_SECRET: "microsoft",
+  ZOOM_CLIENT_ID: "zoom",
+  ZOOM_CLIENT_SECRET: "zoom",
+};
+
+export function resolveOAuthCredential(
+  envVar: string,
+  field: "clientId" | "clientSecret",
+): string | undefined {
+  // Env vars take priority (backward compatible)
+  const envValue = process.env[envVar];
+  if (envValue) {
+    return envValue;
+  }
+  // Fall back to config
+  const cfg = loadConfig();
+  const group = ENV_TO_GROUP[envVar];
+  if (!group) {
+    return undefined;
+  }
+  const raw = cfg.integrations?.oauth?.[group]?.[field];
+  if (typeof raw === "string") {
+    return raw || undefined;
+  }
+  // Handle SecretRef with env source
+  if (raw && typeof raw === "object" && "source" in raw) {
+    const ref = raw;
+    if (ref.source === "env") {
+      return process.env[ref.id] || undefined;
+    }
+  }
+  return undefined;
+}
+
 // ── Authorization URL generation ─────────────────────────────────
 
 export type StartOAuthResult = {
@@ -58,9 +101,12 @@ export function startOAuthFlow(
 
   const { oauth2Config } = provider;
 
-  const clientId = process.env[oauth2Config.clientIdEnvVar];
+  const clientId = resolveOAuthCredential(oauth2Config.clientIdEnvVar, "clientId");
   if (!clientId) {
-    return { error: `Missing env var: ${oauth2Config.clientIdEnvVar}` };
+    const group = ENV_TO_GROUP[oauth2Config.clientIdEnvVar] ?? "unknown";
+    return {
+      error: `Missing OAuth credentials for ${group}. Set up in Integrations page or set ${oauth2Config.clientIdEnvVar} environment variable.`,
+    };
   }
 
   const state = crypto.randomBytes(24).toString("hex");
@@ -108,8 +154,9 @@ export async function exchangeOAuthCode(
   }
 
   const { oauth2Config } = provider;
-  const clientId = process.env[oauth2Config.clientIdEnvVar] ?? "";
-  const clientSecret = process.env[oauth2Config.clientSecretEnvVar] ?? "";
+  const clientId = resolveOAuthCredential(oauth2Config.clientIdEnvVar, "clientId") ?? "";
+  const clientSecret =
+    resolveOAuthCredential(oauth2Config.clientSecretEnvVar, "clientSecret") ?? "";
 
   const body = new URLSearchParams({
     grant_type: "authorization_code",
@@ -170,8 +217,9 @@ export async function refreshTokens(
   }
 
   const { oauth2Config } = provider;
-  const clientId = process.env[oauth2Config.clientIdEnvVar] ?? "";
-  const clientSecret = process.env[oauth2Config.clientSecretEnvVar] ?? "";
+  const clientId = resolveOAuthCredential(oauth2Config.clientIdEnvVar, "clientId") ?? "";
+  const clientSecret =
+    resolveOAuthCredential(oauth2Config.clientSecretEnvVar, "clientSecret") ?? "";
 
   const body = new URLSearchParams({
     grant_type: "refresh_token",

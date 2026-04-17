@@ -6,6 +6,7 @@
  */
 
 import { getIntegrationService } from "../../integrations/index.js";
+import { resolveOAuthCredential } from "../../integrations/oauth2.js";
 import { getIntegration, listIntegrations } from "../../integrations/sdk/registry.js";
 import type { IntegrationProviderId } from "../../integrations/types.js";
 import { ErrorCodes, errorShape } from "../protocol/index.js";
@@ -177,5 +178,29 @@ export const integrationsHandlers: GatewayRequestHandlers = {
         errorShape(ErrorCodes.UNAVAILABLE, err instanceof Error ? err.message : String(err)),
       );
     }
+  },
+
+  // ── OAuth credential status ─────────────────────────────────
+
+  "integrations.oauth.status": ({ respond }) => {
+    const groups = ["google", "microsoft", "zoom"] as const;
+    const status: Record<string, { configured: boolean; source: "config" | "env" | null }> = {};
+
+    for (const group of groups) {
+      const envIdVar = `${group.toUpperCase()}_CLIENT_ID`;
+      const envSecretVar = `${group.toUpperCase()}_CLIENT_SECRET`;
+
+      const hasId = !!resolveOAuthCredential(envIdVar, "clientId");
+      const hasSecret = !!resolveOAuthCredential(envSecretVar, "clientSecret");
+      const configured = hasId && hasSecret;
+
+      const hasEnv = !!(process.env[envIdVar] && process.env[envSecretVar]);
+      status[group] = {
+        configured,
+        source: configured ? (hasEnv ? "env" : "config") : null,
+      };
+    }
+
+    respond(true, { status }, undefined);
   },
 };

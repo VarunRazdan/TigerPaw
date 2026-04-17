@@ -3,6 +3,7 @@ import type { MsgContext } from "../../../auto-reply/templating.js";
 import { loadConfig } from "../../../config/config.js";
 import { readConfigFileSnapshotForWrite, writeConfigFile } from "../../../config/io.js";
 import { logVerbose } from "../../../globals.js";
+import { isOwnerNotificationEcho } from "../../../pairing/owner-notification-echo.js";
 import { resolveAgentRoute } from "../../../routing/resolve-route.js";
 import { buildGroupHistoryKey } from "../../../routing/session-key.js";
 import {
@@ -96,6 +97,12 @@ export function createWebOnMessageHandler(params: {
     // Same-phone mode logging retained
     if (msg.from === msg.to) {
       logVerbose(`📱 Same-phone mode detected (from === to: ${msg.from})`);
+    }
+
+    // Skip if this is an owner pairing notification we just sent to self-chat
+    if (msg.body && isOwnerNotificationEcho(msg.body)) {
+      logVerbose("Skipping auto-reply: detected owner pairing notification echo");
+      return;
     }
 
     // Skip if this is a message we just sent (echo detection)

@@ -20,7 +20,7 @@ describe("issuePairingChallenge", () => {
     expect(sent[0]).toContain("ABCD");
   });
 
-  it("does not send a reply when request already exists", async () => {
+  it("does not send a reply when request already exists (default)", async () => {
     const sendPairingReply = vi.fn(async () => {});
 
     const result = await issuePairingChallenge({
@@ -31,8 +31,24 @@ describe("issuePairingChallenge", () => {
       sendPairingReply,
     });
 
-    expect(result).toEqual({ created: false });
+    expect(result).toEqual({ created: false, code: "ABCD" });
     expect(sendPairingReply).not.toHaveBeenCalled();
+  });
+
+  it("sends reply on duplicate when replyOnDuplicate is true", async () => {
+    const sendPairingReply = vi.fn(async () => {});
+
+    const result = await issuePairingChallenge({
+      channel: "whatsapp",
+      senderId: "123",
+      senderIdLine: "Your WhatsApp phone number: 123",
+      upsertPairingRequest: async () => ({ code: "ABCD", created: false }),
+      sendPairingReply,
+      replyOnDuplicate: true,
+    });
+
+    expect(result).toEqual({ created: false, code: "ABCD" });
+    expect(sendPairingReply).toHaveBeenCalledTimes(1);
   });
 
   it("supports custom reply text builder", async () => {
@@ -85,6 +101,58 @@ describe("issuePairingChallenge", () => {
     });
 
     expect(result).toEqual({ created: true, code: "9999" });
+    expect(onReplyError).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls sendOwnerNotification when provided and request is created", async () => {
+    const sendOwnerNotification = vi.fn(async () => {});
+
+    await issuePairingChallenge({
+      channel: "whatsapp",
+      senderId: "+1555",
+      senderIdLine: "Your WhatsApp phone number: +1555",
+      upsertPairingRequest: async () => ({ code: "OWNERTEST", created: true }),
+      sendPairingReply: async () => {},
+      sendOwnerNotification,
+    });
+
+    expect(sendOwnerNotification).toHaveBeenCalledTimes(1);
+    expect(sendOwnerNotification).toHaveBeenCalledWith({
+      code: "OWNERTEST",
+      senderIdLine: "Your WhatsApp phone number: +1555",
+    });
+  });
+
+  it("does not call sendOwnerNotification when created=false", async () => {
+    const sendOwnerNotification = vi.fn(async () => {});
+
+    await issuePairingChallenge({
+      channel: "whatsapp",
+      senderId: "+1555",
+      senderIdLine: "Your WhatsApp phone number: +1555",
+      upsertPairingRequest: async () => ({ code: "OWNERTEST", created: false }),
+      sendPairingReply: async () => {},
+      sendOwnerNotification,
+    });
+
+    expect(sendOwnerNotification).not.toHaveBeenCalled();
+  });
+
+  it("captures sendOwnerNotification errors via onReplyError", async () => {
+    const onReplyError = vi.fn();
+
+    await issuePairingChallenge({
+      channel: "whatsapp",
+      senderId: "+1555",
+      senderIdLine: "Your WhatsApp phone number: +1555",
+      upsertPairingRequest: async () => ({ code: "FAIL1234", created: true }),
+      sendPairingReply: async () => {},
+      sendOwnerNotification: async () => {
+        throw new Error("owner notification failed");
+      },
+      onReplyError,
+    });
+
     expect(onReplyError).toHaveBeenCalledTimes(1);
   });
 });

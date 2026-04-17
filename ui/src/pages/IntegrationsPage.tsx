@@ -1,7 +1,8 @@
 import { Mail, Calendar, Video, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { OAuthSetupDialog, PROVIDER_TO_OAUTH_GROUP } from "@/components/OAuthSetupDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { gatewayRpc } from "@/lib/gateway-rpc";
 import { assetUrl } from "@/lib/utils";
 import { useIntegrationStore } from "@/stores/integration-store";
 import type { IntegrationProvider } from "@/stores/integration-store";
@@ -77,11 +79,32 @@ export function IntegrationsPage() {
   const setConnectingProvider = useIntegrationStore((s) => s.setConnectingProvider);
 
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
+  const [setupGroup, setSetupGroup] = useState<"google" | "microsoft" | "zoom" | null>(null);
+  const [pendingProvider, setPendingProvider] = useState<IntegrationProvider | null>(null);
+  const [oauthStatus, setOauthStatus] = useState<
+    Record<string, { configured: boolean; source: "config" | "env" | null }>
+  >({});
+
+  const fetchOAuthStatus = useCallback(async () => {
+    try {
+      const res = await gatewayRpc<{
+        status: Record<string, { configured: boolean; source: string | null }>;
+      }>("integrations.oauth.status", {});
+      if (res.ok && res.payload?.status) {
+        setOauthStatus(res.payload.status as typeof oauthStatus);
+      }
+    } catch {
+      // Gateway offline
+    }
+  }, []);
 
   useEffect(() => {
     void fetchProviders();
     void fetchConnections();
-  }, [fetchProviders, fetchConnections]);
+    if (!demoMode) {
+      void fetchOAuthStatus();
+    }
+  }, [fetchProviders, fetchConnections, fetchOAuthStatus, demoMode]);
 
   // Group providers by category
   const grouped = useMemo(() => {
@@ -114,8 +137,16 @@ export function IntegrationsPage() {
       return;
     }
 
+    // Check if OAuth credentials are configured for this provider's group
+    const group = PROVIDER_TO_OAUTH_GROUP[provider.id];
+    if (group && !oauthStatus[group]?.configured) {
+      setPendingProvider(provider);
+      setSetupGroup(group);
+      return;
+    }
+
     const result = await startOAuth(provider.id);
-    if (result) {
+    if (result && "authUrl" in result) {
       // Open OAuth URL in popup
       const popup = window.open(
         result.authUrl,
@@ -132,10 +163,12 @@ export function IntegrationsPage() {
         }
       }, 500);
     } else {
+      const errorMsg =
+        result && "error" in result ? result.error : t("oauthError", "Authorization failed");
       useNotificationStore.getState().addNotification({
         type: "integration",
         title: t("providers." + provider.id + ".name", provider.name),
-        description: t("oauthError", "Authorization failed"),
+        description: errorMsg,
         severity: "error",
         timestamp: Date.now(),
       });
@@ -292,6 +325,30 @@ export function IntegrationsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* OAuth credential setup dialog */}
+      {setupGroup && (
+        <OAuthSetupDialog
+          open={!!setupGroup}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSetupGroup(null);
+              setPendingProvider(null);
+            }
+          }}
+          group={setupGroup}
+          onSaved={() => {
+            setSetupGroup(null);
+            void fetchOAuthStatus();
+            // After saving credentials, automatically start OAuth for the provider they clicked
+            if (pendingProvider) {
+              const provider = pendingProvider;
+              setPendingProvider(null);
+              setTimeout(() => void handleConnect(provider), 300);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
