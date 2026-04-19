@@ -201,6 +201,7 @@ export async function startCommand(opts: StartOptions = {}) {
   await runGatewayCommand({
     port: opts.port,
     allowUnconfigured: true,
+    force: true,
     verbose: opts.verbose,
     open: !opts.noOpen,
     onReady: async () => {
