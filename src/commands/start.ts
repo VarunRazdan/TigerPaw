@@ -196,7 +196,19 @@ export async function startCommand(opts: StartOptions = {}) {
     }
   }
 
-  // Phase 2+3: Start gateway with browser open (unless --no-open).
+  // Phase 2: Stop any supervised gateway service before starting.
+  // On macOS, launchd auto-restarts killed processes — must bootout the service first.
+  try {
+    const { execSync } = await import("node:child_process");
+    const uid = process.getuid?.();
+    if (uid !== undefined) {
+      execSync(`launchctl bootout gui/${uid}/ai.openclaw.gateway 2>/dev/null`, { stdio: "ignore" });
+    }
+  } catch {
+    // Service not loaded — ignore
+  }
+
+  // Phase 3: Start gateway with browser open (unless --no-open).
   const { runGatewayCommand } = await import("../cli/gateway-cli/run.js");
   await runGatewayCommand({
     port: opts.port,
