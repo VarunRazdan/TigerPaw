@@ -210,3 +210,74 @@ describe("WhatsApp dmPolicy precedence", () => {
     expect(sendMessageMock).not.toHaveBeenCalled();
   });
 });
+
+describe("WhatsApp groupPolicy with group JIDs in groupAllowFrom", () => {
+  const ALLOWED_GROUP = "120363012345@g.us";
+  const OTHER_GROUP = "120363099999@g.us";
+
+  it("allows a group message when the group JID is in groupAllowFrom", async () => {
+    setAccessControlTestConfig({
+      channels: {
+        whatsapp: {
+          groupPolicy: "allowlist",
+          groupAllowFrom: [ALLOWED_GROUP],
+        },
+      },
+    });
+    const result = await checkInboundAccessControl({
+      accountId: "default",
+      from: ALLOWED_GROUP,
+      selfE164: "+15550009999",
+      senderE164: "+15558887777",
+      group: true,
+      isFromMe: false,
+      sock: { sendMessage: sendMessageMock },
+      remoteJid: ALLOWED_GROUP,
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it("blocks a group message when the group JID is not listed", async () => {
+    setAccessControlTestConfig({
+      channels: {
+        whatsapp: {
+          groupPolicy: "allowlist",
+          groupAllowFrom: [ALLOWED_GROUP],
+        },
+      },
+    });
+    const result = await checkInboundAccessControl({
+      accountId: "default",
+      from: OTHER_GROUP,
+      selfE164: "+15550009999",
+      senderE164: "+15558887777",
+      group: true,
+      isFromMe: false,
+      sock: { sendMessage: sendMessageMock },
+      remoteJid: OTHER_GROUP,
+    });
+    expect(result.allowed).toBe(false);
+  });
+
+  it("still allows a known sender even when the group JID is not listed", async () => {
+    setAccessControlTestConfig({
+      channels: {
+        whatsapp: {
+          groupPolicy: "allowlist",
+          groupAllowFrom: ["+15558887777"],
+        },
+      },
+    });
+    const result = await checkInboundAccessControl({
+      accountId: "default",
+      from: OTHER_GROUP,
+      selfE164: "+15550009999",
+      senderE164: "+15558887777",
+      group: true,
+      isFromMe: false,
+      sock: { sendMessage: sendMessageMock },
+      remoteJid: OTHER_GROUP,
+    });
+    expect(result.allowed).toBe(true);
+  });
+});

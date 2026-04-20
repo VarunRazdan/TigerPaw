@@ -54,8 +54,8 @@ export function isBotMentionedFromTargets(
         return true;
       }
     }
-    // If the message explicitly mentions someone else, do not fall back to regex matches.
-    return false;
+    // Even if the message mentions someone else, still check regex patterns (e.g. "@TP")
+    // so keyword triggers work alongside real @mentions.
   } else if (hasMentions && isSelfChat) {
     // Self-chat mode: ignore WhatsApp @mention JIDs, otherwise @mentioning the owner in group chats triggers the bot.
   }

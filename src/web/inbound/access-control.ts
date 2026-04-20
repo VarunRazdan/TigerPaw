@@ -1,3 +1,8 @@
+import {
+  buildMentionRegexes,
+  matchesMentionPatterns,
+  normalizeMentionText,
+} from "../../auto-reply/reply/mentions.js";
 import { loadConfig } from "../../config/config.js";
 import {
   resolveOpenProviderRuntimeGroupPolicy,
@@ -63,6 +68,7 @@ export async function checkInboundAccessControl(params: {
   };
   remoteJid: string;
   selfJid?: string | null;
+  body?: string;
 }): Promise<InboundAccessControlResult> {
   const cfg = loadConfig();
   const account = resolveWhatsAppAccount({
@@ -133,35 +139,61 @@ export async function checkInboundAccessControl(params: {
       if (!params.group && isSamePhone) {
         return true;
       }
-      return params.group
-        ? Boolean(normalizedGroupSender && normalizedEntrySet.has(normalizedGroupSender))
-        : normalizedEntrySet.has(normalizedDmSender);
+      if (params.group) {
+        // Sender-level: check sender E.164 against normalized entries
+        if (normalizedGroupSender && normalizedEntrySet.has(normalizedGroupSender)) {
+          return true;
+        }
+        // Group-level: entries that look like group JIDs (e.g. "120363xxx@g.us")
+        // are dropped by normalizeE164, so match them raw against remoteJid.
+        return allowEntries.some((entry) => String(entry).trim() === params.remoteJid);
+      }
+      return normalizedEntrySet.has(normalizedDmSender);
     },
   });
   if (params.group && access.decision !== "allow") {
-    if (access.reason === "groupPolicy=disabled") {
-      logVerbose("Blocked group message (groupPolicy: disabled)");
-    } else if (access.reason === "groupPolicy=allowlist (empty allowlist)") {
-      logVerbose("Blocked group message (groupPolicy: allowlist, no groupAllowFrom)");
+    // Owner messages always pass through in groups so they can run !group add
+    if (params.isFromMe) {
+      logVerbose("Allowing owner group message (fromMe) despite group policy");
     } else {
-      logVerbose(
-        `Blocked group message from ${params.senderE164 ?? "unknown sender"} (groupPolicy: allowlist)`,
-      );
+      if (access.reason === "groupPolicy=disabled") {
+        logVerbose("Blocked group message (groupPolicy: disabled)");
+      } else if (access.reason === "groupPolicy=allowlist (empty allowlist)") {
+        logVerbose("Blocked group message (groupPolicy: allowlist, no groupAllowFrom)");
+      } else {
+        logVerbose(
+          `Blocked group message from ${params.senderE164 ?? "unknown sender"} (groupPolicy: allowlist)`,
+        );
+      }
+      return {
+        allowed: false,
+        shouldMarkRead: false,
+        isSelfChat,
+        resolvedAccountId: account.accountId,
+      };
     }
-    return {
-      allowed: false,
-      shouldMarkRead: false,
-      isSelfChat,
-      resolvedAccountId: account.accountId,
-    };
   }
 
   // DM access control (secure defaults): "pairing" (default) / "allowlist" / "open" / "disabled".
   if (!params.group) {
     if (params.isFromMe && !isSamePhone) {
-      logVerbose("Skipping outbound DM (fromMe); no pairing reply needed.");
+      // Allow owner's @TP messages through so the bot can respond in other people's chats
+      const mentionRegexes = buildMentionRegexes(cfg);
+      const hasMention =
+        mentionRegexes.length > 0 &&
+        matchesMentionPatterns(normalizeMentionText(params.body ?? ""), mentionRegexes);
+      if (!hasMention) {
+        logVerbose("Skipping outbound DM (fromMe, no @TP prefix).");
+        return {
+          allowed: false,
+          shouldMarkRead: false,
+          isSelfChat,
+          resolvedAccountId: account.accountId,
+        };
+      }
+      logVerbose("Allowing owner outbound DM with @TP prefix.");
       return {
-        allowed: false,
+        allowed: true,
         shouldMarkRead: false,
         isSelfChat,
         resolvedAccountId: account.accountId,
@@ -178,8 +210,18 @@ export async function checkInboundAccessControl(params: {
     }
     if (access.decision === "pairing" && !isSamePhone) {
       const candidate = params.from;
-      if (suppressPairingReply) {
-        logVerbose(`Skipping pairing reply for historical DM from ${candidate}.`);
+      // Only trigger pairing when the message contains the mention prefix (e.g. @TP).
+      // Without it, stay silent — the message is meant for the person, not the bot.
+      const mentionRegexes = buildMentionRegexes(cfg);
+      const hasMentionPrefix =
+        mentionRegexes.length === 0 ||
+        matchesMentionPatterns(normalizeMentionText(params.body ?? ""), mentionRegexes);
+      if (suppressPairingReply || !hasMentionPrefix) {
+        logVerbose(
+          hasMentionPrefix
+            ? `Skipping pairing reply for historical DM from ${candidate}.`
+            : `Skipping pairing reply for ${candidate} (no mention prefix).`,
+        );
       } else {
         await issuePairingChallenge({
           channel: "whatsapp",

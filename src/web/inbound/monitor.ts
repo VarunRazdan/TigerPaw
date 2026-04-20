@@ -218,6 +218,7 @@ export async function monitorWebInbox(options: {
       sock: { sendMessage: (jid, content) => sock.sendMessage(jid, content) },
       remoteJid,
       selfJid,
+      body: extractText(msg.message ?? undefined) ?? "",
     });
     if (!access.allowed) {
       return null;

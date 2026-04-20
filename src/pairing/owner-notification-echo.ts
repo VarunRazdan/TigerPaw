@@ -18,7 +18,7 @@ export function rememberOwnerNotification(text: string): void {
     return; // fail-open: worst case, bot responds to its own notification
   }
   recentNotifications.add(text);
-  setTimeout(() => recentNotifications.delete(text), ECHO_TTL_MS);
+  setTimeout(() => recentNotifications.delete(text), ECHO_TTL_MS).unref();
 }
 
 /** Check if a message body matches a recently-sent owner notification. One-shot: removes on match. */
@@ -46,5 +46,5 @@ export function canSendOwnerNotification(): boolean {
 /** Record that an owner notification was sent. Auto-decrements after the window. */
 export function recordOwnerNotification(): void {
   ownerNotificationCount++;
-  setTimeout(() => ownerNotificationCount--, OWNER_NOTIFY_WINDOW_MS);
+  setTimeout(() => ownerNotificationCount--, OWNER_NOTIFY_WINDOW_MS).unref();
 }

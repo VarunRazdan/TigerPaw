@@ -2,6 +2,35 @@
 
 Docs: https://github.com/varunrazdan/tigerpaw
 
+## 2026.4.21
+
+### WhatsApp @TP Trigger System
+
+- `@TP` prefix required in WhatsApp DMs and groups -- bot only responds when explicitly addressed
+- Owner can use `@TP` in other people's DM chats to trigger bot responses
+- Self-chat (owner to self) always works without prefix
+- Messages without `@TP` are silently ignored -- no more hijacking personal conversations
+- Unpaired users only see pairing message when they use `@TP`
+- `@TP @Person do something` now works (fixed: regex patterns checked even with other @mentions)
+
+### WhatsApp Group Management
+
+- `!group add` command: send inside a group to allow the bot there
+- `!group remove` command: revoke bot access from a group
+- `!group list` command: show all allowed groups
+- `!group` command: check if current group is allowed
+- Fixed: group JIDs in `groupAllowFrom` now actually work (was silently ignored)
+- Owner messages bypass group policy for running `!group add` in new groups
+
+### `tigerpaw start` Improvements
+
+- Auto-kills existing gateway (including launchd services) before starting
+- No more "port already in use" errors
+
+### Package Size
+
+- Trimmed npm package from 147MB to 116MB (removed wallpapers, source maps)
+
 ## 2026.4.18
 
 ### Intelligent Model Routing

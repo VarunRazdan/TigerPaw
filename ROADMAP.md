@@ -38,6 +38,10 @@ Sender sees a friendly "Tigerpaw: Hi! I'm not set up to chat with you yet." mess
 
 OAuth credentials for Gmail, Google Calendar, Outlook, Zoom, and other integrations can now be configured from the UI. Setup dialog with step-by-step instructions, credential fields, and one-click "Save & Connect". Added as Step 3 in the onboarding wizard. Credentials stored in config (env vars still supported as fallback).
 
+### WhatsApp @TP Trigger & Group Management
+
+`@TP` prefix system for WhatsApp -- bot only responds when explicitly addressed. Works in DMs and groups. Owner can trigger bot in other people's chats. `!group add/remove/list` commands for managing group access directly from WhatsApp. Group JID allowlisting fixed. Owner messages bypass group policy for admin commands.
+
 ### F1: README Positioning
 
 - Updated README with clear product positioning and feature highlights

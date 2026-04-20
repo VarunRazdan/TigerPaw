@@ -153,7 +153,7 @@ If you find Tigerpaw useful, consider supporting development:
 - **Docker Multi-Arch Images** -- amd64 + arm64 with rootless Podman/systemd support
 - **Plugin Permission Manifests** -- Declarative permission model for extensions (network, trading, filesystem, secrets) with security audit via `tigerpaw doctor`
 - **Local-First by Default** -- Gateway binds to localhost; API keys and data never leave your machine
-- **AI Assistant (Jarvis by default)** -- Task management, reminders, daily briefings, and knowledge retrieval. Configurable identity: rename via Settings, onboarding wizard, or WhatsApp commands (`!name`, `!agent`, `!whoami`)
+- **AI Assistant (Jarvis by default)** -- Task management, reminders, daily briefings, and knowledge retrieval. Configurable identity: rename via Settings, onboarding wizard, or WhatsApp commands (`!name`, `!agent`, `!whoami`). Trigger with `@TP` prefix in WhatsApp DMs and groups -- the bot only responds when addressed, so it doesn't hijack your personal messages. Manage group access with `!group add/remove/list` commands directly from WhatsApp.
 - **Message Hub** -- Unified inbox across all agent channels with search, filtering, and date grouping
 - **Visual Workflow Builder** -- Drag-and-drop event-driven automation (trading events, cron schedules, message routing) with per-node input/output inspection, real-time execution monitoring, single-node testing, data pinning, and debug replay
 - **Expression Engine & Data Mapping** -- 35 built-in functions (string, array, math, date, logic), `{{expression}}` templates with autocomplete, and visual upstream node output mapping
@@ -272,8 +272,28 @@ On first launch, an **onboarding wizard** guides you through:
 
 1. **AI provider** — connect OpenAI, Anthropic, Ollama, or another LLM
 2. **Messaging** — connect Discord, Telegram, Slack, Signal, or WhatsApp
-3. **Trading** — connect Alpaca, Coinbase, Binance, or other exchanges
-4. **Demo mode** — start with sample data to explore the dashboard
+3. **Integrations** — connect Gmail, Google Calendar, Outlook, Zoom via OAuth
+4. **Trading** — connect Alpaca, Coinbase, Binance, or other exchanges
+5. **Demo mode** — start with sample data to explore the dashboard
+
+### WhatsApp Commands
+
+Since the bot runs on your personal WhatsApp number, use `@TP` to address it:
+
+| Command            | Context     | Description                                                |
+| ------------------ | ----------- | ---------------------------------------------------------- |
+| `@TP <message>`    | DM or Group | Talk to the AI assistant                                   |
+| `/new`             | Any         | Reset session (picks up new model/personality)             |
+| `/model <alias>`   | Any         | Switch AI model (e.g., `/model gemini`, `/model deepseek`) |
+| `!group add`       | In a group  | Allow the bot to respond in this group                     |
+| `!group remove`    | In a group  | Stop the bot from responding in this group                 |
+| `!group list`      | Any         | Show all allowed groups                                    |
+| `!name <name>`     | Any         | Set your display name                                      |
+| `!agent <name>`    | Any (owner) | Change the bot's name                                      |
+| `!sleep` / `!wake` | Any (owner) | Pause/resume the bot                                       |
+| `!whoami`          | Any         | Show your identity info                                    |
+
+Without `@TP`, messages are treated as personal messages between you and your contacts. The bot stays silent.
 
 ## Configuration
 

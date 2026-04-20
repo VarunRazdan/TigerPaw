@@ -1,4 +1,9 @@
 import type { getReplyFromConfig } from "../../../auto-reply/reply.js";
+import {
+  buildMentionRegexes,
+  matchesMentionPatterns,
+  normalizeMentionText,
+} from "../../../auto-reply/reply/mentions.js";
 import type { MsgContext } from "../../../auto-reply/templating.js";
 import { loadConfig } from "../../../config/config.js";
 import { readConfigFileSnapshotForWrite, writeConfigFile } from "../../../config/io.js";
@@ -253,6 +258,125 @@ export function createWebOnMessageHandler(params: {
       return;
     }
 
+    // Group allowlist management — owner only
+    if ((bodyLower === "!group" || bodyLower.startsWith("!group ")) && msg.fromMe) {
+      const args = bodyLower.startsWith("!group ") ? bodyLower.slice(7).trim() : "";
+      const inGroup = msg.chatType === "group";
+      const groupJid = msg.chatId;
+      const groupName = (msg.groupSubject ?? groupJid).slice(0, 80);
+
+      if (args === "add") {
+        if (!inGroup) {
+          const err = "Send !group add inside the group you want to allow.";
+          params.echoTracker.rememberText(err, {});
+          await msg.reply(err);
+          return;
+        }
+        try {
+          const { snapshot, writeOptions } = await readConfigFileSnapshotForWrite();
+          const cfg = snapshot.config;
+          const existing = cfg.channels?.whatsapp?.groupAllowFrom ?? [];
+          if (existing.includes(groupJid)) {
+            const already = `Group "${groupName}" is already allowed.`;
+            params.echoTracker.rememberText(already, {});
+            await msg.reply(already);
+            return;
+          }
+          const updated = {
+            ...cfg,
+            channels: {
+              ...cfg.channels,
+              whatsapp: {
+                ...cfg.channels?.whatsapp,
+                groupAllowFrom: [...existing, groupJid],
+              },
+            },
+          };
+          await writeConfigFile(updated, writeOptions);
+          const ok = `Group "${groupName}" added to allowlist. I'll respond here from now on.`;
+          params.echoTracker.rememberText(ok, {});
+          await msg.reply(ok);
+        } catch {
+          const fail = "Failed to update group allowlist.";
+          params.echoTracker.rememberText(fail, {});
+          await msg.reply(fail);
+        }
+        return;
+      }
+
+      if (args === "remove") {
+        if (!inGroup) {
+          const err = "Send !group remove inside the group you want to remove.";
+          params.echoTracker.rememberText(err, {});
+          await msg.reply(err);
+          return;
+        }
+        try {
+          const { snapshot, writeOptions } = await readConfigFileSnapshotForWrite();
+          const cfg = snapshot.config;
+          const existing = cfg.channels?.whatsapp?.groupAllowFrom ?? [];
+          if (!existing.includes(groupJid)) {
+            const notFound = "This group isn't in the allowlist.";
+            params.echoTracker.rememberText(notFound, {});
+            await msg.reply(notFound);
+            return;
+          }
+          const updated = {
+            ...cfg,
+            channels: {
+              ...cfg.channels,
+              whatsapp: {
+                ...cfg.channels?.whatsapp,
+                groupAllowFrom: existing.filter((e: string) => e !== groupJid),
+              },
+            },
+          };
+          await writeConfigFile(updated, writeOptions);
+          const ok = `Group "${groupName}" removed from allowlist. I'll stop responding here.`;
+          params.echoTracker.rememberText(ok, {});
+          await msg.reply(ok);
+        } catch {
+          const fail = "Failed to update group allowlist.";
+          params.echoTracker.rememberText(fail, {});
+          await msg.reply(fail);
+        }
+        return;
+      }
+
+      if (args === "list") {
+        const cfg = loadConfig();
+        const entries = cfg.channels?.whatsapp?.groupAllowFrom ?? [];
+        const groupEntries = entries.filter((e: string) => String(e).includes("@g.us"));
+        if (groupEntries.length === 0) {
+          const empty = "No groups allowed. Send !group add inside a group to allow it.";
+          params.echoTracker.rememberText(empty, {});
+          await msg.reply(empty);
+        } else {
+          const list = "Allowed groups:\n" + groupEntries.map((g: string) => `- ${g}`).join("\n");
+          params.echoTracker.rememberText(list, {});
+          await msg.reply(list);
+        }
+        return;
+      }
+
+      // No args: show status or help
+      if (inGroup) {
+        const cfg = loadConfig();
+        const entries = cfg.channels?.whatsapp?.groupAllowFrom ?? [];
+        const isAllowed = entries.includes(groupJid);
+        const status = isAllowed
+          ? "This group is allowed."
+          : "This group is NOT allowed. Send !group add to allow it.";
+        params.echoTracker.rememberText(status, {});
+        await msg.reply(status);
+      } else {
+        const help = "Usage: !group add | remove | list (run add/remove inside a group).";
+        params.echoTracker.rememberText(help, {});
+        await msg.reply(help);
+      }
+      return;
+    }
+
     // If sleeping, silently ignore all messages
     if (isSleeping()) {
       logVerbose("Skipping message: bot is sleeping");
@@ -310,6 +434,24 @@ export function createWebOnMessageHandler(params: {
       // Ensure `peerId` for DMs is stable and stored as E.164 when possible.
       if (!msg.senderE164 && peerId && peerId.startsWith("+")) {
         msg.senderE164 = normalizeE164(peerId) ?? msg.senderE164;
+      }
+
+      // DM mention gating — require @TP prefix so the bot doesn't hijack
+      // every message on the owner's personal WhatsApp number.
+      // Owner messages (fromMe) bypass this so self-chat always works.
+      if (!msg.fromMe) {
+        const mentionRegexes = buildMentionRegexes(params.cfg);
+        if (mentionRegexes.length > 0) {
+          const bodyClean = normalizeMentionText(msg.body ?? "");
+          if (!matchesMentionPatterns(bodyClean, mentionRegexes)) {
+            logVerbose("Skipping DM: no mention prefix (e.g. @TP) detected");
+            return;
+          }
+          // Strip the @TP prefix from the body before AI processing
+          for (const re of mentionRegexes) {
+            msg.body = msg.body.replace(re, "").trim();
+          }
+        }
       }
     }
 

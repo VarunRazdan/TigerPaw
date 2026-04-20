@@ -41,14 +41,14 @@ describe("isBotMentionedFromTargets", () => {
     expect(isBotMentionedFromTargets(msg, cfg, targets)).toBe(expected);
   }
 
-  it("ignores regex matches when other mentions are present", () => {
+  it("matches regex even when other mentions are present", () => {
     const msg = makeMsg({
       body: "@OpenClaw please help",
       mentionedJids: ["19998887777@s.whatsapp.net"],
       selfE164: "+15551234567",
       selfJid: "15551234567@s.whatsapp.net",
     });
-    expectMentioned(msg, mentionCfg, false);
+    expectMentioned(msg, mentionCfg, true);
   });
 
   it("matches explicit self mentions", () => {

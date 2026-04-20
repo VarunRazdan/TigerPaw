@@ -169,6 +169,41 @@ tigerpaw channels add --channel telegram --token "123456:ABC-your-bot-token"
 tigerpaw channels add --channel discord --bot-token "..." --app-token "..."
 ```
 
+### Using the Bot on WhatsApp
+
+Since the bot runs on your personal WhatsApp number, it uses `@TP` as a trigger prefix to distinguish bot messages from your personal messages:
+
+```
+@TP what's the weather in Hong Kong?     # Bot responds
+Hey want to grab dinner?                  # Bot stays silent (personal message)
+```
+
+**Setup the trigger:**
+
+```bash
+tigerpaw config set messages.groupChat.mentionPatterns '["@TP"]'
+```
+
+**Managing groups:**
+Send `!group add` inside any WhatsApp group to let the bot respond there. Send `!group remove` to revoke. Send `!group list` to see all allowed groups.
+
+**Switching AI models:**
+
+```
+/model deepseek     # Switch to DeepSeek
+/model gemini       # Switch to Google Gemini
+/model jarvis       # Switch to local Ollama model
+```
+
+**Customizing personality:**
+Create `~/.openclaw/agent/AGENTS.md` with your instructions:
+
+```markdown
+You are Jarvis. Keep replies to 1-2 sentences. No emojis.
+```
+
+For Ollama models, bake the personality into the model with a Modelfile for better instruction following.
+
 ### 4. Check Status
 
 ```bash
