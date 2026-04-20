@@ -1,6 +1,6 @@
 {
   "name": "@tigerpaw/alpaca",
-  "version": "2026.4.21",
+  "version": "2026.4.22",
   "private": true,
   "description": "Tigerpaw Alpaca stock trading extension",
   "type": "module",

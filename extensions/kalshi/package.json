@@ -1,6 +1,6 @@
 {
   "name": "@tigerpaw/kalshi",
-  "version": "2026.4.21",
+  "version": "2026.4.22",
   "private": true,
   "description": "Tigerpaw Kalshi event contracts trading extension",
   "type": "module",
