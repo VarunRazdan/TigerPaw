@@ -5,6 +5,8 @@ export type IntegrationCategory = "email" | "calendar" | "meeting";
 
 export type IntegrationStatus = "connected" | "disconnected" | "expired" | "error";
 
+export type IntegrationAuthMethod = "oauth2" | "service_account";
+
 export type IntegrationConnection = {
   id: string;
   providerId: string;
@@ -12,6 +14,7 @@ export type IntegrationConnection = {
   status: IntegrationStatus;
   label: string;
   accountEmail?: string;
+  authMethod?: IntegrationAuthMethod;
   connectedAt: string;
   lastUsedAt?: string;
   error?: string;
@@ -25,6 +28,7 @@ export type IntegrationProvider = {
   description: string;
   authType: "oauth2" | "api_key";
   capabilities: string[];
+  oauth2Config?: { scopes: string[] };
 };
 
 type IntegrationState = {

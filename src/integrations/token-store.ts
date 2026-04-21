@@ -7,17 +7,34 @@
 
 import { dalFindByType } from "../dal/credentials.js";
 import { deleteCredential, getCredential, saveCredential } from "../workflows/credentials.js";
+
+/**
+ * Find credentials by type with decrypted fields.
+ * dalFindByType returns raw encrypted fields; this wrapper decrypts each
+ * match through getCredential() so callers get usable plaintext values.
+ */
+function findDecryptedByType(type: string) {
+  const raw = dalFindByType(type);
+  return raw
+    .map((c) => {
+      const decrypted = getCredential(c.id);
+      return decrypted ? { ...decrypted, createdAt: c.createdAt, updatedAt: c.updatedAt } : null;
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null);
+}
 import type {
+  IntegrationAuthMethod,
   IntegrationConnection,
   IntegrationConnectionFull,
   IntegrationProviderId,
   OAuth2TokenSet,
+  ServiceAccountConfig,
 } from "./types.js";
 
 const CREDENTIAL_TYPE = "oauth2_integration";
 
 function connectionToCredentialFields(conn: IntegrationConnectionFull): Record<string, string> {
-  return {
+  const fields: Record<string, string> = {
     providerId: conn.providerId,
     category: conn.category,
     label: conn.label,
@@ -31,6 +48,16 @@ function connectionToCredentialFields(conn: IntegrationConnectionFull): Record<s
     tokenType: conn.tokens.tokenType,
     scope: conn.tokens.scope,
   };
+  if (conn.authMethod && conn.authMethod !== "oauth2") {
+    fields.authMethod = conn.authMethod;
+  }
+  if (conn.serviceAccount) {
+    fields.saClientEmail = conn.serviceAccount.clientEmail;
+    fields.saPrivateKey = conn.serviceAccount.privateKey;
+    fields.saImpersonateEmail = conn.serviceAccount.impersonateEmail;
+    fields.saScopes = conn.serviceAccount.scopes.join(" ");
+  }
+  return fields;
 }
 
 function credentialFieldsToConnection(
@@ -38,6 +65,16 @@ function credentialFieldsToConnection(
   name: string,
   fields: Record<string, string>,
 ): IntegrationConnectionFull {
+  const authMethod = (fields.authMethod as IntegrationAuthMethod) || "oauth2";
+  let serviceAccount: ServiceAccountConfig | undefined;
+  if (fields.saClientEmail && fields.saPrivateKey) {
+    serviceAccount = {
+      clientEmail: fields.saClientEmail,
+      privateKey: fields.saPrivateKey,
+      impersonateEmail: fields.saImpersonateEmail ?? "",
+      scopes: fields.saScopes ? fields.saScopes.split(" ") : [],
+    };
+  }
   return {
     id,
     providerId: fields.providerId as IntegrationProviderId,
@@ -54,6 +91,8 @@ function credentialFieldsToConnection(
       tokenType: fields.tokenType ?? "Bearer",
       scope: fields.scope ?? "",
     },
+    authMethod,
+    serviceAccount,
   };
 }
 
@@ -64,7 +103,7 @@ function credentialFieldsToConnection(
  * Uses DAL type-filtered query for efficiency instead of scanning all credentials.
  */
 export function listIntegrationConnections(): IntegrationConnection[] {
-  const integrationCreds = dalFindByType(CREDENTIAL_TYPE);
+  const integrationCreds = findDecryptedByType(CREDENTIAL_TYPE);
   return integrationCreds.map((c) => {
     const conn = credentialFieldsToConnection(c.id, c.name, c.fields);
     return {
@@ -74,6 +113,7 @@ export function listIntegrationConnections(): IntegrationConnection[] {
       status: conn.status,
       label: conn.label,
       accountEmail: conn.accountEmail,
+      authMethod: conn.authMethod,
       connectedAt: c.createdAt,
       lastUsedAt: c.updatedAt,
     };
@@ -135,7 +175,7 @@ export function deleteIntegrationConnection(id: string): boolean {
 export function findConnectionByProvider(
   providerId: IntegrationProviderId,
 ): IntegrationConnectionFull | null {
-  const integrationCreds = dalFindByType(CREDENTIAL_TYPE);
+  const integrationCreds = findDecryptedByType(CREDENTIAL_TYPE);
   for (const c of integrationCreds) {
     const conn = credentialFieldsToConnection(c.id, c.name, c.fields);
     if (conn.providerId === providerId) {

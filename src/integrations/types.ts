@@ -5,6 +5,17 @@
  * capabilities that can be used through the UI, workflows, and Jarvis.
  */
 
+// ── Auth methods ─────────────────────────────────────────────────
+
+export type IntegrationAuthMethod = "oauth2" | "service_account";
+
+export type ServiceAccountConfig = {
+  clientEmail: string;
+  privateKey: string;
+  impersonateEmail: string;
+  scopes: string[];
+};
+
 // ── Provider identifiers ─────────────────────────────────────────
 
 export type IntegrationCategory = "email" | "calendar" | "meeting" | (string & {});
@@ -40,6 +51,7 @@ export type IntegrationConnection = {
   status: IntegrationStatus;
   label: string; // User-facing label, e.g. "user@gmail.com"
   accountEmail?: string;
+  authMethod?: IntegrationAuthMethod;
   connectedAt: string;
   lastUsedAt?: string;
   error?: string;
@@ -52,6 +64,7 @@ export type IntegrationConnection = {
  */
 export type IntegrationConnectionFull = IntegrationConnection & {
   tokens: OAuth2TokenSet;
+  serviceAccount?: ServiceAccountConfig;
   config?: Record<string, unknown>;
 };
 
@@ -220,6 +233,14 @@ export const INTEGRATION_PROVIDERS: IntegrationProviderDefinition[] = [
     capabilities: ["schedule", "list", "get_details", "get_join_link"],
   },
 ];
+
+/** Google provider IDs that support service account auth. */
+export const GOOGLE_PROVIDER_IDS = new Set<IntegrationProviderId>([
+  "gmail",
+  "google_calendar",
+  "google_meet",
+  "google_sheets",
+]);
 
 /**
  * Look up a provider definition by ID.

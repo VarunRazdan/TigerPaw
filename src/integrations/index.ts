@@ -5,8 +5,19 @@
  * Follows the same singleton pattern as WorkflowService.
  */
 
-import { ensureFreshTokens, exchangeOAuthCode, startOAuthFlow } from "./oauth2.js";
+import crypto from "node:crypto";
+import {
+  ensureFreshTokens,
+  exchangeOAuthCode,
+  fetchAccountEmail,
+  startOAuthFlow,
+} from "./oauth2.js";
 import { listIntegrations } from "./sdk/registry.js";
+import {
+  evictTokenCache,
+  mintServiceAccountToken,
+  parseServiceAccountJson,
+} from "./service-account.js";
 import {
   deleteIntegrationConnection,
   findConnectionByProvider,
@@ -23,7 +34,7 @@ import type {
   IntegrationProviderDefinition,
   IntegrationProviderId,
 } from "./types.js";
-import { INTEGRATION_PROVIDERS } from "./types.js";
+import { GOOGLE_PROVIDER_IDS, INTEGRATION_PROVIDERS } from "./types.js";
 
 export class IntegrationService {
   private gatewayPort: number;
@@ -69,8 +80,8 @@ export class IntegrationService {
     if (!full) {
       return null;
     }
-    // Strip tokens before returning
-    const { tokens: _tokens, config: _config, ...connection } = full;
+    // Strip sensitive fields before returning
+    const { tokens: _tokens, config: _config, serviceAccount: _sa, ...connection } = full;
     return connection;
   }
 
@@ -103,25 +114,98 @@ export class IntegrationService {
         scopes: result.scopes,
       };
       saveIntegrationConnection(updated);
-      const { tokens: _t, config: _c, ...connection } = updated;
+      const { tokens: _t, config: _c, serviceAccount: _sa, ...connection } = updated;
       return connection;
     }
 
     // Save new connection
     saveIntegrationConnection(result);
-    const { tokens: _t, config: _c, ...connection } = result;
+    const { tokens: _t, config: _c, serviceAccount: _sa, ...connection } = result;
     return connection;
   }
 
   async disconnect(connectionId: string): Promise<boolean> {
+    const conn = getIntegrationConnection(connectionId);
+    if (conn?.authMethod === "service_account" && conn.serviceAccount) {
+      evictTokenCache(conn.serviceAccount);
+    }
     return deleteIntegrationConnection(connectionId);
+  }
+
+  // ── Service account flow ─────────────────────────────────────
+
+  async connectServiceAccount(
+    providerId: IntegrationProviderId,
+    serviceAccountJson: string,
+    impersonateEmail: string,
+  ): Promise<IntegrationConnection | { error: string }> {
+    const provider = this.listProviders().find((p) => p.id === providerId);
+    if (!provider) {
+      return { error: `Unknown provider: ${providerId}` };
+    }
+    const isGoogle =
+      GOOGLE_PROVIDER_IDS.has(providerId) ||
+      provider.oauth2Config?.clientIdEnvVar === "GOOGLE_CLIENT_ID";
+    if (!isGoogle) {
+      return { error: "Service account auth is only supported for Google providers" };
+    }
+
+    const parsed = parseServiceAccountJson(serviceAccountJson);
+    if (!parsed.ok) {
+      return { error: parsed.error };
+    }
+
+    const scopes = provider.oauth2Config?.scopes ?? [];
+    const saConfig = {
+      clientEmail: parsed.clientEmail,
+      privateKey: parsed.privateKey,
+      impersonateEmail,
+      scopes,
+    };
+
+    // Validate credentials by minting a token
+    const mintResult = await mintServiceAccountToken(saConfig);
+    if ("error" in mintResult) {
+      return { error: mintResult.error };
+    }
+
+    // Fetch account email for label
+    const accountEmail = await fetchAccountEmail(providerId, mintResult.accessToken);
+
+    // Reuse existing connection ID if updating
+    const existing = findConnectionByProvider(providerId);
+    const connectionId = existing?.id ?? `${providerId}-${crypto.randomBytes(6).toString("hex")}`;
+
+    const connection: IntegrationConnectionFull = {
+      id: connectionId,
+      providerId,
+      category: provider.category,
+      status: "connected",
+      label: accountEmail || impersonateEmail || parsed.clientEmail,
+      accountEmail: accountEmail || impersonateEmail || undefined,
+      authMethod: "service_account",
+      connectedAt: existing?.connectedAt ?? new Date().toISOString(),
+      scopes,
+      tokens: {
+        accessToken: mintResult.accessToken,
+        refreshToken: "",
+        expiresAt: mintResult.expiresAt,
+        tokenType: "Bearer",
+        scope: scopes.join(" "),
+      },
+      serviceAccount: saConfig,
+    };
+
+    saveIntegrationConnection(connection);
+    const { tokens: _t, config: _c, serviceAccount: _sa, ...stripped } = connection;
+    return stripped;
   }
 
   // ── Token access (server-side only) ──────────────────────────
 
   /**
    * Get a fresh access token for an integration connection.
-   * Automatically refreshes expired tokens.
+   * Branches on authMethod to support OAuth2 and service account connections.
    */
   async getAccessToken(connectionId: string): Promise<string | { error: string }> {
     const conn = getIntegrationConnection(connectionId);
@@ -129,14 +213,32 @@ export class IntegrationService {
       return { error: "Connection not found" };
     }
 
+    // Service account path — mint a fresh token on demand
+    if (conn.authMethod === "service_account" && conn.serviceAccount) {
+      const result = await mintServiceAccountToken(conn.serviceAccount);
+      if ("error" in result) {
+        saveIntegrationConnection({ ...conn, status: "error" });
+        return result;
+      }
+      if (result.accessToken !== conn.tokens.accessToken) {
+        updateIntegrationTokens(connectionId, {
+          accessToken: result.accessToken,
+          refreshToken: "",
+          expiresAt: result.expiresAt,
+          tokenType: "Bearer",
+          scope: conn.tokens.scope,
+        });
+      }
+      return result.accessToken;
+    }
+
+    // OAuth2 path (default)
     const result = await ensureFreshTokens(conn);
     if ("error" in result) {
-      // Mark connection as expired
       saveIntegrationConnection({ ...conn, status: "expired" });
       return result;
     }
 
-    // Update stored tokens if they changed
     if (result.accessToken !== conn.tokens.accessToken) {
       updateIntegrationTokens(connectionId, result);
     }

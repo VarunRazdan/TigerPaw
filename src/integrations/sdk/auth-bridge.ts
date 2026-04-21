@@ -8,6 +8,7 @@
 
 import { resolveCredential } from "../../workflows/credentials.js";
 import { ensureFreshTokens } from "../oauth2.js";
+import { mintServiceAccountToken } from "../service-account.js";
 import { findConnectionByProvider } from "../token-store.js";
 import type { IntegrationProviderId } from "../types.js";
 import { getIntegration } from "./registry.js";
@@ -48,7 +49,7 @@ export async function createAuthContext(
   }
 }
 
-/** OAuth2: find existing connection, refresh if needed, wrap as AuthContext. */
+/** OAuth2 or service account: find existing connection, get fresh token, wrap as AuthContext. */
 async function createOAuth2AuthContext(integrationId: string): Promise<AuthContext> {
   const connection = findConnectionByProvider(integrationId as IntegrationProviderId);
   if (!connection) {
@@ -58,7 +59,27 @@ async function createOAuth2AuthContext(integrationId: string): Promise<AuthConte
     );
   }
 
-  // Ensure tokens are fresh (refreshes if within 5 min of expiry)
+  // Service account path — mint tokens on demand
+  if (connection.authMethod === "service_account" && connection.serviceAccount) {
+    const saConfig = connection.serviceAccount;
+    const initial = await mintServiceAccountToken(saConfig);
+    if ("error" in initial) {
+      throw new Error(`Service account token mint failed for "${integrationId}": ${initial.error}`);
+    }
+    return {
+      getAccessToken: async () => {
+        const result = await mintServiceAccountToken(saConfig);
+        if ("error" in result) {
+          throw new Error(result.error);
+        }
+        return result.accessToken;
+      },
+      getCredentialField: () => undefined,
+      credentials: {},
+    };
+  }
+
+  // OAuth2 path — ensure tokens are fresh (refreshes if within 5 min of expiry)
   const tokens = await ensureFreshTokens(connection);
   if ("error" in tokens) {
     throw new Error(`OAuth2 token refresh failed for "${integrationId}": ${tokens.error}`);
@@ -70,6 +91,13 @@ async function createOAuth2AuthContext(integrationId: string): Promise<AuthConte
       const conn = findConnectionByProvider(integrationId as IntegrationProviderId);
       if (!conn) {
         throw new Error(`Connection lost for "${integrationId}"`);
+      }
+      if (conn.authMethod === "service_account" && conn.serviceAccount) {
+        const result = await mintServiceAccountToken(conn.serviceAccount);
+        if ("error" in result) {
+          throw new Error(result.error);
+        }
+        return result.accessToken;
       }
       const fresh = await ensureFreshTokens(conn);
       if ("error" in fresh) {

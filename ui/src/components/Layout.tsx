@@ -15,6 +15,7 @@ import {
   Sparkles,
   Blocks,
   FlaskConical,
+  Wrench,
 } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -184,6 +185,7 @@ function useNavGroups(): NavGroup[] {
         icon: <Shield className="w-4 h-4" />,
       },
       { to: "/config", label: t("nav.config", "Config"), icon: <FileJson className="w-4 h-4" /> },
+      { to: "/tools", label: t("nav.tools", "Search Tools"), icon: <Wrench className="w-4 h-4" /> },
       {
         to: "/workflows",
         label: t("nav.workflows", "Workflows"),

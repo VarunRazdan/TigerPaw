@@ -106,6 +106,7 @@ const IntegrationsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import("./pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
+const ToolsPage = lazy(() => import("./pages/ToolsPage").then((m) => ({ default: m.ToolsPage })));
 const TradingPage = lazy(() =>
   import("./pages/TradingPage").then((m) => ({ default: m.TradingPage })),
 );
@@ -168,6 +169,7 @@ const CORE_ROUTES: RouteObject[] = [
   { path: "security", element: <SecurityPage />, errorElement: PAGE_ERROR },
   { path: "settings", element: <SettingsPage />, errorElement: PAGE_ERROR },
   { path: "config", element: <ConfigPage />, errorElement: PAGE_ERROR },
+  { path: "tools", element: <ToolsPage />, errorElement: PAGE_ERROR },
   { path: "workflows", element: <WorkflowsPage />, errorElement: PAGE_ERROR },
   { path: "workflows/:id", element: <WorkflowEditorPage />, errorElement: PAGE_ERROR },
   { path: "mcp", element: <McpPage />, errorElement: PAGE_ERROR },

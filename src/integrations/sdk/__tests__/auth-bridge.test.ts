@@ -13,6 +13,10 @@ vi.mock("../../oauth2.js", () => ({
   ensureFreshTokens: vi.fn(),
 }));
 
+vi.mock("../../service-account.js", () => ({
+  mintServiceAccountToken: vi.fn(),
+}));
+
 vi.mock("../../../workflows/credentials.js", () => ({
   resolveCredential: vi.fn(),
 }));
@@ -23,6 +27,7 @@ vi.mock("../registry.js", () => ({
 
 import { resolveCredential } from "../../../workflows/credentials.js";
 import { ensureFreshTokens } from "../../oauth2.js";
+import { mintServiceAccountToken } from "../../service-account.js";
 import { findConnectionByProvider } from "../../token-store.js";
 import { createAuthContext } from "../auth-bridge.js";
 import { getIntegration } from "../registry.js";
@@ -30,6 +35,7 @@ import type { IntegrationDefinition } from "../types.js";
 
 const mockFindConnection = vi.mocked(findConnectionByProvider);
 const mockEnsureFreshTokens = vi.mocked(ensureFreshTokens);
+const mockMintServiceAccountToken = vi.mocked(mintServiceAccountToken);
 const mockResolveCredential = vi.mocked(resolveCredential);
 const mockGetIntegration = vi.mocked(getIntegration);
 
@@ -230,6 +236,79 @@ describe("Auth Bridge — createAuthContext", () => {
       expect(token).toBe("");
       expect(ctx.getCredentialField("anything")).toBeUndefined();
       expect(ctx.credentials).toEqual({});
+    });
+  });
+
+  // ── Service account path ───────────────────────────────────────
+
+  describe("Service account auth", () => {
+    it("uses mintServiceAccountToken when connection has service_account authMethod", async () => {
+      const def = makeOAuth2Definition("google_sheets");
+      mockGetIntegration.mockReturnValue(def);
+
+      const saConfig = {
+        clientEmail: "sa@project.iam.gserviceaccount.com",
+        privateKey: "fake-key",
+        impersonateEmail: "admin@example.com",
+        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+      };
+
+      const fakeConnection = {
+        id: "conn-sa",
+        providerId: "google_sheets" as const,
+        authMethod: "service_account" as const,
+        serviceAccount: saConfig,
+        tokens: {
+          accessToken: "old-token",
+          refreshToken: "",
+          expiresAt: Date.now() + 3600_000,
+        },
+      };
+      mockFindConnection.mockReturnValue(fakeConnection as never);
+      mockMintServiceAccountToken.mockResolvedValue({
+        accessToken: "sa-minted-token",
+        expiresAt: Date.now() + 3600_000,
+      });
+
+      const ctx = await createAuthContext("google_sheets");
+      expect(ctx).toBeDefined();
+
+      const token = await ctx.getAccessToken();
+      expect(token).toBe("sa-minted-token");
+      expect(mockMintServiceAccountToken).toHaveBeenCalledWith(saConfig);
+      expect(mockEnsureFreshTokens).not.toHaveBeenCalled();
+    });
+
+    it("throws when service account token mint fails", async () => {
+      const def = makeOAuth2Definition("google_sheets");
+      mockGetIntegration.mockReturnValue(def);
+
+      const saConfig = {
+        clientEmail: "sa@project.iam.gserviceaccount.com",
+        privateKey: "bad-key",
+        impersonateEmail: "admin@example.com",
+        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+      };
+
+      const fakeConnection = {
+        id: "conn-sa",
+        providerId: "google_sheets" as const,
+        authMethod: "service_account" as const,
+        serviceAccount: saConfig,
+        tokens: {
+          accessToken: "",
+          refreshToken: "",
+          expiresAt: 0,
+        },
+      };
+      mockFindConnection.mockReturnValue(fakeConnection as never);
+      mockMintServiceAccountToken.mockResolvedValue({
+        error: "Invalid private key",
+      });
+
+      await expect(createAuthContext("google_sheets")).rejects.toThrow(
+        'Service account token mint failed for "google_sheets"',
+      );
     });
   });
 

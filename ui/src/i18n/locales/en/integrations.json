@@ -60,5 +60,35 @@
   "setup.instructions": "Setup Instructions",
   "setup.consoleLink": "Open {{provider}}",
   "setup.redirectUri": "Redirect URI (add this to your OAuth app)",
-  "setup.securityNote": "Credentials are stored locally and never sent to third parties."
+  "setup.securityNote": "Credentials are stored locally and never sent to third parties.",
+  "authPicker": {
+    "title": "Connect {{provider}}",
+    "subtitle": "Choose an authentication method",
+    "continue": "Continue",
+    "oauth2": {
+      "label": "OAuth2 (User Consent)",
+      "description": "Sign in with your Google account. Best for personal use — requires browser-based consent per user."
+    },
+    "serviceAccount": {
+      "label": "Service Account (Domain-Wide)",
+      "description": "Use a GCP service account with domain-wide delegation. Best for Workspace admins — no per-user consent needed."
+    }
+  },
+  "sa": {
+    "title": "Connect {{provider}} via Service Account",
+    "subtitle": "Paste your GCP service account JSON key and specify the Workspace user to impersonate.",
+    "jsonLabel": "Service Account JSON Key",
+    "pasteClipboard": "Paste from clipboard",
+    "jsonValid": "Valid service account JSON",
+    "emailLabel": "Impersonate User (email)",
+    "emailHint": "The Workspace user whose data the service account will access. Domain-wide delegation must be enabled in the Google Admin console.",
+    "securityNote": "The private key is stored locally in your encrypted credential vault and never sent to any external service except Google's token endpoint.",
+    "scopesLabel": "Scopes requested",
+    "scopesHint": "Enable these scopes for domain-wide delegation in the Google Admin console.",
+    "connect": "Connect",
+    "connecting": "Connecting..."
+  },
+  "authMethod": {
+    "service_account": "Service Account"
+  }
 }

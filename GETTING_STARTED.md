@@ -161,6 +161,26 @@ tigerpaw config set models.providers.ollama.baseUrl "http://localhost:11434"
 
 You can also configure providers from the dashboard: navigate to **Models** in the sidebar and click **Configure Provider**.
 
+### 2. Set Up Search Tools
+
+Enable your AI assistant to search the web. Go to **Tools** in the sidebar, or configure via CLI:
+
+**Brave Search** (recommended, free tier available):
+
+```bash
+tigerpaw config set tools.web.search.apiKey "YOUR_BRAVE_KEY"
+```
+
+Get a free key at [brave.com/search/api](https://brave.com/search/api/).
+
+Other search providers (Gemini, Grok, Kimi, Perplexity) can be configured from the Tools page in the dashboard. Each uses its own API key.
+
+**Firecrawl** (optional, enhances web page extraction):
+
+```bash
+tigerpaw config set tools.web.fetch.firecrawl.apiKey "YOUR_FIRECRAWL_KEY"
+```
+
 ### 3. Add a Messaging Channel
 
 ```bash
@@ -592,9 +612,15 @@ Navigate to the **Integrations** page from the sidebar. You'll see cards for eac
 - **Calendar**: Google Calendar, Outlook Calendar
 - **Meetings**: Zoom, Google Meet, Microsoft Teams
 
-**Setup:**
+![Integrations Page](docs/screenshots/integrations-page.png)
 
-1. **Set OAuth credentials** — Each provider requires a Client ID and Client Secret. Set them as environment variables:
+Google integrations (Gmail, Google Calendar, Google Meet) support **two authentication methods**:
+
+#### Option A: OAuth2 (Personal / User Consent)
+
+Best for individual Google accounts. Requires a Google Cloud project with OAuth consent screen.
+
+1. **Set OAuth credentials** — Set Client ID and Client Secret as environment variables or configure in the UI:
 
    ```bash
    # Google (Gmail, Calendar, Meet)
@@ -610,13 +636,39 @@ Navigate to the **Integrations** page from the sidebar. You'll see cards for eac
    export ZOOM_CLIENT_SECRET="your-client-secret"
    ```
 
-2. **Click "Connect"** — Your browser opens the provider's consent screen. After approving, you're redirected back to Tigerpaw and the connection is established.
+2. **Click "Connect"** — For Google providers, a method picker appears. Choose **OAuth2**. Your browser opens the Google consent screen. After approving, the connection is established.
 
-3. **Use via Jarvis** — Once connected, Jarvis can read emails, create calendar events, and schedule meetings. Try: "Jarvis, summarize my unread emails" or "Jarvis, what's on my calendar today?"
+   ![Auth Method Picker](docs/screenshots/auth-method-picker.png)
 
-4. **Use in Workflows** — Three new workflow action nodes are available: `Send Email`, `Create Calendar Event`, and `Schedule Meeting`. These use your connected providers automatically.
+#### Option B: Service Account (Google Workspace / Domain-Wide)
 
-**Security:** OAuth tokens are encrypted at rest using AES-256-GCM via the credential vault. Tokens auto-refresh before expiry. All API calls run locally — your data never passes through Tigerpaw's servers.
+Best for organizations using Google Workspace. Provides unattended full-domain access without per-user consent. Requires a GCP service account with domain-wide delegation enabled.
+
+1. **Create a service account** in the [Google Cloud Console](https://console.cloud.google.com/iam-admin/serviceaccounts):
+   - Create a new service account (or use an existing one)
+   - Create a JSON key and download it
+   - In the [Google Admin console](https://admin.google.com/), go to Security > API Controls > Domain-wide Delegation
+   - Add the service account's client ID with the required scopes (shown in the setup dialog)
+
+2. **Click "Connect"** on a Google provider — Choose **Service Account** in the method picker.
+
+   ![Service Account Dialog](docs/screenshots/service-account-dialog.png)
+
+3. **Paste the JSON key** — The dialog accepts the full service account JSON key file contents.
+
+4. **Enter the impersonation email** — The Workspace user whose data the service account will access (e.g., `admin@yourcompany.com`).
+
+5. **Click "Connect"** — Tigerpaw validates the credentials by minting a test token. If successful, the connection is established.
+
+Connected service account integrations show a **"Service Account"** badge on the provider card.
+
+#### After connecting (both methods)
+
+- **Use via Jarvis** — "Jarvis, summarize my unread emails" or "Jarvis, what's on my calendar today?"
+- **Use in Workflows** — Action nodes for `Send Email`, `Create Calendar Event`, and `Schedule Meeting` use your connected providers automatically.
+- **Microsoft and Zoom** — These providers use OAuth2 only (service account auth is Google-specific).
+
+**Security:** All credentials (OAuth tokens and service account private keys) are encrypted at rest using AES-256-GCM via the credential vault. OAuth tokens auto-refresh before expiry. Service account tokens are minted on demand (1-hour lifetime, cached locally). All API calls run locally — your data never passes through Tigerpaw's servers.
 
 ### Dashboard Auto-Open
 

@@ -2,6 +2,15 @@
 
 ## Next Up
 
+### ~~Dual Auth for Google Integrations~~ DONE
+
+Shipped: OAuth2 + Service Account (domain-wide delegation) for Gmail, Google Calendar, Google Meet, and Google Sheets. API Key option was dropped — Google API keys only grant access to public data, not user-scoped APIs like Gmail or Calendar.
+
+- **OAuth2**: browser-based consent per user. Best for personal accounts.
+- **Service Account**: GCP service account with domain-wide delegation. Best for Workspace admins — no per-user consent needed. Paste the SA JSON key + impersonation email in the UI.
+
+UI shows a method picker when connecting any Google provider. Service account connections display a badge. Scopes are shown in the setup dialog. Private keys are encrypted at rest via the credential vault.
+
 ### SSRF Protection
 
 Add URL validation for custom/ollama/lmstudio provider base URLs:

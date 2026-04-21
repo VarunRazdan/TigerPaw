@@ -296,7 +296,7 @@ function resolveProviderWithSdk(
   return provider;
 }
 
-async function fetchAccountEmail(
+export async function fetchAccountEmail(
   providerId: IntegrationProviderId,
   accessToken: string,
 ): Promise<string | null> {
@@ -304,7 +304,8 @@ async function fetchAccountEmail(
     if (
       providerId === "gmail" ||
       providerId === "google_calendar" ||
-      providerId === "google_meet"
+      providerId === "google_meet" ||
+      providerId === "google_sheets"
     ) {
       const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
         headers: { Authorization: `Bearer ${accessToken}` },

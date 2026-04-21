@@ -111,6 +111,50 @@ export const integrationsHandlers: GatewayRequestHandlers = {
     }
   },
 
+  // ── Service account connect ─────────────────────────────────
+
+  "integrations.serviceAccount.connect": async ({ params, respond }) => {
+    const providerId = params.providerId as string | undefined;
+    const serviceAccountJson = params.serviceAccountJson as string | undefined;
+    const impersonateEmail = params.impersonateEmail as string | undefined;
+
+    if (!providerId || !serviceAccountJson || !impersonateEmail) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "providerId, serviceAccountJson, and impersonateEmail are required",
+        ),
+      );
+      return;
+    }
+
+    try {
+      const service = getIntegrationService();
+      const result = await service.connectServiceAccount(
+        providerId as IntegrationProviderId,
+        serviceAccountJson,
+        impersonateEmail,
+      );
+      if (!("id" in result)) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.UNAVAILABLE, (result as { error: string }).error),
+        );
+        return;
+      }
+      respond(true, { connection: result }, undefined);
+    } catch (err) {
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.UNAVAILABLE, err instanceof Error ? err.message : String(err)),
+      );
+    }
+  },
+
   // ── Disconnect ───────────────────────────────────────────────
 
   "integrations.disconnect": async ({ params, respond }) => {

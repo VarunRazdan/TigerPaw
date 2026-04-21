@@ -2,7 +2,9 @@ import { Mail, Calendar, Video, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
+import { GoogleAuthMethodPicker } from "@/components/GoogleAuthMethodPicker";
 import { OAuthSetupDialog, PROVIDER_TO_OAUTH_GROUP } from "@/components/OAuthSetupDialog";
+import { ServiceAccountDialog } from "@/components/ServiceAccountDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +42,9 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; desc
   };
 
 const CATEGORY_ORDER: string[] = ["email", "calendar", "meeting"];
+
+/** Google providers that support both OAuth2 and Service Account auth. */
+const GOOGLE_SA_PROVIDERS = new Set(["gmail", "google_calendar", "google_meet", "google_sheets"]);
 
 function IntegrationIcon({ icon }: { icon: string }) {
   const [failed, setFailed] = useState(false);
@@ -81,6 +86,8 @@ export function IntegrationsPage() {
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [setupGroup, setSetupGroup] = useState<"google" | "microsoft" | "zoom" | null>(null);
   const [pendingProvider, setPendingProvider] = useState<IntegrationProvider | null>(null);
+  const [authPickerProvider, setAuthPickerProvider] = useState<IntegrationProvider | null>(null);
+  const [saDialogProvider, setSaDialogProvider] = useState<IntegrationProvider | null>(null);
   const [oauthStatus, setOauthStatus] = useState<
     Record<string, { configured: boolean; source: "config" | "env" | null }>
   >({});
@@ -125,18 +132,7 @@ export function IntegrationsPage() {
     return connections.find((c) => c.providerId === providerId);
   }
 
-  async function handleConnect(provider: IntegrationProvider) {
-    if (demoMode) {
-      useNotificationStore.getState().addNotification({
-        type: "integration",
-        title: t("providers." + provider.id + ".name", provider.name),
-        description: "Start the gateway to connect integrations.",
-        severity: "warning",
-        timestamp: Date.now(),
-      });
-      return;
-    }
-
+  function startOAuthFlow(provider: IntegrationProvider) {
     // Check if OAuth credentials are configured for this provider's group
     const group = PROVIDER_TO_OAUTH_GROUP[provider.id];
     if (group && !oauthStatus[group]?.configured) {
@@ -144,17 +140,17 @@ export function IntegrationsPage() {
       setSetupGroup(group);
       return;
     }
+    void doOAuthPopup(provider);
+  }
 
+  async function doOAuthPopup(provider: IntegrationProvider) {
     const result = await startOAuth(provider.id);
     if (result && "authUrl" in result) {
-      // Open OAuth URL in popup
       const popup = window.open(
         result.authUrl,
         "tigerpaw-oauth",
         "width=600,height=700,menubar=no,toolbar=no",
       );
-
-      // Poll for popup close
       const interval = setInterval(() => {
         if (popup?.closed) {
           clearInterval(interval);
@@ -173,6 +169,27 @@ export function IntegrationsPage() {
         timestamp: Date.now(),
       });
     }
+  }
+
+  async function handleConnect(provider: IntegrationProvider) {
+    if (demoMode) {
+      useNotificationStore.getState().addNotification({
+        type: "integration",
+        title: t("providers." + provider.id + ".name", provider.name),
+        description: "Start the gateway to connect integrations.",
+        severity: "warning",
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    // Google providers get a method picker (OAuth2 vs Service Account)
+    if (GOOGLE_SA_PROVIDERS.has(provider.id)) {
+      setAuthPickerProvider(provider);
+      return;
+    }
+
+    startOAuthFlow(provider);
   }
 
   async function handleDisconnectConfirm() {
@@ -251,8 +268,13 @@ export function IntegrationsPage() {
                                   {t("oauthPending", "Waiting for authorization...")}
                                 </span>
                               ) : isConnected ? (
-                                <span className="text-neutral-400">
+                                <span className="text-neutral-400 flex items-center gap-1.5">
                                   {conn.accountEmail ?? conn.label}
+                                  {conn.authMethod === "service_account" && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400/80 border border-blue-500/20 shrink-0">
+                                      {t("authMethod.service_account")}
+                                    </span>
+                                  )}
                                 </span>
                               ) : isExpired ? (
                                 <span className="text-orange-400/70">
@@ -326,6 +348,47 @@ export function IntegrationsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Google auth method picker (OAuth2 vs Service Account) */}
+      {authPickerProvider && (
+        <GoogleAuthMethodPicker
+          open={!!authPickerProvider}
+          onOpenChange={(open) => {
+            if (!open) {
+              setAuthPickerProvider(null);
+            }
+          }}
+          providerName={authPickerProvider.name}
+          onSelect={(method) => {
+            const provider = authPickerProvider;
+            setAuthPickerProvider(null);
+            if (method === "service_account") {
+              setSaDialogProvider(provider);
+            } else {
+              startOAuthFlow(provider);
+            }
+          }}
+        />
+      )}
+
+      {/* Service Account setup dialog */}
+      {saDialogProvider && (
+        <ServiceAccountDialog
+          open={!!saDialogProvider}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSaDialogProvider(null);
+            }
+          }}
+          providerId={saDialogProvider.id}
+          providerName={saDialogProvider.name}
+          scopes={saDialogProvider.oauth2Config?.scopes}
+          onConnected={() => {
+            setSaDialogProvider(null);
+            void fetchConnections();
+          }}
+        />
+      )}
+
       {/* OAuth credential setup dialog */}
       {setupGroup && (
         <OAuthSetupDialog
@@ -340,7 +403,6 @@ export function IntegrationsPage() {
           onSaved={() => {
             setSetupGroup(null);
             void fetchOAuthStatus();
-            // After saving credentials, automatically start OAuth for the provider they clicked
             if (pendingProvider) {
               const provider = pendingProvider;
               setPendingProvider(null);
