@@ -1,0 +1,21 @@
+{
+  "title": "Tools",
+  "subtitle": "Configure API keys for web search and web fetch tools",
+  "webSearch.title": "Web Search",
+  "webSearch.subtitle": "Enable your AI assistant to search the web for current information",
+  "webSearch.provider": "Search Provider",
+  "webSearch.apiKey": "API Key",
+  "webSearch.getKey": "Get API Key",
+  "webSearch.test": "Test",
+  "webSearch.testing": "Testing...",
+  "webSearch.testSuccess": "Search working",
+  "webSearch.testFailed": "Search failed",
+  "webSearch.configured": "Configured",
+  "webSearch.notConfigured": "Not configured",
+  "webSearch.save": "Save",
+  "webSearch.saved": "Saved",
+  "firecrawl.title": "Firecrawl",
+  "firecrawl.subtitle": "Optional. Enhances web page extraction quality.",
+  "firecrawl.apiKey": "Firecrawl API Key",
+  "firecrawl.saved": "Saved"
+}
