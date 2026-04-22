@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw vs Tigerpaw</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0A0908;
+    color: #F5F5F5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: -10%;
+    width: 50vmax;
+    height: 50vmax;
+    background: radial-gradient(circle, rgba(212,133,10,0.12) 0%, rgba(163,82,0,0.04) 50%, transparent 70%);
+    border-radius: 50%;
+    animation: float1 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -15%;
+    right: -10%;
+    width: 40vmax;
+    height: 40vmax;
+    background: radial-gradient(circle, rgba(232,160,32,0.08) 0%, rgba(196,112,0,0.03) 50%, transparent 70%);
+    border-radius: 50%;
+    animation: float2 25s ease-in-out infinite;
+    animation-delay: -7s;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(5%, 8%) scale(1.05); }
+    66% { transform: translate(-3%, -5%) scale(0.95); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-6%, -4%) scale(1.08); }
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 32px 64px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .header-logos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 12px;
+  }
+  .header-logos img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .header h1 .oc { color: #FF5C5C; }
+  .header h1 .vs { color: #525252; font-weight: 500; margin: 0 4px; }
+  .header h1 .tp { color: #F97316; }
+  .header .subtitle {
+    font-size: 14px;
+    color: #737373;
+    font-weight: 400;
+  }
+
+  .summary {
+    text-align: center;
+    padding: 20px 24px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 40px;
+  }
+  .summary .tagline {
+    font-size: 16px;
+    font-weight: 700;
+    color: #E5E5E5;
+    margin-bottom: 4px;
+  }
+  .summary p {
+    font-size: 13px;
+    color: #737373;
+    line-height: 1.6;
+  }
+
+  .col-headers {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+  .col-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .col-label img {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+  }
+  .col-label.oc { color: #FF5C5C; }
+  .col-label.tp { color: #F97316; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .dim {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px 0 16px 4px;
+  }
+  .dim-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    margin-top: 1px;
+    flex-shrink: 0;
+    opacity: 0.4;
+  }
+  .dim-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #737373;
+    line-height: 1.4;
+  }
+
+  .cell {
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #D4D4D4;
+    border: 1px solid transparent;
+  }
+
+  .cell.oc {
+    background: rgba(255,92,92,0.04);
+    border-color: rgba(255,92,92,0.12);
+  }
+  .cell.oc strong { color: #FF5C5C; }
+
+  .cell.tp {
+    background: rgba(249,115,22,0.04);
+    border-color: rgba(249,115,22,0.12);
+  }
+  .cell.tp strong { color: #F97316; }
+
+  .cell .muted {
+    color: #525252;
+    font-size: 12px;
+  }
+
+  .sep {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 2px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div class="header-logos">
+      <img src="https://raw.githubusercontent.com/openclaw/openclaw.ai/main/public/apple-touch-icon.png" alt="OpenClaw">
+      <h1><span class="oc">OpenClaw</span> <span class="vs">vs</span> <span class="tp">Tigerpaw</span></h1>
+      <img src="https://raw.githubusercontent.com/VarunRazdan/TigerPaw/main/.github/tigerpaw-logo.png" alt="Tigerpaw">
+    </div>
+    <div class="subtitle">Agent framework comparison</div>
+  </div>
+
+  <div class="summary">
+    <div class="tagline">Tigerpaw is a strict superset of OpenClaw</div>
+    <p>Everything OpenClaw can do, Tigerpaw can do too. Plus trading, a modern dashboard, visual automations, and email/calendar built in.</p>
+  </div>
+
+  <div class="col-headers">
+    <div></div>
+    <div class="col-label oc"><img src="https://raw.githubusercontent.com/openclaw/openclaw.ai/main/public/apple-touch-icon.png" alt="OpenClaw">OPENCLAW</div>
+    <div class="col-label tp"><img src="https://raw.githubusercontent.com/VarunRazdan/TigerPaw/main/.github/tigerpaw-logo.png" alt="Tigerpaw">TIGERPAW</div>
+  </div>
+
+  <!-- What is it -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      <div class="dim-label">What is it</div>
+    </div>
+    <div class="cell oc">
+      An <strong>AI agent</strong> that connects to your messaging apps. Runs bots on Telegram, Discord, WhatsApp, and 20+ other channels.
+    </div>
+    <div class="cell tp">
+      All of that, plus it can <strong>trade for you</strong> across 9 exchanges, automate tasks visually, and manage your email and calendar.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Getting started -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+      <div class="dim-label">Getting Started</div>
+    </div>
+    <div class="cell oc">
+      Edit a config file, connect channels from the terminal. Need to <strong>write code</strong> for anything beyond the basics.
+    </div>
+    <div class="cell tp">
+      One command: <strong><code>tigerpaw start</code></strong>. Config created, dashboard opens, ready to go. Point and click for everything.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Trading -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <div class="dim-label">Trading</div>
+    </div>
+    <div class="cell oc">
+      <span class="muted">Can't trade.</span>
+    </div>
+    <div class="cell tp">
+      Trade stocks, crypto, and prediction markets from <strong>9 exchanges</strong>. Place orders from the dashboard, your phone, or let the AI do it.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Protecting your money -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="dim-label">Protecting Your Money</div>
+    </div>
+    <div class="cell oc">
+      <span class="muted">No trading, so not applicable.</span>
+    </div>
+    <div class="cell tp">
+      Every order checked 12 ways before it goes through. <strong>Spending limits, loss limits, and an automatic kill switch</strong> that shuts things down if something goes wrong.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- The UI -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <div class="dim-label">The Dashboard</div>
+    </div>
+    <div class="cell oc">
+      <strong>Older web UI.</strong> Gets the job done, but feels dated. No charts or visual data.
+    </div>
+    <div class="cell tp">
+      <strong>Modern, polished dashboard.</strong> Live charts, portfolio views, a unified message inbox, and everything in 10 languages.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Automations -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 17h6M17 14v6"/></svg>
+      <div class="dim-label">Automations</div>
+    </div>
+    <div class="cell oc">
+      You can build custom skills, but you need to <strong>write the code yourself</strong>.
+    </div>
+    <div class="cell tp">
+      <strong>Drag-and-drop workflow builder.</strong> Connect triggers to actions visually. No code needed. Templates to get started fast.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Email & Calendar -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <div class="dim-label">Email &amp; Calendar</div>
+    </div>
+    <div class="cell oc">
+      <strong>Messaging channels only.</strong> No email, calendar, or meeting integrations.
+    </div>
+    <div class="cell tp">
+      Connect <strong>Gmail, Outlook, Google Calendar, Zoom, Google Meet, Teams</strong>. Ask your AI to check your inbox or schedule a meeting.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- AI Models -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 3.4 2.1 6.3 5 7.5V20h6v-2.5c2.9-1.2 5-4.1 5-7.5a8 8 0 0 0-8-8z"/><path d="M9 22h6"/></svg>
+      <div class="dim-label">AI Models</div>
+    </div>
+    <div class="cell oc">
+      Works with <strong>cloud AI</strong> (OpenAI, Anthropic, Gemini). Basic local model support.
+    </div>
+    <div class="cell tp">
+      Same cloud support, plus <strong>finds local models automatically</strong> (Ollama, LM Studio). Picks the right model for each task. No API key needed for local.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Security -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <div class="dim-label">Security</div>
+    </div>
+    <div class="cell oc">
+      <strong>Basic password protection.</strong> Your keys are stored locally, but no advanced safeguards.
+    </div>
+    <div class="cell tp">
+      <strong>Encrypted credential vault</strong>, rate limiting, tamper-proof audit trail. Everything stays on your machine, locked down properly.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Data -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+      <div class="dim-label">Your Data</div>
+    </div>
+    <div class="cell oc">
+      Stored in <strong>scattered JSON files</strong>. Works, but hard to back up or move.
+    </div>
+    <div class="cell tp">
+      <strong>One database file.</strong> Copy it to back up everything. Credentials encrypted. Migrates from OpenClaw automatically.
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Best For -->
+  <div class="row">
+    <div class="dim">
+      <svg class="dim-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <div class="dim-label">Best For</div>
+    </div>
+    <div class="cell oc">
+      People who want a <strong>lightweight messaging bot</strong> and are comfortable in the terminal.
+    </div>
+    <div class="cell tp">
+      People who want messaging, trading, and productivity <strong>all in one place</strong>, with a UI that doesn't require touching a config file.
+    </div>
+  </div>
+
+  <!-- Links footer -->
+  <div style="margin-top: 40px; text-align: center; padding: 24px; border-radius: 16px; background: rgba(249,115,22,0.04); border: 1px solid rgba(249,115,22,0.1);">
+    <div style="font-size: 14px; color: #A3A3A3; margin-bottom: 12px;">Try Tigerpaw</div>
+    <div style="font-family: 'SF Mono','Cascadia Code','Fira Code',monospace; font-size: 14px; color: #F97316; background: rgba(0,0,0,0.3); display: inline-block; padding: 8px 20px; border-radius: 8px; border: 1px solid rgba(249,115,22,0.2); margin-bottom: 16px;">npm install -g @greatlyrecommended/tigerpaw</div>
+    <div style="display: flex; justify-content: center; gap: 24px; font-size: 13px;">
+      <a href="https://github.com/VarunRazdan/TigerPaw" style="color: #737373; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#F97316'" onmouseout="this.style.color='#737373'">GitHub</a>
+      <a href="https://www.npmjs.com/package/@greatlyrecommended/tigerpaw" style="color: #737373; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#F97316'" onmouseout="this.style.color='#737373'">npm</a>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
