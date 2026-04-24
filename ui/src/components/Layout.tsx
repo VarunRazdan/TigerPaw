@@ -4,6 +4,7 @@ import {
   Settings,
   Shield,
   FileJson,
+  FileClock,
   MessageSquare,
   ChevronLeft,
   ChevronRight,
@@ -146,6 +147,11 @@ function useNavGroups(): NavGroup[] {
           to: "/trading/settings",
           label: t("nav.tradeSettings", "Trade Settings"),
           icon: <Settings className="w-4 h-4" />,
+        },
+        {
+          to: "/trading/audit",
+          label: t("nav.auditLog", "Audit Log"),
+          icon: <FileClock className="w-4 h-4" />,
         },
       ],
     });

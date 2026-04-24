@@ -4,6 +4,7 @@ import { ConnectDialog } from "@/components/ConnectDialog";
 import { OrderEntrySheet } from "@/components/OrderEntrySheet";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { Badge } from "@/components/ui/badge";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
 import { cn, assetUrl } from "@/lib/utils";
@@ -104,45 +105,50 @@ export function IbkrPage() {
         </TabsList>
 
         <TabsContent value="positions">
-          <div className="rounded-2xl glass-panel overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
-                  <th className="py-2 px-3 text-left font-medium">{tc("symbol")}</th>
-                  <th className="py-2 px-3 text-left font-medium">{tc("description")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{tc("qty")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{tc("avgCost")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{tc("market")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{tc("pnl")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DEMO_POSITIONS.map((pos) => (
-                  <tr
-                    key={pos.symbol}
-                    className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200"
-                  >
-                    <td className="py-2 px-3 font-medium text-neutral-200">{pos.symbol}</td>
-                    <td className="py-2 px-3 text-neutral-400">{pos.description}</td>
-                    <td className="py-2 px-3 text-right font-mono text-neutral-300">{pos.qty}</td>
-                    <td className="py-2 px-3 text-right font-mono text-neutral-400">
-                      ${pos.avgCost.toFixed(2)}
-                    </td>
-                    <td className="py-2 px-3 text-right font-mono text-neutral-200">
-                      ${pos.marketPrice.toFixed(2)}
-                    </td>
-                    <td
-                      className={cn(
-                        "py-2 px-3 text-right font-mono font-semibold",
-                        pos.pnl >= 0 ? "text-green-400" : "text-red-400",
-                      )}
-                    >
-                      {pos.pnl >= 0 ? "+" : ""}${pos.pnl.toFixed(0)}
-                    </td>
+          <div className="space-y-3">
+            {!platform?.connected && (
+              <DemoBadge message="Demo positions — connect Interactive Brokers to see live holdings." />
+            )}
+            <div className="rounded-2xl glass-panel overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
+                    <th className="py-2 px-3 text-left font-medium">{tc("symbol")}</th>
+                    <th className="py-2 px-3 text-left font-medium">{tc("description")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{tc("qty")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{tc("avgCost")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{tc("market")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{tc("pnl")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {DEMO_POSITIONS.map((pos) => (
+                    <tr
+                      key={pos.symbol}
+                      className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200"
+                    >
+                      <td className="py-2 px-3 font-medium text-neutral-200">{pos.symbol}</td>
+                      <td className="py-2 px-3 text-neutral-400">{pos.description}</td>
+                      <td className="py-2 px-3 text-right font-mono text-neutral-300">{pos.qty}</td>
+                      <td className="py-2 px-3 text-right font-mono text-neutral-400">
+                        ${pos.avgCost.toFixed(2)}
+                      </td>
+                      <td className="py-2 px-3 text-right font-mono text-neutral-200">
+                        ${pos.marketPrice.toFixed(2)}
+                      </td>
+                      <td
+                        className={cn(
+                          "py-2 px-3 text-right font-mono font-semibold",
+                          pos.pnl >= 0 ? "text-green-400" : "text-red-400",
+                        )}
+                      >
+                        {pos.pnl >= 0 ? "+" : ""}${pos.pnl.toFixed(0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </TabsContent>
 

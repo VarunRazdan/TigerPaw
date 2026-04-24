@@ -38,6 +38,7 @@ import {
   type AssistantConfig,
 } from "./config.js";
 import { registerBriefingCron } from "./cron-briefing.js";
+import { registerDeliveryService } from "./delivery-service.js";
 import { registerIntegrationTools } from "./integration-tools.js";
 
 // -- Constants ---------------------------------------------------------------
@@ -68,6 +69,17 @@ type Reminder = {
   recurring?: string; // cron expression for recurring
   active: boolean;
   created: string;
+  // Optional delivery target — set when a reminder is created from a specific
+  // channel ("remind me in 10 min" from WhatsApp records channel+to so the
+  // delivery fires back on the same thread).
+  channel?: string;
+  to?: string;
+  accountId?: string;
+  threadId?: string;
+  // Set by the delivery service once dispatched; used to skip on subsequent
+  // polls. Recurring reminders clear these when `triggerAt` advances.
+  deliveredAt?: string;
+  deliveredOn?: string;
 };
 
 // -- Helpers -----------------------------------------------------------------
@@ -455,17 +467,38 @@ export default {
               description:
                 "Cron expression for recurring reminders (optional, e.g. '0 9 * * 1-5' for weekday mornings)",
             },
+            channel: {
+              type: "string",
+              description:
+                "Optional channel to deliver this reminder on (e.g. 'whatsapp', 'telegram'). Must be paired with 'to'.",
+            },
+            to: {
+              type: "string",
+              description:
+                "Optional delivery target for the reminder (peer id / handle). Must be paired with 'channel'.",
+            },
           },
           required: ["text", "triggerAt"],
         },
         async execute(_id: string, params: unknown) {
-          const p = params as { text: string; triggerAt: string; recurring?: string };
+          const p = params as {
+            text: string;
+            triggerAt: string;
+            recurring?: string;
+            channel?: string;
+            to?: string;
+          };
           if (!p.text?.trim()) return txt("Reminder text is required.");
           if (!p.triggerAt) return txt("Trigger time is required (ISO timestamp).");
 
           const triggerDate = new Date(p.triggerAt);
           if (isNaN(triggerDate.getTime()))
             return txt("Invalid trigger time. Use ISO format (e.g. 2026-03-27T09:00:00).");
+
+          // Channel+to are paired: providing one without the other is a user error.
+          if ((p.channel && !p.to) || (!p.channel && p.to)) {
+            return txt("Channel and to must be provided together, or neither.");
+          }
 
           const reminder: Reminder = {
             id: randomUUID(),
@@ -474,14 +507,17 @@ export default {
             recurring: p.recurring,
             active: true,
             created: new Date().toISOString(),
+            channel: p.channel,
+            to: p.to,
           };
 
           appendJsonl(REMINDERS_FILE, reminder);
 
           const timeStr = triggerDate.toLocaleString();
           const recurStr = p.recurring ? ` (recurring: ${p.recurring})` : "";
+          const targetStr = p.channel && p.to ? ` → ${p.channel}:${p.to}` : "";
           return txtD(
-            `${personaName} set reminder: "${reminder.text}" for ${timeStr}${recurStr}`,
+            `${personaName} set reminder: "${reminder.text}" for ${timeStr}${recurStr}${targetStr}`,
             reminder,
           );
         },
@@ -672,10 +708,16 @@ export default {
     // Register integration tools (email, calendar, meetings)
     registerIntegrationTools(api);
 
+    // Register proactive delivery service — polls reminders.jsonl every 30s
+    // and dispatches due reminders via the outbound message pipeline. This
+    // turns "set reminder" from a pure storage op into an actual ping.
+    const briefingChannelsGetter = () => cfg.dailyBriefing?.channels ?? [];
+    registerDeliveryService(api, briefingChannelsGetter);
+
     // Register daily briefing cron job
     const briefingCron = cfg.dailyBriefing?.cronExpression ?? "0 8 * * *";
     if (cfg.dailyBriefing?.enabled !== false) {
-      registerBriefingCron(api, briefingCron);
+      registerBriefingCron(api, briefingCron, briefingChannelsGetter);
     }
   },
 };

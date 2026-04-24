@@ -6,6 +6,7 @@ import { ErrorCodes, errorShape } from "./protocol/index.js";
 import { isRoleAuthorizedForMethod, parseGatewayRole } from "./role-policy.js";
 import { agentHandlers } from "./server-methods/agent.js";
 import { agentsHandlers } from "./server-methods/agents.js";
+import { auditHandlers } from "./server-methods/audit.js";
 import { backtestHandlers } from "./server-methods/backtest.js";
 import { browserHandlers } from "./server-methods/browser.js";
 import { channelsHandlers } from "./server-methods/channels.js";
@@ -111,6 +112,7 @@ export const coreGatewayHandlers: GatewayRequestHandlers = {
   ...strategiesHandlers,
   ...backtestHandlers,
   ...toolsConfigHandlers,
+  ...auditHandlers,
 };
 
 export async function handleGatewayRequest(

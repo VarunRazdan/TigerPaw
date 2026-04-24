@@ -101,6 +101,8 @@ const METHOD_SCOPE_GROUPS: Record<OperatorScope, readonly string[]> = {
     "strategies.get",
     "strategies.executions",
     "backtest.generate",
+    "audit.list",
+    "audit.verify",
   ],
   [WRITE_SCOPE]: [
     "send",
