@@ -60,8 +60,8 @@ importers:
         specifier: ^1.59.0
         version: 1.59.0
       '@line/bot-sdk':
-        specifier: ^10.6.0
-        version: 10.6.0
+        specifier: ^11.0.0
+        version: 11.0.0
       '@lydell/node-pty':
         specifier: 1.2.0-beta.3
         version: 1.2.0-beta.3
@@ -1831,6 +1831,10 @@ packages:
 
   '@line/bot-sdk@10.6.0':
     resolution: {integrity: sha512-4hSpglL/G/cW2JCcohaYz/BS0uOSJNV9IEYdMm0EiPEvDLayoI2hGq2D86uYPQFD2gvgkyhmzdShpWLG3P5r3w==}
+    engines: {node: '>=20'}
+
+  '@line/bot-sdk@11.0.0':
+    resolution: {integrity: sha512-3NZJjeFm2BikwVRgA8osIVbgKhuL0CzphQOdrB8okXIC40qMRE4RRfHFN3G8/qTb/34RtB95mD4J/KW5MD+b8g==}
     engines: {node: '>=20'}
 
   '@lit-labs/signals@0.2.0':
@@ -10025,6 +10029,10 @@ snapshots:
       axios: 1.13.5
     transitivePeerDependencies:
       - debug
+
+  '@line/bot-sdk@11.0.0':
+    dependencies:
+      '@types/node': 24.12.2
 
   '@lit-labs/signals@0.2.0':
     dependencies:
