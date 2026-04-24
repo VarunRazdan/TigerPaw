@@ -424,7 +424,7 @@
     "sqlite-vec": "0.1.7-alpha.2",
     "tar": "7.5.11",
     "tslog": "^4.10.2",
-    "undici": "^7.22.0",
+    "undici": "^8.1.0",
     "ws": "^8.19.0",
     "yaml": "^2.8.2",
     "zod": "^4.3.6"
@@ -482,7 +482,7 @@
       "has-symbols": "npm:@nolyfill/has-symbols@^1.0.21",
       "has-tostringtag": "npm:@nolyfill/has-tostringtag@^1.0.21",
       "hasown": "npm:@nolyfill/hasown@^1.0.44",
-      "undici": "7.24.6"
+      "undici": "8.1.0"
     },
     "onlyBuiltDependencies": [
       "@lydell/node-pty",
