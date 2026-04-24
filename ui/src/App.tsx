@@ -137,6 +137,9 @@ const KrakenPage = lazy(() =>
 );
 const DydxPage = lazy(() => import("./pages/DydxPage").then((m) => ({ default: m.DydxPage })));
 const StrategiesPage = lazy(() => import("./pages/StrategiesPage"));
+const AuditLogPage = lazy(() =>
+  import("./pages/AuditLogPage").then((m) => ({ default: m.AuditLogPage })),
+);
 
 const PAGE_ERROR = <PageErrorFallback />;
 
@@ -153,6 +156,7 @@ const TRADING_ROUTES: RouteObject[] = [
   { path: "trading/binance", element: <BinancePage />, errorElement: PAGE_ERROR },
   { path: "trading/kraken", element: <KrakenPage />, errorElement: PAGE_ERROR },
   { path: "trading/dydx", element: <DydxPage />, errorElement: PAGE_ERROR },
+  { path: "trading/audit", element: <AuditLogPage />, errorElement: PAGE_ERROR },
 ];
 
 const TRADING_REDIRECT: RouteObject = {

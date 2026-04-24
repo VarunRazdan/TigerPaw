@@ -10,6 +10,7 @@ import { join } from "node:path";
 import type { OpenClawPluginApi } from "tigerpaw/plugin-sdk/core";
 import { getEmailClient, getCalendarClient } from "../../src/integrations/clients/index.js";
 import { getPersonaName } from "./config.js";
+import { deliverToChannels } from "./delivery-service.js";
 
 const DATA_DIR = join(homedir(), ".tigerpaw", "assistant");
 const TASKS_FILE = join(DATA_DIR, "tasks.jsonl");
@@ -131,7 +132,11 @@ async function buildBriefingSummary(): Promise<string> {
  * Uses the gateway method system to register a callable briefing endpoint,
  * and hooks into the "ready" lifecycle to start a cron poll.
  */
-export function registerBriefingCron(api: OpenClawPluginApi, cronExpression: string): void {
+export function registerBriefingCron(
+  api: OpenClawPluginApi,
+  cronExpression: string,
+  getBriefingChannels: () => readonly unknown[],
+): void {
   // Register a gateway method so the briefing can be invoked on demand
   api.registerGatewayMethod(`assistant.briefing`, async ({ respond }) => {
     const summary = await buildBriefingSummary();
@@ -146,8 +151,20 @@ export function registerBriefingCron(api: OpenClawPluginApi, cronExpression: str
     start() {
       const interval = cronToMs(cronExpression);
       timer = setInterval(() => {
-        void buildBriefingSummary().then((summary) => {
+        void buildBriefingSummary().then(async (summary) => {
           api.logger.info(`[Daily Briefing] ${summary.slice(0, 120)}...`);
+          // Actually dispatch to configured channels. Errors are swallowed
+          // per-target inside deliverToChannels so one bad channel doesn't
+          // block the others.
+          const result = await deliverToChannels({
+            text: summary,
+            channels: getBriefingChannels(),
+            log: api.logger,
+            idempotencyKey: `briefing:${new Date().toISOString().slice(0, 10)}`,
+          });
+          if (result.attempted > 0) {
+            api.logger.info(`[Daily Briefing] delivered=${result.delivered}/${result.attempted}`);
+          }
         });
       }, interval);
     },

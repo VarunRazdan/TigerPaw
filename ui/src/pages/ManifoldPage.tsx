@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConnectDialog } from "@/components/ConnectDialog";
 import { Badge } from "@/components/ui/badge";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
 import { cn, assetUrl } from "@/lib/utils";
@@ -112,10 +113,15 @@ export function ManifoldPage() {
         </TabsList>
 
         <TabsContent value="browse">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {DEMO_MARKETS.map((market) => (
-              <MarketCard key={market.question} market={market} />
-            ))}
+          <div className="space-y-3">
+            {!platform?.connected && (
+              <DemoBadge message="Demo markets — connect Manifold to see live markets and place bets." />
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {DEMO_MARKETS.map((market) => (
+                <MarketCard key={market.question} market={market} />
+              ))}
+            </div>
           </div>
         </TabsContent>
 

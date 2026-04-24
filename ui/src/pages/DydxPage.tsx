@@ -4,6 +4,7 @@ import { ConnectDialog } from "@/components/ConnectDialog";
 import { OrderEntrySheet } from "@/components/OrderEntrySheet";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { Badge } from "@/components/ui/badge";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TRADING_CONNECT_INFO } from "@/lib/connect-config";
 import { cn, assetUrl } from "@/lib/utils";
@@ -87,46 +88,53 @@ export function DydxPage() {
         </TabsList>
 
         <TabsContent value="markets">
-          <div className="rounded-2xl glass-panel overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
-                  <th className="py-2 px-3 text-left font-medium">{tc("market")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{tc("price")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{t("change24h")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{tc("volume")}</th>
-                  <th className="py-2 px-3 text-right font-medium">{tc("funding")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DEMO_MARKETS.map((m) => (
-                  <tr
-                    key={m.market}
-                    className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200"
-                  >
-                    <td className="py-2 px-3 font-medium text-neutral-200">{m.market}</td>
-                    <td className="py-2 px-3 text-right font-mono text-neutral-200">{m.price}</td>
-                    <td
-                      className={cn(
-                        "py-2 px-3 text-right font-mono",
-                        m.change.startsWith("+") ? "text-green-400" : "text-red-400",
-                      )}
-                    >
-                      {m.change}
-                    </td>
-                    <td className="py-2 px-3 text-right font-mono text-neutral-400">{m.volume}</td>
-                    <td
-                      className={cn(
-                        "py-2 px-3 text-right font-mono",
-                        m.funding.startsWith("+") ? "text-green-400" : "text-red-400",
-                      )}
-                    >
-                      {m.funding}
-                    </td>
+          <div className="space-y-3">
+            {!platform?.connected && (
+              <DemoBadge message="Demo markets — connect dYdX to see live perpetuals and funding rates." />
+            )}
+            <div className="rounded-2xl glass-panel overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-xs text-neutral-500 border-b border-[var(--glass-subtle-hover)]">
+                    <th className="py-2 px-3 text-left font-medium">{tc("market")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{tc("price")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{t("change24h")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{tc("volume")}</th>
+                    <th className="py-2 px-3 text-right font-medium">{tc("funding")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {DEMO_MARKETS.map((m) => (
+                    <tr
+                      key={m.market}
+                      className="text-xs border-b border-[var(--glass-divider)] hover:bg-[var(--glass-divider)] transition-colors duration-200"
+                    >
+                      <td className="py-2 px-3 font-medium text-neutral-200">{m.market}</td>
+                      <td className="py-2 px-3 text-right font-mono text-neutral-200">{m.price}</td>
+                      <td
+                        className={cn(
+                          "py-2 px-3 text-right font-mono",
+                          m.change.startsWith("+") ? "text-green-400" : "text-red-400",
+                        )}
+                      >
+                        {m.change}
+                      </td>
+                      <td className="py-2 px-3 text-right font-mono text-neutral-400">
+                        {m.volume}
+                      </td>
+                      <td
+                        className={cn(
+                          "py-2 px-3 text-right font-mono",
+                          m.funding.startsWith("+") ? "text-green-400" : "text-red-400",
+                        )}
+                      >
+                        {m.funding}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </TabsContent>
 
