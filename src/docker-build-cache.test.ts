@@ -10,7 +10,10 @@ async function readRepoFile(path: string): Promise<string> {
 }
 
 describe("docker build cache layout", () => {
-  it("keeps the root dependency layer independent from scripts changes", async () => {
+  it("copies scripts before pnpm install so postinstall hooks can resolve them", async () => {
+    // Scripts are intentionally copied before `pnpm install --frozen-lockfile`
+    // so the root postinstall hook can execute (see commit aed62147a).
+    // The trade-off: changes under scripts/ invalidate the install layer cache.
     const dockerfile = await readRepoFile("Dockerfile");
     const installIndex = dockerfile.indexOf("pnpm install --frozen-lockfile");
     const copyAllIndex = dockerfile.indexOf("COPY . .");
@@ -18,7 +21,8 @@ describe("docker build cache layout", () => {
 
     expect(installIndex).toBeGreaterThan(-1);
     expect(copyAllIndex).toBeGreaterThan(installIndex);
-    expect(scriptsCopyIndex === -1 || scriptsCopyIndex > installIndex).toBe(true);
+    expect(scriptsCopyIndex).toBeGreaterThan(-1);
+    expect(scriptsCopyIndex).toBeLessThan(installIndex);
   });
 
   it("uses pnpm cache mounts in Dockerfiles that install repo dependencies", async () => {
