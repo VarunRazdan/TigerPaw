@@ -189,13 +189,11 @@ describe("mintServiceAccountToken", () => {
   it("returns cached token on second call", async () => {
     const sa = makeSaConfig();
 
-    const mockFetch = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: "cached-token", expires_in: 3600 }), {
-          status: 200,
-        }),
-      );
+    const mockFetch = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ access_token: "cached-token", expires_in: 3600 }), {
+        status: 200,
+      }),
+    );
 
     const result1 = await mintServiceAccountToken(sa);
     const result2 = await mintServiceAccountToken(sa);

@@ -297,7 +297,7 @@ describe("IntegrationService.connectServiceAccount", () => {
     const svc = makeService();
 
     const result = await svc.connectServiceAccount(
-      "nonexistent_provider" as unknown as import("../../types.js").IntegrationProviderId,
+      "nonexistent_provider" as unknown as import("../types.js").IntegrationProviderId,
       VALID_SA_JSON,
       "admin@example.com",
     );

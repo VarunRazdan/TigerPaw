@@ -238,7 +238,9 @@ describe("policy-state", () => {
       expect(stat.isFile()).toBe(true);
     });
 
-    it("sets file permissions to 0o600", async () => {
+    // Windows uses ACLs rather than POSIX mode bits, so chmod is largely a
+    // no-op and stat.mode reports 0o666. Skip the assertion on win32.
+    it.skipIf(process.platform === "win32")("sets file permissions to 0o600", async () => {
       const state = createSampleState();
       await savePolicyState(state);
 
@@ -376,12 +378,16 @@ describe("policy-state", () => {
       expect(result.date).toBe(todayUtc());
     });
 
-    it("sets file permissions to 0o600 on written file", async () => {
-      await updatePolicyState((s) => s);
+    // POSIX-only — see note on the savePolicyState test above.
+    it.skipIf(process.platform === "win32")(
+      "sets file permissions to 0o600 on written file",
+      async () => {
+        await updatePolicyState((s) => s);
 
-      const stat = await fs.stat(stateFile());
-      const permissions = stat.mode & 0o777;
-      expect(permissions).toBe(0o600);
-    });
+        const stat = await fs.stat(stateFile());
+        const permissions = stat.mode & 0o777;
+        expect(permissions).toBe(0o600);
+      },
+    );
   });
 });
