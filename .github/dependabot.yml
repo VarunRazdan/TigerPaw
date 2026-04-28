@@ -17,6 +17,19 @@ updates:
         update-types:
           - minor
           - patch
+        # High-risk pre-1.0 / fast-moving packages excluded so each gets its
+        # own PR instead of riding in the group bump (a single bad bump used
+        # to block 38+ safe deps — see closed #125).
+        exclude-patterns:
+          - "@mariozechner/*"
+          - "@agentclientprotocol/sdk"
+          - "acpx"
+          - "@buape/carbon"
+          - "@tloncorp/*"
+          - "@matrix-org/*"
+          - "@lancedb/*"
+          - "sqlite-vec"
+          - "openai"
       development:
         dependency-type: development
         update-types:
