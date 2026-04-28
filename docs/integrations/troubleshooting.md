@@ -120,6 +120,6 @@ The OAuth app has fewer scopes than Tigerpaw expects. Happens when you add a new
 
 ## When all else fails
 
-- Open `~/.tigerpaw/logs/gateway.log` for the full upstream error message — the OAuth callback page truncates for readability but the log has everything.
+- Run `tigerpaw logs` to tail the gateway log — the OAuth callback page truncates for readability but the log has the full upstream error. The on-disk default is `/tmp/openclaw/openclaw-YYYY-MM-DD.log`; managed installs (e.g. via launchctl on macOS) often redirect this to `~/.openclaw/logs/gateway.log`.
 - Run `tigerpaw doctor` for a quick health check across channels and integrations.
 - Open an issue at <https://github.com/varunrazdan/tigerpaw/issues> with the log excerpt and a description of the steps you took.

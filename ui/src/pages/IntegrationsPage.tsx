@@ -152,9 +152,10 @@ export function IntegrationsPage() {
         "width=600,height=700,menubar=no,toolbar=no",
       );
       // Detect popup blocked: window.open returns null when the browser
-      // refused. Without this check the polling loop below saw popup?.closed
-      // === undefined (truthy with optional chaining flip) and silently
-      // cleared the spinner with no user feedback.
+      // refused. Without this check the polling loop below sees
+      // popup?.closed === undefined every tick (falsy via optional
+      // chaining), never exits, and the card stays stuck on
+      // 'Waiting for authorization…' indefinitely with no user feedback.
       if (!popup) {
         setConnectingProvider(null);
         useNotificationStore.getState().addNotification({

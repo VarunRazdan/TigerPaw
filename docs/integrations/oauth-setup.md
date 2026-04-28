@@ -59,7 +59,7 @@ You can now connect Gmail, Google Calendar, and Google Meet on the Integrations 
 
 ## How Tigerpaw stores the credentials
 
-The Client ID and Secret are saved into your Tigerpaw config at `~/.tigerpaw/tigerclaw.json` under `integrations.oauth.<group>`. The user OAuth tokens (refresh + access) are encrypted with the OS keychain (macOS Keychain, Linux Secret Service) where available, with an AES-256-GCM file-encrypted fallback. They never leave your machine.
+The Client ID and Secret are saved into your Tigerpaw config at `~/.tigerpaw/tigerpaw.json` under `integrations.oauth.<group>` (legacy installs may still use `~/.tigerclaw/tigerclaw.json`). The user OAuth tokens (refresh + access) are encrypted with the OS keychain (macOS Keychain, Linux Secret Service) where available, with an AES-256-GCM file-encrypted fallback. They never leave your machine.
 
 If you rotate the Client Secret in the provider console, repeat step 6 (or 4 for Zoom) — Tigerpaw doesn't auto-refresh credentials it hasn't been told about.
 
