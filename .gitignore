@@ -159,3 +159,13 @@ COMPETITIVE_RESEARCH.md
 
 # Background design assets (large PNGs)
 assets/Tigerclaw Backgrounds/
+
+# macOS / iCloud sync duplicate files (Finder appends " 2.<ext>" on conflict)
+*\ 2.ts
+*\ 2.tsx
+*\ 2.js
+*\ 2.jsx
+*\ 2.mjs
+*\ 2.cjs
+*\ 2.json
+*\ 2.md
