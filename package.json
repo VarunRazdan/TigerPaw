@@ -445,7 +445,7 @@
     "lit": "^3.3.2",
     "oxfmt": "0.46.0",
     "oxlint": "^1.53.0",
-    "oxlint-tsgolint": "^0.21.1",
+    "oxlint-tsgolint": "^0.22.0",
     "signal-utils": "0.21.1",
     "tsdown": "0.21.10",
     "tsx": "^4.21.0",
