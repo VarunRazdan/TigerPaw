@@ -348,7 +348,7 @@ export function registerNodesInvokeCommands(nodes: Command) {
       .option(
         "--env <key=val>",
         "Environment override (repeatable)",
-        (value: string, prev: string[] = []) => [...prev, value],
+        (value: string, prev: string[]) => [...prev, value],
       )
       .option("--raw <command>", "Run a raw shell command string (sh -lc / cmd.exe /c)")
       .option("--agent <id>", "Agent id (default: configured default agent)")
