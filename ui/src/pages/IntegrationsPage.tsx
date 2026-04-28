@@ -151,11 +151,56 @@ export function IntegrationsPage() {
         "tigerpaw-oauth",
         "width=600,height=700,menubar=no,toolbar=no",
       );
+      // Detect popup blocked: window.open returns null when the browser
+      // refused. Without this check the polling loop below sees
+      // popup?.closed === undefined every tick (falsy via optional
+      // chaining), never exits, and the card stays stuck on
+      // 'Waiting for authorization…' indefinitely with no user feedback.
+      if (!popup) {
+        setConnectingProvider(null);
+        useNotificationStore.getState().addNotification({
+          type: "integration",
+          title: t(`providers.${provider.id}.name`, provider.name),
+          description: t(
+            "oauthPopupBlocked",
+            "Your browser blocked the OAuth popup. Allow popups for this page and try again.",
+          ),
+          severity: "error",
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      // Outer timeout: if the user walks away from the consent screen, we
+      // can't infinitely keep the card in 'Waiting for authorization…' state.
+      // 5 minutes is generous; consent flows complete in seconds normally.
+      const POPUP_TIMEOUT_MS = 5 * 60 * 1000;
+      const startedAt = Date.now();
       const interval = setInterval(() => {
-        if (popup?.closed) {
+        if (popup.closed) {
           clearInterval(interval);
           setConnectingProvider(null);
           void fetchConnections();
+          return;
+        }
+        if (Date.now() - startedAt > POPUP_TIMEOUT_MS) {
+          clearInterval(interval);
+          setConnectingProvider(null);
+          try {
+            popup.close();
+          } catch {
+            // ignore — popup may have navigated cross-origin
+          }
+          useNotificationStore.getState().addNotification({
+            type: "integration",
+            title: t(`providers.${provider.id}.name`, provider.name),
+            description: t(
+              "oauthTimeout",
+              "OAuth flow timed out — close any open consent screens and click Connect again.",
+            ),
+            severity: "error",
+            timestamp: Date.now(),
+          });
         }
       }, 500);
     } else {
@@ -163,7 +208,7 @@ export function IntegrationsPage() {
         result && "error" in result ? result.error : t("oauthError", "Authorization failed");
       useNotificationStore.getState().addNotification({
         type: "integration",
-        title: t("providers." + provider.id + ".name", provider.name),
+        title: t(`providers.${provider.id}.name`, provider.name),
         description: errorMsg,
         severity: "error",
         timestamp: Date.now(),
@@ -299,11 +344,24 @@ export function IntegrationsPage() {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <div className="text-xs max-w-[240px]">
+                        <div className="text-xs max-w-[280px]">
                           <div className="font-semibold">{provider.name}</div>
                           <div className="text-neutral-400">
                             {t(`providers.${provider.id}.description`, provider.description)}
                           </div>
+                          {provider.oauth2Config?.scopes &&
+                            provider.oauth2Config.scopes.length > 0 && (
+                              <div className="mt-1.5 pt-1.5 border-t border-neutral-700/40">
+                                <div className="text-[10px] uppercase tracking-wide text-neutral-500 mb-0.5">
+                                  {t("permissions", "Permissions")}
+                                </div>
+                                <div className="text-neutral-400 leading-snug">
+                                  {provider.oauth2Config.scopes
+                                    .map((s) => s.split("/").pop() ?? s)
+                                    .join(", ")}
+                                </div>
+                              </div>
+                            )}
                           {isConnected && conn?.lastUsedAt && (
                             <div className="text-neutral-500 mt-1">
                               {t("lastUsed", "Last used")}:{" "}
