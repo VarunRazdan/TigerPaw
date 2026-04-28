@@ -1,4 +1,4 @@
-import { AlertCircle, Check, Clipboard, Loader2, Shield } from "lucide-react";
+import { AlertCircle, Check, Clipboard, ExternalLink, Loader2, Shield } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -191,6 +191,17 @@ export function ServiceAccountDialog({
             <Shield className="w-4 h-4 text-neutral-500 shrink-0 mt-0.5" />
             <p className="text-xs text-neutral-500">{t("sa.securityNote")}</p>
           </div>
+
+          {/* Setup guide link */}
+          <a
+            href="https://github.com/varunrazdan/tigerpaw/blob/main/docs/integrations/service-account-setup.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" />
+            {t("sa.setupGuide", "Service account setup guide")}
+          </a>
         </div>
 
         <div className="flex justify-end gap-2 mt-4">

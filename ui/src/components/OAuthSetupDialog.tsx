@@ -19,6 +19,8 @@ import { notifyError } from "@/stores/notification-store";
 
 type OAuthGroup = "google" | "microsoft" | "zoom";
 
+const DOCS_BASE = "https://github.com/varunrazdan/tigerpaw/blob/main/docs/integrations";
+
 const OAUTH_GROUPS: Record<
   OAuthGroup,
   {
@@ -27,6 +29,7 @@ const OAUTH_GROUPS: Record<
     consoleName: string;
     unlocks: string[];
     steps: string[];
+    docsAnchor: string;
   }
 > = {
   google: {
@@ -42,6 +45,7 @@ const OAUTH_GROUPS: Record<
       "Add the redirect URI shown below to Authorized redirect URIs",
       "Copy the Client ID and Client Secret into the fields below",
     ],
+    docsAnchor: "google-gmail-google-calendar-google-meet",
   },
   microsoft: {
     label: "Microsoft",
@@ -55,6 +59,7 @@ const OAUTH_GROUPS: Record<
       "Under API permissions, add Microsoft Graph: Mail.ReadWrite, Calendars.ReadWrite",
       "Copy the Application (client) ID and Secret value below",
     ],
+    docsAnchor: "microsoft-outlook-mail-outlook-calendar-microsoft-teams",
   },
   zoom: {
     label: "Zoom",
@@ -68,6 +73,7 @@ const OAUTH_GROUPS: Record<
       "Under Scopes, add meeting:read, meeting:write",
       "Copy the Client ID and Client Secret below",
     ],
+    docsAnchor: "zoom",
   },
 };
 
@@ -169,18 +175,29 @@ export function OAuthSetupDialog({
                 <li key={i}>{step}</li>
               ))}
             </ol>
-            <a
-              href={config.consoleUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-orange-400 hover:text-orange-300 mt-2 transition-colors"
-            >
-              <ExternalLink className="w-3 h-3" />
-              {t("setup.consoleLink", {
-                provider: config.consoleName,
-                defaultValue: `Open ${config.consoleName}`,
-              })}
-            </a>
+            <div className="flex flex-wrap items-center gap-3 mt-2">
+              <a
+                href={config.consoleUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-orange-400 hover:text-orange-300 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                {t("setup.consoleLink", {
+                  provider: config.consoleName,
+                  defaultValue: `Open ${config.consoleName}`,
+                })}
+              </a>
+              <a
+                href={`${DOCS_BASE}/oauth-setup.md#${config.docsAnchor}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                {t("setup.learnMore", "Detailed guide")}
+              </a>
+            </div>
           </div>
 
           {/* Redirect URI */}
