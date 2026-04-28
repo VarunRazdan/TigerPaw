@@ -160,7 +160,7 @@ export async function deliverToChannels(params: {
 
 // -- Reminder polling --------------------------------------------------------
 
-function readRemindersFile(filePath: string): Reminder[] {
+function readRemindersFile(filePath: string, log?: Logger): Reminder[] {
   if (!existsSync(filePath)) {
     return [];
   }
@@ -168,10 +168,22 @@ function readRemindersFile(filePath: string): Reminder[] {
   if (!content) {
     return [];
   }
-  return content
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => JSON.parse(line) as Reminder);
+  // Resilience: a single malformed line should not crash the polling tick.
+  // Skip and warn so the next tick still processes the rest of the file.
+  const reminders: Reminder[] = [];
+  for (const line of content.split("\n")) {
+    if (!line) {
+      continue;
+    }
+    try {
+      reminders.push(JSON.parse(line) as Reminder);
+    } catch (err) {
+      log?.warn(
+        `[assistant-delivery] skipping malformed reminder line: ${String(err)} | line=${line.slice(0, 80)}`,
+      );
+    }
+  }
+  return reminders;
 }
 
 function writeRemindersFile(filePath: string, reminders: Reminder[]): void {
@@ -232,10 +244,21 @@ export async function pollRemindersOnce(params: {
   const nowMs = params.now ?? Date.now();
   const dataDir = join(homedir(), ".tigerpaw", "assistant");
   const remindersFile = join(dataDir, "reminders.jsonl");
-  const reminders = readRemindersFile(remindersFile);
+  const reminders = readRemindersFile(remindersFile, params.log);
   if (reminders.length === 0) {
     return;
   }
+
+  // Defense-in-depth: even if a malicious tool call slipped past the
+  // assistant_set_reminder allowlist check, the dispatch layer enforces it
+  // again. Build the allowlist from briefingChannels and drop any
+  // explicitTarget that isn't on it.
+  const allowedTargetSet = new Set(
+    params.briefingChannels
+      .map((entry) => parseChannelTarget(entry))
+      .filter((t): t is NonNullable<typeof t> => t !== null)
+      .map((t) => `${t.channel}:${t.to}`),
+  );
 
   let changed = false;
   const updated: Reminder[] = [];
@@ -260,15 +283,22 @@ export async function pollRemindersOnce(params: {
       continue;
     }
 
-    const explicitTarget =
-      reminder.channel && reminder.to
-        ? {
-            channel: reminder.channel,
-            to: reminder.to,
-            accountId: reminder.accountId,
-            threadId: reminder.threadId,
-          }
-        : undefined;
+    let explicitTarget: ChannelTarget | undefined;
+    if (reminder.channel && reminder.to) {
+      const key = `${reminder.channel}:${reminder.to}`;
+      if (allowedTargetSet.has(key)) {
+        explicitTarget = {
+          channel: reminder.channel,
+          to: reminder.to,
+          accountId: reminder.accountId,
+          threadId: reminder.threadId,
+        };
+      } else {
+        params.log.warn(
+          `[assistant-delivery] reminder ${reminder.id} explicit target ${key} not in allowlist; falling back to dailyBriefing.channels`,
+        );
+      }
+    }
 
     const result = await deliverToChannels({
       text: reminder.text,

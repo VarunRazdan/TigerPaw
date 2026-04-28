@@ -305,7 +305,7 @@ describe("pollRemindersOnce", () => {
     expect(updated[0].deliveredAt).toBeUndefined();
   });
 
-  it("reminder.channel+to overrides briefing channels", async () => {
+  it("reminder.channel+to overrides briefing channels (when allowlisted)", async () => {
     mockSendMessage.mockResolvedValue({ via: "direct" });
     writeReminders([
       {
@@ -323,13 +323,46 @@ describe("pollRemindersOnce", () => {
     await pollRemindersOnce({
       log: makeLogger(),
       now,
-      briefingChannels: ["whatsapp:+15551234"],
+      // telegram:98765 must be in the briefingChannels allowlist for the
+      // explicit target to be honored — defense-in-depth against prompt-
+      // injection-driven exfiltration.
+      briefingChannels: ["whatsapp:+15551234", "telegram:98765"],
     });
     expect(mockSendMessage).toHaveBeenCalledWith(
       expect.objectContaining({ channel: "telegram", to: "98765" }),
     );
+    expect(mockSendMessage).toHaveBeenCalledTimes(1);
     const updated = readReminders();
     expect(updated[0].deliveredOn).toBe("telegram");
+  });
+
+  it("rejects reminder explicit target not in briefing channel allowlist (exfil defense)", async () => {
+    mockSendMessage.mockResolvedValue({ via: "direct" });
+    writeReminders([
+      {
+        id: "r1",
+        text: "<sensitive context>",
+        triggerAt: "2026-01-01T00:00:00.000Z",
+        active: true,
+        created: "2025-12-31T00:00:00.000Z",
+        channel: "whatsapp",
+        to: "+1ATTACKER",
+      },
+    ]);
+    const log = makeLogger();
+    const { pollRemindersOnce } = await import("../delivery-service.js");
+    await pollRemindersOnce({
+      log,
+      now: new Date("2026-01-01T00:00:30.000Z").getTime(),
+      briefingChannels: ["whatsapp:+15551234"],
+    });
+    // Explicit target was not allowlisted → fell back to the legitimate
+    // briefingChannels target instead of being delivered to the attacker.
+    expect(mockSendMessage).toHaveBeenCalledTimes(1);
+    expect(mockSendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ channel: "whatsapp", to: "+15551234" }),
+    );
+    expect(log.warn).toHaveBeenCalledTimes(1);
   });
 
   it("skips inactive reminders", async () => {

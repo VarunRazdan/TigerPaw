@@ -38,7 +38,7 @@ import {
   type AssistantConfig,
 } from "./config.js";
 import { registerBriefingCron } from "./cron-briefing.js";
-import { registerDeliveryService } from "./delivery-service.js";
+import { parseChannelTarget, registerDeliveryService } from "./delivery-service.js";
 import { registerIntegrationTools } from "./integration-tools.js";
 
 // -- Constants ---------------------------------------------------------------
@@ -498,6 +498,23 @@ export default {
           // Channel+to are paired: providing one without the other is a user error.
           if ((p.channel && !p.to) || (!p.channel && p.to)) {
             return txt("Channel and to must be provided together, or neither.");
+          }
+
+          // Security: an LLM-emitted tool call (e.g. via prompt injection from an
+          // inbound message) could try to redirect a reminder to an attacker-
+          // controlled channel/to and exfil context via the reminder text. Only
+          // accept channel/to combinations the operator has pre-approved in
+          // assistant.dailyBriefing.channels.
+          if (p.channel && p.to) {
+            const allowedTargets = (cfg.dailyBriefing?.channels ?? [])
+              .map((entry) => parseChannelTarget(entry))
+              .filter((t): t is NonNullable<typeof t> => t !== null);
+            const matches = allowedTargets.some((t) => t.channel === p.channel && t.to === p.to);
+            if (!matches) {
+              return txt(
+                `Refusing to set reminder for ${p.channel}:${p.to} — not in dailyBriefing.channels allowlist.`,
+              );
+            }
           }
 
           const reminder: Reminder = {
