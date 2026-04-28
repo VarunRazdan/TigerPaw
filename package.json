@@ -430,7 +430,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@grammyjs/types": "3.25.0",
+    "@grammyjs/types": "3.26.0",
     "@lit-labs/signals": "^0.2.0",
     "@lit/context": "^1.1.6",
     "@types/express": "^5.0.6",
