@@ -26,7 +26,7 @@ npm install -g @greatlyrecommended/tigerpaw
 tigerpaw start
 ```
 
-That's it. Config auto-generates, the gateway starts, and a dashboard opens at **http://localhost:18789**. An onboarding wizard walks you through connecting your AI provider and messaging channels.
+That's it. Config auto-generates, the gateway starts, and a dashboard opens at **<http://localhost:18789>**. An onboarding wizard walks you through connecting your AI provider and messaging channels.
 
 <details>
 <summary>Other install methods (Docker, from source)</summary>
@@ -167,15 +167,15 @@ If you find Tigerpaw useful, consider supporting development:
 ### For traders
 
 - **9 Trading Platforms** --
-  <img src="icons/trading-platforms/alpaca.svg" height="14" alt="Alpaca"> Alpaca
-  · <img src="icons/trading-platforms/polymarket.svg" height="14" alt="Polymarket"> Polymarket
-  · <img src="icons/trading-platforms/kalshi.svg" height="14" alt="Kalshi"> Kalshi
-  · <img src="icons/trading-platforms/manifold.svg" height="14" alt="Manifold"> Manifold
-  · <img src="icons/trading-platforms/coinbase.svg" height="14" alt="Coinbase"> Coinbase
-  · <img src="icons/trading-platforms/interactive-brokers.svg" height="14" alt="Interactive Brokers"> Interactive Brokers
-  · <img src="icons/trading-platforms/binance.svg" height="14" alt="Binance"> Binance
-  · <img src="icons/trading-platforms/kraken.svg" height="14" alt="Kraken"> Kraken
-  · <img src="icons/trading-platforms/dydx.svg" height="14" alt="dYdX"> dYdX
+  <img alt="" src="icons/trading-platforms/alpaca.svg" height="14" alt="Alpaca"> Alpaca
+  · <img alt="" src="icons/trading-platforms/polymarket.svg" height="14" alt="Polymarket"> Polymarket
+  · <img alt="" src="icons/trading-platforms/kalshi.svg" height="14" alt="Kalshi"> Kalshi
+  · <img alt="" src="icons/trading-platforms/manifold.svg" height="14" alt="Manifold"> Manifold
+  · <img alt="" src="icons/trading-platforms/coinbase.svg" height="14" alt="Coinbase"> Coinbase
+  · <img alt="" src="icons/trading-platforms/interactive-brokers.svg" height="14" alt="Interactive Brokers"> Interactive Brokers
+  · <img alt="" src="icons/trading-platforms/binance.svg" height="14" alt="Binance"> Binance
+  · <img alt="" src="icons/trading-platforms/kraken.svg" height="14" alt="Kraken"> Kraken
+  · <img alt="" src="icons/trading-platforms/dydx.svg" height="14" alt="dYdX"> dYdX
 - **Policy-Gated Trading** -- Every order goes through a 12-step validation pipeline before execution
 - **Risk Management** -- Daily spend limits, position limits, drawdown protection, cooldowns, kill switch
 - **Tamper-Evident Audit Log** -- HMAC-SHA256 chain-linked JSONL logging for every trade decision
@@ -390,17 +390,17 @@ Add a `trading` block to your config:
 
 Configure the platform you want to use in the `plugins` section:
 
-|                                                                         | Platform                        | Config Key   | Mode                  | Order Types                              | Auth         |
-| ----------------------------------------------------------------------- | ------------------------------- | ------------ | --------------------- | ---------------------------------------- | ------------ |
-| <img src="icons/trading-platforms/alpaca.svg" height="20">              | Alpaca (stocks)                 | `alpaca`     | `paper` / `live`      | market, limit, stop, stop_limit, bracket | API Key      |
-| <img src="icons/trading-platforms/polymarket.svg" height="20">          | Polymarket (prediction markets) | `polymarket` | `live`                | limit                                    | HMAC-SHA256  |
-| <img src="icons/trading-platforms/kalshi.svg" height="20">              | Kalshi (event contracts)        | `kalshi`     | `demo` / `live`       | market, limit                            | RSA-SHA256   |
-| <img src="icons/trading-platforms/manifold.svg" height="20">            | Manifold (play money)           | `manifold`   | play money only       | market (implicit)                        | Bearer token |
-| <img src="icons/trading-platforms/coinbase.svg" height="20">            | Coinbase (crypto)               | `coinbase`   | `sandbox` / `live`    | market, limit, stop_limit                | ES256 JWT    |
-| <img src="icons/trading-platforms/interactive-brokers.svg" height="20"> | Interactive Brokers             | `ibkr`       | `paper` / `live`      | MKT, LMT, STP, STP_LIMIT, bracket        | Session      |
-| <img src="icons/trading-platforms/binance.svg" height="20">             | Binance (crypto)                | `binance`    | `testnet` / `live`    | MARKET, LIMIT, STOP_LOSS_LIMIT, OCO      | HMAC-SHA256  |
-| <img src="icons/trading-platforms/kraken.svg" height="20">              | Kraken (crypto + margin)        | `kraken`     | `live`                | market, limit, stop-loss + leverage      | HMAC-SHA512  |
-| <img src="icons/trading-platforms/dydx.svg" height="20">                | dYdX (perpetuals)               | `dydx`       | `testnet` / `mainnet` | market, limit (read-only)                | Cosmos SDK   |
+|                                                                                | Platform                        | Config Key   | Mode                  | Order Types                              | Auth         |
+| ------------------------------------------------------------------------------ | ------------------------------- | ------------ | --------------------- | ---------------------------------------- | ------------ |
+| <img alt="" src="icons/trading-platforms/alpaca.svg" height="20">              | Alpaca (stocks)                 | `alpaca`     | `paper` / `live`      | market, limit, stop, stop_limit, bracket | API Key      |
+| <img alt="" src="icons/trading-platforms/polymarket.svg" height="20">          | Polymarket (prediction markets) | `polymarket` | `live`                | limit                                    | HMAC-SHA256  |
+| <img alt="" src="icons/trading-platforms/kalshi.svg" height="20">              | Kalshi (event contracts)        | `kalshi`     | `demo` / `live`       | market, limit                            | RSA-SHA256   |
+| <img alt="" src="icons/trading-platforms/manifold.svg" height="20">            | Manifold (play money)           | `manifold`   | play money only       | market (implicit)                        | Bearer token |
+| <img alt="" src="icons/trading-platforms/coinbase.svg" height="20">            | Coinbase (crypto)               | `coinbase`   | `sandbox` / `live`    | market, limit, stop_limit                | ES256 JWT    |
+| <img alt="" src="icons/trading-platforms/interactive-brokers.svg" height="20"> | Interactive Brokers             | `ibkr`       | `paper` / `live`      | MKT, LMT, STP, STP_LIMIT, bracket        | Session      |
+| <img alt="" src="icons/trading-platforms/binance.svg" height="20">             | Binance (crypto)                | `binance`    | `testnet` / `live`    | MARKET, LIMIT, STOP_LOSS_LIMIT, OCO      | HMAC-SHA256  |
+| <img alt="" src="icons/trading-platforms/kraken.svg" height="20">              | Kraken (crypto + margin)        | `kraken`     | `live`                | market, limit, stop-loss + leverage      | HMAC-SHA512  |
+| <img alt="" src="icons/trading-platforms/dydx.svg" height="20">                | dYdX (perpetuals)               | `dydx`       | `testnet` / `mainnet` | market, limit (read-only)                | Cosmos SDK   |
 
 Example (Alpaca):
 

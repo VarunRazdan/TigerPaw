@@ -6,33 +6,34 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 
 ## Platform Summary
 
-|                                                                            | Platform            | Tools       | Order Types                              | Auth                    | Sync | Status                                      |
-| -------------------------------------------------------------------------- | ------------------- | ----------- | ---------------------------------------- | ----------------------- | ---- | ------------------------------------------- |
-| <img src="../icons/trading-platforms/alpaca.svg" height="20">              | Alpaca              | 8           | market, limit, stop, stop_limit, bracket | API Key headers         | 30s  | Fully functional                            |
-| <img src="../icons/trading-platforms/polymarket.svg" height="20">          | Polymarket          | 6           | limit only                               | HMAC-SHA256             | 60s  | Fully functional                            |
-| <img src="../icons/trading-platforms/kalshi.svg" height="20">              | Kalshi              | 6           | market, limit                            | RSA-SHA256              | 60s  | Fully functional                            |
-| <img src="../icons/trading-platforms/manifold.svg" height="20">            | Manifold            | 6           | market (implicit)                        | Bearer token            | 60s  | Fully functional (play money)               |
-| <img src="../icons/trading-platforms/coinbase.svg" height="20">            | Coinbase            | 7           | market, limit, stop_limit                | ES256 JWT               | 60s  | Fully functional                            |
-| <img src="../icons/trading-platforms/interactive-brokers.svg" height="20"> | Interactive Brokers | 8           | MKT, LMT, STP, STP_LIMIT, bracket        | Session (local gateway) | 30s  | Fully functional                            |
-| <img src="../icons/trading-platforms/binance.svg" height="20">             | Binance             | 8           | MARKET, LIMIT, STOP_LOSS_LIMIT, OCO      | HMAC-SHA256             | 60s  | Fully functional                            |
-| <img src="../icons/trading-platforms/kraken.svg" height="20">              | Kraken              | 7           | market, limit, stop-loss + leverage      | HMAC-SHA512             | 60s  | Fully functional                            |
-| <img src="../icons/trading-platforms/dydx.svg" height="20">                | dYdX                | 7 (2 stubs) | market, limit (stubs)                    | Read-only indexer       | 60s  | Read-only (order placement not implemented) |
+|                                                                                   | Platform            | Tools       | Order Types                              | Auth                    | Sync | Status                                      |
+| --------------------------------------------------------------------------------- | ------------------- | ----------- | ---------------------------------------- | ----------------------- | ---- | ------------------------------------------- |
+| <img alt="" src="../icons/trading-platforms/alpaca.svg" height="20">              | Alpaca              | 8           | market, limit, stop, stop_limit, bracket | API Key headers         | 30s  | Fully functional                            |
+| <img alt="" src="../icons/trading-platforms/polymarket.svg" height="20">          | Polymarket          | 6           | limit only                               | HMAC-SHA256             | 60s  | Fully functional                            |
+| <img alt="" src="../icons/trading-platforms/kalshi.svg" height="20">              | Kalshi              | 6           | market, limit                            | RSA-SHA256              | 60s  | Fully functional                            |
+| <img alt="" src="../icons/trading-platforms/manifold.svg" height="20">            | Manifold            | 6           | market (implicit)                        | Bearer token            | 60s  | Fully functional (play money)               |
+| <img alt="" src="../icons/trading-platforms/coinbase.svg" height="20">            | Coinbase            | 7           | market, limit, stop_limit                | ES256 JWT               | 60s  | Fully functional                            |
+| <img alt="" src="../icons/trading-platforms/interactive-brokers.svg" height="20"> | Interactive Brokers | 8           | MKT, LMT, STP, STP_LIMIT, bracket        | Session (local gateway) | 30s  | Fully functional                            |
+| <img alt="" src="../icons/trading-platforms/binance.svg" height="20">             | Binance             | 8           | MARKET, LIMIT, STOP_LOSS_LIMIT, OCO      | HMAC-SHA256             | 60s  | Fully functional                            |
+| <img alt="" src="../icons/trading-platforms/kraken.svg" height="20">              | Kraken              | 7           | market, limit, stop-loss + leverage      | HMAC-SHA512             | 60s  | Fully functional                            |
+| <img alt="" src="../icons/trading-platforms/dydx.svg" height="20">                | dYdX                | 7 (2 stubs) | market, limit (stubs)                    | Read-only indexer       | 60s  | Read-only (order placement not implemented) |
 
 ---
 
 ## Per-Platform Analysis
 
-### <img src="../icons/trading-platforms/alpaca.svg" height="28"> Alpaca (Stocks)
+### <img alt="" src="../icons/trading-platforms/alpaca.svg" height="28"> Alpaca (Stocks)
 
 **Extension:** `extensions/alpaca/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `apiKeyId` | string | Yes | Alpaca API key ID |
-| `apiSecretKey` | string | Yes | Alpaca API secret key |
-| `mode` | `"paper"` / `"live"` | No (default: `"paper"`) | Trading mode |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type                 | Required                | Description              |
+| ---------------- | -------------------- | ----------------------- | ------------------------ |
+| `apiKeyId`       | string               | Yes                     | Alpaca API key ID        |
+| `apiSecretKey`   | string               | Yes                     | Alpaca API secret key    |
+| `mode`           | `"paper"` / `"live"` | No (default: `"paper"`) | Trading mode             |
+| `syncIntervalMs` | number               | No                      | Background sync interval |
 
 **Implemented Tools:**
 
@@ -59,28 +60,30 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Portfolio history endpoint
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Trailing stop orders | Moderate | Low | Add `trailing_stop` order type, `trail_percent`/`trail_price` params |
-| Fractional shares | Low | Low | Already supported by API, just needs tool parameter |
-| Extended hours flag | Low | Low | Add `extended_hours: true` parameter to place_order |
-| Options trading | High | High | Requires new tools: options chain, options order, Greeks |
-| Crypto trading | Moderate | Moderate | Same API, different asset class filter |
+
+| Feature              | Priority | Complexity | Notes                                                                |
+| -------------------- | -------- | ---------- | -------------------------------------------------------------------- |
+| Trailing stop orders | Moderate | Low        | Add `trailing_stop` order type, `trail_percent`/`trail_price` params |
+| Fractional shares    | Low      | Low        | Already supported by API, just needs tool parameter                  |
+| Extended hours flag  | Low      | Low        | Add `extended_hours: true` parameter to place_order                  |
+| Options trading      | High     | High       | Requires new tools: options chain, options order, Greeks             |
+| Crypto trading       | Moderate | Moderate   | Same API, different asset class filter                               |
 
 ---
 
-### <img src="../icons/trading-platforms/polymarket.svg" height="28"> Polymarket (Prediction Markets)
+### <img alt="" src="../icons/trading-platforms/polymarket.svg" height="28"> Polymarket (Prediction Markets)
 
 **Extension:** `extensions/polymarket/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `apiKey` | string | Yes | CLOB API key |
-| `apiSecret` | string | Yes | CLOB API secret |
-| `passphrase` | string | Yes | CLOB passphrase |
-| `privateKey` | string | Yes | Ethereum private key for on-chain signing |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type   | Required | Description                               |
+| ---------------- | ------ | -------- | ----------------------------------------- |
+| `apiKey`         | string | Yes      | CLOB API key                              |
+| `apiSecret`      | string | Yes      | CLOB API secret                           |
+| `passphrase`     | string | Yes      | CLOB passphrase                           |
+| `privateKey`     | string | Yes      | Ethereum private key for on-chain signing |
+| `syncIntervalMs` | number | No       | Background sync interval                  |
 
 **Implemented Tools:**
 
@@ -103,27 +106,29 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - User trade history with P&L breakdown
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Market order support | High | Low | Currently limit-only; GTC market orders are common |
-| Order book depth | Moderate | Low | Useful for price discovery before placing orders |
-| Multi-outcome markets | Moderate | Moderate | Requires UI changes for >2 outcomes |
-| Trade history with P&L | Low | Low | Better reporting |
+
+| Feature                | Priority | Complexity | Notes                                              |
+| ---------------------- | -------- | ---------- | -------------------------------------------------- |
+| Market order support   | High     | Low        | Currently limit-only; GTC market orders are common |
+| Order book depth       | Moderate | Low        | Useful for price discovery before placing orders   |
+| Multi-outcome markets  | Moderate | Moderate   | Requires UI changes for >2 outcomes                |
+| Trade history with P&L | Low      | Low        | Better reporting                                   |
 
 ---
 
-### <img src="../icons/trading-platforms/kalshi.svg" height="28"> Kalshi (Event Contracts)
+### <img alt="" src="../icons/trading-platforms/kalshi.svg" height="28"> Kalshi (Event Contracts)
 
 **Extension:** `extensions/kalshi/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `email` | string | Yes | Kalshi account email |
-| `apiKeyId` | string | Yes | API key ID |
-| `privateKeyPath` | string | Yes | Path to RSA private key PEM file |
-| `mode` | `"demo"` / `"live"` | No (default: `"demo"`) | Trading mode |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type                | Required               | Description                      |
+| ---------------- | ------------------- | ---------------------- | -------------------------------- |
+| `email`          | string              | Yes                    | Kalshi account email             |
+| `apiKeyId`       | string              | Yes                    | API key ID                       |
+| `privateKeyPath` | string              | Yes                    | Path to RSA private key PEM file |
+| `mode`           | `"demo"` / `"live"` | No (default: `"demo"`) | Trading mode                     |
+| `syncIntervalMs` | number              | No                     | Background sync interval         |
 
 **Implemented Tools:**
 
@@ -147,23 +152,25 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Exchange status endpoint
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Batch orders | Low | Moderate | Useful for multi-contract strategies |
-| Settlement history | Low | Low | Better P&L tracking |
-| Market expiration info | Low | Low | Show contract expiry in market details |
+
+| Feature                | Priority | Complexity | Notes                                  |
+| ---------------------- | -------- | ---------- | -------------------------------------- |
+| Batch orders           | Low      | Moderate   | Useful for multi-contract strategies   |
+| Settlement history     | Low      | Low        | Better P&L tracking                    |
+| Market expiration info | Low      | Low        | Show contract expiry in market details |
 
 ---
 
-### <img src="../icons/trading-platforms/manifold.svg" height="28"> Manifold (Play Money)
+### <img alt="" src="../icons/trading-platforms/manifold.svg" height="28"> Manifold (Play Money)
 
 **Extension:** `extensions/manifold/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `apiKey` | string | No | Manifold API key (read-only without it) |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type   | Required | Description                             |
+| ---------------- | ------ | -------- | --------------------------------------- |
+| `apiKey`         | string | No       | Manifold API key (read-only without it) |
+| `syncIntervalMs` | number | No       | Background sync interval                |
 
 **Implemented Tools:**
 
@@ -188,25 +195,27 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Leaderboards
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Multi-outcome markets | Moderate | Moderate | Currently only binary YES/NO |
-| Limit orders | Low | Low | Manifold supports them |
-| Market creation | Low | Moderate | Create new prediction markets |
+
+| Feature               | Priority | Complexity | Notes                         |
+| --------------------- | -------- | ---------- | ----------------------------- |
+| Multi-outcome markets | Moderate | Moderate   | Currently only binary YES/NO  |
+| Limit orders          | Low      | Low        | Manifold supports them        |
+| Market creation       | Low      | Moderate   | Create new prediction markets |
 
 ---
 
-### <img src="../icons/trading-platforms/coinbase.svg" height="28"> Coinbase (Crypto Spot)
+### <img alt="" src="../icons/trading-platforms/coinbase.svg" height="28"> Coinbase (Crypto Spot)
 
 **Extension:** `extensions/coinbase/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `apiKey` | string | Yes | CDP Key Name (`organizations/{org_id}/apiKeys/{key_id}`) |
-| `apiSecret` | string | Yes | EC P-256 private key (PEM format) |
-| `mode` | `"live"` / `"sandbox"` | No (default: `"sandbox"`) | Trading mode |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type                   | Required                  | Description                                              |
+| ---------------- | ---------------------- | ------------------------- | -------------------------------------------------------- |
+| `apiKey`         | string                 | Yes                       | CDP Key Name (`organizations/{org_id}/apiKeys/{key_id}`) |
+| `apiSecret`      | string                 | Yes                       | EC P-256 private key (PEM format)                        |
+| `mode`           | `"live"` / `"sandbox"` | No (default: `"sandbox"`) | Trading mode                                             |
+| `syncIntervalMs` | number                 | No                        | Background sync interval                                 |
 
 **Implemented Tools:**
 
@@ -231,26 +240,28 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Transaction history (deposits/withdrawals)
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Bracket orders | Moderate | Moderate | Stop-loss + take-profit in single order |
-| Trailing stop | Moderate | Low | Add trailing_stop order type |
-| Advanced TIF | Low | Low | Good-til-date, IOC, FOK |
-| WebSocket feeds | Low | High | Real-time price streaming |
+
+| Feature         | Priority | Complexity | Notes                                   |
+| --------------- | -------- | ---------- | --------------------------------------- |
+| Bracket orders  | Moderate | Moderate   | Stop-loss + take-profit in single order |
+| Trailing stop   | Moderate | Low        | Add trailing_stop order type            |
+| Advanced TIF    | Low      | Low        | Good-til-date, IOC, FOK                 |
+| WebSocket feeds | Low      | High       | Real-time price streaming               |
 
 ---
 
-### <img src="../icons/trading-platforms/interactive-brokers.svg" height="28"> Interactive Brokers (Stocks, Options, Futures)
+### <img alt="" src="../icons/trading-platforms/interactive-brokers.svg" height="28"> Interactive Brokers (Stocks, Options, Futures)
 
 **Extension:** `extensions/ibkr/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `accountId` | string | Yes | IBKR account ID |
-| `gatewayHost` | string | No (default: `"localhost:5000"`) | IB Client Portal Gateway host:port |
-| `mode` | `"paper"` / `"live"` | No (default: `"paper"`) | Trading mode |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type                 | Required                         | Description                        |
+| ---------------- | -------------------- | -------------------------------- | ---------------------------------- |
+| `accountId`      | string               | Yes                              | IBKR account ID                    |
+| `gatewayHost`    | string               | No (default: `"localhost:5000"`) | IB Client Portal Gateway host:port |
+| `mode`           | `"paper"` / `"live"` | No (default: `"paper"`)          | Trading mode                       |
+| `syncIntervalMs` | number               | No                               | Background sync interval           |
 
 **Implemented Tools:**
 
@@ -280,27 +291,29 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Historical data bars
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Options chain lookup | High | Moderate | IBKR is the premier options platform; unlock options trading |
-| Algo orders (TWAP/VWAP) | Moderate | Moderate | Institutional-grade execution |
-| Streaming quotes | Moderate | High | WebSocket-based real-time data |
-| Scanner/screener | Low | Moderate | Market scanning capabilities |
-| Portfolio margin analysis | Low | Low | Margin requirement calculations |
+
+| Feature                   | Priority | Complexity | Notes                                                        |
+| ------------------------- | -------- | ---------- | ------------------------------------------------------------ |
+| Options chain lookup      | High     | Moderate   | IBKR is the premier options platform; unlock options trading |
+| Algo orders (TWAP/VWAP)   | Moderate | Moderate   | Institutional-grade execution                                |
+| Streaming quotes          | Moderate | High       | WebSocket-based real-time data                               |
+| Scanner/screener          | Low      | Moderate   | Market scanning capabilities                                 |
+| Portfolio margin analysis | Low      | Low        | Margin requirement calculations                              |
 
 ---
 
-### <img src="../icons/trading-platforms/binance.svg" height="28"> Binance (Crypto Spot)
+### <img alt="" src="../icons/trading-platforms/binance.svg" height="28"> Binance (Crypto Spot)
 
 **Extension:** `extensions/binance/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `apiKey` | string | Yes | Binance API key |
-| `apiSecret` | string | Yes | Binance API secret |
-| `mode` | `"live"` / `"testnet"` | No (default: `"testnet"`) | Trading mode |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type                   | Required                  | Description              |
+| ---------------- | ---------------------- | ------------------------- | ------------------------ |
+| `apiKey`         | string                 | Yes                       | Binance API key          |
+| `apiSecret`      | string                 | Yes                       | Binance API secret       |
+| `mode`           | `"live"` / `"testnet"` | No (default: `"testnet"`) | Trading mode             |
+| `syncIntervalMs` | number                 | No                        | Background sync interval |
 
 **Implemented Tools:**
 
@@ -327,25 +340,27 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Auto-invest
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Trailing stop | Moderate | Low | TRAILING_STOP_MARKET order type |
-| Margin trading | Low | High | Requires separate margin account management |
-| Futures trading | Low | High | Different API endpoints, separate risk model |
-| WebSocket streams | Low | High | Real-time price and order updates |
+
+| Feature           | Priority | Complexity | Notes                                        |
+| ----------------- | -------- | ---------- | -------------------------------------------- |
+| Trailing stop     | Moderate | Low        | TRAILING_STOP_MARKET order type              |
+| Margin trading    | Low      | High       | Requires separate margin account management  |
+| Futures trading   | Low      | High       | Different API endpoints, separate risk model |
+| WebSocket streams | Low      | High       | Real-time price and order updates            |
 
 ---
 
-### <img src="../icons/trading-platforms/kraken.svg" height="28"> Kraken (Crypto Spot + Margin)
+### <img alt="" src="../icons/trading-platforms/kraken.svg" height="28"> Kraken (Crypto Spot + Margin)
 
 **Extension:** `extensions/kraken/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `apiKey` | string | Yes | Kraken API key |
-| `apiSecret` | string | Yes | Kraken API secret (base64-encoded) |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type   | Required | Description                        |
+| ---------------- | ------ | -------- | ---------------------------------- |
+| `apiKey`         | string | Yes      | Kraken API key                     |
+| `apiSecret`      | string | Yes      | Kraken API secret (base64-encoded) |
+| `syncIntervalMs` | number | No       | Background sync interval           |
 
 **Implemented Tools:**
 
@@ -372,26 +387,28 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Withdrawal management
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| Trailing stop | Moderate | Low | Kraken supports trailing stop natively |
-| Advanced order types | Low | Low | Iceberg orders for large positions |
-| Futures | Low | High | Separate Kraken Futures API |
-| WebSocket feeds | Low | High | Real-time price streaming |
+
+| Feature              | Priority | Complexity | Notes                                  |
+| -------------------- | -------- | ---------- | -------------------------------------- |
+| Trailing stop        | Moderate | Low        | Kraken supports trailing stop natively |
+| Advanced order types | Low      | Low        | Iceberg orders for large positions     |
+| Futures              | Low      | High       | Separate Kraken Futures API            |
+| WebSocket feeds      | Low      | High       | Real-time price streaming              |
 
 ---
 
-### <img src="../icons/trading-platforms/dydx.svg" height="28"> dYdX (Decentralized Perpetuals)
+### <img alt="" src="../icons/trading-platforms/dydx.svg" height="28"> dYdX (Decentralized Perpetuals)
 
 **Extension:** `extensions/dydx/`
 
 **Config Fields:**
-| Field | Type | Required | Description |
-| ----- | ---- | -------- | ----------- |
-| `mnemonic` | string | Yes | Cosmos wallet mnemonic |
-| `address` | string | No | dYdX v4 address (derived from mnemonic if omitted) |
-| `mode` | `"mainnet"` / `"testnet"` | No (default: `"testnet"`) | Network |
-| `syncIntervalMs` | number | No | Background sync interval |
+
+| Field            | Type                      | Required                  | Description                                        |
+| ---------------- | ------------------------- | ------------------------- | -------------------------------------------------- |
+| `mnemonic`       | string                    | Yes                       | Cosmos wallet mnemonic                             |
+| `address`        | string                    | No                        | dYdX v4 address (derived from mnemonic if omitted) |
+| `mode`           | `"mainnet"` / `"testnet"` | No (default: `"testnet"`) | Network                                            |
+| `syncIntervalMs` | number                    | No                        | Background sync interval                           |
 
 **Implemented Tools:**
 
@@ -418,12 +435,13 @@ A comprehensive analysis of all 9 trading platforms integrated with Tigerpaw: wh
 - Transfer/withdrawal management
 
 **Enhancement Priority:**
-| Feature | Priority | Complexity | Notes |
-| ------- | -------- | ---------- | ----- |
-| **Order placement** | **Critical** | **High** | Requires `@dydxprotocol/v4-client-js` Cosmos SDK integration |
-| **Order cancellation** | **Critical** | **High** | Same dependency as order placement |
-| Funding rates | Moderate | Low | Query current funding rate per market |
-| Stop-loss / take-profit | Moderate | Moderate | Conditional orders via Cosmos |
+
+| Feature                 | Priority     | Complexity | Notes                                                        |
+| ----------------------- | ------------ | ---------- | ------------------------------------------------------------ |
+| **Order placement**     | **Critical** | **High**   | Requires `@dydxprotocol/v4-client-js` Cosmos SDK integration |
+| **Order cancellation**  | **Critical** | **High**   | Same dependency as order placement                           |
+| Funding rates           | Moderate     | Low        | Query current funding rate per market                        |
+| Stop-loss / take-profit | Moderate     | Moderate   | Conditional orders via Cosmos                                |
 
 ---
 
