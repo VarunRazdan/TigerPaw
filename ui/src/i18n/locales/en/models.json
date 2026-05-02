@@ -52,5 +52,13 @@
   "routing.searchDesc": "Current events, lookups, real-time data",
   "routing.reasoningDesc": "Math, logic, analysis, multi-step problems",
   "routing.codeDesc": "Programming, debugging, code generation",
-  "routing.creativeDesc": "Stories, poems, creative writing"
+  "routing.creativeDesc": "Stories, poems, creative writing",
+  "routing.recent.title": "Recent decisions",
+  "routing.recent.empty": "No decisions yet — send a message to see routing in action",
+  "routing.recent.routedTo": "{{provider}}/{{model}}",
+  "routing.recent.fallback": "default: {{provider}}/{{model}} — {{reason}}",
+  "routing.recent.reason.disabled": "routing disabled",
+  "routing.recent.reason.noRule": "no matching rule",
+  "routing.recent.reason.generalIntent": "general chat",
+  "routing.recent.reason.providerUnavailable": "provider not configured"
 }

@@ -5,8 +5,9 @@ import {
   resolveAgentSkillsFilter,
 } from "../../agents/agent-scope.js";
 import { classifyMessageIntent } from "../../agents/intent-classifier.js";
-import { resolveIntentRoute } from "../../agents/model-routing.js";
+import { buildRoutingDecision, resolveIntentRoute } from "../../agents/model-routing.js";
 import { resolveModelRefFromString } from "../../agents/model-selection.js";
+import { recordRoutingDecision } from "../../agents/routing-decisions-buffer.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
 import { DEFAULT_AGENT_WORKSPACE_DIR, ensureAgentWorkspace } from "../../agents/workspace.js";
 import { resolveChannelModelOverride } from "../../channels/model-overrides.js";
@@ -86,21 +87,35 @@ export async function getReplyFromConfig(
   let model = defaultModel;
 
   // --- Intent-based model routing ---
-  // Classify the message intent and route to a specialized provider if configured.
-  // All downstream overrides (heartbeat, channel, session, directive) take priority.
+  // Classify every non-empty inbound, even when routing is disabled, so the
+  // observability buffer can show why a route did or did not fire. Downstream
+  // overrides (heartbeat, channel, session, directive) still take priority over
+  // a routed pick.
   const routingConfig = agentCfg?.routing;
-  if (routingConfig?.enabled && ctx.Body?.trim()) {
-    const classification = classifyMessageIntent(ctx.Body.trim());
-    if (classification.intent !== "general") {
-      const routeResult = resolveIntentRoute({
-        intent: classification.intent,
-        cfg,
-        routingConfig,
-      });
-      if (routeResult.routed) {
-        provider = routeResult.ref.provider;
-        model = routeResult.ref.model;
-      }
+  const trimmedBody = ctx.Body?.trim();
+  if (trimmedBody) {
+    const classification = classifyMessageIntent(trimmedBody);
+    const routeResult = resolveIntentRoute({
+      intent: classification.intent,
+      cfg,
+      routingConfig,
+    });
+    recordRoutingDecision(
+      buildRoutingDecision({
+        classification,
+        resolution: routeResult,
+        defaultProvider,
+        defaultModel,
+        ctx: {
+          sessionKey: agentSessionKey,
+          channel: ctx.OriginatingChannel ?? ctx.Provider,
+          bodyPreview: trimmedBody.slice(0, 80),
+        },
+      }),
+    );
+    if (routingConfig?.enabled && routeResult.routed) {
+      provider = routeResult.ref.provider;
+      model = routeResult.ref.model;
     }
   }
 
