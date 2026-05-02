@@ -628,7 +628,7 @@ export async function runAgentTurnWithFallback(params: {
           : isRoleOrderingError
             ? "⚠️ Message ordering conflict - please try again. If this persists, use /new to start a fresh session."
             : isModelNotFound
-              ? "⚠️ The AI model is no longer available. Please switch to a newer model in the dashboard."
+              ? "⚠️ The AI model is no longer available. Try /models refresh to update your provider's model list, then /model <provider/name> to switch — or use the dashboard."
               : isAuthPermanent
                 ? "⚠️ Your API key is invalid or expired. Please update it in the dashboard."
                 : isAuth
