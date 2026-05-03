@@ -17,6 +17,7 @@ import {
   Blocks,
   FlaskConical,
   Wrench,
+  UserCheck,
 } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -189,6 +190,11 @@ function useNavGroups(): NavGroup[] {
         to: "/security",
         label: t("nav.security", "Security"),
         icon: <Shield className="w-4 h-4" />,
+      },
+      {
+        to: "/owner",
+        label: t("nav.owner", "Owner allowlist"),
+        icon: <UserCheck className="w-4 h-4" />,
       },
       { to: "/config", label: t("nav.config", "Config"), icon: <FileJson className="w-4 h-4" /> },
       { to: "/tools", label: t("nav.tools", "Search Tools"), icon: <Wrench className="w-4 h-4" /> },
