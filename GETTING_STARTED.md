@@ -246,6 +246,41 @@ tigerpaw channels status --probe
 tigerpaw doctor
 ```
 
+### 5. Viewing Live Logs
+
+After `tigerpaw gateway start` the daemon runs in the background under your platform's supervisor (launchd on macOS, systemd on Linux, Task Scheduler on Windows). Its stdout no longer goes to your terminal — it goes to a log file:
+
+| Platform | Log file                                      |
+| -------- | --------------------------------------------- |
+| macOS    | `~/.openclaw/logs/gateway.log` (+ `.err.log`) |
+| Linux    | `journalctl --user -u openclaw-gateway -f`    |
+| Windows  | `%LOCALAPPDATA%\openclaw\logs\gateway.log`    |
+
+**Tail the live stream from any terminal:**
+
+```bash
+tail -F ~/.openclaw/logs/gateway.log ~/.openclaw/logs/gateway.err.log
+```
+
+Open it once, leave it running — same lines you'd see in foreground mode. Convenient alias for `~/.zshrc`:
+
+```sh
+alias tplogs='tail -F ~/.openclaw/logs/gateway.log ~/.openclaw/logs/gateway.err.log'
+```
+
+**Want colors under the supervisor?** Add `FORCE_COLOR=1` to the launchd plist's `EnvironmentVariables` block (`~/Library/LaunchAgents/ai.openclaw.gateway.plist`) and restart with `tigerpaw gateway restart`. Without it, the daemon detects the non-TTY stdout and strips ANSI escapes; with it, color codes are written to the log file and your terminal renders them when you `tail -F`.
+
+**Or skip the supervisor entirely** and run foreground for full TTY + colors + Ctrl-C, exactly like `pnpm gateway:dev` used to feel:
+
+```bash
+tigerpaw gateway stop          # tells the supervisor to bootout
+tigerpaw gateway run           # foreground, real TTY
+# Ctrl-C when done
+tigerpaw gateway start         # put the supervisor back in charge
+```
+
+Tradeoff: foreground means **no auto-restart-on-crash**, and closing the terminal kills the daemon. Useful for debugging; supervised mode is what you want for normal use.
+
 ---
 
 ## Configuration
