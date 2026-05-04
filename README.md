@@ -280,20 +280,30 @@ On first launch, an **onboarding wizard** guides you through:
 
 Since the bot runs on your personal WhatsApp number, use `@TP` to address it:
 
-| Command            | Context     | Description                                                |
-| ------------------ | ----------- | ---------------------------------------------------------- |
-| `@TP <message>`    | DM or Group | Talk to the AI assistant                                   |
-| `/new`             | Any         | Reset session (picks up new model/personality)             |
-| `/model <alias>`   | Any         | Switch AI model (e.g., `/model gemini`, `/model deepseek`) |
-| `!group add`       | In a group  | Allow the bot to respond in this group                     |
-| `!group remove`    | In a group  | Stop the bot from responding in this group                 |
-| `!group list`      | Any         | Show all allowed groups                                    |
-| `!name <name>`     | Any         | Set your display name                                      |
-| `!agent <name>`    | Any (owner) | Change the bot's name                                      |
-| `!sleep` / `!wake` | Any (owner) | Pause/resume the bot                                       |
-| `!whoami`          | Any         | Show your identity info                                    |
+| Command                   | Context     | Description                                                                                                                                                                  |
+| ------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@TP <message>`           | DM or Group | Talk to the AI assistant                                                                                                                                                     |
+| `/new`                    | Any         | Reset session (picks up new model/personality)                                                                                                                               |
+| `/model <provider/model>` | Any         | Switch AI model (e.g., `/model anthropic/claude-opus-4-5`, `/model ollama/qwen3:8b`)                                                                                         |
+| `/models`                 | Any         | List configured providers with model counts                                                                                                                                  |
+| `/models list`            | Any         | Flat list of every `provider/model` available, with `* (active)` marker on the current one                                                                                   |
+| `/models <provider>`      | Any         | List models for one provider (paginated)                                                                                                                                     |
+| `/models refresh`         | Any         | Re-discover live providers (Ollama / vLLM / Venice / Vercel / Huggingface / Kilocode). Use after `ollama pull` so newly-installed tags appear without restarting the daemon. |
+| `/allowlist`              | Any (owner) | Show current per-channel allowlist (DM policy, paired senders, store entries)                                                                                                |
+| `/allowlist +<number>`    | Any (owner) | Shorthand: add a number to the WhatsApp DM allowlist (pairing-store only). Spaces/dashes ok: `/allowlist +852 9826 6533` becomes `+85298266533`                              |
+| `/allowlist add dm <id>`  | Any (owner) | Long form: also persist into `tigerpaw.json` (requires `commands.config=true`)                                                                                               |
+| `/reset <provider/model>` | Any         | Reset the session and switch model in one go                                                                                                                                 |
+| `!group add`              | In a group  | Allow the bot to respond in this group                                                                                                                                       |
+| `!group remove`           | In a group  | Stop the bot from responding in this group                                                                                                                                   |
+| `!group list`             | Any         | Show all allowed groups                                                                                                                                                      |
+| `!name <name>`            | Any         | Set your display name                                                                                                                                                        |
+| `!agent <name>`           | Any (owner) | Change the bot's name                                                                                                                                                        |
+| `!sleep` / `!wake`        | Any (owner) | Pause/resume the bot                                                                                                                                                         |
+| `!whoami`                 | Any         | Show your identity info                                                                                                                                                      |
 
 Without `@TP`, messages are treated as personal messages between you and your contacts. The bot stays silent.
+
+**Owner-gated commands** (everything marked _owner_) only respond to senders listed in `commands.ownerAllowFrom`. The fastest way to set this up is the new **Owner allowlist** page in the dashboard (System → Owner allowlist), or send `/allowlist +<your-number>` from your bot's self-chat.
 
 ## Configuration
 

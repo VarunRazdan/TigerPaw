@@ -207,13 +207,27 @@ tigerpaw config set messages.groupChat.mentionPatterns '["@TP"]'
 **Managing groups:**
 Send `!group add` inside any WhatsApp group to let the bot respond there. Send `!group remove` to revoke. Send `!group list` to see all allowed groups.
 
-**Switching AI models:**
+**Browsing and switching AI models:**
 
 ```
-/model deepseek     # Switch to DeepSeek
-/model gemini       # Switch to Google Gemini
-/model jarvis       # Switch to local Ollama model
+/models                       # show all configured providers
+/models list                  # flat list of every provider/model — `* (active)` marks the current one
+/models ollama                # list just Ollama's installed tags
+/models refresh               # re-discover live providers (run after `ollama pull` to pick up new tags)
+/model ollama/qwen3:8b        # switch the active model (slash, not space — `/model ollama/qwen3:8b` not `/model ollama qwen3:8b`)
+/model deepseek/deepseek-chat # cloud provider example
 ```
+
+If you ever see `Ollama API error 404: model 'X' not found`, the saved model list is stale — `/models refresh` re-queries Ollama's `/api/tags` and updates your config. The reply walks you through which models are now installed; pick one with `/model ollama/<name>`.
+
+**Owner-only commands and allowlist:**
+
+Some commands (e.g., `/allowlist`, `/config`) only respond to "owner" senders — phone numbers / channel-native IDs you've registered in `commands.ownerAllowFrom`. To set this up, either:
+
+1. Open the dashboard → System → **Owner allowlist** → enter your number(s) → Save, or
+2. Send `/allowlist +<your-e164-number>` from your bot's self-chat (e.g., `/allowlist +85290263757`). Spaces/dashes get compacted automatically: `/allowlist +852 9826 6533` saves as `+85298266533`.
+
+The shorthand writes to the pairing store only (no `tigerpaw.json` change), so it works even when chat-driven config edits are disabled.
 
 **Customizing personality:**
 Create `~/.openclaw/agent/AGENTS.md` with your instructions:
