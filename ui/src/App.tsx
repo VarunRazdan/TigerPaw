@@ -106,6 +106,7 @@ const IntegrationsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import("./pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
+const OwnerPage = lazy(() => import("./pages/OwnerPage").then((m) => ({ default: m.OwnerPage })));
 const ToolsPage = lazy(() => import("./pages/ToolsPage").then((m) => ({ default: m.ToolsPage })));
 const TradingPage = lazy(() =>
   import("./pages/TradingPage").then((m) => ({ default: m.TradingPage })),
@@ -171,6 +172,7 @@ const CORE_ROUTES: RouteObject[] = [
   { path: "assistant", element: <AssistantPage />, errorElement: PAGE_ERROR },
   { path: "channels", element: <ChannelsPage />, errorElement: PAGE_ERROR },
   { path: "security", element: <SecurityPage />, errorElement: PAGE_ERROR },
+  { path: "owner", element: <OwnerPage />, errorElement: PAGE_ERROR },
   { path: "settings", element: <SettingsPage />, errorElement: PAGE_ERROR },
   { path: "config", element: <ConfigPage />, errorElement: PAGE_ERROR },
   { path: "tools", element: <ToolsPage />, errorElement: PAGE_ERROR },

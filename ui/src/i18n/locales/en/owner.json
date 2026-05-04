@@ -1,0 +1,17 @@
+{
+  "title": "Owner allowlist",
+  "subtitle": "Phone numbers (or channel-prefixed identifiers) that count as the bot's owner. Owner-gated chat commands like /allowlist only respond to senders on this list.",
+  "addOwner": "Add owner",
+  "removeOwner": "Remove",
+  "placeholder": "+85290263757",
+  "save": "Save",
+  "savedHint": "Saved",
+  "saveError": "Couldn't save the owner allowlist",
+  "demoSaveBlocked": "Saving is disabled in demo mode",
+  "empty.title": "No owners configured",
+  "empty.body": "Add at least one number so owner-gated commands work. Without owners, /allowlist falls back to the broader sender check.",
+  "hint.title": "Format",
+  "hint.body": "Phone numbers should be E.164 format: + followed by country code and digits, no spaces. For non-phone channels, prefix with the channel id, e.g. telegram:@yourname.",
+  "warn.notE164": "Doesn't look like E.164 (e.g. +14155551234). Will still be saved — Tigerpaw matches against channel-native identifiers, so non-phone formats are valid for non-phone channels.",
+  "currentSenderHelp": "Tip: send any message to your bot, then return here — the sender ID for that message will appear in the next /allowlist reply, and you can paste it as an owner."
+}

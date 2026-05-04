@@ -57,6 +57,7 @@
   "nav.system": "System",
   "nav.channels": "Agent Channels",
   "nav.security": "Security",
+  "nav.owner": "Owner allowlist",
   "nav.config": "Config",
   "nav.tools": "Search Tools",
   "nav.compact": "Compact",
