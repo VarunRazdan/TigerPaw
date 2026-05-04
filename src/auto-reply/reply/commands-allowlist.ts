@@ -68,6 +68,27 @@ type AllowlistCommand =
 const ACTIONS = new Set(["list", "add", "remove"]);
 const SCOPES = new Set<AllowlistScope>(["dm", "group", "all"]);
 
+// Match a phone-number-shaped string: starts with + and contains only digits,
+// spaces, dashes, or parens. Used both to detect the `/allowlist <+number>`
+// shorthand and to decide when to compact whitespace out of an entry.
+const PHONE_SHAPED = /^\+[\d\s\-()]+$/;
+
+/**
+ * If `entry` looks like a phone number with whitespace/dashes/parens
+ * (`+852 9826 6533`, `+1-415-555-1234`, `+1 (415) 555-1234`), compact it to
+ * E.164 (`+85298266533`). Leaves non-phone entries untouched so we don't
+ * accidentally mangle channel-prefixed identifiers like `telegram:@user`.
+ */
+function compactPhoneEntry(entry: string): string {
+  const trimmed = entry.trim();
+  if (!PHONE_SHAPED.test(trimmed)) {
+    return trimmed;
+  }
+  const compact = `+${trimmed.slice(1).replace(/[\s\-()]/g, "")}`;
+  // Final check: only keep if compaction produced a plausible E.164.
+  return /^\+[1-9][0-9]{6,14}$/.test(compact) ? compact : trimmed;
+}
+
 function parseAllowlistCommand(raw: string): AllowlistCommand | null {
   const trimmed = raw.trim();
   if (!trimmed.toLowerCase().startsWith("/allowlist")) {
@@ -91,6 +112,11 @@ function parseAllowlistCommand(raw: string): AllowlistCommand | null {
   if (tokens[i] && ACTIONS.has(tokens[i].toLowerCase())) {
     action = tokens[i].toLowerCase() as AllowlistAction;
     i += 1;
+  } else if (tokens[i]?.startsWith("+")) {
+    // Shorthand: `/allowlist +85298266533` (or `/allowlist +852 9826 6533`)
+    // expands to `/allowlist add dm <number>`. Phone-shaped first-token
+    // implies the user wants to add themselves.
+    action = "add";
   }
   if (tokens[i] && SCOPES.has(tokens[i].toLowerCase() as AllowlistScope)) {
     scope = tokens[i].toLowerCase() as AllowlistScope;
@@ -147,10 +173,14 @@ function parseAllowlistCommand(raw: string): AllowlistCommand | null {
   }
 
   if (action === "add" || action === "remove") {
-    const entry = entryTokens.join(" ").trim();
-    if (!entry) {
+    // Compact phone-shaped entries before assembling so multi-token numbers
+    // like `+852 9826 6533` survive whitespace tokenization and end up as
+    // E.164 (`+85298266533`).
+    const rawEntry = entryTokens.join(" ").trim();
+    if (!rawEntry) {
       return { action: "error", message: "Usage: /allowlist add|remove <entry>" };
     }
+    const entry = compactPhoneEntry(rawEntry);
     return { action, scope, entry, channel, account, resolve, target };
   }
 
@@ -591,17 +621,21 @@ export const handleAllowlistCommand: CommandHandler = async (params, allowTextCo
     return { shouldContinue: false, reply: { text: lines.join("\n") } };
   }
 
-  const disabled = requireCommandFlagEnabled(params.cfg, {
-    label: "/allowlist edits",
-    configKey: "config",
-    disabledVerb: "are",
-  });
-  if (disabled) {
-    return disabled;
-  }
-
   const shouldUpdateConfig = parsed.target !== "store";
   const shouldTouchStore = parsed.target !== "config" && listPairingChannels().includes(channelId);
+
+  // `commands.config` only gates edits that modify tigerclaw.json. Pairing-store
+  // writes don't touch the config file, so don't block them on that flag.
+  if (shouldUpdateConfig) {
+    const disabled = requireCommandFlagEnabled(params.cfg, {
+      label: "/allowlist edits",
+      configKey: "config",
+      disabledVerb: "are",
+    });
+    if (disabled) {
+      return disabled;
+    }
+  }
 
   if (shouldUpdateConfig) {
     const allowlistPath = resolveChannelAllowFromPaths(channelId, scope);
