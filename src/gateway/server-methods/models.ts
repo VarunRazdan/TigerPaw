@@ -1,11 +1,13 @@
 import { DEFAULT_PROVIDER } from "../../agents/defaults.js";
 import { buildAllowedModelSet } from "../../agents/model-selection.js";
+import { readRecentRoutingDecisions } from "../../agents/routing-decisions-buffer.js";
 import { loadConfig } from "../../config/config.js";
 import {
   ErrorCodes,
   errorShape,
   formatValidationErrors,
   validateModelsListParams,
+  validateModelsRoutingRecentParams,
 } from "../protocol/index.js";
 import type { GatewayRequestHandlers } from "./types.js";
 
@@ -35,5 +37,23 @@ export const modelsHandlers: GatewayRequestHandlers = {
     } catch (err) {
       respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, String(err)));
     }
+  },
+  "models.routing.recent": async ({ params, respond }) => {
+    if (!validateModelsRoutingRecentParams(params)) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          `invalid models.routing.recent params: ${formatValidationErrors(
+            validateModelsRoutingRecentParams.errors,
+          )}`,
+        ),
+      );
+      return;
+    }
+    const limit = typeof params.limit === "number" ? params.limit : undefined;
+    const decisions = readRecentRoutingDecisions(limit);
+    respond(true, { decisions }, undefined);
   },
 };

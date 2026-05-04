@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import type { IntentCategory } from "./intent-classifier.js";
-import { resolveIntentRoute, type RoutingConfig } from "./model-routing.js";
+import type { ClassificationResult, IntentCategory } from "./intent-classifier.js";
+import {
+  buildRoutingDecision,
+  resolveIntentRoute,
+  type RoutingConfig,
+  type RoutingResolution,
+} from "./model-routing.js";
 
 // Suppress subsystem logger output during tests.
 // vi.hoisted runs before vi.mock hoisting, so the reference is available.
@@ -256,5 +261,86 @@ describe("resolveIntentRoute", () => {
         expect(result.intent).toBe(intent);
       }
     });
+  });
+});
+
+describe("buildRoutingDecision", () => {
+  const baseCtx = {
+    sessionKey: "wa:+15551234567",
+    channel: "whatsapp",
+    bodyPreview: "what's the weather in NYC",
+  };
+  const baseClassification: ClassificationResult = {
+    intent: "search",
+    confidence: "high",
+    matchedPattern: "weather|forecast",
+  };
+
+  it("captures shared fields plus routedProvider/Model when routed", () => {
+    const resolution: RoutingResolution = {
+      routed: true,
+      ref: { provider: "perplexity", model: "sonar-pro" },
+      intent: "search",
+      rule: { intent: "search", provider: "perplexity", model: "sonar-pro" },
+    };
+    const before = Date.now();
+    const decision = buildRoutingDecision({
+      classification: baseClassification,
+      resolution,
+      defaultProvider: "anthropic",
+      defaultModel: "claude-opus-4-6",
+      ctx: baseCtx,
+    });
+    expect(decision.ts).toBeGreaterThanOrEqual(before);
+    expect(decision.sessionKey).toBe(baseCtx.sessionKey);
+    expect(decision.channel).toBe(baseCtx.channel);
+    expect(decision.bodyPreview).toBe(baseCtx.bodyPreview);
+    expect(decision.intent).toBe("search");
+    expect(decision.confidence).toBe("high");
+    expect(decision.matchedPattern).toBe("weather|forecast");
+    expect(decision.defaultProvider).toBe("anthropic");
+    expect(decision.defaultModel).toBe("claude-opus-4-6");
+    expect(decision.routed).toBe(true);
+    expect(decision.routedProvider).toBe("perplexity");
+    expect(decision.routedModel).toBe("sonar-pro");
+    expect(decision.reason).toBeUndefined();
+  });
+
+  const reasons: Array<RoutingResolution & { routed: false }> = [
+    { routed: false, reason: "disabled", intent: "search" },
+    { routed: false, reason: "no-rule", intent: "code" },
+    { routed: false, reason: "general-intent", intent: "general" },
+    { routed: false, reason: "provider-unavailable", intent: "search" },
+  ];
+
+  for (const resolution of reasons) {
+    it(`captures reason=${resolution.reason} when not routed`, () => {
+      const decision = buildRoutingDecision({
+        classification: { ...baseClassification, intent: resolution.intent },
+        resolution,
+        defaultProvider: "anthropic",
+        defaultModel: "claude-opus-4-6",
+        ctx: baseCtx,
+      });
+      expect(decision.routed).toBe(false);
+      expect(decision.reason).toBe(resolution.reason);
+      expect(decision.routedProvider).toBeUndefined();
+      expect(decision.routedModel).toBeUndefined();
+      expect(decision.defaultProvider).toBe("anthropic");
+      expect(decision.defaultModel).toBe("claude-opus-4-6");
+    });
+  }
+
+  it("preserves optional ctx fields when undefined", () => {
+    const decision = buildRoutingDecision({
+      classification: { intent: "general", confidence: "high" },
+      resolution: { routed: false, reason: "general-intent", intent: "general" },
+      defaultProvider: "anthropic",
+      defaultModel: "claude-opus-4-6",
+      ctx: { bodyPreview: "hi" },
+    });
+    expect(decision.sessionKey).toBeUndefined();
+    expect(decision.channel).toBeUndefined();
+    expect(decision.matchedPattern).toBeUndefined();
   });
 });

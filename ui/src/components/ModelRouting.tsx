@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { Check, ChevronDown, ChevronUp, Loader2, Plus, Route, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,8 @@ import { notifyError } from "@/stores/notification-store";
 // ---------------------------------------------------------------------------
 
 type IntentType = "search" | "reasoning" | "code" | "creative";
+type DecisionIntent = IntentType | "general";
+type DecisionReason = "disabled" | "no-rule" | "general-intent" | "provider-unavailable";
 
 type RoutingRule = {
   intent: IntentType;
@@ -24,6 +27,22 @@ type RoutingRule = {
 type RoutingConfig = {
   enabled?: boolean;
   rules?: RoutingRule[];
+};
+
+type RoutingDecision = {
+  ts: number;
+  sessionKey?: string;
+  channel?: string;
+  bodyPreview: string;
+  intent: DecisionIntent;
+  confidence: "high" | "medium";
+  matchedPattern?: string;
+  defaultProvider: string;
+  defaultModel: string;
+  routed: boolean;
+  routedProvider?: string;
+  routedModel?: string;
+  reason?: DecisionReason;
 };
 
 // ---------------------------------------------------------------------------
@@ -48,6 +67,7 @@ export function ModelRouting({ demoMode }: { demoMode: boolean }) {
   const [savedHint, setSavedHint] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [configuredProviders, setConfiguredProviders] = useState<Set<string>>(new Set());
+  const [decisions, setDecisions] = useState<RoutingDecision[]>([]);
 
   // --- Load routing config ---
   useEffect(() => {
@@ -87,6 +107,29 @@ export function ModelRouting({ demoMode }: { demoMode: boolean }) {
       cancelled = true;
     };
   }, [demoMode]);
+
+  // --- Poll recent routing decisions while panel is expanded ---
+  useEffect(() => {
+    if (demoMode || !expanded) {
+      return;
+    }
+    let cancelled = false;
+    const fetchDecisions = () => {
+      gatewayRpc<{ decisions: RoutingDecision[] }>("models.routing.recent", { limit: 50 })
+        .then((res) => {
+          if (!cancelled && res.ok && Array.isArray(res.payload?.decisions)) {
+            setDecisions(res.payload.decisions);
+          }
+        })
+        .catch(() => {});
+    };
+    fetchDecisions();
+    const handle = window.setInterval(fetchDecisions, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(handle);
+    };
+  }, [demoMode, expanded]);
 
   // --- Handlers ---
 
@@ -452,7 +495,117 @@ export function ModelRouting({ demoMode }: { demoMode: boolean }) {
               </Button>
             </div>
           )}
+
+          {!demoMode && (
+            <RecentDecisions decisions={decisions} reasonLabel={getReasonLabel} t={t} />
+          )}
         </div>
+      )}
+    </div>
+  );
+}
+
+function getReasonLabel(reason: DecisionReason | undefined, t: TFunction): string {
+  if (!reason) {
+    return "";
+  }
+  const map: Record<DecisionReason, string> = {
+    disabled: t("routing.recent.reason.disabled", "routing disabled"),
+    "no-rule": t("routing.recent.reason.noRule", "no matching rule"),
+    "general-intent": t("routing.recent.reason.generalIntent", "general chat"),
+    "provider-unavailable": t(
+      "routing.recent.reason.providerUnavailable",
+      "provider not configured",
+    ),
+  };
+  return map[reason];
+}
+
+function formatRelativeTime(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) {
+    return "just now";
+  }
+  if (diff < 3_600_000) {
+    return `${Math.floor(diff / 60_000)}m ago`;
+  }
+  if (diff < 86_400_000) {
+    return `${Math.floor(diff / 3_600_000)}h ago`;
+  }
+  return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
+function RecentDecisions({
+  decisions,
+  reasonLabel,
+  t,
+}: {
+  decisions: RoutingDecision[];
+  reasonLabel: (reason: DecisionReason | undefined, t: TFunction) => string;
+  t: TFunction;
+}) {
+  return (
+    <div className="pt-2 border-t border-[var(--glass-border)]">
+      <div className="flex items-center gap-2 mb-2 mt-2">
+        <span className="text-[11px] font-medium text-neutral-300">
+          {t("routing.recent.title", "Recent decisions")}
+        </span>
+        {decisions.length > 0 && (
+          <span className="text-[10px] text-neutral-500">({decisions.length})</span>
+        )}
+      </div>
+      {decisions.length === 0 ? (
+        <p className="text-[11px] text-neutral-500">
+          {t("routing.recent.empty", "No decisions yet — send a message to see routing in action")}
+        </p>
+      ) : (
+        <ul className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
+          {decisions.map((d, idx) => (
+            <li
+              key={`${d.ts}-${idx}`}
+              className="rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] px-2.5 py-1.5"
+            >
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] text-neutral-500 tabular-nums w-14 shrink-0">
+                  {formatRelativeTime(d.ts)}
+                </span>
+                <span
+                  className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded-full border",
+                    d.intent === "general"
+                      ? "bg-neutral-900/40 text-neutral-400 border-neutral-800/60"
+                      : "bg-purple-900/40 text-purple-400 border-purple-800/50",
+                  )}
+                >
+                  {d.intent}
+                </span>
+                {d.channel && <span className="text-[10px] text-neutral-500">{d.channel}</span>}
+                <span className="text-[11px] text-neutral-400 truncate flex-1 min-w-0">
+                  {d.bodyPreview || ""}
+                </span>
+              </div>
+              <div className="text-[10px] text-neutral-500 mt-0.5 ml-16">
+                {d.routed && d.routedProvider && d.routedModel ? (
+                  <span className="text-emerald-400">
+                    →{" "}
+                    {t("routing.recent.routedTo", "{{provider}}/{{model}}", {
+                      provider: d.routedProvider,
+                      model: d.routedModel,
+                    })}
+                  </span>
+                ) : (
+                  <span>
+                    {t("routing.recent.fallback", "default: {{provider}}/{{model}} — {{reason}}", {
+                      provider: d.defaultProvider,
+                      model: d.defaultModel,
+                      reason: reasonLabel(d.reason, t),
+                    })}
+                  </span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

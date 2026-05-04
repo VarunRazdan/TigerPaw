@@ -8,6 +8,7 @@ import {
   resolveDefaultModelForAgent,
   resolveModelRefFromString,
 } from "../../agents/model-selection.js";
+import { refreshProviders } from "../../agents/refresh-providers.js";
 import type { OpenClawConfig } from "../../config/config.js";
 import type { SessionEntry } from "../../config/sessions.js";
 import {
@@ -231,6 +232,29 @@ export async function resolveModelsCommandReply(params: {
   }
 
   const argText = body.replace(/^\/models\b/i, "").trim();
+
+  // `refresh` is a subcommand, not a provider — branch before parseModelsArgs
+  // would otherwise emit "Unknown provider: refresh".
+  if (/^refresh(\b|$)/i.test(argText)) {
+    return await handleModelsRefresh({ argText, cfg: params.cfg });
+  }
+
+  // `/models list ...` flattens every configured provider's models into a
+  // single list so users can scan leaf model IDs without memorizing them.
+  // `/models <provider> list` is handled by parseModelsArgs silently
+  // ignoring the trailing "list" token.
+  if (/^list(\b|$)/i.test(argText)) {
+    return await handleModelsListAll({
+      argText: argText.replace(/^list\b\s*/i, ""),
+      cfg: params.cfg,
+      surface: params.surface,
+      currentModel: params.currentModel,
+      agentId: params.agentId,
+      agentDir: params.agentDir,
+      sessionEntry: params.sessionEntry,
+    });
+  }
+
   const { provider, page, pageSize, all } = parseModelsArgs(argText);
 
   const { byProvider, providers } = await buildModelsProviderData(params.cfg, params.agentId);
@@ -347,7 +371,8 @@ export async function resolveModelsCommandReply(params: {
 
   const lines: string[] = [header];
   for (const id of pageModels) {
-    lines.push(`- ${provider}/${id}`);
+    const ref = `${provider}/${id}`;
+    lines.push(params.currentModel === ref ? `* ${ref} (active)` : `- ${ref}`);
   }
 
   lines.push("", "Switch: /model <provider/model>");
@@ -360,6 +385,155 @@ export async function resolveModelsCommandReply(params: {
 
   const payload: ReplyPayload = { text: lines.join("\n") };
   return payload;
+}
+
+const REFRESH_INLINE_LIMIT = 20;
+
+async function handleModelsRefresh(params: {
+  argText: string;
+  cfg: OpenClawConfig;
+}): Promise<ReplyPayload> {
+  const tokens = params.argText.trim().split(/\s+/g).filter(Boolean);
+  // tokens[0] is "refresh"; tokens[1] (if present) is an optional provider filter.
+  const filter = tokens[1] ? [tokens[1].toLowerCase()] : undefined;
+
+  const result = await refreshProviders(params.cfg, filter);
+
+  if (!result.ok) {
+    if (result.code === "config-conflict") {
+      return { text: "⚠️ Config changed during refresh — please retry /models refresh." };
+    }
+    return { text: `❌ Failed to write config: ${result.error}` };
+  }
+
+  if (result.summaries.length === 0) {
+    return {
+      text: filter
+        ? `No live discovery for "${filter[0]}" — only ollama, vllm, venice, vercel-ai-gateway, huggingface, kilocode support refresh.`
+        : "No discoverable providers configured. Static catalog providers (anthropic, openai, …) are always up-to-date.",
+    };
+  }
+
+  const lines: string[] = [
+    `🔄 Refresh complete (${result.refreshedCount} provider${result.refreshedCount === 1 ? "" : "s"} refreshed${
+      result.failedCount ? `, ${result.failedCount} failed` : ""
+    })`,
+  ];
+
+  for (const summary of result.summaries) {
+    lines.push("");
+    if (!summary.ok) {
+      if (summary.code === "unreachable") {
+        lines.push(
+          `❌ ${summary.provider}: unreachable${summary.baseUrl ? ` at ${summary.baseUrl}` : ""}`,
+        );
+      } else {
+        lines.push(
+          `❌ ${summary.provider}: discovery failed${summary.error ? ` (${summary.error})` : ""}`,
+        );
+      }
+      continue;
+    }
+    const newCount = summary.models.length;
+    lines.push(`${summary.provider} (was ${summary.oldCount} → now ${newCount}):`);
+    if (newCount === 0) {
+      lines.push(`  (no models discovered)`);
+      continue;
+    }
+    const shown = summary.models.slice(0, REFRESH_INLINE_LIMIT);
+    for (const model of shown) {
+      lines.push(`- ${summary.provider}/${model.id}`);
+    }
+    if (newCount > REFRESH_INLINE_LIMIT) {
+      lines.push(
+        `  …and ${newCount - REFRESH_INLINE_LIMIT} more — /models ${summary.provider} list`,
+      );
+    }
+  }
+
+  if (result.refreshedCount > 0) {
+    lines.push("", "Switch: /model <provider/model>");
+  }
+
+  if (result.allowlistActive) {
+    lines.push(
+      "",
+      "⚠️ You have an explicit allowlist (agents.defaults.models). Refreshed",
+      "tags won't appear in /models <provider> until you add them there. Use",
+      "/model <provider/model> to switch directly for this session.",
+    );
+  }
+
+  return { text: lines.join("\n") };
+}
+
+async function handleModelsListAll(params: {
+  argText: string;
+  cfg: OpenClawConfig;
+  surface?: string;
+  currentModel?: string;
+  agentId?: string;
+  agentDir?: string;
+  sessionEntry?: SessionEntry;
+}): Promise<ReplyPayload> {
+  const { byProvider, providers } = await buildModelsProviderData(params.cfg, params.agentId);
+
+  // Flatten provider/model into a sorted list of refs so users see leaf IDs.
+  const collected: string[] = [];
+  for (const provider of providers) {
+    const models = [...(byProvider.get(provider) ?? new Set<string>())].toSorted();
+    for (const id of models) {
+      collected.push(`${provider}/${id}`);
+    }
+  }
+  const allRefs = collected.toSorted();
+
+  const total = allRefs.length;
+  if (total === 0) {
+    return {
+      text:
+        "No models in the catalog yet. Configure a provider in the AI Provider page,\n" +
+        "or run /models refresh after starting your local Ollama / vLLM / etc.",
+    };
+  }
+
+  const { page, pageSize, all } = parseModelsArgs(params.argText);
+  const effectivePageSize = all ? total : pageSize;
+  const pageCount = effectivePageSize > 0 ? Math.ceil(total / effectivePageSize) : 1;
+  const safePage = all ? 1 : Math.max(1, Math.min(page, pageCount));
+
+  if (!all && page !== safePage) {
+    return {
+      text: [
+        `Page out of range: ${page} (valid: 1-${pageCount})`,
+        "",
+        `Try: /models list ${safePage}`,
+        `All: /models list all`,
+      ].join("\n"),
+    };
+  }
+
+  const startIndex = (safePage - 1) * effectivePageSize;
+  const endIndexExclusive = Math.min(total, startIndex + effectivePageSize);
+  const pageRefs = allRefs.slice(startIndex, endIndexExclusive);
+
+  const lines: string[] = [
+    `All models — showing ${startIndex + 1}-${endIndexExclusive} of ${total} (page ${safePage}/${pageCount})`,
+  ];
+  for (const ref of pageRefs) {
+    lines.push(params.currentModel === ref ? `* ${ref} (active)` : `- ${ref}`);
+  }
+
+  lines.push("", "Switch: /model <provider/model>");
+  if (!all && safePage < pageCount) {
+    lines.push(`More: /models list ${safePage + 1}`);
+  }
+  if (!all) {
+    lines.push(`All: /models list all`);
+  }
+  lines.push("Filter to one provider: /models <provider> list");
+
+  return { text: lines.join("\n") };
 }
 
 export const handleModelsCommand: CommandHandler = async (params, allowTextCommands) => {

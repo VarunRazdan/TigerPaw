@@ -7,7 +7,7 @@
 
 import type { OpenClawConfig } from "../config/config.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
-import type { IntentCategory } from "./intent-classifier.js";
+import type { ClassificationResult, IntentCategory } from "./intent-classifier.js";
 import {
   type ModelRef,
   findNormalizedProviderValue,
@@ -74,4 +74,56 @@ export function resolveIntentRoute(params: {
   const ref = normalizeModelRef(rule.provider, rule.model);
   log.info(`routing: ${intent} -> ${ref.provider}/${ref.model}`);
   return { routed: true, ref, intent, rule };
+}
+
+/**
+ * Per-message routing telemetry record.
+ * Captures both the classifier output and the router's resolution so the UI can
+ * explain why a route did or did not fire.
+ */
+export type RoutingDecision = {
+  ts: number;
+  sessionKey?: string;
+  channel?: string;
+  bodyPreview: string;
+  intent: IntentCategory;
+  confidence: "high" | "medium";
+  matchedPattern?: string;
+  defaultProvider: string;
+  defaultModel: string;
+  routed: boolean;
+  routedProvider?: string;
+  routedModel?: string;
+  reason?: "disabled" | "no-rule" | "general-intent" | "provider-unavailable";
+};
+
+export function buildRoutingDecision(params: {
+  classification: ClassificationResult;
+  resolution: RoutingResolution;
+  defaultProvider: string;
+  defaultModel: string;
+  ctx: { sessionKey?: string; channel?: string; bodyPreview: string };
+}): RoutingDecision {
+  const { classification, resolution, defaultProvider, defaultModel, ctx } = params;
+  const base: RoutingDecision = {
+    ts: Date.now(),
+    sessionKey: ctx.sessionKey,
+    channel: ctx.channel,
+    bodyPreview: ctx.bodyPreview,
+    intent: classification.intent,
+    confidence: classification.confidence,
+    matchedPattern: classification.matchedPattern,
+    defaultProvider,
+    defaultModel,
+    routed: false,
+  };
+  if (resolution.routed) {
+    return {
+      ...base,
+      routed: true,
+      routedProvider: resolution.ref.provider,
+      routedModel: resolution.ref.model,
+    };
+  }
+  return { ...base, reason: resolution.reason };
 }

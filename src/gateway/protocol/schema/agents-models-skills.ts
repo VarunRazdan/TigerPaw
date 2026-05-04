@@ -173,6 +173,52 @@ export const ModelsListResultSchema = Type.Object(
   { additionalProperties: false },
 );
 
+export const RoutingDecisionSchema = Type.Object(
+  {
+    ts: Type.Integer({ minimum: 0 }),
+    sessionKey: Type.Optional(NonEmptyString),
+    channel: Type.Optional(NonEmptyString),
+    bodyPreview: Type.String(),
+    intent: Type.Union([
+      Type.Literal("search"),
+      Type.Literal("reasoning"),
+      Type.Literal("code"),
+      Type.Literal("creative"),
+      Type.Literal("general"),
+    ]),
+    confidence: Type.Union([Type.Literal("high"), Type.Literal("medium")]),
+    matchedPattern: Type.Optional(Type.String()),
+    defaultProvider: NonEmptyString,
+    defaultModel: NonEmptyString,
+    routed: Type.Boolean(),
+    routedProvider: Type.Optional(NonEmptyString),
+    routedModel: Type.Optional(NonEmptyString),
+    reason: Type.Optional(
+      Type.Union([
+        Type.Literal("disabled"),
+        Type.Literal("no-rule"),
+        Type.Literal("general-intent"),
+        Type.Literal("provider-unavailable"),
+      ]),
+    ),
+  },
+  { additionalProperties: false },
+);
+
+export const ModelsRoutingRecentParamsSchema = Type.Object(
+  {
+    limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 200 })),
+  },
+  { additionalProperties: false },
+);
+
+export const ModelsRoutingRecentResultSchema = Type.Object(
+  {
+    decisions: Type.Array(RoutingDecisionSchema),
+  },
+  { additionalProperties: false },
+);
+
 export const SkillsStatusParamsSchema = Type.Object(
   {
     agentId: Type.Optional(NonEmptyString),

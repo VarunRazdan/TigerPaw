@@ -75,6 +75,11 @@ vi.mock("../../agents/model-catalog.js", () => ({
   ]),
 }));
 
+const refreshProvidersMock = vi.hoisted(() => vi.fn());
+vi.mock("../../agents/refresh-providers.js", () => ({
+  refreshProviders: refreshProvidersMock,
+}));
+
 vi.mock("../../agents/pi-embedded.js", () => {
   const resolveEmbeddedSessionLane = (key: string) => {
     const cleaned = key.trim() || "main";
@@ -1259,6 +1264,243 @@ describe("/models command", () => {
     });
 
     expect(result.reply?.text).toContain("localai");
+  });
+
+  describe("active-model marker", () => {
+    it("marks the currently configured model with `* ... (active)`", async () => {
+      const params = buildPolicyParams("/models anthropic", cfg, {
+        Provider: "discord",
+        Surface: "discord",
+      });
+      const result = await handleCommands({
+        ...params,
+        provider: "anthropic",
+        model: "claude-opus-4-5",
+      });
+      expect(result.reply?.text).toContain("* anthropic/claude-opus-4-5 (active)");
+      expect(result.reply?.text).toContain("- anthropic/claude-sonnet-4-5");
+    });
+  });
+
+  describe("/models list (flat full-model listing)", () => {
+    it("emits a flat list of every provider/model with active marker + pagination hints", async () => {
+      const params = buildPolicyParams("/models list", cfg, {
+        Provider: "discord",
+        Surface: "discord",
+      });
+      const result = await handleCommands({
+        ...params,
+        provider: "anthropic",
+        model: "claude-opus-4-5",
+      });
+      expect(result.shouldContinue).toBe(false);
+      const text = result.reply?.text ?? "";
+      expect(text).toContain("All models — showing 1-");
+      expect(text).toContain("anthropic/claude-opus-4-5");
+      expect(text).toContain("anthropic/claude-sonnet-4-5");
+      expect(text).toContain("openai/gpt-4.1");
+      expect(text).toContain("* anthropic/claude-opus-4-5 (active)");
+      expect(text).toContain("Switch: /model <provider/model>");
+      expect(text).toContain("Filter to one provider: /models <provider> list");
+    });
+
+    it("`/models list all` skips pagination and shows everything", async () => {
+      const result = await handleCommands(
+        buildPolicyParams("/models list all", cfg, { Provider: "discord", Surface: "discord" }),
+      );
+      const text = result.reply?.text ?? "";
+      expect(text).toContain("page 1/1");
+      expect(text).toContain("anthropic/claude-opus-4-5");
+      expect(text).toContain("google/gemini-2.0-flash");
+    });
+
+    it("`/models <provider> list` is the existing per-provider listing path", async () => {
+      const params = buildPolicyParams("/models anthropic list", cfg, {
+        Provider: "discord",
+        Surface: "discord",
+      });
+      const result = await handleCommands(params);
+      const text = result.reply?.text ?? "";
+      expect(text).toContain("Models (anthropic");
+      expect(text).toContain("anthropic/claude-opus-4-5");
+      expect(text).not.toContain("Unknown provider");
+    });
+  });
+
+  describe("/models refresh (multi-provider)", () => {
+    beforeEach(() => {
+      refreshProvidersMock.mockReset();
+    });
+
+    it("formats a success reply with per-provider summaries", async () => {
+      refreshProvidersMock.mockResolvedValue({
+        ok: true,
+        refreshedCount: 2,
+        failedCount: 0,
+        writtenCount: 2,
+        allowlistActive: false,
+        summaries: [
+          {
+            provider: "ollama",
+            ok: true,
+            oldCount: 6,
+            models: [{ id: "gemma4:26b" }, { id: "qwen3:8b" }],
+            baseUrl: "http://localhost:11434",
+          },
+          {
+            provider: "venice",
+            ok: true,
+            oldCount: 3,
+            models: [{ id: "llama-3-405b" }],
+            baseUrl: "https://api.venice.ai/v1",
+          },
+        ],
+      });
+      const result = await handleCommands(
+        buildPolicyParams("/models refresh", cfg, { Provider: "discord", Surface: "discord" }),
+      );
+      expect(result.shouldContinue).toBe(false);
+      const text = result.reply?.text ?? "";
+      expect(text).toContain("Refresh complete (2 providers refreshed)");
+      expect(text).toContain("ollama (was 6 → now 2)");
+      expect(text).toContain("- ollama/gemma4:26b");
+      expect(text).toContain("venice (was 3 → now 1)");
+      expect(text).toContain("- venice/llama-3-405b");
+      expect(text).toContain("Switch: /model <provider/model>");
+    });
+
+    it("filters to a single provider when one is supplied (e.g. /models refresh ollama)", async () => {
+      refreshProvidersMock.mockResolvedValue({
+        ok: true,
+        refreshedCount: 1,
+        failedCount: 0,
+        writtenCount: 1,
+        allowlistActive: false,
+        summaries: [
+          {
+            provider: "ollama",
+            ok: true,
+            oldCount: 0,
+            models: [{ id: "gemma4:26b" }],
+            baseUrl: "http://localhost:11434",
+          },
+        ],
+      });
+      await handleCommands(
+        buildPolicyParams("/models refresh ollama", cfg, {
+          Provider: "discord",
+          Surface: "discord",
+        }),
+      );
+      expect(refreshProvidersMock).toHaveBeenCalledWith(expect.anything(), ["ollama"]);
+    });
+
+    it("reports unreachable + discovery-failed per provider without aborting the batch", async () => {
+      refreshProvidersMock.mockResolvedValue({
+        ok: true,
+        refreshedCount: 1,
+        failedCount: 2,
+        writtenCount: 1,
+        allowlistActive: false,
+        summaries: [
+          {
+            provider: "ollama",
+            ok: true,
+            oldCount: 0,
+            models: [{ id: "gemma4:26b" }],
+            baseUrl: "http://localhost:11434",
+          },
+          {
+            provider: "vllm",
+            ok: false,
+            code: "unreachable",
+            baseUrl: "http://127.0.0.1:8000/v1",
+          },
+          {
+            provider: "venice",
+            ok: false,
+            code: "discovery-failed",
+            error: "auth required",
+          },
+        ],
+      });
+      const result = await handleCommands(
+        buildPolicyParams("/models refresh", cfg, { Provider: "discord", Surface: "discord" }),
+      );
+      const text = result.reply?.text ?? "";
+      expect(text).toContain("1 provider refreshed, 2 failed");
+      expect(text).toContain("❌ vllm: unreachable at http://127.0.0.1:8000/v1");
+      expect(text).toContain("❌ venice: discovery failed (auth required)");
+    });
+
+    it("informs the user when no discoverable providers are configured", async () => {
+      refreshProvidersMock.mockResolvedValue({
+        ok: true,
+        refreshedCount: 0,
+        failedCount: 0,
+        writtenCount: 0,
+        allowlistActive: false,
+        summaries: [],
+      });
+      const result = await handleCommands(
+        buildPolicyParams("/models refresh", cfg, { Provider: "discord", Surface: "discord" }),
+      );
+      expect(result.reply?.text).toContain("No discoverable providers configured");
+    });
+
+    it("informs when refresh <name> has no live discovery", async () => {
+      refreshProvidersMock.mockResolvedValue({
+        ok: true,
+        refreshedCount: 0,
+        failedCount: 0,
+        writtenCount: 0,
+        allowlistActive: false,
+        summaries: [],
+      });
+      const result = await handleCommands(
+        buildPolicyParams("/models refresh anthropic", cfg, {
+          Provider: "discord",
+          Surface: "discord",
+        }),
+      );
+      expect(result.reply?.text).toContain('No live discovery for "anthropic"');
+    });
+
+    it("appends the allowlist warning when allowlistActive=true", async () => {
+      refreshProvidersMock.mockResolvedValue({
+        ok: true,
+        refreshedCount: 1,
+        failedCount: 0,
+        writtenCount: 1,
+        allowlistActive: true,
+        summaries: [{ provider: "ollama", ok: true, oldCount: 0, models: [{ id: "gemma4:26b" }] }],
+      });
+      const result = await handleCommands(
+        buildPolicyParams("/models refresh", cfg, { Provider: "discord", Surface: "discord" }),
+      );
+      expect(result.reply?.text).toContain("explicit allowlist");
+    });
+
+    it("maps config-conflict to a retry message", async () => {
+      refreshProvidersMock.mockResolvedValue({ ok: false, code: "config-conflict" });
+      const result = await handleCommands(
+        buildPolicyParams("/models refresh", cfg, { Provider: "discord", Surface: "discord" }),
+      );
+      expect(result.reply?.text).toContain("Config changed during refresh");
+    });
+
+    it("maps io-error to a write-failure message", async () => {
+      refreshProvidersMock.mockResolvedValue({
+        ok: false,
+        code: "io-error",
+        error: "disk full",
+      });
+      const result = await handleCommands(
+        buildPolicyParams("/models refresh", cfg, { Provider: "discord", Surface: "discord" }),
+      );
+      expect(result.reply?.text).toContain("Failed to write config");
+      expect(result.reply?.text).toContain("disk full");
+    });
   });
 });
 
