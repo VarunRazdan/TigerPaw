@@ -2398,6 +2398,96 @@ public struct ModelsListResult: Codable, Sendable {
     }
 }
 
+public struct RoutingDecision: Codable, Sendable {
+    public let ts: Int
+    public let sessionkey: String?
+    public let channel: String?
+    public let bodypreview: String
+    public let intent: AnyCodable
+    public let confidence: AnyCodable
+    public let matchedpattern: String?
+    public let defaultprovider: String
+    public let defaultmodel: String
+    public let routed: Bool
+    public let routedprovider: String?
+    public let routedmodel: String?
+    public let reason: AnyCodable?
+
+    public init(
+        ts: Int,
+        sessionkey: String?,
+        channel: String?,
+        bodypreview: String,
+        intent: AnyCodable,
+        confidence: AnyCodable,
+        matchedpattern: String?,
+        defaultprovider: String,
+        defaultmodel: String,
+        routed: Bool,
+        routedprovider: String?,
+        routedmodel: String?,
+        reason: AnyCodable?)
+    {
+        self.ts = ts
+        self.sessionkey = sessionkey
+        self.channel = channel
+        self.bodypreview = bodypreview
+        self.intent = intent
+        self.confidence = confidence
+        self.matchedpattern = matchedpattern
+        self.defaultprovider = defaultprovider
+        self.defaultmodel = defaultmodel
+        self.routed = routed
+        self.routedprovider = routedprovider
+        self.routedmodel = routedmodel
+        self.reason = reason
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case ts
+        case sessionkey = "sessionKey"
+        case channel
+        case bodypreview = "bodyPreview"
+        case intent
+        case confidence
+        case matchedpattern = "matchedPattern"
+        case defaultprovider = "defaultProvider"
+        case defaultmodel = "defaultModel"
+        case routed
+        case routedprovider = "routedProvider"
+        case routedmodel = "routedModel"
+        case reason
+    }
+}
+
+public struct ModelsRoutingRecentParams: Codable, Sendable {
+    public let limit: Int?
+
+    public init(
+        limit: Int?)
+    {
+        self.limit = limit
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case limit
+    }
+}
+
+public struct ModelsRoutingRecentResult: Codable, Sendable {
+    public let decisions: [RoutingDecision]
+
+    public init(
+        decisions: [RoutingDecision])
+    {
+        self.decisions = decisions
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case decisions
+    }
+}
+
 public struct SkillsStatusParams: Codable, Sendable {
     public let agentid: String?
 
