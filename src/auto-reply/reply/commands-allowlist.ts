@@ -114,9 +114,14 @@ function parseAllowlistCommand(raw: string): AllowlistCommand | null {
     i += 1;
   } else if (tokens[i]?.startsWith("+")) {
     // Shorthand: `/allowlist +85298266533` (or `/allowlist +852 9826 6533`)
-    // expands to `/allowlist add dm <number>`. Phone-shaped first-token
-    // implies the user wants to add themselves.
+    // expands to `/allowlist add dm <number> --store`. Phone-shaped first-
+    // token implies the user wants to add themselves; default to store-only
+    // so the command works without flipping `commands.config=true` (which
+    // would unlock other config-mutating chat commands too). Users who want
+    // to also persist into `tigerclaw.json` can still type the long form
+    // `/allowlist add dm +X` (which keeps the historical `target=both`).
     action = "add";
+    target = "store";
   }
   if (tokens[i] && SCOPES.has(tokens[i].toLowerCase() as AllowlistScope)) {
     scope = tokens[i].toLowerCase() as AllowlistScope;

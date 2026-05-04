@@ -1157,33 +1157,29 @@ describe("handleCommands /allowlist", () => {
       );
     });
 
-    it("treats `/allowlist <+number>` as `add dm <+number>`", async () => {
-      readConfigFileSnapshotMock.mockResolvedValueOnce({
-        valid: true,
-        parsed: { channels: { telegram: { allowFrom: [] } } },
-      });
-      validateConfigObjectWithPluginsMock.mockImplementation((config: unknown) => ({
-        ok: true,
-        config,
-      }));
+    it("treats `/allowlist <+number>` as `add dm <+number>` with store-only target", async () => {
       addChannelAllowFromStoreEntryMock.mockResolvedValueOnce({
         changed: true,
         allowFrom: ["+85298266533"],
       });
 
+      // No `commands.config` flag — shorthand should still work because it
+      // defaults to target=store, which doesn't touch tigerclaw.json.
       const cfg = {
-        commands: { text: true, config: true },
+        commands: { text: true },
         channels: { telegram: {} },
       } as OpenClawConfig;
       const params = buildPolicyParams("/allowlist +85298266533", cfg);
       const result = await handleCommands(params);
 
       expect(result.shouldContinue).toBe(false);
+      expect(result.reply?.text).not.toContain("disabled");
       expect(addChannelAllowFromStoreEntryMock).toHaveBeenCalledWith({
         channel: "telegram",
         entry: "+85298266533",
         accountId: "default",
       });
+      expect(writeConfigFileMock).not.toHaveBeenCalled();
     });
 
     it("expands `/allowlist <number-with-spaces>` shorthand and compacts the entry", async () => {
