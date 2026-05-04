@@ -1121,6 +1121,166 @@ describe("handleCommands /allowlist", () => {
       expect(result.reply?.text).toContain(`channels.${testCase.provider}.allowFrom`);
     }
   });
+
+  describe("phone-shaped shortcuts", () => {
+    it("compacts whitespace and dashes from phone-shaped entries on add", async () => {
+      readConfigFileSnapshotMock.mockResolvedValueOnce({
+        valid: true,
+        parsed: { channels: { telegram: { allowFrom: ["+123"] } } },
+      });
+      validateConfigObjectWithPluginsMock.mockImplementation((config: unknown) => ({
+        ok: true,
+        config,
+      }));
+      addChannelAllowFromStoreEntryMock.mockResolvedValueOnce({
+        changed: true,
+        allowFrom: ["+123", "+85298266533"],
+      });
+
+      const cfg = {
+        commands: { text: true, config: true },
+        channels: { telegram: { allowFrom: ["+123"] } },
+      } as OpenClawConfig;
+      const params = buildPolicyParams("/allowlist add dm +852 9826 6533", cfg);
+      const result = await handleCommands(params);
+
+      expect(result.shouldContinue).toBe(false);
+      expect(addChannelAllowFromStoreEntryMock).toHaveBeenCalledWith({
+        channel: "telegram",
+        entry: "+85298266533",
+        accountId: "default",
+      });
+      expect(writeConfigFileMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channels: { telegram: { allowFrom: ["+123", "+85298266533"] } },
+        }),
+      );
+    });
+
+    it("treats `/allowlist <+number>` as `add dm <+number>`", async () => {
+      readConfigFileSnapshotMock.mockResolvedValueOnce({
+        valid: true,
+        parsed: { channels: { telegram: { allowFrom: [] } } },
+      });
+      validateConfigObjectWithPluginsMock.mockImplementation((config: unknown) => ({
+        ok: true,
+        config,
+      }));
+      addChannelAllowFromStoreEntryMock.mockResolvedValueOnce({
+        changed: true,
+        allowFrom: ["+85298266533"],
+      });
+
+      const cfg = {
+        commands: { text: true, config: true },
+        channels: { telegram: {} },
+      } as OpenClawConfig;
+      const params = buildPolicyParams("/allowlist +85298266533", cfg);
+      const result = await handleCommands(params);
+
+      expect(result.shouldContinue).toBe(false);
+      expect(addChannelAllowFromStoreEntryMock).toHaveBeenCalledWith({
+        channel: "telegram",
+        entry: "+85298266533",
+        accountId: "default",
+      });
+    });
+
+    it("expands `/allowlist <number-with-spaces>` shorthand and compacts the entry", async () => {
+      readConfigFileSnapshotMock.mockResolvedValueOnce({
+        valid: true,
+        parsed: { channels: { telegram: { allowFrom: [] } } },
+      });
+      validateConfigObjectWithPluginsMock.mockImplementation((config: unknown) => ({
+        ok: true,
+        config,
+      }));
+      addChannelAllowFromStoreEntryMock.mockResolvedValueOnce({
+        changed: true,
+        allowFrom: ["+85298266533"],
+      });
+
+      const cfg = {
+        commands: { text: true, config: true },
+        channels: { telegram: {} },
+      } as OpenClawConfig;
+      const params = buildPolicyParams("/allowlist +852 9826 6533", cfg);
+      const result = await handleCommands(params);
+
+      expect(result.shouldContinue).toBe(false);
+      expect(addChannelAllowFromStoreEntryMock).toHaveBeenCalledWith({
+        channel: "telegram",
+        entry: "+85298266533",
+        accountId: "default",
+      });
+    });
+
+    it("doesn't compact non-phone-shaped entries (keeps telegram:@user untouched)", async () => {
+      readConfigFileSnapshotMock.mockResolvedValueOnce({
+        valid: true,
+        parsed: { channels: { telegram: { allowFrom: [] } } },
+      });
+      validateConfigObjectWithPluginsMock.mockImplementation((config: unknown) => ({
+        ok: true,
+        config,
+      }));
+      addChannelAllowFromStoreEntryMock.mockResolvedValueOnce({
+        changed: true,
+        allowFrom: ["telegram:@alice"],
+      });
+
+      const cfg = {
+        commands: { text: true, config: true },
+        channels: { telegram: {} },
+      } as OpenClawConfig;
+      const params = buildPolicyParams("/allowlist add dm telegram:@alice", cfg);
+      const result = await handleCommands(params);
+
+      expect(result.shouldContinue).toBe(false);
+      expect(addChannelAllowFromStoreEntryMock).toHaveBeenCalledWith({
+        channel: "telegram",
+        entry: "telegram:@alice",
+        accountId: "default",
+      });
+    });
+  });
+
+  describe("commands.config gate", () => {
+    it("blocks add when target=config (default) and commands.config is unset", async () => {
+      const cfg = {
+        commands: { text: true },
+        channels: { telegram: { allowFrom: [] } },
+      } as OpenClawConfig;
+      const params = buildPolicyParams("/allowlist add dm +85298266533", cfg);
+      const result = await handleCommands(params);
+
+      expect(result.shouldContinue).toBe(false);
+      expect(result.reply?.text).toContain("/allowlist edits are disabled");
+      expect(writeConfigFileMock).not.toHaveBeenCalled();
+    });
+
+    it("allows --store edits without commands.config (store doesn't touch tigerclaw.json)", async () => {
+      addChannelAllowFromStoreEntryMock.mockResolvedValueOnce({
+        changed: true,
+        allowFrom: ["+85298266533"],
+      });
+
+      const cfg = {
+        commands: { text: true },
+        channels: { telegram: {} },
+      } as OpenClawConfig;
+      const params = buildPolicyParams("/allowlist add dm --store +85298266533", cfg);
+      const result = await handleCommands(params);
+
+      expect(result.shouldContinue).toBe(false);
+      expect(addChannelAllowFromStoreEntryMock).toHaveBeenCalledWith({
+        channel: "telegram",
+        entry: "+85298266533",
+        accountId: "default",
+      });
+      expect(result.reply?.text).not.toContain("disabled");
+    });
+  });
 });
 
 describe("/models command", () => {
