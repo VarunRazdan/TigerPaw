@@ -75,8 +75,8 @@ importers:
         specifier: 0.57.1
         version: 0.57.1(ws@8.19.0)(zod@4.3.6)
       '@mariozechner/pi-tui':
-        specifier: 0.57.1
-        version: 0.57.1
+        specifier: 0.72.1
+        version: 0.72.1
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
@@ -1985,6 +1985,10 @@ packages:
 
   '@mariozechner/pi-tui@0.57.1':
     resolution: {integrity: sha512-cjoRghLbeAHV0tTJeHgZXaryUi5zzBZofeZ7uJun1gztnckLLRjoVeaPTujNlc5BIfyKvFqhh1QWCZng/MXlpg==}
+    engines: {node: '>=20.0.0'}
+
+  '@mariozechner/pi-tui@0.72.1':
+    resolution: {integrity: sha512-KjeqzMQp4vafomfkvI8HKv5/52PqRP5BmlowGC8WKyOaB+u0UkkTdfM5U1Ui3ty2gA7FOfglVRiyvcitiWwvMQ==}
     engines: {node: '>=20.0.0'}
 
   '@matrix-org/matrix-sdk-crypto-nodejs@0.4.0':
@@ -6100,8 +6104,8 @@ packages:
     resolution: {integrity: sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==}
     engines: {node: '>= 8'}
 
-  koffi@2.15.1:
-    resolution: {integrity: sha512-mnc0C0crx/xMSljb5s9QbnLrlFHprioFO1hkXyuSuO/QtbpLDa0l/uM21944UfQunMKmp3/r789DTDxVyyH6aA==}
+  koffi@2.16.1:
+    resolution: {integrity: sha512-0Ie6CfD026dNfWSosDw9dPxPzO9Rlyo0N8m5r05S8YjytIpuilzMFDMY4IDy/8xQsTwpuVinhncD+S8n3bcYZQ==}
 
   leac@0.6.0:
     resolution: {integrity: sha512-y+SqErxb8h7nE/fiEX07jsbuhrpO9lL8eca7/Y1nuWV2moNlXhyd59iDGcRf6moVyDMbmTNzL40SUyrFU/yDpg==}
@@ -10141,7 +10145,17 @@ snapshots:
       marked: 15.0.12
       mime-types: 3.0.2
     optionalDependencies:
-      koffi: 2.15.1
+      koffi: 2.16.1
+
+  '@mariozechner/pi-tui@0.72.1':
+    dependencies:
+      '@types/mime-types': 2.1.4
+      chalk: 5.6.2
+      get-east-asian-width: 1.5.0
+      marked: 15.0.12
+      mime-types: 3.0.2
+    optionalDependencies:
+      koffi: 2.16.1
 
   '@matrix-org/matrix-sdk-crypto-nodejs@0.4.0':
     dependencies:
@@ -14557,7 +14571,7 @@ snapshots:
 
   klona@2.0.6: {}
 
-  koffi@2.15.1:
+  koffi@2.16.1:
     optional: true
 
   leac@0.6.0: {}
