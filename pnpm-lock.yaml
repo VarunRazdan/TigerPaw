@@ -34,7 +34,7 @@ importers:
     dependencies:
       '@agentclientprotocol/sdk':
         specifier: 0.20.0
-        version: 0.20.0(zod@4.3.6)
+        version: 0.20.0(zod@4.4.2)
       '@aws-sdk/client-bedrock':
         specifier: ^3.1007.0
         version: 3.1007.0
@@ -67,13 +67,13 @@ importers:
         version: 1.2.0-beta.12
       '@mariozechner/pi-agent-core':
         specifier: 0.57.1
-        version: 0.57.1(ws@8.19.0)(zod@4.3.6)
+        version: 0.57.1(ws@8.19.0)(zod@4.4.2)
       '@mariozechner/pi-ai':
         specifier: 0.57.1
-        version: 0.57.1(ws@8.19.0)(zod@4.3.6)
+        version: 0.57.1(ws@8.19.0)(zod@4.4.2)
       '@mariozechner/pi-coding-agent':
         specifier: 0.57.1
-        version: 0.57.1(ws@8.19.0)(zod@4.3.6)
+        version: 0.57.1(ws@8.19.0)(zod@4.4.2)
       '@mariozechner/pi-tui':
         specifier: 0.57.1
         version: 0.57.1
@@ -199,7 +199,7 @@ importers:
         version: 2.8.2
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
     devDependencies:
       '@grammyjs/types':
         specifier: 3.25.0
@@ -274,28 +274,28 @@ importers:
   extensions/alpaca:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/assistant: {}
 
   extensions/binance:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/bluebubbles:
     dependencies:
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/coinbase:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/copilot-proxy: {}
 
@@ -352,8 +352,8 @@ importers:
   extensions/dydx:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/feishu:
     dependencies:
@@ -368,7 +368,7 @@ importers:
         version: 8.0.0
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/google-gemini-cli-auth: {}
 
@@ -384,8 +384,8 @@ importers:
   extensions/ibkr:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/imessage: {}
 
@@ -393,19 +393,19 @@ importers:
     dependencies:
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/kalshi:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/kraken:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/line: {}
 
@@ -427,14 +427,14 @@ importers:
   extensions/manifold:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/matrix:
     dependencies:
       '@mariozechner/pi-agent-core':
         specifier: 0.57.1
-        version: 0.57.1(ws@8.19.0)(zod@4.3.6)
+        version: 0.57.1(ws@8.19.0)(zod@4.4.2)
       '@matrix-org/matrix-sdk-crypto-nodejs':
         specifier: ^0.4.0
         version: 0.4.0
@@ -449,7 +449,7 @@ importers:
         version: 11.12.1
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/mattermost:
     dependencies:
@@ -458,7 +458,7 @@ importers:
         version: 8.19.0
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/memory-core:
     dependencies:
@@ -476,7 +476,7 @@ importers:
         version: 0.34.48
       openai:
         specifier: ^6.27.0
-        version: 6.27.0(ws@8.20.0)(zod@4.3.6)
+        version: 6.27.0(ws@8.20.0)(zod@4.4.2)
 
   extensions/minimax-portal-auth: {}
 
@@ -493,7 +493,7 @@ importers:
     dependencies:
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/nostr:
     dependencies:
@@ -502,15 +502,15 @@ importers:
         version: 2.23.3(typescript@5.9.3)
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/open-prose: {}
 
   extensions/polymarket:
     dependencies:
       zod:
-        specifier: ^3.24.0
-        version: 3.25.75
+        specifier: ^4.4.2
+        version: 4.4.2
 
   extensions/signal: {}
 
@@ -520,7 +520,7 @@ importers:
     dependencies:
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/telegram: {}
 
@@ -537,7 +537,7 @@ importers:
         version: 3.0.0
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/trading-commands: {}
 
@@ -554,7 +554,7 @@ importers:
         version: 8.0.3(@twurple/auth@8.0.3)
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/voice-call:
     dependencies:
@@ -569,7 +569,7 @@ importers:
         version: 8.19.0
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/whatsapp: {}
 
@@ -580,7 +580,7 @@ importers:
         version: 7.24.6
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   extensions/zalouser:
     dependencies:
@@ -592,7 +592,7 @@ importers:
         version: 2.1.1
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
 
   packages/clawdbot:
     dependencies:
@@ -700,7 +700,7 @@ importers:
         version: 3.5.0
       zod:
         specifier: ^4.3.6
-        version: 4.3.6
+        version: 4.4.2
       zustand:
         specifier: ^5.0.0
         version: 5.0.12(@types/react@19.2.14)(immer@11.1.4)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
@@ -8066,6 +8066,9 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
+  zod@4.4.2:
+    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
+
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
     engines: {node: '>=12.7.0'}
@@ -8104,19 +8107,23 @@ packages:
 
 snapshots:
 
-  '@agentclientprotocol/sdk@0.15.0(zod@4.3.6)':
+  '@agentclientprotocol/sdk@0.15.0(zod@4.4.2)':
     dependencies:
-      zod: 4.3.6
+      zod: 4.4.2
 
   '@agentclientprotocol/sdk@0.20.0(zod@4.3.6)':
     dependencies:
       zod: 4.3.6
 
-  '@anthropic-ai/sdk@0.73.0(zod@4.3.6)':
+  '@agentclientprotocol/sdk@0.20.0(zod@4.4.2)':
+    dependencies:
+      zod: 4.4.2
+
+  '@anthropic-ai/sdk@0.73.0(zod@4.4.2)':
     dependencies:
       json-schema-to-ts: 3.1.1
     optionalDependencies:
-      zod: 4.3.6
+      zod: 4.4.2
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -10065,9 +10072,9 @@ snapshots:
       std-env: 3.10.0
       yoctocolors: 2.1.2
 
-  '@mariozechner/pi-agent-core@0.57.1(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-agent-core@0.57.1(ws@8.19.0)(zod@4.4.2)':
     dependencies:
-      '@mariozechner/pi-ai': 0.57.1(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-ai': 0.57.1(ws@8.19.0)(zod@4.4.2)
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
       - aws-crt
@@ -10077,9 +10084,9 @@ snapshots:
       - ws
       - zod
 
-  '@mariozechner/pi-ai@0.57.1(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-ai@0.57.1(ws@8.19.0)(zod@4.4.2)':
     dependencies:
-      '@anthropic-ai/sdk': 0.73.0(zod@4.3.6)
+      '@anthropic-ai/sdk': 0.73.0(zod@4.4.2)
       '@aws-sdk/client-bedrock-runtime': 3.1004.0
       '@google/genai': 1.44.0
       '@mistralai/mistralai': 1.14.1
@@ -10087,11 +10094,11 @@ snapshots:
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
       chalk: 5.6.2
-      openai: 6.26.0(ws@8.19.0)(zod@4.3.6)
+      openai: 6.26.0(ws@8.19.0)(zod@4.4.2)
       partial-json: 0.1.7
       proxy-agent: 6.5.0
       undici: 7.24.6
-      zod-to-json-schema: 3.25.1(zod@4.3.6)
+      zod-to-json-schema: 3.25.1(zod@4.4.2)
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
       - aws-crt
@@ -10101,11 +10108,11 @@ snapshots:
       - ws
       - zod
 
-  '@mariozechner/pi-coding-agent@0.57.1(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-coding-agent@0.57.1(ws@8.19.0)(zod@4.4.2)':
     dependencies:
       '@mariozechner/jiti': 2.6.5
-      '@mariozechner/pi-agent-core': 0.57.1(ws@8.19.0)(zod@4.3.6)
-      '@mariozechner/pi-ai': 0.57.1(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-agent-core': 0.57.1(ws@8.19.0)(zod@4.4.2)
+      '@mariozechner/pi-ai': 0.57.1(ws@8.19.0)(zod@4.4.2)
       '@mariozechner/pi-tui': 0.57.1
       '@silvia-odwyer/photon-node': 0.3.4
       chalk: 5.6.2
@@ -10175,8 +10182,8 @@ snapshots:
   '@mistralai/mistralai@1.14.1':
     dependencies:
       ws: 8.19.0
-      zod: 4.3.6
-      zod-to-json-schema: 3.25.1(zod@4.3.6)
+      zod: 4.4.2
+      zod-to-json-schema: 3.25.1(zod@4.4.2)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -15088,19 +15095,19 @@ snapshots:
       regex: 6.1.0
       regex-recursion: 6.0.2
 
-  openai@6.26.0(ws@8.19.0)(zod@4.3.6):
+  openai@6.26.0(ws@8.19.0)(zod@4.4.2):
     optionalDependencies:
       ws: 8.19.0
-      zod: 4.3.6
+      zod: 4.4.2
 
-  openai@6.27.0(ws@8.20.0)(zod@4.3.6):
+  openai@6.27.0(ws@8.20.0)(zod@4.4.2):
     optionalDependencies:
       ws: 8.20.0
-      zod: 4.3.6
+      zod: 4.4.2
 
   openclaw@2026.3.8(@discordjs/opus@0.10.0)(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(audio-decode@2.2.3)(hono@4.12.7)(node-llama-cpp@3.16.2(typescript@5.9.3)):
     dependencies:
-      '@agentclientprotocol/sdk': 0.15.0(zod@4.3.6)
+      '@agentclientprotocol/sdk': 0.15.0(zod@4.4.2)
       '@aws-sdk/client-bedrock': 3.1007.0
       '@buape/carbon': 0.0.0-beta-20260216184201(@discordjs/opus@0.10.0)(hono@4.12.7)(opusscript@0.1.1)
       '@clack/prompts': 1.1.0
@@ -15111,9 +15118,9 @@ snapshots:
       '@larksuiteoapi/node-sdk': 1.59.0
       '@line/bot-sdk': 10.6.0
       '@lydell/node-pty': 1.2.0-beta.3
-      '@mariozechner/pi-agent-core': 0.57.1(ws@8.19.0)(zod@4.3.6)
-      '@mariozechner/pi-ai': 0.57.1(ws@8.19.0)(zod@4.3.6)
-      '@mariozechner/pi-coding-agent': 0.57.1(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-agent-core': 0.57.1(ws@8.19.0)(zod@4.4.2)
+      '@mariozechner/pi-ai': 0.57.1(ws@8.19.0)(zod@4.4.2)
+      '@mariozechner/pi-coding-agent': 0.57.1(ws@8.19.0)(zod@4.4.2)
       '@mariozechner/pi-tui': 0.57.1
       '@mozilla/readability': 0.6.0
       '@napi-rs/canvas': 0.1.95
@@ -15154,7 +15161,7 @@ snapshots:
       undici: 7.24.6
       ws: 8.19.0
       yaml: 2.8.2
-      zod: 4.3.6
+      zod: 4.4.2
     transitivePeerDependencies:
       - '@discordjs/opus'
       - '@modelcontextprotocol/sdk'
@@ -16727,13 +16734,15 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  zod-to-json-schema@3.25.1(zod@4.3.6):
+  zod-to-json-schema@3.25.1(zod@4.4.2):
     dependencies:
-      zod: 4.3.6
+      zod: 4.4.2
 
   zod@3.25.75: {}
 
   zod@4.3.6: {}
+
+  zod@4.4.2: {}
 
   zustand@4.5.7(@types/react@19.2.14)(immer@11.1.4)(react@19.2.4):
     dependencies:
