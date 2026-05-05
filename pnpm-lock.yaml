@@ -476,7 +476,7 @@ importers:
         version: 0.34.48
       openai:
         specifier: ^6.27.0
-        version: 6.27.0(ws@8.20.0)(zod@4.3.6)
+        version: 6.35.0(ws@8.20.0)(zod@4.3.6)
 
   extensions/minimax-portal-auth: {}
 
@@ -6632,8 +6632,8 @@ packages:
       zod:
         optional: true
 
-  openai@6.27.0:
-    resolution: {integrity: sha512-osTKySlrdYrLYTt0zjhY8yp0JUBmWDCN+Q+QxsV4xMQnnoVFpylgKGgxwN8sSdTNw0G4y+WUXs4eCMWpyDNWZQ==}
+  openai@6.35.0:
+    resolution: {integrity: sha512-L/skwIGnt5xQZHb0UfTu9uAUKbis3ehKypOuJKi20QvG7UStV6C8IC3myGYHcdiF4kms/bAvOJ9UqqNWqi8x/Q==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -15093,7 +15093,7 @@ snapshots:
       ws: 8.19.0
       zod: 4.3.6
 
-  openai@6.27.0(ws@8.20.0)(zod@4.3.6):
+  openai@6.35.0(ws@8.20.0)(zod@4.3.6):
     optionalDependencies:
       ws: 8.20.0
       zod: 4.3.6
