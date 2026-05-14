@@ -182,6 +182,76 @@ describe("hooks mapping", () => {
     }
   });
 
+  it("ignores allowUnsafeExternalContent set by a transform module (security: only honored on static config)", async () => {
+    const configDir = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-config-unsafe-"));
+    const transformsRoot = path.join(configDir, "hooks", "transforms");
+    fs.mkdirSync(transformsRoot, { recursive: true });
+    fs.writeFileSync(
+      path.join(transformsRoot, "transform.mjs"),
+      `export default () => ({ kind: "agent", message: "x", allowUnsafeExternalContent: true });`,
+    );
+    const mappings = resolveHookMappings(
+      {
+        mappings: [
+          {
+            match: { path: "danger" },
+            action: "agent",
+            // No allowUnsafeExternalContent on the static config — only the
+            // transform tries to set it. The merge MUST drop the transform's
+            // value (it could be derived from request body, which would let
+            // an attacker bypass the prompt-injection sanitizer).
+            transform: { module: "transform.mjs" },
+          },
+        ],
+      },
+      { configDir },
+    );
+
+    const result = await applyHookMappings(mappings, {
+      payload: { unsafe: true },
+      headers: {},
+      url: new URL("http://127.0.0.1:18789/hooks/danger"),
+      path: "danger",
+    });
+    expect(result?.ok).toBe(true);
+    if (result?.ok && result.action?.kind === "agent") {
+      expect(result.action.allowUnsafeExternalContent).toBeFalsy();
+    }
+  });
+
+  it("honors allowUnsafeExternalContent on the STATIC mapping config (operator-controlled)", async () => {
+    const configDir = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-config-static-unsafe-"));
+    const transformsRoot = path.join(configDir, "hooks", "transforms");
+    fs.mkdirSync(transformsRoot, { recursive: true });
+    fs.writeFileSync(path.join(transformsRoot, "transform.mjs"), "export default () => null;");
+    const mappings = resolveHookMappings(
+      {
+        mappings: [
+          {
+            match: { path: "operator-trust" },
+            action: "agent",
+            messageTemplate: "static",
+            // Operator explicitly opts into unsafe content on the static
+            // config — this is the only path that should turn it on.
+            allowUnsafeExternalContent: true,
+            transform: { module: "transform.mjs" },
+          },
+        ],
+      },
+      { configDir },
+    );
+    const result = await applyHookMappings(mappings, {
+      payload: {},
+      headers: {},
+      url: new URL("http://127.0.0.1:18789/hooks/operator-trust"),
+      path: "operator-trust",
+    });
+    expect(result?.ok).toBe(true);
+    if (result?.ok && result.action?.kind === "agent") {
+      expect(result.action.allowUnsafeExternalContent).toBe(true);
+    }
+  });
+
   it("rejects transform module traversal outside transformsDir", () => {
     const configDir = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-config-traversal-"));
     const transformsRoot = path.join(configDir, "hooks", "transforms");

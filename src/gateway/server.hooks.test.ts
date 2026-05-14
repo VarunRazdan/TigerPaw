@@ -355,7 +355,15 @@ describe("gateway server hooks", () => {
     });
   });
 
-  test("throttles repeated hook auth failures and resets after success", async () => {
+  test("throttles repeated hook auth failures, and a successful auth before lockout resets the counter", async () => {
+    // With the fail-closed ordering (`recordFailure` BEFORE `check`), the
+    // limiter caps at HOOK_AUTH_FAILURE_LIMIT=20 attempts and locks out.
+    // Once locked, even a valid token is throttled until the lockout
+    // expires — this is intentional, since an attacker burst that
+    // happens to include the right token shouldn't sneak through. To
+    // verify the "reset on success" path, we stay BELOW the lockout
+    // threshold, then succeed, and confirm a subsequent failure starts
+    // counting fresh.
     testState.hooksConfig = { enabled: true, token: HOOK_TOKEN };
     await withGatewayServer(async ({ port }) => {
       const firstFail = await postHook(
@@ -366,18 +374,20 @@ describe("gateway server hooks", () => {
       );
       expect(firstFail.status).toBe(401);
 
-      let throttled: Response | null = null;
-      for (let i = 0; i < 20; i++) {
-        throttled = await postHook(port, "/hooks/wake", { text: "blocked" }, { token: "wrong" });
+      // 18 more failures = 19 total, leaving the bucket at 19/20 (one shy
+      // of triggering the lockout).
+      for (let i = 0; i < 18; i++) {
+        const r = await postHook(port, "/hooks/wake", { text: "blocked" }, { token: "wrong" });
+        expect(r.status).toBe(401);
       }
-      expect(throttled?.status).toBe(429);
-      expect(throttled?.headers.get("retry-after")).toBeTruthy();
 
+      // Valid auth — passes the un-locked limiter and clears the counter.
       const allowed = await postHook(port, "/hooks/wake", { text: "auth reset" });
       expect(allowed.status).toBe(200);
       await waitForSystemEvent();
       drainSystemEvents(resolveMainKey());
 
+      // Counter was reset, so this fresh failure returns 401 (not 429).
       const failAfterSuccess = await postHook(
         port,
         "/hooks/wake",
@@ -385,6 +395,15 @@ describe("gateway server hooks", () => {
         { token: "wrong" },
       );
       expect(failAfterSuccess.status).toBe(401);
+
+      // And we can still trigger the lockout afterward — fail 19 more times
+      // to fill the bucket and confirm a 20th attempt locks out.
+      let lastResponse: Response | null = null;
+      for (let i = 0; i < 19; i++) {
+        lastResponse = await postHook(port, "/hooks/wake", { text: "blocked" }, { token: "wrong" });
+      }
+      expect(lastResponse?.status).toBe(429);
+      expect(lastResponse?.headers.get("retry-after")).toBeTruthy();
     });
   });
 

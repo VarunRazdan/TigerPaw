@@ -82,6 +82,23 @@ OAuth2 group: Zoom. Service account: not supported.
 | `meeting:read`  | List existing meetings, retrieve join links | (reserved)                                  |
 | `user:read`     | Identify the connected Zoom user            | connection label                            |
 
+## Jira
+
+OAuth2 group: Atlassian. Service account: not supported.
+
+| Scope             | What it lets Tigerpaw do                                      | Used by                                                                                             |
+| ----------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `read:jira-user`  | Read the connected user's profile (email, displayName)        | `/rest/api/3/myself` lookup at connect time (connection label) and any tool that resolves assignees |
+| `read:jira-work`  | Read projects, issues, comments, transitions, search via JQL  | `jira.list_projects`, `jira.search_issues`, `jira.get_issue`, transition-name resolution            |
+| `write:jira-work` | Create / update / transition issues and add comments          | `jira.create_issue`, `jira.update_issue`, `jira.transition_issue`, `jira.add_comment`               |
+| `offline_access`  | Issue a rotating refresh token so Tigerpaw can renew silently | required by Atlassian for any long-lived OAuth connection                                           |
+
+A few Jira specifics worth knowing:
+
+- **Site scope.** A Jira OAuth 2.0 (3LO) app is granted access to one Atlassian site at a time. The site you grant on the Atlassian consent screen is the only one this connection can act on; the site name appears in the connection label so you can tell at a glance.
+- **Plain text only (v1).** Issue descriptions and comments are wrapped in a minimal Atlassian Document Format (ADF) doc. Markdown is not interpreted — the literal text appears in Jira's body. Full ADF / Markdown support is a planned follow-up.
+- **No board / sprint scopes (v1).** Tigerpaw doesn't currently request the Jira Software (`read:board-scope.admin:jira-software`, etc.) scopes. If you need board or sprint access, open an issue describing the use case.
+
 ## What Tigerpaw never asks for
 
 For transparency:

@@ -13,6 +13,8 @@ export type ChannelId = ChatChannelId | (string & {});
 export type ChannelOutboundTargetMode = "explicit" | "implicit" | "heartbeat";
 
 export type ChannelAgentTool = AgentTool<TSchema, unknown> & {
+  audience?: "owner" | "all";
+  /** @deprecated Set `audience: "owner"` instead. */
   ownerOnly?: boolean;
 };
 

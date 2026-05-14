@@ -98,7 +98,14 @@ describe("createHooksRequestHandler timeout status mapping", () => {
   test("shares hook auth rate-limit bucket across ipv4 and ipv4-mapped ipv6 forms", async () => {
     const handler = createHandler();
 
-    for (let i = 0; i < 20; i++) {
+    // The hook auth limiter caps at HOOK_AUTH_FAILURE_LIMIT=20 attempts in a
+    // window. With the fail-closed ordering (`recordFailure` BEFORE `check`),
+    // the 20th invalid attempt records its failure and then trips the
+    // lockout in the same call → 429. Earlier attempts return 401. We hit
+    // 19 invalid attempts here, leaving the bucket at 19/20 — full but not
+    // yet locked — so the next attempt from a different-but-equivalent
+    // address proves the bucket is shared by getting 429 too.
+    for (let i = 0; i < 19; i++) {
       const req = createRequest({
         authorization: "Bearer wrong",
         remoteAddress: "1.2.3.4",

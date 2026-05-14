@@ -17,6 +17,7 @@ export function createHooksConfig(): HooksConfigResolved {
       defaultSessionKey: undefined,
       allowedSessionKeyPrefixes: undefined,
     },
+    ownerEquivalent: false,
   };
 }
 

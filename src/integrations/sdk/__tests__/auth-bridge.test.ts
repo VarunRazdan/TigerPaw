@@ -160,6 +160,64 @@ describe("Auth Bridge — createAuthContext", () => {
         'OAuth2 token refresh failed for "slack"',
       );
     });
+
+    it("returns long-lived token verbatim for authMethod=api_token with config exposed", async () => {
+      const def = makeOAuth2Definition("jira");
+      mockGetIntegration.mockReturnValue(def);
+      const fakeConnection = {
+        id: "conn-jira-token",
+        providerId: "jira" as const,
+        authMethod: "api_token" as const,
+        config: {
+          baseUrl: "https://acme.atlassian.net",
+          siteName: "acme",
+          authScheme: "Basic",
+          accountEmail: "u@acme.com",
+        },
+        tokens: {
+          accessToken: "base64-blob",
+          refreshToken: "",
+          expiresAt: 0,
+          tokenType: "Basic",
+          scope: "",
+        },
+      };
+      mockFindConnection.mockReturnValue(fakeConnection as never);
+
+      const ctx = await createAuthContext("jira");
+      expect(await ctx.getAccessToken()).toBe("base64-blob");
+      expect(ctx.getCredentialField("baseUrl")).toBe("https://acme.atlassian.net");
+      expect(ctx.getCredentialField("authScheme")).toBe("Basic");
+      // ensureFreshTokens must NOT be called for api_token paths.
+      expect(mockEnsureFreshTokens).not.toHaveBeenCalled();
+    });
+
+    it("surfaces connection.config via credentials + getCredentialField (Jira cloudId)", async () => {
+      const def = makeOAuth2Definition("jira");
+      mockGetIntegration.mockReturnValue(def);
+
+      const fakeConnection = {
+        id: "conn-jira",
+        providerId: "jira" as const,
+        config: { cloudId: "cloud-xyz", siteName: "Acme" },
+        tokens: {
+          accessToken: "at",
+          refreshToken: "rt",
+          expiresAt: Date.now() + 3600_000,
+        },
+      };
+      mockFindConnection.mockReturnValue(fakeConnection as never);
+      mockEnsureFreshTokens.mockResolvedValue({
+        accessToken: "at",
+        refreshToken: "rt",
+        expiresAt: Date.now() + 3600_000,
+      } as never);
+
+      const ctx = await createAuthContext("jira");
+      expect(ctx.getCredentialField("cloudId")).toBe("cloud-xyz");
+      expect(ctx.getCredentialField("siteName")).toBe("Acme");
+      expect(ctx.credentials).toEqual({ cloudId: "cloud-xyz", siteName: "Acme" });
+    });
   });
 
   // ── API key path ───────────────────────────────────────────────

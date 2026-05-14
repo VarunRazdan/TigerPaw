@@ -80,6 +80,7 @@ export function createSessionsSpawnTool(
   return {
     label: "Sessions",
     name: "sessions_spawn",
+    audience: "all",
     description:
       'Spawn an isolated session (runtime="subagent" or runtime="acp"). mode="run" is one-shot and mode="session" is persistent/thread-bound. Subagents inherit the parent workspace directory automatically.',
     parameters: SessionsSpawnToolSchema,

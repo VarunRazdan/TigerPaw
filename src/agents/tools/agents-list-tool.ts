@@ -26,6 +26,7 @@ export function createAgentsListTool(opts?: {
   return {
     label: "Agents",
     name: "agents_list",
+    audience: "all",
     description:
       'List OpenClaw agent ids you can target with `sessions_spawn` when `runtime="subagent"` (based on subagent allowlists).',
     parameters: AgentsListToolSchema,

@@ -1,9 +1,13 @@
 /**
  * Credential Vault — encrypted-at-rest credential storage for workflows.
  *
- * Encryption/decryption logic lives here. Storage is delegated to the DAL
- * (SQLite or flat-file fallback). Fields are encrypted before save and
- * decrypted after retrieval.
+ * Encryption uses AES-256-GCM with a 12-byte IV (per spec) and a per-install
+ * random master key from `vault-master-key.ts`. New ciphertexts are tagged
+ * with a `v2:` envelope prefix; values without the prefix are decrypted with
+ * the legacy host-derived key (16-byte IV) so existing installs keep working.
+ * Each `saveCredential` re-encrypts under v2, so vaults migrate lazily.
+ *
+ * Storage is delegated to the DAL (SQLite or flat-file fallback).
  */
 
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
@@ -14,21 +18,33 @@ import {
   dalSaveCredentialRaw,
   dalDeleteCredential,
 } from "../dal/credentials.js";
+import { createSubsystemLogger } from "../logging/subsystem.js";
 import type { StoredCredential } from "./types.js";
+import { loadOrGenerateMasterKey } from "./vault-master-key.js";
+
+const log = createSubsystemLogger("workflows/credentials");
 
 const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32;
-const IV_LENGTH = 16;
+const IV_LENGTH = 12;
+const V2_PREFIX = "v2:";
+const LEGACY_IV_LENGTH = 16;
 
-/** Derive an encryption key from a stable machine-local seed. */
-function deriveKey(): Buffer {
+/**
+ * Legacy key derivation — kept indefinitely so existing installs can decrypt
+ * credentials written before the master-key migration. New ciphertexts use
+ * `loadOrGenerateMasterKey()` instead.
+ *
+ * @deprecated retained only for legacy decrypt; do not use for new ciphertexts.
+ */
+function deriveKeyLegacy(): Buffer {
   const seed = `tigerpaw-vault-${hostname()}-${homedir()}`;
   return scryptSync(seed, "tigerpaw-salt-v1", KEY_LENGTH);
 }
 
-/** Encrypt a string value. Returns base64-encoded "iv:authTag:ciphertext". */
+/** Encrypt a string value. Returns "v2:<iv12>:<authTag>:<ciphertext>" (all base64). */
 function encrypt(plaintext: string): string {
-  const key = deriveKey();
+  const key = loadOrGenerateMasterKey();
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv);
 
@@ -36,18 +52,28 @@ function encrypt(plaintext: string): string {
   encrypted += cipher.final("base64");
   const authTag = cipher.getAuthTag();
 
-  return `${iv.toString("base64")}:${authTag.toString("base64")}:${encrypted}`;
+  return `${V2_PREFIX}${iv.toString("base64")}:${authTag.toString("base64")}:${encrypted}`;
 }
 
-/** Decrypt a value encoded by encrypt(). */
+/** Decrypt a value encoded by encrypt() or the pre-v2 format. */
 function decrypt(encoded: string): string {
-  const parts = encoded.split(":");
+  if (encoded.startsWith(V2_PREFIX)) {
+    return decryptWith(encoded.slice(V2_PREFIX.length), loadOrGenerateMasterKey(), IV_LENGTH);
+  }
+  // Legacy envelope: pre-v2 ciphertexts have no prefix and used a 16-byte IV.
+  return decryptWith(encoded, deriveKeyLegacy(), LEGACY_IV_LENGTH);
+}
+
+function decryptWith(payload: string, key: Buffer, expectedIvLength: number): string {
+  const parts = payload.split(":");
   if (parts.length !== 3) {
     throw new Error("Invalid encrypted value format");
   }
 
-  const key = deriveKey();
   const iv = Buffer.from(parts[0], "base64");
+  if (iv.length !== expectedIvLength) {
+    throw new Error(`Invalid IV length: got ${iv.length}, expected ${expectedIvLength}`);
+  }
   const authTag = Buffer.from(parts[1], "base64");
   const ciphertext = parts[2];
 
@@ -60,23 +86,48 @@ function decrypt(encoded: string): string {
   return decrypted;
 }
 
-/** Encrypt all field values in a credential. */
-function encryptFields(fields: Record<string, string>): Record<string, string> {
-  const encrypted: Record<string, string> = {};
+/** Encrypt all field values in a credential. Null/undefined values pass through. */
+function encryptFields(
+  fields: Record<string, string | null | undefined>,
+): Record<string, string | null> {
+  const encrypted: Record<string, string | null> = {};
   for (const [k, v] of Object.entries(fields)) {
+    if (v == null) {
+      // Preserve null instead of round-tripping the literal string "null".
+      encrypted[k] = null;
+      continue;
+    }
     encrypted[k] = encrypt(v);
   }
   return encrypted;
 }
 
-/** Decrypt all field values in a credential. */
-function decryptFields(fields: Record<string, string>): Record<string, string> {
-  const decrypted: Record<string, string> = {};
+/**
+ * Decrypt all field values in a credential.
+ *
+ * Returns `null` for any field whose ciphertext fails to decrypt (logged at
+ * `warn`). Callers can distinguish "field never set" from "decrypt failed";
+ * historically this returned `""` and silently masked corruption.
+ */
+function decryptFields(
+  fields: Record<string, string | null>,
+  credentialId: string,
+): Record<string, string | null> {
+  const decrypted: Record<string, string | null> = {};
   for (const [k, v] of Object.entries(fields)) {
+    if (v == null) {
+      decrypted[k] = null;
+      continue;
+    }
     try {
       decrypted[k] = decrypt(v);
-    } catch {
-      decrypted[k] = ""; // Return empty on decryption failure
+    } catch (err) {
+      log.warn(
+        `Failed to decrypt credential field; returning null. id=${credentialId} field=${k} err=${
+          err instanceof Error ? err.message : String(err as string)
+        }`,
+      );
+      decrypted[k] = null;
     }
   }
   return decrypted;
@@ -99,12 +150,12 @@ export function getCredential(id: string): StoredCredential | null {
   }
   return {
     ...raw,
-    fields: decryptFields(raw.fields ?? {}),
+    fields: decryptFields(raw.fields ?? {}, id),
   };
 }
 
 /** Resolve a credential's fields by ID (for template injection). */
-export function resolveCredential(id: string): Record<string, string> | null {
+export function resolveCredential(id: string): Record<string, string | null> | null {
   const cred = getCredential(id);
   return cred?.fields ?? null;
 }
@@ -124,12 +175,15 @@ export function deleteCredential(id: string): boolean {
 }
 
 /** Test that encryption/decryption works (health check). */
-export function testVault(): { ok: boolean; error?: string } {
+export function testVault(): { ok: boolean; keyFormat?: "v2"; error?: string } {
   try {
     const testValue = "tigerpaw-vault-test-" + Date.now();
     const encrypted = encrypt(testValue);
     const decrypted = decrypt(encrypted);
-    return { ok: decrypted === testValue };
+    return {
+      ok: decrypted === testValue,
+      keyFormat: encrypted.startsWith(V2_PREFIX) ? "v2" : undefined,
+    };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err as string) };
   }

@@ -292,6 +292,18 @@ function mergeAction(
     typeof override.message === "string" ? override.message : (baseAgent?.message ?? "");
   const wakeMode =
     override.wakeMode === "next-heartbeat" ? "next-heartbeat" : (baseAgent?.wakeMode ?? "now");
+  // SECURITY: `allowUnsafeExternalContent` disables the prompt-injection
+  // sanitizer, so it must NEVER be settable from a request body. Transform
+  // scripts can be derived from request payloads (`payload.unsafe = true`),
+  // which means honoring `override.allowUnsafeExternalContent` lets an
+  // attacker bypass the sanitizer. Always use the static mapping config
+  // value; if a transform attempts to set it, log a one-line warn.
+  if (typeof override.allowUnsafeExternalContent === "boolean") {
+    // eslint-disable-next-line no-console -- subsystem logger isn't in scope here.
+    console.warn(
+      "[hooks-mapping] Transform script attempted to set allowUnsafeExternalContent; ignored. Set it on the static mapping config instead.",
+    );
+  }
   return validateAction({
     kind: "agent",
     message,
@@ -300,10 +312,7 @@ function mergeAction(
     agentId: override.agentId ?? baseAgent?.agentId,
     sessionKey: override.sessionKey ?? baseAgent?.sessionKey,
     deliver: typeof override.deliver === "boolean" ? override.deliver : baseAgent?.deliver,
-    allowUnsafeExternalContent:
-      typeof override.allowUnsafeExternalContent === "boolean"
-        ? override.allowUnsafeExternalContent
-        : baseAgent?.allowUnsafeExternalContent,
+    allowUnsafeExternalContent: baseAgent?.allowUnsafeExternalContent,
     channel: override.channel ?? baseAgent?.channel,
     to: override.to ?? baseAgent?.to,
     model: override.model ?? baseAgent?.model,

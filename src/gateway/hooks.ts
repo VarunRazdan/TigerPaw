@@ -19,6 +19,13 @@ export type HooksConfigResolved = {
   mappings: HookMappingResolved[];
   agentPolicy: HookAgentPolicyResolved;
   sessionPolicy: HookSessionPolicyResolved;
+  /**
+   * If true, hook-dispatched agent runs receive `senderIsOwner: true`. Maps
+   * 1:1 to the `hooks.ownerEquivalent` config field. Defaults to `false`
+   * for safety — a leaked hook token does not equal owner privilege unless
+   * the operator explicitly opts in.
+   */
+  ownerEquivalent: boolean;
 };
 
 export type HookAgentPolicyResolved = {
@@ -75,6 +82,18 @@ export function resolveHooksConfig(cfg: OpenClawConfig): HooksConfigResolved | n
       "hooks.allowedSessionKeyPrefixes must include 'hook:' when hooks.defaultSessionKey is unset",
     );
   }
+  // Migration warning: hooks.allowedAgentIds === undefined currently means
+  // allow-all. Future major release will flip to deny-all. Surface this so
+  // operators see the upcoming break before it lands.
+  if (cfg.hooks?.allowedAgentIds === undefined && !warnedMissingAllowedAgentIds) {
+    warnedMissingAllowedAgentIds = true;
+    // eslint-disable-next-line no-console -- subsystem logger lives elsewhere; one-shot boot warn.
+    console.warn(
+      "[hooks] hooks.allowedAgentIds is not configured — every agent is currently allowed. " +
+        "This will become a hard requirement in a future release. Set `hooks.allowedAgentIds: []` " +
+        "to deny all, or list the agent IDs you intend to expose.",
+    );
+  }
   return {
     basePath: trimmed,
     token,
@@ -90,7 +109,15 @@ export function resolveHooksConfig(cfg: OpenClawConfig): HooksConfigResolved | n
       allowRequestSessionKey: cfg.hooks?.allowRequestSessionKey === true,
       allowedSessionKeyPrefixes,
     },
+    ownerEquivalent: cfg.hooks?.ownerEquivalent === true,
   };
+}
+
+let warnedMissingAllowedAgentIds = false;
+
+/** Test-only: re-arm the boot warning so it fires again. */
+export function resetHooksBootWarningsForTests(): void {
+  warnedMissingAllowedAgentIds = false;
 }
 
 function resolveKnownAgentIds(cfg: OpenClawConfig, defaultAgentId: string): Set<string> {
@@ -236,6 +263,12 @@ export type HookAgentPayload = {
 export type HookAgentDispatchPayload = Omit<HookAgentPayload, "sessionKey"> & {
   sessionKey: string;
   allowUnsafeExternalContent?: boolean;
+  /**
+   * Set to `true` only when `hooks.ownerEquivalent` is enabled in config.
+   * Controls whether the dispatched agent run sees `senderIsOwner: true`
+   * (and can therefore invoke `audience: "owner"` tools). Default `false`.
+   */
+  senderIsOwner?: boolean;
 };
 
 const listHookChannelValues = () => ["last", ...listChannelPlugins().map((plugin) => plugin.id)];

@@ -684,6 +684,7 @@ export function createMessageTool(options?: MessageToolOptions): AnyAgentTool {
   return {
     label: "Message",
     name: "message",
+    audience: "all",
     description,
     parameters: schema,
     execute: async (_toolCallId, args, signal) => {

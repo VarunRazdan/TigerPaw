@@ -9,5 +9,6 @@ import "./http-request.js";
 import "./slack.js";
 import "./google-sheets.js";
 import "./github.js";
+import "./jira.js";
 import "./openai.js";
 import "./anthropic.js";

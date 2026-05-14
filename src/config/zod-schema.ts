@@ -564,6 +564,7 @@ export const OpenClawSchema = z
         allowRequestSessionKey: z.boolean().optional(),
         allowedSessionKeyPrefixes: z.array(z.string()).optional(),
         allowedAgentIds: z.array(z.string()).optional(),
+        ownerEquivalent: z.boolean().optional(),
         maxBodyBytes: z.number().int().positive().optional(),
         presets: z.array(z.string()).optional(),
         transformsDir: z.string().optional(),
@@ -894,6 +895,13 @@ export const OpenClawSchema = z
               .strict()
               .optional(),
             zoom: z
+              .object({
+                clientId: SecretInputSchema.optional(),
+                clientSecret: SecretInputSchema.optional().register(sensitive),
+              })
+              .strict()
+              .optional(),
+            atlassian: z
               .object({
                 clientId: SecretInputSchema.optional(),
                 clientSecret: SecretInputSchema.optional().register(sensitive),

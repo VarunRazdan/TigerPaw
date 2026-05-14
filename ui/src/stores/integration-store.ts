@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { gatewayRpc } from "@/lib/gateway-rpc";
 
-export type IntegrationCategory = "email" | "calendar" | "meeting";
+export type IntegrationCategory = "email" | "calendar" | "meeting" | "productivity" | (string & {});
 
 export type IntegrationStatus = "connected" | "disconnected" | "expired" | "error";
 
@@ -127,6 +127,23 @@ const DEMO_PROVIDERS: IntegrationProvider[] = [
     description: "Schedule Teams meetings and retrieve join links via Microsoft Graph",
     authType: "oauth2",
     capabilities: ["schedule", "list", "get_details", "get_join_link"],
+  },
+  {
+    id: "jira",
+    name: "Jira",
+    category: "productivity",
+    icon: "jira",
+    description: "Read, create, update, comment on, transition, and search Jira Cloud issues",
+    authType: "oauth2",
+    capabilities: [
+      "list_projects",
+      "search_issues",
+      "get_issue",
+      "create_issue",
+      "update_issue",
+      "transition_issue",
+      "add_comment",
+    ],
   },
 ];
 

@@ -57,13 +57,16 @@ function connectionToCredentialFields(conn: IntegrationConnectionFull): Record<s
     fields.saImpersonateEmail = conn.serviceAccount.impersonateEmail;
     fields.saScopes = conn.serviceAccount.scopes.join(" ");
   }
+  if (conn.config && Object.keys(conn.config).length > 0) {
+    fields.config = JSON.stringify(conn.config);
+  }
   return fields;
 }
 
 function credentialFieldsToConnection(
   id: string,
   name: string,
-  fields: Record<string, string>,
+  fields: Record<string, string | null>,
 ): IntegrationConnectionFull {
   const authMethod = (fields.authMethod as IntegrationAuthMethod) || "oauth2";
   let serviceAccount: ServiceAccountConfig | undefined;
@@ -74,6 +77,17 @@ function credentialFieldsToConnection(
       impersonateEmail: fields.saImpersonateEmail ?? "",
       scopes: fields.saScopes ? fields.saScopes.split(" ") : [],
     };
+  }
+  let config: Record<string, unknown> | undefined;
+  if (fields.config) {
+    try {
+      const parsed = JSON.parse(fields.config) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        config = parsed as Record<string, unknown>;
+      }
+    } catch {
+      config = undefined;
+    }
   }
   return {
     id,
@@ -93,6 +107,7 @@ function credentialFieldsToConnection(
     },
     authMethod,
     serviceAccount,
+    config,
   };
 }
 

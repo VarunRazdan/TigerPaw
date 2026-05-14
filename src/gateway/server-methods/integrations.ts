@@ -155,6 +155,51 @@ export const integrationsHandlers: GatewayRequestHandlers = {
     }
   },
 
+  // ── API token connect (Jira et al.) ──────────────────────────
+
+  "integrations.apiToken.connect": async ({ params, respond }) => {
+    const providerId = params.providerId as string | undefined;
+    const siteUrl = params.siteUrl as string | undefined;
+    const email = params.email as string | undefined;
+    const apiToken = params.apiToken as string | undefined;
+
+    if (!providerId || !siteUrl || !email || !apiToken) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "providerId, siteUrl, email, and apiToken are all required",
+        ),
+      );
+      return;
+    }
+
+    try {
+      const service = getIntegrationService();
+      const result = await service.connectApiToken(providerId as IntegrationProviderId, {
+        siteUrl,
+        email,
+        apiToken,
+      });
+      if (!("id" in result)) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.UNAVAILABLE, (result as { error: string }).error),
+        );
+        return;
+      }
+      respond(true, { connection: result }, undefined);
+    } catch (err) {
+      respond(
+        false,
+        undefined,
+        errorShape(ErrorCodes.UNAVAILABLE, err instanceof Error ? err.message : String(err)),
+      );
+    }
+  },
+
   // ── Disconnect ───────────────────────────────────────────────
 
   "integrations.disconnect": async ({ params, respond }) => {
@@ -227,7 +272,7 @@ export const integrationsHandlers: GatewayRequestHandlers = {
   // ── OAuth credential status ─────────────────────────────────
 
   "integrations.oauth.status": ({ respond }) => {
-    const groups = ["google", "microsoft", "zoom"] as const;
+    const groups = ["google", "microsoft", "zoom", "atlassian"] as const;
     const status: Record<string, { configured: boolean; source: "config" | "env" | null }> = {};
 
     for (const group of groups) {

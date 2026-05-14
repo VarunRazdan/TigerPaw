@@ -1930,6 +1930,7 @@ export function createWebSearchTool(options?: {
   return {
     label: "Web Search",
     name: "web_search",
+    audience: "all",
     description,
     parameters: createWebSearchSchema({
       provider,

@@ -398,20 +398,39 @@ export function createHooksRequestHandler(
       return true;
     }
 
+    // Auth + rate-limit race fix: record failure BEFORE we check `allowed`.
+    //
+    // Old order — compare → check → recordFailure — leaves a race window:
+    // N concurrent invalid-token requests can all pass `check()` before any
+    // of them has yet recorded a failure (the handler is async; HTTP requests
+    // interleave at await points). The N-th attempt only sees a populated
+    // counter once an earlier attempt's `recordFailure()` has run.
+    //
+    // New order: compare, then on bad token *first* increment failures and
+    // *then* read the throttle state. Any sibling request entering after the
+    // increment sees the updated count, closing the race. Successful auth
+    // calls `reset()` to clear the entry.
+    //
+    // The same fail-closed pattern is what `src/gateway/http-rate-limit.ts`
+    // achieves with its `consume()` primitive — we order the existing
+    // `AuthRateLimiter` primitives the same way.
     const token = extractHookToken(req);
     const clientKey = resolveHookClientKey(req);
-    if (!safeEqualSecret(token, hooksConfig.token)) {
-      const throttle = hookAuthLimiter.check(clientKey, AUTH_RATE_LIMIT_SCOPE_HOOK_AUTH);
-      if (!throttle.allowed) {
-        const retryAfter = throttle.retryAfterMs > 0 ? Math.ceil(throttle.retryAfterMs / 1000) : 1;
-        res.statusCode = 429;
-        res.setHeader("Retry-After", String(retryAfter));
-        res.setHeader("Content-Type", "text/plain; charset=utf-8");
-        res.end("Too Many Requests");
-        logHooks.warn(`hook auth throttled for ${clientKey}; retry-after=${retryAfter}s`);
-        return true;
-      }
+    const ok = safeEqualSecret(token, hooksConfig.token);
+    if (!ok) {
       hookAuthLimiter.recordFailure(clientKey, AUTH_RATE_LIMIT_SCOPE_HOOK_AUTH);
+    }
+    const throttle = hookAuthLimiter.check(clientKey, AUTH_RATE_LIMIT_SCOPE_HOOK_AUTH);
+    if (!throttle.allowed) {
+      const retryAfter = throttle.retryAfterMs > 0 ? Math.ceil(throttle.retryAfterMs / 1000) : 1;
+      res.statusCode = 429;
+      res.setHeader("Retry-After", String(retryAfter));
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.end("Too Many Requests");
+      logHooks.warn(`hook auth throttled for ${clientKey}; retry-after=${retryAfter}s`);
+      return true;
+    }
+    if (!ok) {
       res.statusCode = 401;
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       res.end("Unauthorized");
@@ -480,6 +499,7 @@ export function createHooksRequestHandler(
           targetAgentId,
         }),
         agentId: targetAgentId,
+        senderIsOwner: hooksConfig.ownerEquivalent,
       });
       sendJson(res, 200, { ok: true, runId });
       return true;
@@ -546,6 +566,7 @@ export function createHooksRequestHandler(
             thinking: mapped.action.thinking,
             timeoutSeconds: mapped.action.timeoutSeconds,
             allowUnsafeExternalContent: mapped.action.allowUnsafeExternalContent,
+            senderIsOwner: hooksConfig.ownerEquivalent,
           });
           sendJson(res, 200, { ok: true, runId });
           return true;

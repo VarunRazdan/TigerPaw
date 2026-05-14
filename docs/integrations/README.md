@@ -1,6 +1,6 @@
 # Integrations
 
-Tigerpaw connects to your email, calendar, and meeting providers so Jarvis can read and send mail, schedule events, and create meeting links on your behalf. All connections live on your machine — credentials never leave the host.
+Tigerpaw connects to your email, calendar, meeting, and project-management providers so Jarvis can read and send mail, schedule events, create meeting links, and triage Jira issues on your behalf. All connections live on your machine — credentials never leave the host.
 
 ## Quick start
 
@@ -11,19 +11,20 @@ Tigerpaw connects to your email, calendar, and meeting providers so Jarvis can r
 
 ## Supported integrations
 
-| Provider         | Category | OAuth2 | Service Account        | Setup guide                                  |
-| ---------------- | -------- | ------ | ---------------------- | -------------------------------------------- |
-| Gmail            | Email    | Yes    | Yes (Google Workspace) | [gmail.md](./gmail.md)                       |
-| Outlook Mail     | Email    | Yes    | No                     | [outlook-mail.md](./outlook-mail.md)         |
-| Google Calendar  | Calendar | Yes    | Yes (Google Workspace) | [google-calendar.md](./google-calendar.md)   |
-| Outlook Calendar | Calendar | Yes    | No                     | [outlook-calendar.md](./outlook-calendar.md) |
-| Google Meet      | Meeting  | Yes    | Yes (Google Workspace) | [google-meet.md](./google-meet.md)           |
-| Microsoft Teams  | Meeting  | Yes    | No                     | [microsoft-teams.md](./microsoft-teams.md)   |
-| Zoom             | Meeting  | Yes    | No                     | [zoom.md](./zoom.md)                         |
+| Provider         | Category     | OAuth2 | Service Account        | Setup guide                                  |
+| ---------------- | ------------ | ------ | ---------------------- | -------------------------------------------- |
+| Gmail            | Email        | Yes    | Yes (Google Workspace) | [gmail.md](./gmail.md)                       |
+| Outlook Mail     | Email        | Yes    | No                     | [outlook-mail.md](./outlook-mail.md)         |
+| Google Calendar  | Calendar     | Yes    | Yes (Google Workspace) | [google-calendar.md](./google-calendar.md)   |
+| Outlook Calendar | Calendar     | Yes    | No                     | [outlook-calendar.md](./outlook-calendar.md) |
+| Google Meet      | Meeting      | Yes    | Yes (Google Workspace) | [google-meet.md](./google-meet.md)           |
+| Microsoft Teams  | Meeting      | Yes    | No                     | [microsoft-teams.md](./microsoft-teams.md)   |
+| Zoom             | Meeting      | Yes    | No                     | [zoom.md](./zoom.md)                         |
+| Jira             | Productivity | Yes    | No                     | [jira.md](./jira.md)                         |
 
 ## Cross-cutting guides
 
-- [oauth-setup.md](./oauth-setup.md) — registering an OAuth app with Google, Microsoft, or Zoom (one-time setup per OAuth group).
+- [oauth-setup.md](./oauth-setup.md) — registering an OAuth app with Google, Microsoft, Zoom, or Atlassian (one-time setup per OAuth group).
 - [service-account-setup.md](./service-account-setup.md) — Google Workspace service-account flow with domain-wide delegation. Use this when you want Tigerpaw to act on behalf of users across a Workspace tenant without individual consent.
 - [scopes-permissions.md](./scopes-permissions.md) — exactly which permissions each integration requests and what Tigerpaw does with them.
 - [troubleshooting.md](./troubleshooting.md) — common errors (`redirect_uri_mismatch`, `invalid_client`, expired tokens, missing scopes) and how to fix them.
@@ -42,10 +43,11 @@ If you're not sure, start with OAuth2. You can switch to a service account later
 
 ## What Jarvis can do once connected
 
-| Connection                 | Tools unlocked                                                                                                                            |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Gmail / Outlook Mail       | `assistant_read_emails`, `assistant_read_email`, `assistant_send_email`                                                                   |
-| Google / Outlook Calendar  | `assistant_list_calendar_events`, `assistant_create_calendar_event`, `assistant_update_calendar_event`, `assistant_delete_calendar_event` |
-| Zoom / Google Meet / Teams | `assistant_schedule_meeting` (creates an event with a join link)                                                                          |
+| Connection                 | Tools unlocked                                                                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gmail / Outlook Mail       | `assistant_read_emails`, `assistant_read_email`, `assistant_send_email`                                                                                                        |
+| Google / Outlook Calendar  | `assistant_list_calendar_events`, `assistant_create_calendar_event`, `assistant_update_calendar_event`, `assistant_delete_calendar_event`                                      |
+| Zoom / Google Meet / Teams | `assistant_schedule_meeting` (creates an event with a join link)                                                                                                               |
+| Jira                       | `jira.list_projects`, `jira.search_issues` (JQL), `jira.get_issue`, `jira.create_issue`, `jira.update_issue`, `jira.transition_issue`, `jira.add_comment`, `jira.delete_issue` |
 
 You can verify a connection by asking Jarvis a small task like "check my unread emails" or "what's on my calendar today" from any messaging channel that's wired to the agent.

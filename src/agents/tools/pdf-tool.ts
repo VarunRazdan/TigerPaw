@@ -337,6 +337,7 @@ export function createPdfTool(options?: {
   return {
     label: "PDF",
     name: "pdf",
+    audience: "all",
     description,
     parameters: Type.Object({
       prompt: Type.Optional(Type.String()),

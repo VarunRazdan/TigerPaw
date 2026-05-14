@@ -1,7 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { lazy, useMemo } from "react";
 import {
-  createHashRouter,
+  createBrowserRouter,
   Navigate,
   type RouteObject,
   RouterProvider,
@@ -27,7 +27,7 @@ function RouteErrorFallback() {
             : "Something went wrong loading this page."}
         </p>
         <a
-          href="#/"
+          href="/"
           className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500 transition-colors"
         >
           Go to Dashboard
@@ -189,7 +189,7 @@ export function App() {
 
   const router = useMemo(
     () =>
-      createHashRouter([
+      createBrowserRouter([
         {
           path: "/",
           element: <Layout />,

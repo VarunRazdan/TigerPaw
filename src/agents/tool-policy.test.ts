@@ -6,10 +6,11 @@ import { TOOL_POLICY_CONFORMANCE } from "./tool-policy.conformance.js";
 import {
   applyOwnerOnlyToolPolicy,
   expandToolGroups,
-  isOwnerOnlyToolName,
   normalizeToolName,
+  OWNER_ONLY_TOOL_ERROR,
   resolveToolProfilePolicy,
   TOOL_GROUPS,
+  wrapOwnerOnlyToolExecution,
 } from "./tool-policy.js";
 import type { AnyAgentTool } from "./tools/common.js";
 
@@ -17,23 +18,27 @@ function createOwnerPolicyTools() {
   return [
     {
       name: "read",
+      audience: "all",
       // oxlint-disable-next-line typescript/no-explicit-any
       execute: async () => ({ content: [], details: {} }) as any,
     },
     {
       name: "cron",
+      audience: "owner",
       ownerOnly: true,
       // oxlint-disable-next-line typescript/no-explicit-any
       execute: async () => ({ content: [], details: {} }) as any,
     },
     {
       name: "gateway",
+      audience: "owner",
       ownerOnly: true,
       // oxlint-disable-next-line typescript/no-explicit-any
       execute: async () => ({ content: [], details: {} }) as any,
     },
     {
       name: "whatsapp_login",
+      audience: "owner",
       // oxlint-disable-next-line typescript/no-explicit-any
       execute: async () => ({ content: [], details: {} }) as any,
     },
@@ -76,14 +81,6 @@ describe("tool-policy", () => {
     expect(normalizeToolName("READ")).toBe("read");
   });
 
-  it("identifies owner-only tools", () => {
-    expect(isOwnerOnlyToolName("whatsapp_login")).toBe(true);
-    expect(isOwnerOnlyToolName("cron")).toBe(true);
-    expect(isOwnerOnlyToolName("gateway")).toBe(true);
-    expect(isOwnerOnlyToolName("nodes")).toBe(true);
-    expect(isOwnerOnlyToolName("read")).toBe(false);
-  });
-
   it("strips owner-only tools for non-owner senders", async () => {
     const tools = createOwnerPolicyTools();
     const filtered = applyOwnerOnlyToolPolicy(tools, false);
@@ -96,10 +93,24 @@ describe("tool-policy", () => {
     expect(filtered.map((t) => t.name)).toEqual(["read", "cron", "gateway", "whatsapp_login"]);
   });
 
-  it("honors ownerOnly metadata for custom tool names", async () => {
+  it("treats audience='owner' as owner-only (deny-by-default for non-owners)", async () => {
     const tools = [
       {
         name: "custom_admin_tool",
+        audience: "owner",
+        // oxlint-disable-next-line typescript/no-explicit-any
+        execute: async () => ({ content: [], details: {} }) as any,
+      },
+    ] as unknown as AnyAgentTool[];
+    expect(applyOwnerOnlyToolPolicy(tools, false)).toEqual([]);
+    expect(applyOwnerOnlyToolPolicy(tools, true)).toHaveLength(1);
+  });
+
+  it("still honors deprecated ownerOnly: true (back-compat for older plugins)", async () => {
+    const tools = [
+      {
+        // No `audience` — relies on the deprecated flag.
+        name: "legacy_admin_tool",
         ownerOnly: true,
         // oxlint-disable-next-line typescript/no-explicit-any
         execute: async () => ({ content: [], details: {} }) as any,
@@ -109,25 +120,31 @@ describe("tool-policy", () => {
     expect(applyOwnerOnlyToolPolicy(tools, true)).toHaveLength(1);
   });
 
-  it("strips nodes for non-owner senders via fallback policy", () => {
+  it("does NOT treat the legacy fallback names as owner-only when audience is missing", async () => {
+    // Pre-audience behavior would have treated "nodes" / "cron" / "gateway" /
+    // "whatsapp_login" as owner-only by name. After the audience field, the
+    // fallback set is gone — name alone is no signal. Tools with `audience:
+    // "all"` (or missing) are callable by anyone.
     const tools = [
       {
-        name: "read",
-        // oxlint-disable-next-line typescript/no-explicit-any
-        execute: async () => ({ content: [], details: {} }) as any,
-      },
-      {
         name: "nodes",
+        audience: "all",
         // oxlint-disable-next-line typescript/no-explicit-any
         execute: async () => ({ content: [], details: {} }) as any,
       },
     ] as unknown as AnyAgentTool[];
+    expect(applyOwnerOnlyToolPolicy(tools, false).map((t) => t.name)).toEqual(["nodes"]);
+  });
 
-    expect(applyOwnerOnlyToolPolicy(tools, false).map((tool) => tool.name)).toEqual(["read"]);
-    expect(applyOwnerOnlyToolPolicy(tools, true).map((tool) => tool.name)).toEqual([
-      "read",
-      "nodes",
-    ]);
+  it("wrapOwnerOnlyToolExecution wraps even when execute is unset (regression for the old early-return bug)", async () => {
+    const bare = {
+      name: "no_execute_yet",
+      audience: "owner",
+    } as unknown as AnyAgentTool;
+    const wrapped = wrapOwnerOnlyToolExecution(bare, false);
+    expect(typeof wrapped.execute).toBe("function");
+    // oxlint-disable-next-line typescript/no-explicit-any
+    await expect((wrapped as any).execute()).rejects.toThrow(OWNER_ONLY_TOOL_ERROR);
   });
 });
 

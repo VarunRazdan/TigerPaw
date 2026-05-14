@@ -129,8 +129,20 @@ export type HooksConfig = {
   /**
    * Restrict explicit hook `agentId` routing to these agent ids.
    * Omit or include `*` to allow any agent. Set `[]` to deny all explicit `agentId` routing.
+   *
+   * Migration note: in a future release, omitting this field will deny
+   * everything (deny-by-default). For now, omitting it logs a boot warning
+   * but preserves the historical allow-all behavior so existing installs
+   * keep working. Set explicitly to silence the warning.
    */
   allowedAgentIds?: string[];
+  /**
+   * If true, hook-dispatched agent runs receive `senderIsOwner: true` and
+   * may invoke `audience: "owner"` tools (cron, gateway, nodes,
+   * whatsapp_login). Defaults to `false` — opt-in only, since a leaked hook
+   * token must not equal full owner privilege by default.
+   */
+  ownerEquivalent?: boolean;
   maxBodyBytes?: number;
   presets?: string[];
   transformsDir?: string;

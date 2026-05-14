@@ -9,6 +9,7 @@
 
 import crypto from "node:crypto";
 import { loadConfig } from "../config/io.js";
+import { createSubsystemLogger } from "../logging/subsystem.js";
 import { getIntegration } from "./sdk/registry.js";
 import type {
   IntegrationConnectionFull,
@@ -18,6 +19,8 @@ import type {
 } from "./types.js";
 import { getProviderDefinition } from "./types.js";
 
+const log = createSubsystemLogger("integrations/oauth2");
+
 // ── Pending OAuth flows (in-memory, short-lived) ─────────────────
 
 type PendingOAuthFlow = {
@@ -25,13 +28,30 @@ type PendingOAuthFlow = {
   state: string;
   createdAt: number;
   redirectUri: string;
+  /**
+   * PKCE code verifier (RFC 7636). Generated server-side; never leaves this
+   * process. The code_challenge derived from it is sent to the IdP at
+   * authorization time, and this verifier is sent to the IdP at token
+   * exchange time, proving the same client started and finished the flow.
+   * `null` for providers that opt out of PKCE (e.g. Atlassian 3LO).
+   */
+  codeVerifier: string | null;
 };
 
 const pendingFlows = new Map<string, PendingOAuthFlow>();
 
-// Clean up stale flows older than 10 minutes
+/**
+ * TTL for a pending state. Was 10 min — shrunk to 3 min so a stolen state
+ * value has a small replay window. 3 minutes is plenty for an interactive
+ * consent flow and well above typical IdP redirect latency.
+ */
+const PENDING_FLOW_TTL_MS = 3 * 60 * 1000;
+/** Hard cap to bound memory; if exceeded after cleanup, reject new flows. */
+const MAX_PENDING_FLOWS = 32;
+
+// Clean up stale flows
 function cleanStalePendingFlows(): void {
-  const cutoff = Date.now() - 10 * 60 * 1000;
+  const cutoff = Date.now() - PENDING_FLOW_TTL_MS;
   for (const [state, flow] of pendingFlows) {
     if (flow.createdAt < cutoff) {
       pendingFlows.delete(state);
@@ -39,9 +59,22 @@ function cleanStalePendingFlows(): void {
   }
 }
 
+/**
+ * PKCE: generate the code_verifier (high-entropy random) and the
+ * S256 code_challenge that Tigerpaw sends to the IdP up front. All 7
+ * configured providers (Gmail / Outlook / Google Calendar / Outlook
+ * Calendar / Zoom / Google Meet / MS Teams) accept S256; there is no
+ * provider-specific path here.
+ */
+function generatePkcePair(): { verifier: string; challenge: string } {
+  const verifier = crypto.randomBytes(32).toString("base64url");
+  const challenge = crypto.createHash("sha256").update(verifier).digest("base64url");
+  return { verifier, challenge };
+}
+
 // ── Credential resolution (config → env fallback) ───────────────
 
-type OAuthGroup = "google" | "microsoft" | "zoom";
+type OAuthGroup = "google" | "microsoft" | "zoom" | "atlassian";
 
 const ENV_TO_GROUP: Record<string, OAuthGroup> = {
   GOOGLE_CLIENT_ID: "google",
@@ -50,6 +83,8 @@ const ENV_TO_GROUP: Record<string, OAuthGroup> = {
   MICROSOFT_CLIENT_SECRET: "microsoft",
   ZOOM_CLIENT_ID: "zoom",
   ZOOM_CLIENT_SECRET: "zoom",
+  ATLASSIAN_CLIENT_ID: "atlassian",
+  ATLASSIAN_CLIENT_SECRET: "atlassian",
 };
 
 export function resolveOAuthCredential(
@@ -109,8 +144,22 @@ export function startOAuthFlow(
     };
   }
 
+  // Hard cap on outstanding flows. Run a cleanup first so legitimate users
+  // aren't blocked by stale entries; if we're still over the cap, reject.
+  if (pendingFlows.size >= MAX_PENDING_FLOWS) {
+    cleanStalePendingFlows();
+    if (pendingFlows.size >= MAX_PENDING_FLOWS) {
+      log.warn(
+        `Refusing to start OAuth flow: ${pendingFlows.size} pending flows already in-flight (cap ${MAX_PENDING_FLOWS}).`,
+      );
+      return { error: "too_many_pending_flows" };
+    }
+  }
+
   const state = crypto.randomBytes(24).toString("hex");
   const redirectUri = `http://127.0.0.1:${gatewayPort}/integrations/oauth2/callback`;
+  const wantsPkce = oauth2Config.usePkce !== false;
+  const pkce = wantsPkce ? generatePkcePair() : null;
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -118,9 +167,18 @@ export function startOAuthFlow(
     response_type: "code",
     scope: oauth2Config.scopes.join(" "),
     state,
-    access_type: "offline",
     prompt: "consent",
   });
+  if (pkce) {
+    params.set("code_challenge", pkce.challenge);
+    params.set("code_challenge_method", "S256");
+  }
+  if (oauth2Config.useGoogleOfflineAccess !== false) {
+    params.set("access_type", "offline");
+  }
+  for (const [k, v] of Object.entries(oauth2Config.extraAuthParams ?? {})) {
+    params.set(k, v);
+  }
 
   const authUrl = `${oauth2Config.authorizationUrl}?${params.toString()}`;
 
@@ -129,6 +187,7 @@ export function startOAuthFlow(
     state,
     createdAt: Date.now(),
     redirectUri,
+    codeVerifier: pkce?.verifier ?? null,
   });
 
   return { authUrl, state };
@@ -165,6 +224,9 @@ export async function exchangeOAuthCode(
     client_id: clientId,
     client_secret: clientSecret,
   });
+  if (flow.codeVerifier) {
+    body.set("code_verifier", flow.codeVerifier);
+  }
 
   const res = await fetch(oauth2Config.tokenUrl, {
     method: "POST",
@@ -174,6 +236,19 @@ export async function exchangeOAuthCode(
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
+    // Zoom's OAuth app registration distinguishes "PKCE app" from "confidential
+    // client app". Apps registered before PKCE was required may return
+    // invalid_grant when code_verifier is sent alongside client_secret.
+    if (
+      flow.providerId === "zoom" &&
+      (res.status === 400 || res.status === 401) &&
+      text.toLowerCase().includes("invalid_grant")
+    ) {
+      return {
+        error:
+          "zoom_pkce_compat: Reconfigure the Zoom OAuth app to allow PKCE, or remove and reconnect this Zoom integration.",
+      };
+    }
     return { error: `Token exchange failed (${res.status}): ${text.slice(0, 200)}` };
   }
 
@@ -186,8 +261,43 @@ export async function exchangeOAuthCode(
     scope: String(data.scope ?? oauth2Config.scopes.join(" ")),
   };
 
-  // Fetch user email for label
-  const accountEmail = await fetchAccountEmail(flow.providerId, tokens.accessToken);
+  // Fetch user email for label, plus Jira-specific cloudId discovery.
+  let accountEmail: string | null = null;
+  let connectionConfig: Record<string, unknown> | undefined;
+  let connectionLabel: string;
+
+  if (flow.providerId === "jira") {
+    const site = await fetchJiraCloudId(tokens.accessToken);
+    if (!site) {
+      return {
+        error:
+          "jira_no_accessible_resources: This Atlassian account has no Jira sites accessible to this OAuth app. Add the app to a site, then try again.",
+      };
+    }
+    connectionConfig = {
+      cloudId: site.cloudId,
+      siteName: site.siteName,
+      siteUrl: site.siteUrl,
+      baseUrl: `https://api.atlassian.com/ex/jira/${site.cloudId}`,
+      authScheme: "Bearer",
+    };
+    try {
+      const me = await fetch(
+        `https://api.atlassian.com/ex/jira/${site.cloudId}/rest/api/3/myself`,
+        { headers: { Authorization: `Bearer ${tokens.accessToken}` } },
+      );
+      if (me.ok) {
+        const data = (await me.json()) as { emailAddress?: string };
+        accountEmail = data.emailAddress ?? null;
+      }
+    } catch {
+      // Non-critical — label falls back to site name only.
+    }
+    connectionLabel = accountEmail ? `${site.siteName} — ${accountEmail}` : site.siteName;
+  } else {
+    accountEmail = await fetchAccountEmail(flow.providerId, tokens.accessToken);
+    connectionLabel = accountEmail || provider.name;
+  }
 
   const connectionId = `${flow.providerId}-${crypto.randomBytes(6).toString("hex")}`;
   const connection: IntegrationConnectionFull = {
@@ -195,11 +305,12 @@ export async function exchangeOAuthCode(
     providerId: flow.providerId,
     category: provider.category,
     status: "connected",
-    label: accountEmail || provider.name,
+    label: connectionLabel,
     accountEmail: accountEmail || undefined,
     connectedAt: new Date().toISOString(),
     tokens,
     scopes: oauth2Config.scopes,
+    ...(connectionConfig ? { config: connectionConfig } : {}),
   };
 
   return connection;
@@ -290,10 +401,33 @@ function resolveProviderWithSdk(
         scopes: sdkAuth.scopes,
         clientIdEnvVar: sdkAuth.clientIdEnvVar,
         clientSecretEnvVar: sdkAuth.clientSecretEnvVar,
+        extraAuthParams: sdkAuth.extraAuthParams,
+        usePkce: sdkAuth.usePkce,
+        useGoogleOfflineAccess: sdkAuth.useGoogleOfflineAccess,
       },
     };
   }
   return provider;
+}
+
+async function fetchJiraCloudId(
+  accessToken: string,
+): Promise<{ cloudId: string; siteName: string; siteUrl: string } | null> {
+  try {
+    const res = await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const arr = (await res.json()) as Array<{ id: string; name: string; url: string }>;
+    if (!Array.isArray(arr) || arr.length === 0) {
+      return null;
+    }
+    return { cloudId: arr[0].id, siteName: arr[0].name, siteUrl: arr[0].url };
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchAccountEmail(

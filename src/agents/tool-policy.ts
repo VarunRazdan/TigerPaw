@@ -4,6 +4,7 @@ import {
   normalizeToolName,
   resolveToolProfilePolicy,
   TOOL_GROUPS,
+  wrapOwnerOnlyToolExecution,
 } from "./tool-policy-shared.js";
 import type { AnyAgentTool } from "./tools/common.js";
 export {
@@ -12,39 +13,51 @@ export {
   normalizeToolName,
   resolveToolProfilePolicy,
   TOOL_GROUPS,
+  wrapOwnerOnlyToolExecution,
+  OWNER_ONLY_TOOL_ERROR,
 } from "./tool-policy-shared.js";
 export type { ToolProfileId } from "./tool-policy-shared.js";
 
-// Keep tool-policy browser-safe: do not import tools/common at runtime.
-function wrapOwnerOnlyToolExecution(tool: AnyAgentTool, senderIsOwner: boolean): AnyAgentTool {
-  if (tool.ownerOnly !== true || senderIsOwner || !tool.execute) {
-    return tool;
-  }
-  return {
-    ...tool,
-    execute: async () => {
-      throw new Error("Tool restricted to owner senders.");
-    },
-  };
-}
-
-const OWNER_ONLY_TOOL_NAME_FALLBACKS = new Set<string>([
-  "whatsapp_login",
-  "cron",
-  "gateway",
-  "nodes",
-]);
-
-export function isOwnerOnlyToolName(name: string) {
-  return OWNER_ONLY_TOOL_NAME_FALLBACKS.has(normalizeToolName(name));
-}
-
+/**
+ * Owner-only check: deny-by-default via required `audience`. The deprecated
+ * `ownerOnly: true` flag is still honored so external plugins published
+ * before the audience field rolled out keep working.
+ *
+ * Note: there is intentionally no name-based fallback list anymore — that
+ * would re-introduce the allow-by-default failure mode the audience field
+ * was added to fix. A tool that declares NEITHER audience nor ownerOnly is
+ * treated as `audience: "owner"` (fail-safe) — see `applyOwnerOnlyToolPolicy`.
+ */
 function isOwnerOnlyTool(tool: AnyAgentTool) {
-  return tool.ownerOnly === true || isOwnerOnlyToolName(tool.name);
+  return tool.audience === "owner" || tool.ownerOnly === true;
+}
+
+const warnedMissingAudience = new Set<string>();
+
+function isMissingAudience(tool: AnyAgentTool) {
+  return tool.audience === undefined && tool.ownerOnly !== true;
 }
 
 export function applyOwnerOnlyToolPolicy(tools: AnyAgentTool[], senderIsOwner: boolean) {
-  const withGuard = tools.map((tool) => {
+  // Deny-by-default: any tool that forgot to declare `audience` is treated
+  // as owner-only. We log once per tool name so devs see the regression in
+  // dev/CI without spamming. The CI guard
+  // `scripts/check-tool-audience.mjs` is the primary enforcement; this is
+  // the runtime safety net.
+  const annotated = tools.map((tool) => {
+    if (!isMissingAudience(tool)) {
+      return tool;
+    }
+    if (!warnedMissingAudience.has(tool.name)) {
+      warnedMissingAudience.add(tool.name);
+      // eslint-disable-next-line no-console -- subsystem logger not always in scope here.
+      console.warn(
+        `[tool-policy] Tool "${tool.name}" has no \`audience\` declared; defaulting to "owner" (deny-by-default). Add \`audience: "owner" | "all"\` to the tool definition.`,
+      );
+    }
+    return { ...tool, audience: "owner" as const };
+  });
+  const withGuard = annotated.map((tool) => {
     if (!isOwnerOnlyTool(tool)) {
       return tool;
     }
@@ -54,6 +67,11 @@ export function applyOwnerOnlyToolPolicy(tools: AnyAgentTool[], senderIsOwner: b
     return withGuard;
   }
   return withGuard.filter((tool) => !isOwnerOnlyTool(tool));
+}
+
+/** Test-only: clear the per-name warn set so `console.warn` fires again. */
+export function resetWarnedMissingAudienceForTests(): void {
+  warnedMissingAudience.clear();
 }
 
 export type ToolPolicyLike = {

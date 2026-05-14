@@ -58,7 +58,7 @@ function SetupWizardSection() {
           setOnboardingComplete(false);
           void navigate("/");
         }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition-all cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-orange-500/40 bg-orange-500/10 hover:bg-orange-500/20 text-orange-200 transition-all cursor-pointer"
       >
         <RotateCcw className="w-3 h-3" />
         {ts("rerunWizard")}

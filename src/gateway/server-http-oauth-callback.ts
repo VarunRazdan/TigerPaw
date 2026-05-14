@@ -97,6 +97,14 @@ function explainError(message: string): { headline: string; detail: string; hint
       hint: "Click Connect again from the Integrations page and approve the requested permissions.",
     };
   }
+  if (lower.includes("zoom_pkce_compat")) {
+    return {
+      headline: "Zoom OAuth App Needs PKCE",
+      detail:
+        "Zoom rejected the token exchange. Older Zoom OAuth apps registered as confidential clients may not accept PKCE.",
+      hint: "Reconfigure the Zoom OAuth app to allow PKCE, or remove this Zoom integration and reconnect after enabling PKCE on the app.",
+    };
+  }
   if (lower.includes("invalid_grant") || lower.includes("invalid grant")) {
     return {
       headline: "Authorization Code Expired",
@@ -199,6 +207,29 @@ export async function handleOAuth2CallbackRequest(
     res.setHeader("Allow", "GET");
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.end("Method Not Allowed");
+    return true;
+  }
+
+  // Sec-Fetch-Site defense-in-depth.
+  //
+  // A legitimate OAuth redirect arrives at the loopback callback after the
+  // browser follows a redirect from the IdP (accounts.google.com,
+  // login.microsoftonline.com, zoom.us, ...). Because the *initiator* of the
+  // request is a third-party origin, the browser sets:
+  //     Sec-Fetch-Site: cross-site
+  //
+  // `same-origin` would mean the request was triggered by a page served by
+  // this gateway — but the callback URL is provider-redirect-only and is
+  // never reached from the Tigerpaw UI directly, so a same-origin value is
+  // suspicious (forged form post, link click from a gateway-served page).
+  // Reject `same-origin` and `same-site`; allow `cross-site`; allow absent
+  // header (older browsers, curl, scripted callers — handled by state/PKCE).
+  //
+  // DO NOT "fix" this by inverting the conditional — it's correct as written.
+  const fetchSiteHeader = req.headers["sec-fetch-site"];
+  const fetchSite = typeof fetchSiteHeader === "string" ? fetchSiteHeader.toLowerCase() : undefined;
+  if (fetchSite === "same-origin" || fetchSite === "same-site") {
+    sendHtml(res, 400, errorPage("Security check failed (unexpected request origin)."));
     return true;
   }
 

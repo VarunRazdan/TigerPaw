@@ -59,6 +59,27 @@ async function createOAuth2AuthContext(integrationId: string): Promise<AuthConte
     );
   }
 
+  // API-token path (long-lived; no refresh). The "access token" is a
+  // pre-encoded credential blob (e.g. base64 email:apiToken for Atlassian
+  // Basic auth). The provider helper reads `authScheme` from the config to
+  // decide between `Bearer <x>` and `Basic <x>` headers.
+  if (connection.authMethod === "api_token") {
+    const configFields: Record<string, string> = connection.config
+      ? Object.fromEntries(
+          Object.entries(connection.config).map(([k, v]) => [
+            k,
+            typeof v === "string" ? v : v == null ? "" : JSON.stringify(v),
+          ]),
+        )
+      : {};
+    const token = connection.tokens.accessToken;
+    return {
+      getAccessToken: async () => token,
+      getCredentialField: (key: string) => configFields[key],
+      credentials: configFields,
+    };
+  }
+
   // Service account path — mint tokens on demand
   if (connection.authMethod === "service_account" && connection.serviceAccount) {
     const saConfig = connection.serviceAccount;
@@ -85,6 +106,15 @@ async function createOAuth2AuthContext(integrationId: string): Promise<AuthConte
     throw new Error(`OAuth2 token refresh failed for "${integrationId}": ${tokens.error}`);
   }
 
+  const configFields: Record<string, string> = connection.config
+    ? Object.fromEntries(
+        Object.entries(connection.config).map(([k, v]) => [
+          k,
+          typeof v === "string" ? v : v == null ? "" : JSON.stringify(v),
+        ]),
+      )
+    : {};
+
   return {
     getAccessToken: async () => {
       // Re-check freshness on each call in case the context is long-lived
@@ -105,19 +135,21 @@ async function createOAuth2AuthContext(integrationId: string): Promise<AuthConte
       }
       return fresh.accessToken;
     },
-    getCredentialField: () => undefined,
-    credentials: {},
+    getCredentialField: (key: string) => configFields[key],
+    credentials: configFields,
   };
 }
 
 /** API key / bearer / basic: read from credential vault. */
 function createCredentialAuthContext(credentialId?: string, envVar?: string): AuthContext {
+  // Vault fields may be null when decrypt fails (logged in workflows/credentials);
+  // we coerce nulls to "" at the boundary so SDK callers see a consistent string view.
   let fields: Record<string, string> = {};
 
   if (credentialId) {
     const resolved = resolveCredential(credentialId);
     if (resolved) {
-      fields = resolved;
+      fields = Object.fromEntries(Object.entries(resolved).map(([k, v]) => [k, v ?? ""]));
     }
   }
 

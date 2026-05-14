@@ -112,6 +112,7 @@ export class IntegrationService {
         accountEmail: result.accountEmail,
         lastUsedAt: new Date().toISOString(),
         scopes: result.scopes,
+        config: result.config ?? existing.config,
       };
       saveIntegrationConnection(updated);
       const { tokens: _t, config: _c, serviceAccount: _sa, ...connection } = updated;
@@ -201,6 +202,109 @@ export class IntegrationService {
     return stripped;
   }
 
+  // ── API token flow (Jira et al.) ─────────────────────────────
+
+  /**
+   * Connect via a long-lived API token (basic-auth style).
+   *
+   * Used for Jira Cloud and any future provider that supports the simpler
+   * "user-generated token" model. Validates the token by calling a
+   * provider-specific identity endpoint before persisting.
+   */
+  async connectApiToken(
+    providerId: IntegrationProviderId,
+    params: { siteUrl: string; email: string; apiToken: string },
+  ): Promise<IntegrationConnection | { error: string }> {
+    const provider = this.listProviders().find((p) => p.id === providerId);
+    if (!provider) {
+      return { error: `Unknown provider: ${providerId}` };
+    }
+
+    // v1: API-token auth is implemented for Jira only.
+    if (providerId !== "jira") {
+      return { error: `API-token auth is not supported for provider: ${providerId}` };
+    }
+
+    const siteUrl = normalizeAtlassianSiteUrl(params.siteUrl);
+    if (!siteUrl) {
+      return {
+        error:
+          "Invalid Atlassian site URL. Use the form https://your-site.atlassian.net (no path).",
+      };
+    }
+    const email = params.email.trim();
+    const apiToken = params.apiToken.trim();
+    if (!email || !apiToken) {
+      return { error: "Email and API token are both required." };
+    }
+
+    const basic = Buffer.from(`${email}:${apiToken}`).toString("base64");
+
+    // Validate against /myself before persisting.
+    let accountEmail: string | undefined;
+    let displayName: string | undefined;
+    try {
+      const res = await fetch(`${siteUrl}/rest/api/3/myself`, {
+        headers: { Authorization: `Basic ${basic}`, Accept: "application/json" },
+      });
+      if (res.status === 401 || res.status === 403) {
+        return {
+          error:
+            "Atlassian rejected the credentials (401/403). Double-check the email + API token and that the token has Jira access.",
+        };
+      }
+      if (!res.ok) {
+        return {
+          error: `Token validation failed (${res.status}). Try again or check the site URL.`,
+        };
+      }
+      const data = (await res.json()) as { emailAddress?: string; displayName?: string };
+      accountEmail = data.emailAddress;
+      displayName = data.displayName;
+    } catch (err) {
+      return {
+        error: `Could not reach ${siteUrl}: ${err instanceof Error ? err.message : String(err)}`,
+      };
+    }
+
+    const siteHost = new URL(siteUrl).hostname.replace(/\.atlassian\.net$/, "");
+    const siteName = siteHost || "Jira";
+    const existing = findConnectionByProvider(providerId);
+    const connectionId = existing?.id ?? `${providerId}-${crypto.randomBytes(6).toString("hex")}`;
+
+    const connection: IntegrationConnectionFull = {
+      id: connectionId,
+      providerId,
+      category: provider.category,
+      status: "connected",
+      label: accountEmail ? `${siteName} — ${accountEmail}` : siteName,
+      accountEmail: accountEmail ?? email,
+      authMethod: "api_token",
+      connectedAt: existing?.connectedAt ?? new Date().toISOString(),
+      tokens: {
+        // The "access token" for Basic auth is the pre-encoded `email:token` blob.
+        // Refresh/expiry are unused — Atlassian API tokens are user-rotated.
+        accessToken: basic,
+        refreshToken: "",
+        expiresAt: 0,
+        tokenType: "Basic",
+        scope: "",
+      },
+      config: {
+        baseUrl: siteUrl,
+        siteName,
+        siteUrl,
+        accountEmail: accountEmail ?? email,
+        authScheme: "Basic",
+        displayName: displayName ?? "",
+      },
+    };
+
+    saveIntegrationConnection(connection);
+    const { tokens: _t, config: _c, serviceAccount: _sa, ...stripped } = connection;
+    return stripped;
+  }
+
   // ── Token access (server-side only) ──────────────────────────
 
   /**
@@ -211,6 +315,11 @@ export class IntegrationService {
     const conn = getIntegrationConnection(connectionId);
     if (!conn) {
       return { error: "Connection not found" };
+    }
+
+    // API token path (e.g. Jira basic-auth) — token is long-lived; no refresh.
+    if (conn.authMethod === "api_token") {
+      return conn.tokens.accessToken;
     }
 
     // Service account path — mint a fresh token on demand
@@ -239,7 +348,10 @@ export class IntegrationService {
       return result;
     }
 
-    if (result.accessToken !== conn.tokens.accessToken) {
+    if (
+      result.accessToken !== conn.tokens.accessToken ||
+      result.refreshToken !== conn.tokens.refreshToken
+    ) {
       updateIntegrationTokens(connectionId, result);
     }
 
@@ -279,4 +391,33 @@ export function getIntegrationService(gatewayPort?: number): IntegrationService 
     _instance = new IntegrationService(gatewayPort ?? 18789);
   }
   return _instance;
+}
+
+/**
+ * Normalize a user-provided Atlassian site URL to `https://<host>.atlassian.net`.
+ * Returns `null` for unparseable / clearly-wrong input.
+ *
+ * Accepts: `acme.atlassian.net`, `https://acme.atlassian.net`, trailing slashes,
+ * accidental `/jira` path. Rejects non-https schemes, IPs, and clearly-foreign hosts.
+ */
+function normalizeAtlassianSiteUrl(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  let url: URL;
+  try {
+    const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    url = new URL(withProto);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    return null;
+  }
+  // Allow *.atlassian.net (Cloud) — Server/DC support is out of v1 scope.
+  if (!/\.atlassian\.net$/i.test(url.hostname)) {
+    return null;
+  }
+  return `https://${url.hostname}`;
 }

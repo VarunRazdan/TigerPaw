@@ -17,7 +17,7 @@ import { notifyError } from "@/stores/notification-store";
 // OAuth group definitions
 // ---------------------------------------------------------------------------
 
-type OAuthGroup = "google" | "microsoft" | "zoom";
+type OAuthGroup = "google" | "microsoft" | "zoom" | "atlassian";
 
 const DOCS_BASE = "https://github.com/varunrazdan/tigerpaw/blob/main/docs/integrations";
 
@@ -74,6 +74,20 @@ const OAUTH_GROUPS: Record<
       "Copy the Client ID and Client Secret below",
     ],
     docsAnchor: "zoom",
+  },
+  atlassian: {
+    label: "Atlassian",
+    consoleUrl: "https://developer.atlassian.com/console/myapps/",
+    consoleName: "Atlassian Developer Console",
+    unlocks: ["Jira"],
+    steps: [
+      "Go to the Atlassian Developer Console and click Create > OAuth 2.0 (3LO) integration",
+      "Under Authorization, add the redirect URI shown below",
+      "Under Permissions, add the Jira API and grant scopes: read:jira-user, read:jira-work, write:jira-work, offline_access",
+      "Distribute the app to your Atlassian site (or install it on a site you administer)",
+      "Copy the Client ID and Secret from the Settings page below",
+    ],
+    docsAnchor: "atlassian-jira",
   },
 };
 
@@ -311,4 +325,5 @@ export const PROVIDER_TO_OAUTH_GROUP: Record<string, OAuthGroup> = {
   outlook_calendar: "microsoft",
   ms_teams_meetings: "microsoft",
   zoom: "zoom",
+  jira: "atlassian",
 };

@@ -305,6 +305,7 @@ export function createImageTool(options?: {
   return {
     label: "Image",
     name: "image",
+    audience: "all",
     description,
     parameters: Type.Object({
       prompt: Type.Optional(Type.String()),

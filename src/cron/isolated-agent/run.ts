@@ -602,7 +602,14 @@ export async function runCronIsolatedAgentTurn(params: {
             trigger: "cron",
             // Cron jobs are trusted local automation, so isolated runs should
             // inherit owner-only tooling like local `openclaw agent` runs.
-            senderIsOwner: true,
+            // Hook-dispatched runs override this to `hooks.ownerEquivalent`
+            // (default false) so a leaked hook token does not equal owner
+            // privilege by default — see `dispatchAgentHook` callers.
+            senderIsOwner:
+              params.job.payload?.kind === "agentTurn" &&
+              params.job.payload.senderIsOwner !== undefined
+                ? params.job.payload.senderIsOwner
+                : true,
             messageChannel,
             agentAccountId: resolvedDelivery.accountId,
             sessionFile,

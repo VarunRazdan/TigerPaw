@@ -748,6 +748,7 @@ export function createWebFetchTool(options?: {
   return {
     label: "Web Fetch",
     name: "web_fetch",
+    audience: "all",
     description:
       "Fetch and extract readable content from a URL (HTML → markdown/text). Use for lightweight page access without browser automation.",
     parameters: WebFetchSchema,

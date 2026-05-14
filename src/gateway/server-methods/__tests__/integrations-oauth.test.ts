@@ -13,8 +13,12 @@ vi.mock("../../../integrations/index.js", () => {
   };
 });
 
-function createMockReq(url: string, method = "GET"): IncomingMessage {
-  return { url, method, headers: {} } as unknown as IncomingMessage;
+function createMockReq(
+  url: string,
+  method = "GET",
+  headers: Record<string, string> = {},
+): IncomingMessage {
+  return { url, method, headers } as unknown as IncomingMessage;
 }
 
 function createMockRes(): ServerResponse & {
@@ -133,6 +137,84 @@ describe("OAuth2 Callback Handler", () => {
     expect(handled).toBe(true);
     expect(res._statusCode).toBe(500);
     expect(res._body).toContain("Network timeout");
+  });
+
+  it("rejects callback with Sec-Fetch-Site: same-origin", async () => {
+    const req = createMockReq("/integrations/oauth2/callback?code=abc&state=xyz", "GET", {
+      "sec-fetch-site": "same-origin",
+    });
+    const res = createMockRes();
+    const handled = await handleOAuth2CallbackRequest(req, res);
+    expect(handled).toBe(true);
+    expect(res._statusCode).toBe(400);
+    expect(res._body).toContain("Security check failed");
+  });
+
+  it("rejects callback with Sec-Fetch-Site: same-site", async () => {
+    const req = createMockReq("/integrations/oauth2/callback?code=abc&state=xyz", "GET", {
+      "sec-fetch-site": "same-site",
+    });
+    const res = createMockRes();
+    const handled = await handleOAuth2CallbackRequest(req, res);
+    expect(handled).toBe(true);
+    expect(res._statusCode).toBe(400);
+  });
+
+  it("allows callback with Sec-Fetch-Site: cross-site (legitimate IdP redirect)", async () => {
+    const { __mockCompleteOAuth } = (await import("../../../integrations/index.js")) as unknown as {
+      __mockCompleteOAuth: ReturnType<typeof vi.fn>;
+    };
+    __mockCompleteOAuth.mockResolvedValue({
+      id: "gmail-x",
+      providerId: "gmail",
+      category: "email",
+      status: "connected",
+      label: "Gmail",
+      accountEmail: "test@gmail.com",
+      connectedAt: new Date().toISOString(),
+    });
+    const req = createMockReq("/integrations/oauth2/callback?code=abc&state=xyz", "GET", {
+      "sec-fetch-site": "cross-site",
+    });
+    const res = createMockRes();
+    const handled = await handleOAuth2CallbackRequest(req, res);
+    expect(handled).toBe(true);
+    expect(res._statusCode).toBe(200);
+    expect(res._body).toContain("Gmail Connected");
+  });
+
+  it("allows callback with no Sec-Fetch-Site header (older browsers / curl)", async () => {
+    const { __mockCompleteOAuth } = (await import("../../../integrations/index.js")) as unknown as {
+      __mockCompleteOAuth: ReturnType<typeof vi.fn>;
+    };
+    __mockCompleteOAuth.mockResolvedValue({
+      id: "gmail-y",
+      providerId: "gmail",
+      category: "email",
+      status: "connected",
+      label: "Gmail",
+      accountEmail: "test@gmail.com",
+      connectedAt: new Date().toISOString(),
+    });
+    const req = createMockReq("/integrations/oauth2/callback?code=abc&state=xyz");
+    const res = createMockRes();
+    const handled = await handleOAuth2CallbackRequest(req, res);
+    expect(handled).toBe(true);
+    expect(res._statusCode).toBe(200);
+  });
+
+  it("maps zoom_pkce_compat error to a Zoom-specific hint", async () => {
+    const { __mockCompleteOAuth } = (await import("../../../integrations/index.js")) as unknown as {
+      __mockCompleteOAuth: ReturnType<typeof vi.fn>;
+    };
+    __mockCompleteOAuth.mockResolvedValue({
+      error:
+        "zoom_pkce_compat: Reconfigure the Zoom OAuth app to allow PKCE, or remove and reconnect this Zoom integration.",
+    });
+    const req = createMockReq("/integrations/oauth2/callback?code=abc&state=xyz");
+    const res = createMockRes();
+    await handleOAuth2CallbackRequest(req, res);
+    expect(res._body).toContain("Zoom OAuth App Needs PKCE");
   });
 
   it("escapes HTML in provider label and email", async () => {

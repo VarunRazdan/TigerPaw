@@ -4,8 +4,27 @@ import { detectMime } from "../../media/mime.js";
 import type { ImageSanitizationLimits } from "../image-sanitization.js";
 import { sanitizeToolResultImages } from "../tool-images.js";
 
+/**
+ * Tool authorization audience.
+ *
+ * - `"owner"` — only the gateway owner / configured owner senders may invoke.
+ *   Tools that mutate config, infrastructure, or credentials belong here
+ *   (e.g. `cron`, `gateway`, `nodes`, `whatsapp_login`).
+ * - `"all"` — any sender may invoke (subject to channel-level allowlists).
+ *
+ * Optional in the type but **required at runtime** by the tool registry —
+ * first-party tools missing `audience` throw at registration; external
+ * (plugin) tools default to `"owner"` with a deprecation warning, so a
+ * forgotten audience cannot silently become callable by any inbound
+ * message. CI guard `scripts/check-tool-audience.mjs` enforces the
+ * declaration on first-party source files.
+ */
+export type ToolAudience = "owner" | "all";
+
 // oxlint-disable-next-line typescript/no-explicit-any
 export type AnyAgentTool = AgentTool<any, unknown> & {
+  audience?: ToolAudience;
+  /** @deprecated Set `audience: "owner"` instead. Read for back-compat. */
   ownerOnly?: boolean;
 };
 
@@ -239,20 +258,10 @@ export function jsonResult(payload: unknown): AgentToolResult<unknown> {
   };
 }
 
-export function wrapOwnerOnlyToolExecution(
-  tool: AnyAgentTool,
-  senderIsOwner: boolean,
-): AnyAgentTool {
-  if (tool.ownerOnly !== true || senderIsOwner || !tool.execute) {
-    return tool;
-  }
-  return {
-    ...tool,
-    execute: async () => {
-      throw new Error(OWNER_ONLY_TOOL_ERROR);
-    },
-  };
-}
+// Re-exported from tool-policy-shared.js for back-compat. The implementation
+// lives there so `tool-policy.ts` (which is browser-safe and must not import
+// node:fs) can use the same function without duplicating it.
+export { wrapOwnerOnlyToolExecution } from "../tool-policy-shared.js";
 
 export async function imageResult(params: {
   label: string;

@@ -37,6 +37,7 @@ export function createSessionsListTool(opts?: {
   return {
     label: "Sessions",
     name: "sessions_list",
+    audience: "all",
     description: "List sessions with optional filters and last messages.",
     parameters: SessionsListToolSchema,
     execute: async (_toolCallId, args) => {

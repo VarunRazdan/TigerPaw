@@ -1,5 +1,5 @@
 import type { IncomingMessage } from "node:http";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { OpenClawConfig } from "../config/config.js";
 import { setActivePluginRegistry } from "../plugins/runtime.js";
 import { createMSTeamsTestPlugin, createTestRegistry } from "../test-utils/channel-plugins.js";
@@ -8,6 +8,7 @@ import {
   extractHookToken,
   isHookAgentAllowed,
   normalizeHookDispatchSessionKey,
+  resetHooksBootWarningsForTests,
   resolveHookSessionKey,
   resolveHookTargetAgentId,
   normalizeAgentPayload,
@@ -322,6 +323,56 @@ describe("gateway hooks helpers", () => {
     ).toThrow(
       "hooks.allowedSessionKeyPrefixes must include 'hook:' when hooks.defaultSessionKey is unset",
     );
+  });
+
+  test("ownerEquivalent defaults to false and reflects the config flag", () => {
+    const off = resolveHooksConfigOrThrow({
+      hooks: { enabled: true, token: "secret" },
+    } as OpenClawConfig);
+    expect(off.ownerEquivalent).toBe(false);
+
+    const on = resolveHooksConfigOrThrow({
+      hooks: { enabled: true, token: "secret", ownerEquivalent: true },
+    } as OpenClawConfig);
+    expect(on.ownerEquivalent).toBe(true);
+  });
+
+  test("logs a one-time boot warning when allowedAgentIds is undefined", () => {
+    resetHooksBootWarningsForTests();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      resolveHooksConfigOrThrow({
+        hooks: { enabled: true, token: "secret" },
+      } as OpenClawConfig);
+      // Resolve a second time — warning must NOT fire again.
+      resolveHooksConfigOrThrow({
+        hooks: { enabled: true, token: "secret" },
+      } as OpenClawConfig);
+      const warnCalls = warnSpy.mock.calls.filter((args) =>
+        String(args[0] ?? "").includes("hooks.allowedAgentIds is not configured"),
+      );
+      expect(warnCalls).toHaveLength(1);
+    } finally {
+      warnSpy.mockRestore();
+      resetHooksBootWarningsForTests();
+    }
+  });
+
+  test("does NOT warn when allowedAgentIds is explicitly configured (even as empty array)", () => {
+    resetHooksBootWarningsForTests();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      resolveHooksConfigOrThrow({
+        hooks: { enabled: true, token: "secret", allowedAgentIds: [] },
+      } as OpenClawConfig);
+      const warnCalls = warnSpy.mock.calls.filter((args) =>
+        String(args[0] ?? "").includes("hooks.allowedAgentIds is not configured"),
+      );
+      expect(warnCalls).toHaveLength(0);
+    } finally {
+      warnSpy.mockRestore();
+      resetHooksBootWarningsForTests();
+    }
   });
 });
 

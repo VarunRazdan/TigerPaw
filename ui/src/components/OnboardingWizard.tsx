@@ -33,6 +33,8 @@ import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ConnectDialog } from "@/components/ConnectDialog";
+import { JiraApiTokenDialog } from "@/components/JiraApiTokenDialog";
+import { JiraAuthMethodPicker, type JiraAuthMethod } from "@/components/JiraAuthMethodPicker";
 import { OAuthSetupDialog } from "@/components/OAuthSetupDialog";
 import { PlatformIcon } from "@/components/PlatformIcon";
 import {
@@ -823,41 +825,96 @@ const INTEGRATION_GROUPS = [
     sublabel: "Zoom Meetings",
     icons: ["integrations/zoom"],
   },
+  {
+    id: "atlassian" as const,
+    label: "Atlassian",
+    sublabel: "Jira — OAuth or API token",
+    icons: ["integrations/jira"],
+  },
 ];
 
 function IntegrationsGridStep() {
   const { t } = useTranslation("onboarding");
-  const [setupGroup, setSetupGroup] = useState<"google" | "microsoft" | "zoom" | null>(null);
+  const [setupGroup, setSetupGroup] = useState<
+    "google" | "microsoft" | "zoom" | "atlassian" | null
+  >(null);
+  const [jiraPickerOpen, setJiraPickerOpen] = useState(false);
+  const [jiraTokenDialogOpen, setJiraTokenDialogOpen] = useState(false);
   const [configuredGroups, setConfiguredGroups] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    gatewayRpc<{
-      status: Record<string, { configured: boolean }>;
-    }>("integrations.oauth.status", {})
-      .then((res) => {
-        if (res.ok && res.payload?.status) {
-          const configured = new Set<string>();
-          for (const [group, s] of Object.entries(res.payload.status)) {
-            if (s.configured) {
-              configured.add(group);
-            }
+  // "Configured" semantics:
+  //   - Google / Microsoft / Zoom: OAuth app credentials are saved (the wizard's
+  //     primary job — these groups have nothing the user can connect "directly").
+  //   - Atlassian: EITHER OAuth credentials are saved OR a live Jira connection
+  //     exists. The API-token path completes a connection in the wizard itself,
+  //     so the badge needs to reflect that — falling back to OAuth-only status
+  //     would make a token-connected user think the step is unfinished.
+  const refreshConfigured = useCallback(async () => {
+    try {
+      const [statusRes, connRes] = await Promise.all([
+        gatewayRpc<{ status: Record<string, { configured: boolean }> }>(
+          "integrations.oauth.status",
+          {},
+        ),
+        gatewayRpc<{ connections?: Array<{ providerId: string; status: string }> }>(
+          "integrations.connections",
+          {},
+        ),
+      ]);
+      const configured = new Set<string>();
+      if (statusRes.ok && statusRes.payload?.status) {
+        for (const [group, s] of Object.entries(statusRes.payload.status)) {
+          if (s.configured) {
+            configured.add(group);
           }
-          setConfiguredGroups(configured);
         }
-      })
-      .catch(() => {});
-  }, [setupGroup]); // Re-fetch after dialog closes
+      }
+      const hasLiveJiraConnection = (connRes.ok ? (connRes.payload?.connections ?? []) : []).some(
+        (c) => c.providerId === "jira" && c.status === "connected",
+      );
+      if (hasLiveJiraConnection) {
+        configured.add("atlassian");
+      }
+      setConfiguredGroups(configured);
+    } catch {
+      // Gateway transient — leave badges as-is rather than flicker to "unset".
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshConfigured();
+  }, [refreshConfigured, setupGroup, jiraPickerOpen, jiraTokenDialogOpen]);
+
+  function onTileClick(groupId: "google" | "microsoft" | "zoom" | "atlassian") {
+    // Atlassian is the one group where the wizard tile leads to a method
+    // picker instead of straight to OAuth credential setup, because Jira
+    // supports both OAuth and a (much faster) API token. Same picker the
+    // post-onboarding Integrations page uses, so the UX is consistent.
+    if (groupId === "atlassian") {
+      setJiraPickerOpen(true);
+      return;
+    }
+    setSetupGroup(groupId);
+  }
+
+  function onJiraMethodPicked(method: JiraAuthMethod) {
+    if (method === "api_token") {
+      setJiraTokenDialogOpen(true);
+    } else {
+      setSetupGroup("atlassian");
+    }
+  }
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {INTEGRATION_GROUPS.map((group) => {
           const isConfigured = configuredGroups.has(group.id);
           return (
             <button
               key={group.id}
               type="button"
-              onClick={() => setSetupGroup(group.id)}
+              onClick={() => onTileClick(group.id)}
               className={cn(
                 "rounded-xl glass-panel-interactive p-4 flex flex-col items-center gap-2 text-center cursor-pointer",
                 "hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-300",
@@ -892,9 +949,22 @@ function IntegrationsGridStep() {
       <p className="text-[11px] text-neutral-600 mt-2 text-center">
         {t(
           "integrations.skipNote",
-          "Requires OAuth app credentials from Google, Microsoft, or Zoom.",
+          "Each tile sets up the OAuth app credentials shared by every integration in that group. Jira also offers a faster API-token path — pick it on the Atlassian tile.",
         )}
       </p>
+      <JiraAuthMethodPicker
+        open={jiraPickerOpen}
+        onOpenChange={setJiraPickerOpen}
+        onSelect={onJiraMethodPicked}
+      />
+      <JiraApiTokenDialog
+        open={jiraTokenDialogOpen}
+        onOpenChange={setJiraTokenDialogOpen}
+        onConnected={() => {
+          // Connection lands; effect picks it up and the badge flips to green.
+          void refreshConfigured();
+        }}
+      />
       {setupGroup && (
         <OAuthSetupDialog
           open={!!setupGroup}

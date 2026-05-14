@@ -49,6 +49,7 @@ export function createMemorySearchTool(options: {
   return {
     label: "Memory Search",
     name: "memory_search",
+    audience: "all",
     description:
       "Mandatory recall step: semantically search MEMORY.md + memory/*.md (and optional session transcripts) before answering questions about prior work, decisions, dates, people, preferences, or todos; returns top snippets with path + lines. If response has disabled=true, memory retrieval is unavailable and should be surfaced to the user.",
     parameters: MemorySearchSchema,
@@ -110,6 +111,7 @@ export function createMemoryGetTool(options: {
   return {
     label: "Memory Get",
     name: "memory_get",
+    audience: "all",
     description:
       "Safe snippet read from MEMORY.md or memory/*.md with optional from/lines; use after memory_search to pull only the needed lines and keep context small.",
     parameters: MemoryGetSchema,

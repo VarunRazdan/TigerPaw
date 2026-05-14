@@ -200,7 +200,7 @@ export type ActionDependencies = {
   loadWorkflow?: (id: string) => Workflow | null;
 
   /** Resolve a credential by ID. */
-  resolveCredential?: (id: string) => Record<string, string> | null;
+  resolveCredential?: (id: string) => Record<string, string | null> | null;
 };
 
 // ── Credential vault types ────────────────────────────────────────
@@ -209,7 +209,12 @@ export type StoredCredential = {
   id: string;
   name: string;
   type: string; // e.g. "api_key", "oauth2", "basic_auth", "custom"
-  fields: Record<string, string>; // encrypted at rest
+  /**
+   * Encrypted at rest. Decrypted reads return `null` for fields that fail to
+   * decrypt (e.g. master key lost, ciphertext corrupted) — distinct from
+   * "never set". A `warn` is logged when this happens; see decryptFields.
+   */
+  fields: Record<string, string | null>;
   createdAt: string;
   updatedAt: string;
 };

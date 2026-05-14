@@ -175,6 +175,8 @@ export function createNodesTool(options?: {
   return {
     label: "Nodes",
     name: "nodes",
+    audience: "owner",
+    ownerOnly: true,
     description:
       "Discover and control paired nodes (status/describe/pairing/notify/camera/photos/screen/location/notifications/run/invoke).",
     parameters: NodesToolSchema,

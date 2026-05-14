@@ -289,6 +289,7 @@ export function createBrowserTool(opts?: {
   return {
     label: "Browser",
     name: "browser",
+    audience: "all",
     description: [
       "Control the browser via OpenClaw's browser control server (status/start/stop/profiles/tabs/open/snapshot/screenshot/actions).",
       'Profiles: use profile="chrome" for Chrome extension relay takeover (your existing Chrome tabs). Use profile="openclaw" for the isolated openclaw-managed browser.',

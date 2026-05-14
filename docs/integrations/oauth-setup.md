@@ -1,6 +1,6 @@
 # OAuth setup — registering your OAuth app
 
-Tigerpaw connects to Gmail, Calendar, Zoom, etc. via standard OAuth2. Each _OAuth group_ (Google, Microsoft, Zoom) needs **one** OAuth app registered with the provider — that app is reused for every integration in the group. After you set it up once, every Gmail / Calendar / Meet connection in that group goes through it.
+Tigerpaw connects to Gmail, Calendar, Zoom, Jira, etc. via standard OAuth2. Each _OAuth group_ (Google, Microsoft, Zoom, Atlassian) needs **one** OAuth app registered with the provider — that app is reused for every integration in the group. After you set it up once, every Gmail / Calendar / Meet / Jira connection in that group goes through it.
 
 This page covers the one-time OAuth-app registration. Per-provider details (scopes, what to enable, etc.) live in the per-integration pages.
 
@@ -16,7 +16,7 @@ You need:
 
   If your gateway runs on a different port, the URI changes — always copy the one Tigerpaw shows you.
 
-- An account with the OAuth provider (Google, Microsoft, Zoom).
+- An account with the OAuth provider (Google, Microsoft, Zoom, Atlassian).
 
 ## Google (Gmail, Google Calendar, Google Meet)
 
@@ -57,6 +57,27 @@ You can now connect Gmail, Google Calendar, and Google Meet on the Integrations 
 4. Under **Scopes**, add `meeting:write`, `meeting:read`, `user:read`.
 5. Copy the **Client ID** and **Client Secret** from the App Credentials tab into Tigerpaw's "Set up Zoom OAuth" dialog.
 
+## Atlassian (Jira)
+
+1. Open the [Atlassian Developer Console → My Apps](https://developer.atlassian.com/console/myapps/).
+2. Click **Create → OAuth 2.0 integration**. Give it a name (e.g. "Tigerpaw"); accept the terms.
+3. Open the new app, then under **Authorization → OAuth 2.0 (3LO) → Configure**:
+   - **Callback URL**: paste the redirect URI from Tigerpaw.
+   - Save.
+4. Under **Permissions** click **Add** next to **Jira API** and grant the scopes:
+   - `read:jira-user` (identify the connected account)
+   - `read:jira-work` (read issues, projects, comments)
+   - `write:jira-work` (create / edit / transition issues, add comments)
+   - `offline_access` (refresh tokens — required so Tigerpaw doesn't ask you to re-consent every hour)
+5. Distribute the app to your Atlassian site: under **Distribution → Edit** choose **Sharing → Private** (for personal use) and save. If your account doesn't own a Jira site, install the app on a site you administer.
+6. Open **Settings** and copy the **Client ID** and **Secret** into Tigerpaw's "Set up Atlassian OAuth" dialog. Click **Save**.
+
+A few Atlassian-specific notes:
+
+- **No PKCE for 3LO.** Atlassian's authorization-code flow doesn't document PKCE support, so Tigerpaw deliberately omits the `code_challenge` parameter for Jira. Connecting still uses your Client Secret, which Tigerpaw stores encrypted.
+- **One site per connection (v1).** Atlassian accounts can have multiple Jira sites. Tigerpaw picks the first one returned by `accessible-resources` after consent and shows the site name in the connection label so you can spot a mismatch. To switch sites, disconnect and reconnect (you can choose which site to grant access to in the Atlassian consent screen).
+- **Rotating refresh tokens.** Atlassian rotates the refresh token on every refresh — Tigerpaw persists the new value automatically, so there's nothing for you to do.
+
 ## How Tigerpaw stores the credentials
 
 The Client ID and Secret are saved into your Tigerpaw config at `~/.tigerpaw/tigerpaw.json` under `integrations.oauth.<group>` (legacy installs may still use `~/.tigerclaw/tigerclaw.json`). The user OAuth tokens (refresh + access) are encrypted with the OS keychain (macOS Keychain, Linux Secret Service) where available, with an AES-256-GCM file-encrypted fallback. They never leave your machine.
@@ -74,5 +95,6 @@ You're set up for the OAuth group. Open Tigerpaw → Integrations → click the 
 - [Google Meet](./google-meet.md)
 - [Microsoft Teams](./microsoft-teams.md)
 - [Zoom](./zoom.md)
+- [Jira](./jira.md)
 
 If something goes wrong, see [troubleshooting.md](./troubleshooting.md).

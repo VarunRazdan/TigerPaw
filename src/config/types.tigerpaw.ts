@@ -150,6 +150,7 @@ export type OpenClawConfig = {
       google?: { clientId?: SecretInput; clientSecret?: SecretInput };
       microsoft?: { clientId?: SecretInput; clientSecret?: SecretInput };
       zoom?: { clientId?: SecretInput; clientSecret?: SecretInput };
+      atlassian?: { clientId?: SecretInput; clientSecret?: SecretInput };
     };
   };
 };

@@ -91,6 +91,13 @@ type CronAgentTurnPayloadFields = {
   thinking?: string;
   timeoutSeconds?: number;
   allowUnsafeExternalContent?: boolean;
+  /**
+   * Optional override for the run's `senderIsOwner` value passed into the
+   * isolated agent. Defaults to `true` for genuine cron jobs (trusted local
+   * automation). Hook-dispatched jobs set this to `hooks.ownerEquivalent`
+   * so a leaked hook token does not equal owner privilege by default.
+   */
+  senderIsOwner?: boolean;
   /** If true, run with lightweight bootstrap context. */
   lightContext?: boolean;
   deliver?: boolean;

@@ -173,6 +173,7 @@ export function createSessionsHistoryTool(opts?: {
   return {
     label: "Session History",
     name: "sessions_history",
+    audience: "all",
     description: "Fetch message history for a session.",
     parameters: SessionsHistoryToolSchema,
     execute: async (_toolCallId, args) => {

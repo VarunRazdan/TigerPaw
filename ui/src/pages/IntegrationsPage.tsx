@@ -1,8 +1,10 @@
-import { Mail, Calendar, Video, RefreshCw } from "lucide-react";
+import { Mail, Calendar, Video, RefreshCw, KanbanSquare, Briefcase } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataModeSelector } from "@/components/DataModeSelector";
 import { GoogleAuthMethodPicker } from "@/components/GoogleAuthMethodPicker";
+import { JiraApiTokenDialog } from "@/components/JiraApiTokenDialog";
+import { JiraAuthMethodPicker, type JiraAuthMethod } from "@/components/JiraAuthMethodPicker";
 import { OAuthSetupDialog, PROVIDER_TO_OAUTH_GROUP } from "@/components/OAuthSetupDialog";
 import { ServiceAccountDialog } from "@/components/ServiceAccountDialog";
 import {
@@ -39,9 +41,14 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; desc
       icon: <Video className="w-4 h-4" />,
       description: "Connect meeting platforms to schedule calls and retrieve join links",
     },
+    productivity: {
+      label: "Productivity",
+      icon: <KanbanSquare className="w-4 h-4" />,
+      description: "Connect project-management and productivity tools",
+    },
   };
 
-const CATEGORY_ORDER: string[] = ["email", "calendar", "meeting"];
+const CATEGORY_ORDER: string[] = ["email", "calendar", "meeting", "productivity"];
 
 /** Google providers that support both OAuth2 and Service Account auth. */
 const GOOGLE_SA_PROVIDERS = new Set(["gmail", "google_calendar", "google_meet", "google_sheets"]);
@@ -57,7 +64,10 @@ function IntegrationIcon({ icon }: { icon: string }) {
     if (icon.includes("calendar")) {
       return <Calendar className="w-6 h-6 text-neutral-400" />;
     }
-    return <Video className="w-6 h-6 text-neutral-400" />;
+    if (icon === "zoom" || icon === "google-meet" || icon === "ms-teams") {
+      return <Video className="w-6 h-6 text-neutral-400" />;
+    }
+    return <Briefcase className="w-6 h-6 text-neutral-400" />;
   }
 
   return (
@@ -84,10 +94,14 @@ export function IntegrationsPage() {
   const setConnectingProvider = useIntegrationStore((s) => s.setConnectingProvider);
 
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
-  const [setupGroup, setSetupGroup] = useState<"google" | "microsoft" | "zoom" | null>(null);
+  const [setupGroup, setSetupGroup] = useState<
+    "google" | "microsoft" | "zoom" | "atlassian" | null
+  >(null);
   const [pendingProvider, setPendingProvider] = useState<IntegrationProvider | null>(null);
   const [authPickerProvider, setAuthPickerProvider] = useState<IntegrationProvider | null>(null);
   const [saDialogProvider, setSaDialogProvider] = useState<IntegrationProvider | null>(null);
+  const [jiraPickerOpen, setJiraPickerOpen] = useState(false);
+  const [jiraTokenDialogOpen, setJiraTokenDialogOpen] = useState(false);
   const [oauthStatus, setOauthStatus] = useState<
     Record<string, { configured: boolean; source: "config" | "env" | null }>
   >({});
@@ -234,7 +248,25 @@ export function IntegrationsPage() {
       return;
     }
 
+    // Jira supports two auth methods: API token (fast) and OAuth (org-grade).
+    if (provider.id === "jira") {
+      setJiraPickerOpen(true);
+      return;
+    }
+
     startOAuthFlow(provider);
+  }
+
+  function handleJiraMethodSelected(method: JiraAuthMethod) {
+    const jiraProvider = providers.find((p) => p.id === "jira");
+    if (!jiraProvider) {
+      return;
+    }
+    if (method === "api_token") {
+      setJiraTokenDialogOpen(true);
+    } else {
+      startOAuthFlow(jiraProvider);
+    }
   }
 
   async function handleDisconnectConfirm() {
@@ -405,6 +437,22 @@ export function IntegrationsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Jira auth method picker (API token vs OAuth2) */}
+      <JiraAuthMethodPicker
+        open={jiraPickerOpen}
+        onOpenChange={setJiraPickerOpen}
+        onSelect={handleJiraMethodSelected}
+      />
+
+      {/* Jira API token entry dialog */}
+      <JiraApiTokenDialog
+        open={jiraTokenDialogOpen}
+        onOpenChange={setJiraTokenDialogOpen}
+        onConnected={() => {
+          void fetchConnections();
+        }}
+      />
 
       {/* Google auth method picker (OAuth2 vs Service Account) */}
       {authPickerProvider && (

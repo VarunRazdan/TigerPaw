@@ -15,6 +15,12 @@ export type OAuth2AuthConfig = {
   scopes: string[];
   clientIdEnvVar: string;
   clientSecretEnvVar: string;
+  /** Extra URL params for the authorize redirect (e.g. Atlassian's `audience`). */
+  extraAuthParams?: Record<string, string>;
+  /** Default true. Set to false for IdPs that don't support PKCE (e.g. Atlassian 3LO). */
+  usePkce?: boolean;
+  /** Default true. Set to false to omit `access_type=offline` — only Google needs it. */
+  useGoogleOfflineAccess?: boolean;
 };
 
 export type ApiKeyAuthConfig = {
