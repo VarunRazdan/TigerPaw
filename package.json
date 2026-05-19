@@ -431,8 +431,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@grammyjs/types": "3.25.0",
-    "@lit-labs/signals": "^0.2.0",
+    "@grammyjs/types": "3.27.3",
+    "@lit-labs/signals": "^0.3.0",
     "@lit/context": "^1.1.6",
     "@types/express": "^5.0.6",
     "@types/markdown-it": "^14.1.2",
@@ -442,13 +442,13 @@
     "@typescript/native-preview": "7.0.0-dev.20260425.1",
     "@vitest/coverage-v8": "^4.0.18",
     "fast-check": "^4.6.0",
-    "jscpd": "4.0.9",
+    "jscpd": "4.2.2",
     "lit": "^3.3.2",
-    "oxfmt": "0.46.0",
+    "oxfmt": "0.50.0",
     "oxlint": "^1.53.0",
     "oxlint-tsgolint": "^0.22.0",
     "signal-utils": "0.21.1",
-    "tsdown": "0.21.10",
+    "tsdown": "0.22.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
