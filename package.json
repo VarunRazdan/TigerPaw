@@ -431,8 +431,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@grammyjs/types": "3.25.0",
-    "@lit-labs/signals": "^0.2.0",
+    "@grammyjs/types": "3.28.0",
+    "@lit-labs/signals": "^0.3.0",
     "@lit/context": "^1.1.6",
     "@types/express": "^5.0.6",
     "@types/markdown-it": "^14.1.2",
@@ -444,11 +444,11 @@
     "fast-check": "^4.6.0",
     "jscpd": "4.0.9",
     "lit": "^3.3.2",
-    "oxfmt": "0.46.0",
+    "oxfmt": "0.55.0",
     "oxlint": "^1.53.0",
-    "oxlint-tsgolint": "^0.22.0",
+    "oxlint-tsgolint": "^0.23.0",
     "signal-utils": "0.21.1",
-    "tsdown": "0.21.10",
+    "tsdown": "0.22.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
