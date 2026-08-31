@@ -7,7 +7,7 @@
   "dependencies": {
     "@lancedb/lancedb": "^0.27.2",
     "@sinclair/typebox": "0.34.48",
-    "openai": "^6.27.0"
+    "openai": "^7.8.0"
   },
   "openclaw": {
     "extensions": [
